@@ -7,36 +7,6 @@
 
 #include <Arduino.h>
 
-/***********************************
-   Sensors types
-*/
-// Generic analog sensor, return a pin's analog value or its percentage
-#define SENSOR_ANALOG_INPUT 0
-// LDR sensor, return the light level of an attached light resistor in percentage
-#define SENSOR_LDR 1
-// Thermistor sensor, return the temperature based on the attached thermistor
-#define SENSOR_THERMISTOR 2
-// Generic digital sensor, return a pin's digital value
-#define SENSOR_DIGITAL_INPUT 3
-// Generic digital output sensor, allows setting the digital output of a pin to the requested value
-#define SENSOR_DIGITAL_OUTPUT 4
-// Relay sensor, allows activating the relay
-#define SENSOR_RELAY 5
-// Latching Relay sensor, allows activating the relay with a pulse
-#define SENSOR_LATCHING_RELAY 6
-// DHT11/DHT22 sensors, return temperature/humidity based on the attached DHT sensor
-#define SENSOR_DHT11 7
-#define SENSOR_DHT22 8
-// SHT21 sensor, return temperature/humidity based on the attached SHT21 sensor
-#define SENSOR_SHT21 9
-// Generic switch, wake up the board when a pin changes status
-#define SENSOR_SWITCH 10
-// Door sensor, wake up the board and report when an attached magnetic sensor has been opened/closed
-#define SENSOR_DOOR 11
-// Motion sensor, wake up the board and report when an attached PIR has triggered
-#define SENSOR_MOTION 12
-// DS18B20 sensor, return the temperature based on the attached sensor
-#define SENSOR_DS18B20 13
 
 /***********************************
    Constants
@@ -71,54 +41,136 @@
 #define EEPROM_SLEEP_UNIT 4
 
 // define NodeManager version
-#define VERSION 1.0
+#define VERSION 1.1
+
+/************************************
+ * Include user defined configuration settings
+ */
+ 
+#include "config.h"
 
 /***********************************
-   Configuration settings
+   Default configuration settings
 */
-// default configuration settings
 
 // if enabled, will load the sleep manager library. Sleep mode and sleep interval have to be configured to make the board sleeping/waiting
-#define SLEEP_MANAGER 1
+#ifndef SLEEP_MANAGER
+  #define SLEEP_MANAGER 1
+#endif
 // if enabled, enable the capability to power on sensors with the arduino's pins to save battery while sleeping
-#define POWER_MANAGER 1
+#ifndef POWER_MANAGER
+  #define POWER_MANAGER 1
+#endif
 // if enabled, will load the battery manager library to allow the battery level to be reported automatically or on demand
-#define BATTERY_MANAGER 1
+#ifndef BATTERY_MANAGER
+  #define BATTERY_MANAGER 1
+#endif
 // if enabled, allow modifying the configuration remotely by interacting with the configuration child id
-#define REMOTE_CONFIGURATION 1
+#ifndef REMOTE_CONFIGURATION
+  #define REMOTE_CONFIGURATION 1
+#endif
 // if enabled, persist the configuration settings on EEPROM
-#define PERSIST 0
+#ifndef PERSIST
+  #define PERSIST 0
+#endif
 
 // if enabled, enable debug messages on serial port
-#define DEBUG 1
+#ifndef DEBUG
+  #define DEBUG 1
+#endif
 
 // if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle
-#define SERVICE_MESSAGES 1
+#ifndef SERVICE_MESSAGES
+  #define SERVICE_MESSAGES 1
+#endif
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
-#define BATTERY_SENSOR 1
+#ifndef BATTERY_SENSOR
+  #define BATTERY_SENSOR 1
+#endif
 
 // the child id used to allow remote configuration
-#define CONFIGURATION_CHILD_ID 200
+#ifndef CONFIGURATION_CHILD_ID
+  #define CONFIGURATION_CHILD_ID 200
+#endif
 // the child id used to report the battery voltage to the controller
-#define BATTERY_CHILD_ID 201
+#ifndef BATTERY_CHILD_ID
+  #define BATTERY_CHILD_ID 201
+#endif
 
 // Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR
-#define MODULE_ANALOG_INPUT 1
+#ifndef MODULE_ANALOG_INPUT
+  #define MODULE_ANALOG_INPUT 0
+#endif
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
-#define MODULE_DIGITAL_INPUT 1
+#ifndef MODULE_DIGITAL_INPUT
+  #define MODULE_DIGITAL_INPUT 0
+#endif
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_OUTPUT, SENSOR_RELAY, SENSOR_LATCHING_RELAY
-#define MODULE_DIGITAL_OUTPUT 1
+#ifndef MODULE_DIGITAL_OUTPUT
+  #define MODULE_DIGITAL_OUTPUT 0
+#endif
 // Enable this module to use one of the following sensors: SENSOR_SHT21
-#define MODULE_SHT21 0
+#ifndef MODULE_SHT21
+  #define MODULE_SHT21 0
+#endif
 // Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
-#define MODULE_DHT 0
+#ifndef MODULE_DHT
+  #define MODULE_DHT 0
+#endif
 // Enable this module to use one of the following sensors: SENSOR_SWITCH, SENSOR_DOOR, SENSOR_MOTION
-#define MODULE_SWITCH 0
+#ifndef MODULE_SWITCH
+  #define MODULE_SWITCH 0
+#endif
 // Enable this module to use one of the following sensors: SENSOR_DS18B20
-#define MODULE_DS18B20 0
+#ifndef MODULE_DS18B20
+  #define MODULE_DS18B20 0
+#endif
 
-// include user defined configuration difrectives
-#include "config.h"
+
+/***********************************
+   Sensors types
+*/
+#if MODULE_ANALOG_INPUT == 1
+  // Generic analog sensor, return a pin's analog value or its percentage
+  #define SENSOR_ANALOG_INPUT 1
+  // LDR sensor, return the light level of an attached light resistor in percentage
+  #define SENSOR_LDR 2
+  // Thermistor sensor, return the temperature based on the attached thermistor
+  #define SENSOR_THERMISTOR 3
+#endif
+#if MODULE_DIGITAL_INPUT == 1
+  // Generic digital sensor, return a pin's digital value
+  #define SENSOR_DIGITAL_INPUT 4
+#endif
+#if MODULE_DIGITAL_OUTPUT == 1
+  // Generic digital output sensor, allows setting the digital output of a pin to the requested value
+  #define SENSOR_DIGITAL_OUTPUT 5
+  // Relay sensor, allows activating the relay
+  #define SENSOR_RELAY 6
+  // Latching Relay sensor, allows activating the relay with a pulse
+  #define SENSOR_LATCHING_RELAY 7
+#endif
+#if MODULE_DHT == 1
+  // DHT11/DHT22 sensors, return temperature/humidity based on the attached DHT sensor
+  #define SENSOR_DHT11 8
+  #define SENSOR_DHT22 9
+#endif
+#if MODULE_SHT21 == 1
+  // SHT21 sensor, return temperature/humidity based on the attached SHT21 sensor
+  #define SENSOR_SHT21 10
+#endif
+#if MODULE_SWITCH == 1
+  // Generic switch, wake up the board when a pin changes status
+  #define SENSOR_SWITCH 11
+  // Door sensor, wake up the board and report when an attached magnetic sensor has been opened/closed
+  #define SENSOR_DOOR 12
+  // Motion sensor, wake up the board and report when an attached PIR has triggered
+  #define SENSOR_MOTION 13
+#endif
+#if MODULE_DS18B20 == 1
+  // DS18B20 sensor, return the temperature based on the attached sensor
+  #define SENSOR_DS18B20 14
+#endif
 
 /***********************************
   Libraries
@@ -158,7 +210,7 @@ class PowerManager {
   public:
     PowerManager() {};
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-    void setPowerPins(int ground_pin, int vcc_pin, long wait = 0);
+    void setPowerPins(int ground_pin, int vcc_pin, long wait = 10);
     void powerOn();
     void powerOff();
   private:
@@ -201,10 +253,16 @@ class Sensor {
     void setValueType(int value);
     // for float values, set the float precision (default: 2)
     void setFloatPrecision(int value);
+    // optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
+    void setSleepBetweenSend(int value);
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
       void setPowerPins(int ground_pin, int vcc_pin, long wait = 0);
+      // if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
+      void setAutoPowerPins(bool value);
+      // manually turn the power on
       void powerOn();
+      // manually turn the power off
       void powerOff();
     #endif
     // define what to do at each stage of the sketch
@@ -218,6 +276,7 @@ class Sensor {
     virtual void onReceive(const MyMessage & message) = 0;
   protected:
     MyMessage _msg;
+    int _sleep_between_send = 0;
     int _pin = -1;
     int _child_id;
     int _presentation = S_CUSTOM;
@@ -231,6 +290,7 @@ class Sensor {
     void _send(MyMessage & msg);
     #if POWER_MANAGER  == 1
       PowerManager _powerManager;
+      bool _auto_power_pins = true;
     #endif
     int _value_type = TYPE_INTEGER;
     int _float_precision = 2;
@@ -346,6 +406,8 @@ class SensorDigitalOutput: public Sensor {
 class SensorRelay: public SensorDigitalOutput {
   public:
     SensorRelay(int child_id, int pin);
+    // define what to do at each stage of the sketch
+    void onLoop();
 };
 
 /*
@@ -458,6 +520,8 @@ class NodeManager {
     NodeManager();
     // the pin to connect to the RST pin to reboot the board (default: 4)
     void setRebootPin(int value);
+    // send the same service message multiple times (default: 1)
+    void setRetries(int value);
     #if BATTERY_MANAGER == 1
       // the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
       void setBatteryMin(float value);
@@ -479,6 +543,8 @@ class NodeManager {
     #endif
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
     void setInterrupt(int pin, int mode, int pull = -1);
+    // optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
+    void setSleepBetweenSend(int value);
     // register a built-in sensor
     int registerSensor(int sensor_type, int pin = -1, int child_id = -1);
     // register a custom sensor
@@ -488,13 +554,17 @@ class NodeManager {
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
       void setPowerPins(int ground_pin, int vcc_pin, long wait = 10);
+      // if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
+      void setAutoPowerPins(bool value);
+      // manually turn the power on
       void powerOn();
+      // manually turn the power off
       void powerOff();
     #endif
-
     // hook into the main sketch functions
     void before();
     void presentation();
+    void setup();
     void loop();
     void receive(const MyMessage & msg);
   private:
@@ -511,12 +581,15 @@ class NodeManager {
       int _cycles = 0;
       float _getVcc();
     #endif
-
     #if POWER_MANAGER == 1
       // to optionally controller power pins
       PowerManager _powerManager;
+      bool _auto_power_pins = true;
     #endif
     MyMessage _msg;
+    void _send(MyMessage & msg);
+    int _sleep_between_send = 0;
+    int _retries = 1;
     int _interrupt_1_mode = MODE_NOT_DEFINED;
     int _interrupt_2_mode = MODE_NOT_DEFINED;
     int _interrupt_1_pull = -1;

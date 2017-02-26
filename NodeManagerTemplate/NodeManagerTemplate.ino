@@ -26,29 +26,21 @@ NodeManager nodeManager;
 void before() {
   // setup the serial port baud rate
   Serial.begin(9600);  
-  // connect pin 4 to RST to enable rebooting the board with a message
-  nodeManager.setRebootPin(4);
-  // set battery minimum voltage. This will be used to calculate the level percentage
-  //nodeManager.setBatteryMin(1.8);
-  // instruct the board to sleep for 10 minutes for each cycle
-  //nodeManager.setSleep(SLEEP,10,MINUTES);
-  // When pin 3 is connected to ground, the board will stop sleeping
-  //nodeManager.setSleepInterruptPin(3)
-  // all the sensors' vcc and ground are connected to pin 6 (vcc) and 7 (ground). NodeManager will enable the vcc pin every time just before loop() and wait for 100ms for the sensors to settle
-  //nodeManager.setPowerPins(6,7,100);
-  // register a thermistor sensor attached to pin A2
-  //nodeManager.registerSensor(SENSOR_THERMISTOR,A2);
-  // register a LDR sensor attached to pin A1 and average 3 samples
-  //int sensor_ldr = nodeManager.registerSensor(SENSOR_LDR,A1);
-  //((SensorLDR*)nodeManager.get(sensor_ldr))->setSamples(3);
-  
+  /*
+   * Register below your sensors
+   */
+
+
+  /*
+   * Register above your sensors
+   */
   nodeManager.before();
 }
 
 // presentation
 void presentation() {
   // Send the sketch version information to the gateway and Controller
-	sendSketchInfo("NodeManager", "1.0");
+	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
   // call NodeManager presentation routine
   nodeManager.presentation();
 
@@ -56,6 +48,8 @@ void presentation() {
 
 // setup
 void setup() {
+  // call NodeManager setup routine
+  nodeManager.setup();
 }
 
 // loop

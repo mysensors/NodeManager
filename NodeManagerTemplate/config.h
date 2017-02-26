@@ -2,11 +2,20 @@
 #define config_h
 
 /**********************************
+ * Sketch configuration
+ */
+
+#define SKETCH_NAME "NodeManagerTemplate"
+#define SKETCH_VERSION "1.1"
+
+/**********************************
  * MySensors configuration
  */
-//#define MY_DEBUG
 #define MY_RADIO_NRF24
-
+//#define MY_RF24_ENABLE_ENCRYPTION
+//#define MY_DEBUG
+//#define MY_RF24_CHANNEL 76
+//#define MY_NODE_ID 100
 
 /***********************************
  * NodeManager configuration
@@ -19,7 +28,7 @@
 #define BATTERY_MANAGER 1
 // if enabled, allow modifying the configuration remotely by interacting with the configuration child id
 #define REMOTE_CONFIGURATION 1
-// if enabled, persist the configuration settings on EEPROM
+// if enabled, persist the remote configuration settings on EEPROM
 #define PERSIST 0
 
 // if enabled, enable debug messages on serial port
@@ -36,10 +45,10 @@
 #define MODULE_DIGITAL_INPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_OUTPUT, SENSOR_RELAY, SENSOR_LATCHING_RELAY
 #define MODULE_DIGITAL_OUTPUT 1
-// Enable this module to use one of the following sensors: SENSOR_SHT21
-#define MODULE_SHT21 0
 // Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
 #define MODULE_DHT 0
+// Enable this module to use one of the following sensors: SENSOR_SHT21
+#define MODULE_SHT21 0
 // Enable this module to use one of the following sensors: SENSOR_SWITCH, SENSOR_DOOR, SENSOR_MOTION
 #define MODULE_SWITCH 0
 // Enable this module to use one of the following sensors: SENSOR_DS18B20
