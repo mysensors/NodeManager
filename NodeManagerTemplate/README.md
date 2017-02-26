@@ -1,4 +1,4 @@
-NodeManager
+Welcome to NodeManager (v1.1)
 
 # Introduction
 
@@ -66,7 +66,6 @@ Those NodeManager's directives in the `config.h` file control which module/libra
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
 #define BATTERY_SENSOR 1
 
-
 // Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR
 #define MODULE_ANALOG_INPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
@@ -90,6 +89,8 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
 ~~~c
     // the pin to connect to the RST pin to reboot the board (default: 4)
     void setRebootPin(int value);
+    // send the same service message multiple times (default: 1)
+    void setRetries(int value);
     #if BATTERY_MANAGER == 1
       // the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
       void setBatteryMin(float value);
@@ -111,6 +112,8 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
     #endif
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
     void setInterrupt(int pin, int mode, int pull = -1);
+    // optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
+    void setSleepBetweenSend(int value);
     // register a built-in sensor
     int registerSensor(int sensor_type, int pin = -1, int child_id = -1);
     // register a custom sensor
@@ -119,8 +122,12 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
     Sensor* get(int sensor_index);
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-      void setPowerPins(int ground_pin, int vcc_pin, long wait = 10);
+      void setPowerPins(int ground_pin, int vcc_pin, long wait = 0);
+      // if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
+      void setAutoPowerPins(bool value);
+      // manually turn the power on
       void powerOn();
+      // manually turn the power off
       void powerOff();
     #endif
 ~~~
@@ -214,10 +221,16 @@ The following methods are available for all the sensors:
     void setValueType(int value);
 // for float values, set the float precision (default: 2)
     void setFloatPrecision(int value);
+    // optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
+    void setSleepBetweenSend(int value);
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
       void setPowerPins(int ground_pin, int vcc_pin, long wait = 0);
+      // if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
+      void setAutoPowerPins(bool value);
+      // manually turn the power on
       void powerOn();
+      // manually turn the power off
       void powerOff();
     #endif
 ~~~
@@ -362,3 +375,96 @@ A NodeManager object must be created and called from within your sketch during `
 
 ### Sensor::receive()
 * Invoke `Sensor::loop()` which will execute the sensor main taks and eventually call `Sensor::onReceive()`
+
+# Examples
+Enable reboot pin, connect pin 4 to RST to enable rebooting the board with the REBOOT message:
+
+~~~c
+void before() {
+  nodeManager.setRebootPin(4);
+  nodeManager.before();
+}
+~~~
+
+Set battery minimum and maxium voltage. This will be used to calculate the level percentage:
+
+~~~c
+void before() {
+    nodeManager.setBatteryMin(1.8);
+    nodeManager.setBatteryMin(3.2);
+    nodeManager.before();
+}
+~~~
+
+Instruct the board to sleep for 10 minutes at each cycle:
+
+~~~c
+void before() {
+    nodeManager.setSleep(SLEEP,10,MINUTES);
+    nodeManager.before();
+}
+~~~
+
+Configure a wake up pin. When pin 3 is connected to ground, the board will stop sleeping:
+
+~~~c
+void before() {
+    nodeManager.setSleepInterruptPin(3);
+    nodeManager.before();
+}
+~~~
+
+Use the arduino pins to power on and off the attached sensors. All the sensors' vcc and ground are connected to pin 6 (ground) and 7 (vcc). NodeManager will enable the vcc pin every time just before loop() and wait for 100ms for the power to settle before running loop() of each sensor:
+
+~~~c
+void before() {
+   nodeManager.setPowerPins(6,7,100);
+    nodeManager.before();
+}
+~~~
+
+Register a thermistor sensor attached to pin A2. NodeManager will then send the temperature to the controller at the end of each sleeping cycle:
+
+~~~c
+void before() {
+   nodeManager.registerSensor(SENSOR_THERMISTOR,A2);
+    nodeManager.before();
+}
+~~~
+
+Register a LDR sensor attached to pin A1 and send to the gateway the average of 3 samples:
+
+~~~c
+void before() {
+  int sensor_ldr = nodeManager.registerSensor(SENSOR_LDR,A1);
+  ((SensorLDR*)nodeManager.get(sensor_ldr))->setSamples(3);
+    nodeManager.before();
+}
+~~~
+
+Register a rain sensor connected to A0. This will be powered with via pins 4 (ground) and 5 (vcc) just before reading its value at each cycle, it will be presented as S_RAIN. sending V_RAINRATE messages, the output will be a percentage (calculated between 200 and 2014) and the value will be reversed (so that no rain will be 0%):
+
+~~~c
+void before() {
+  int rain = nodeManager.registerSensor(SENSOR_ANALOG_INPUT,A0);
+  SensorAnalogInput* rainSensor = ((SensorAnalogInput*)nodeManager.get(rain));
+  rainSensor->setPowerPins(4,5,300);
+  rainSensor->setPresentation(S_RAIN);
+  rainSensor->setType(V_RAINRATE);
+  rainSensor->setOutputPercentage(true);
+  rainSensor->setRangeMin(200);
+  rainSensor->setRangeMax(1024);
+  rainSensor->setReverse(true);
+    nodeManager.before();
+}
+~~~
+
+Register a latching relay connecting to pin 6 (set) and pin 7 (unset):
+
+~~~c
+void before() {
+  nodeManager.registerSensor(SENSOR_LATCHING_RELAY,6);
+  nodeManager.registerSensor(SENSOR_LATCHING_RELAY,7);
+  nodeManager.before();
+}
+~~~
