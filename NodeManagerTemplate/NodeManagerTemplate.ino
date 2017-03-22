@@ -28,12 +28,12 @@ void before() {
   Serial.begin(9600);  
   /*
    * Register below your sensors
-   */
-
+  */
+  
 
   /*
    * Register above your sensors
-   */
+  */
   nodeManager.before();
 }
 

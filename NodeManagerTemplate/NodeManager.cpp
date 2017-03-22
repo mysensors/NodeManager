@@ -21,10 +21,10 @@ const char* WAKEUP = "WAKEUP";
 // set the vcc and ground pin the sensor is connected to
 void PowerManager::setPowerPins(int ground_pin, int vcc_pin, long wait = 10) {
   #if DEBUG == 1
-    Serial.print("POWER V=");
-    Serial.print(vcc_pin);
-    Serial.print(" G=");
-    Serial.println(ground_pin);
+    Serial.print("POWER G=");
+    Serial.print(ground_pin);
+    Serial.print(" V=");
+    Serial.println(vcc_pin);
   #endif
   // configure the vcc pin as output and initialize to low (power off)
   _vcc_pin = vcc_pin;
@@ -619,7 +619,7 @@ void SensorDHT::onReceive(const MyMessage & message) {
 */
 #if MODULE_SHT21 == 1
 // contructor
-SensorSHT21::SensorSHT21(int child_id, int sensor_type): Sensor(child_id, -1) {
+SensorSHT21::SensorSHT21(int child_id, int sensor_type): Sensor(child_id,A2) {
   // store the sensor type (0: temperature, 1: humidity)
   _sensor_type = sensor_type;
   if (_sensor_type == 0) {
@@ -680,6 +680,15 @@ void SensorSHT21::onReceive(const MyMessage & message) {
   onLoop();
 }
 #endif
+
+/*
+ * SensorHTU21D
+ */
+ #if MODULE_SHT21 == 1
+// constructor
+SensorHTU21D::SensorHTU21D(int child_id, int pin): SensorSHT21(child_id, pin) {
+}
+#endif 
 
 /*
  * SensorSwitch
@@ -795,8 +804,81 @@ void SensorDs18b20::onLoop() {
 void SensorDs18b20::onReceive(const MyMessage & message) {
   onLoop();
 }
+#endif
 
+/*
+   SensorBH1750
+*/
+#if MODULE_BH1750 == 1
+// contructor
+SensorBH1750::SensorBH1750(int child_id): Sensor(child_id,A4) {
+  setPresentation(S_LIGHT_LEVEL);
+  setType(V_LEVEL);
+  _lightSensor = new BH1750();
+}
 
+// what do to during setup
+void SensorBH1750::onBefore() {
+  _lightSensor->begin();
+}
+
+// what do to during loop
+void SensorBH1750::onLoop() {
+  // request the light level
+  _value_int = _lightSensor->readLightLevel();
+  #if DEBUG == 1
+    Serial.print("BH1 I=");
+    Serial.print(_child_id);
+    Serial.print(" L=");
+    Serial.println(_value_int);
+  #endif
+}
+
+// what do to as the main task when receiving a message
+void SensorBH1750::onReceive(const MyMessage & message) {
+  onLoop();
+}
+#endif
+
+/*
+   SensorMLX90614
+*/
+#if MODULE_MLX90614 == 1
+// contructor
+SensorMLX90614::SensorMLX90614(int child_id, Adafruit_MLX90614* mlx, int sensor_type): Sensor(child_id,A4) {
+  // store the sensor type (0: ambient, 1: object)
+  _sensor_type = sensor_type;
+  _mlx = mlx;
+  // set presentation and type
+  setPresentation(S_TEMP);
+  setType(V_TEMP);
+  setValueType(TYPE_FLOAT);
+}
+
+// what do to during setup
+void SensorMLX90614::onBefore() {
+  // initialize the library
+  _mlx->begin();
+}
+
+// what do to during loop
+void SensorMLX90614::onLoop() {
+  float temperature = _sensor_type == 0 ? _mlx->readAmbientTempC() : _mlx->readObjectTempC();
+  // convert it
+  if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
+  #if DEBUG == 1
+    Serial.print("MLX I=");
+    Serial.print(_child_id);
+    Serial.print(" T=");
+    Serial.println(temperature);
+  #endif
+  if (! isnan(temperature)) _value_float = temperature;
+}
+
+// what do to as the main task when receiving a message
+void SensorMLX90614::onReceive(const MyMessage & message) {
+  onLoop();
+}
 #endif
 
 /*******************************************
@@ -915,6 +997,11 @@ int NodeManager::registerSensor(int sensor_type, int pin = -1, int child_id = -1
       child_id = _getAvailableChildId();
       registerSensor(new SensorSHT21(child_id,1));
     }
+    else if (sensor_type == SENSOR_HTU21D) {
+      registerSensor(new SensorHTU21D(child_id,0));
+      child_id = _getAvailableChildId();
+      registerSensor(new SensorHTU21D(child_id,1));
+    }
   #endif
   #if MODULE_SWITCH == 1
     else if (sensor_type == SENSOR_SWITCH || sensor_type == SENSOR_DOOR || sensor_type == SENSOR_MOTION) {
@@ -944,6 +1031,22 @@ int NodeManager::registerSensor(int sensor_type, int pin = -1, int child_id = -1
       }
     }
   #endif
+  #if MODULE_BH1750 == 1
+    else if (sensor_type == SENSOR_BH1750) {
+      return registerSensor(new SensorBH1750(child_id));
+    }
+  #endif
+  #if MODULE_MLX90614 == 1
+    else if (sensor_type == SENSOR_MLX90614) {
+      Serial.println("1");
+      Adafruit_MLX90614* mlx = new Adafruit_MLX90614();
+      Serial.println("2");
+      registerSensor(new SensorMLX90614(child_id,mlx,0));
+      Serial.println("3");
+      child_id = _getAvailableChildId();
+      registerSensor(new SensorMLX90614(child_id,mlx,1));
+    }
+  #endif
   else {
     #if DEBUG == 1
       Serial.print("INVALID ");
@@ -965,6 +1068,8 @@ int NodeManager::registerSensor(Sensor* sensor) {
     Serial.print(" T=");
     Serial.println(sensor->getType());
   #endif
+  // set auto power pin
+  sensor->setAutoPowerPins(_auto_power_pins);
   // add the sensor to the array of registered sensors
   _sensors[sensor->getChildId()] = sensor;
   // return the child_id
@@ -1114,7 +1219,7 @@ void NodeManager::loop() {
 // dispacth inbound messages
 void NodeManager::receive(const MyMessage &message) {
   #if DEBUG == 1
-    Serial.print("RECV F=");
+    Serial.print("RECV S=");
     Serial.print(message.sender);
     Serial.print(" I=");
     Serial.print(message.sensor);
@@ -1133,13 +1238,13 @@ void NodeManager::receive(const MyMessage &message) {
   else if (message.getCommand() == C_REQ && _sensors[message.sensor] != 0) {
     #if POWER_MANAGER == 1
       // turn on the pin powering all the sensors
-      powerOn();
+      if (_auto_power_pins) powerOn();
     #endif
     // call the sensor's receive()
      _sensors[message.sensor]->receive(message);
     #if POWER_MANAGER == 1
       // turn off the pin powering all the sensors
-      powerOff();
+      if (_auto_power_pins) powerOff();
     #endif
   }
 }

@@ -41,7 +41,7 @@
 #define EEPROM_SLEEP_UNIT 4
 
 // define NodeManager version
-#define VERSION 1.1
+#define VERSION 1.2
 
 /************************************
  * Include user defined configuration settings
@@ -109,7 +109,7 @@
 #ifndef MODULE_DIGITAL_OUTPUT
   #define MODULE_DIGITAL_OUTPUT 0
 #endif
-// Enable this module to use one of the following sensors: SENSOR_SHT21
+// Enable this module to use one of the following sensors: SENSOR_SHT21, SENSOR_HTU21D
 #ifndef MODULE_SHT21
   #define MODULE_SHT21 0
 #endif
@@ -125,7 +125,14 @@
 #ifndef MODULE_DS18B20
   #define MODULE_DS18B20 0
 #endif
-
+// Enable this module to use one of the following sensors: SENSOR_BH1750
+#ifndef MODULE_BH1750
+  #define MODULE_BH1750 0
+#endif
+// Enable this module to use one of the following sensors: SENSOR_MLX90614
+#ifndef MODULE_MLX90614
+  #define MODULE_MLX90614 0
+#endif
 
 /***********************************
    Sensors types
@@ -158,6 +165,7 @@
 #if MODULE_SHT21 == 1
   // SHT21 sensor, return temperature/humidity based on the attached SHT21 sensor
   #define SENSOR_SHT21 10
+  #define SENSOR_HTU21D 15
 #endif
 #if MODULE_SWITCH == 1
   // Generic switch, wake up the board when a pin changes status
@@ -171,7 +179,16 @@
   // DS18B20 sensor, return the temperature based on the attached sensor
   #define SENSOR_DS18B20 14
 #endif
+#if MODULE_BH1750 == 1
+  // BH1750 sensor, return light in lux
+  #define SENSOR_BH1750 16
+#endif
+#if MODULE_MLX90614 == 1
+  // MLX90614 sensor, contactless temperature sensor
+  #define SENSOR_MLX90614 17
+#endif
 
+// last Id: 17
 /***********************************
   Libraries
 */
@@ -188,15 +205,18 @@
   #include <Wire.h>
   #include <Sodaq_SHT2x.h>
 #endif
-#if MODULE_SHT21 == 1
-  #include <Wire.h>
-  #include <Sodaq_SHT2x.h>
-#endif
 #if MODULE_DS18B20 == 1
   #include <OneWire.h>
   #include <DallasTemperature.h>
 #endif
-
+#if MODULE_BH1750 == 1
+  #include <BH1750.h>
+  #include <Wire.h>
+#endif
+#if MODULE_MLX90614 == 1
+  #include <Wire.h>
+  #include <Adafruit_MLX90614.h>
+#endif
 
 /**************************************
    Classes
@@ -438,7 +458,7 @@ class SensorDHT: public Sensor {
 #endif
 
 /*
-   SensorSHT21
+   SensorSHT21: temperature and humidity sensor
 */
 #if MODULE_SHT21 == 1
 class SensorSHT21: public Sensor {
@@ -451,6 +471,15 @@ class SensorSHT21: public Sensor {
   protected:
     float _offset = 0;
     int _sensor_type = 0;
+};
+
+/*
+   SensorHTU21D: temperature and humidity sensor
+*/
+
+class SensorHTU21D: public SensorSHT21 {
+  public:
+    SensorHTU21D(int child_id, int pin);
 };
 #endif
 
@@ -511,6 +540,38 @@ class SensorDs18b20: public Sensor {
 };
 #endif
 
+/*
+   SensorBH1750
+*/
+#if MODULE_BH1750 == 1
+class SensorBH1750: public Sensor {
+  public:
+    SensorBH1750(int child_id);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+  protected:
+    BH1750* _lightSensor;
+};
+#endif
+
+/*
+   SensorMLX90614
+*/
+#if MODULE_MLX90614 == 1
+class SensorMLX90614: public Sensor {
+  public:
+    SensorMLX90614(int child_id, Adafruit_MLX90614* mlx, int sensor_type);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+  protected:
+    Adafruit_MLX90614* _mlx;
+    int _sensor_type;
+};
+#endif
 
 /***************************************
    NodeManager: manages all the aspects of the node

@@ -6,20 +6,31 @@
  */
 
 #define SKETCH_NAME "NodeManagerTemplate"
-#define SKETCH_VERSION "1.1"
+#define SKETCH_VERSION "1.2"
 
 /**********************************
  * MySensors configuration
  */
+//#define MY_DEBUG
+//#define MY_NODE_ID 100
+
 #define MY_RADIO_NRF24
 //#define MY_RF24_ENABLE_ENCRYPTION
-//#define MY_DEBUG
 //#define MY_RF24_CHANNEL 76
-//#define MY_NODE_ID 100
+
+//#define MY_RADIO_RFM69
+//#define MY_RFM69_FREQUENCY RF69_868MHZ
+//#define MY_IS_RFM69HW
+//#define MY_RFM69_ENABLE_ENCRYPTION
+//#define MY_RFM69_NETWORKID 100
 
 /***********************************
  * NodeManager configuration
  */
+
+// if enabled, enable debug messages on serial port
+#define DEBUG 1
+
 // if enabled, will load the sleep manager library. Sleep mode and sleep interval have to be configured to make the board sleeping/waiting
 #define SLEEP_MANAGER 1
 // if enabled, enable the capability to power on sensors with the arduino's pins to save battery while sleeping
@@ -30,9 +41,6 @@
 #define REMOTE_CONFIGURATION 1
 // if enabled, persist the remote configuration settings on EEPROM
 #define PERSIST 0
-
-// if enabled, enable debug messages on serial port
-#define DEBUG 1
 
 // if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle
 #define SERVICE_MESSAGES 1
@@ -53,5 +61,9 @@
 #define MODULE_SWITCH 0
 // Enable this module to use one of the following sensors: SENSOR_DS18B20
 #define MODULE_DS18B20 0
+// Enable this module to use one of the following sensors: SENSOR_BH1750
+#define MODULE_BH1750 0
+// Enable this module to use one of the following sensors: SENSOR_MLX90614
+#define MODULE_MLX90614 0
 
 #endif

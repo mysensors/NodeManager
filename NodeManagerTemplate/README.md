@@ -1,4 +1,4 @@
-Welcome to NodeManager (v1.1)
+[NodeManager]
 
 # Introduction
 
@@ -40,7 +40,21 @@ Please note NodeManager cannot be used as an arduino library since requires acce
 NodeManager configuration includes compile-time configuration directives (which can be set in config.h), runtime global and per-sensor configuration settings (which can be set in your sketch) and settings that can be customized remotely (via a special child id).
 
 ## Setup MySensors
-Since NodeManager has to communicate with the MySensors gateway on your behalf, it has to know how to do it. Place on top of the `config.h` file all the MySensors typical directives you are used to set on top of your sketch so both your sketch AND NodeManager will be able to share the same configuration.
+Since NodeManager has to communicate with the MySensors gateway on your behalf, it has to know how to do it. Place on top of the `config.h` file all the MySensors typical directives you are used to set on top of your sketch so both your sketch AND NodeManager will be able to share the same configuration. For example:
+~~~c
+//#define MY_DEBUG
+#define MY_NODE_ID 100
+
+#define MY_RADIO_NRF24
+//#define MY_RF24_ENABLE_ENCRYPTION
+//#define MY_RF24_CHANNEL 76
+
+//#define MY_RADIO_RFM69
+//#define MY_RFM69_FREQUENCY RF69_868MHZ
+//#define MY_IS_RFM69HW
+//#define MY_RFM69_ENABLE_ENCRYPTION
+//#define MY_RFM69_NETWORKID 100
+~~~
 
 ## Enable/Disable NodeManager's modules
 
@@ -80,7 +94,23 @@ Those NodeManager's directives in the `config.h` file control which module/libra
 #define MODULE_SWITCH 0
 // Enable this module to use one of the following sensors: SENSOR_DS18B20
 #define MODULE_DS18B20 0
+// Enable this module to use one of the following sensors: SENSOR_BH1750
+#define MODULE_BH1750 0
+// Enable this module to use one of the following sensors: SENSOR_MLX90614
+#define MODULE_MLX90614 0
 ~~~
+
+## Installing the dependencies
+
+Some of the modules above rely on third party libraries. Those libraries are not included within NodeManager and have to be installed from the Arduino IDE Library Manager (Sketch -> Include Library -> Manager Libraries). You need to install the library ONLY if the module is enabled:
+
+Module  | Required Library
+ ------------- | -------------
+MODULE_SHT21 | https://github.com/SodaqMoja/Sodaq_SHT2x
+MODULE_DHT | https://github.com/adafruit/DHT-sensor-library
+MODULE_DS18B20 | https://github.com/milesburton/Arduino-Temperature-Control-Library
+MODULE_BH1750 | https://github.com/claws/BH1750
+MODULE_MLX90614 | https://github.com/adafruit/Adafruit-MLX90614-Library
 
 ## Configure NodeManager
 
@@ -157,6 +187,9 @@ SENSOR_SWITCH | Generic switch, wake up the board when a pin changes status
 SENSOR_DOOR | Door sensor, wake up the board and report when an attached magnetic sensor has been opened/closed
 SENSOR_MOTION | Motion sensor, wake up the board and report when an attached PIR has triggered
 SENSOR_DS18B20 | DS18B20 sensor, return the temperature based on the attached sensor
+SENSOR_HTU21D | HTU21D sensor, return temperature/humidity based on the attached HTU21D sensor
+SENSOR_BH1750 | BH1750 sensor, return light level in lux
+SENSOR_MLX90614 | MLX90614 contactless temperature sensor, return ambient and object temperature
 
 To register a sensor simply call the NodeManager instance with the sensory type and the pin the sensor is conncted to. For example:
 ~~~c
@@ -377,75 +410,61 @@ A NodeManager object must be created and called from within your sketch during `
 * Invoke `Sensor::loop()` which will execute the sensor main taks and eventually call `Sensor::onReceive()`
 
 # Examples
+All the examples below takes place within the before() function in the main sketch, just below the "Register below your sensors" comment.
+
 Enable reboot pin, connect pin 4 to RST to enable rebooting the board with the REBOOT message:
 
 ~~~c
-void before() {
   nodeManager.setRebootPin(4);
-  nodeManager.before();
-}
 ~~~
 
 Set battery minimum and maxium voltage. This will be used to calculate the level percentage:
 
 ~~~c
-void before() {
     nodeManager.setBatteryMin(1.8);
     nodeManager.setBatteryMin(3.2);
-    nodeManager.before();
-}
 ~~~
 
 Instruct the board to sleep for 10 minutes at each cycle:
 
 ~~~c
-void before() {
     nodeManager.setSleep(SLEEP,10,MINUTES);
-    nodeManager.before();
-}
 ~~~
 
 Configure a wake up pin. When pin 3 is connected to ground, the board will stop sleeping:
 
 ~~~c
-void before() {
     nodeManager.setSleepInterruptPin(3);
-    nodeManager.before();
-}
 ~~~
 
 Use the arduino pins to power on and off the attached sensors. All the sensors' vcc and ground are connected to pin 6 (ground) and 7 (vcc). NodeManager will enable the vcc pin every time just before loop() and wait for 100ms for the power to settle before running loop() of each sensor:
 
 ~~~c
-void before() {
    nodeManager.setPowerPins(6,7,100);
-    nodeManager.before();
-}
 ~~~
 
 Register a thermistor sensor attached to pin A2. NodeManager will then send the temperature to the controller at the end of each sleeping cycle:
 
 ~~~c
-void before() {
    nodeManager.registerSensor(SENSOR_THERMISTOR,A2);
-    nodeManager.before();
-}
+~~~
+
+Register a SHT21 temperature/humidity sensor; since using i2c for communicating with the sensor, the pins used are implicit (A4 and A5). NodeManager will then send the temperature and the humidity to the controller at the end of each sleeping cycle:
+
+~~~c
+   nodeManager.registerSensor(SENSOR_SHT21);
 ~~~
 
 Register a LDR sensor attached to pin A1 and send to the gateway the average of 3 samples:
 
 ~~~c
-void before() {
   int sensor_ldr = nodeManager.registerSensor(SENSOR_LDR,A1);
   ((SensorLDR*)nodeManager.get(sensor_ldr))->setSamples(3);
-    nodeManager.before();
-}
 ~~~
 
 Register a rain sensor connected to A0. This will be powered with via pins 4 (ground) and 5 (vcc) just before reading its value at each cycle, it will be presented as S_RAIN. sending V_RAINRATE messages, the output will be a percentage (calculated between 200 and 2014) and the value will be reversed (so that no rain will be 0%):
 
 ~~~c
-void before() {
   int rain = nodeManager.registerSensor(SENSOR_ANALOG_INPUT,A0);
   SensorAnalogInput* rainSensor = ((SensorAnalogInput*)nodeManager.get(rain));
   rainSensor->setPowerPins(4,5,300);
@@ -455,16 +474,11 @@ void before() {
   rainSensor->setRangeMin(200);
   rainSensor->setRangeMax(1024);
   rainSensor->setReverse(true);
-    nodeManager.before();
-}
 ~~~
 
 Register a latching relay connecting to pin 6 (set) and pin 7 (unset):
 
 ~~~c
-void before() {
   nodeManager.registerSensor(SENSOR_LATCHING_RELAY,6);
   nodeManager.registerSensor(SENSOR_LATCHING_RELAY,7);
-  nodeManager.before();
-}
 ~~~
