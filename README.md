@@ -1,5 +1,3 @@
-[NodeManager]
-
 # Introduction
 
 MySensors (<https://www.mysensors.org>) is an open source hardware and software community focusing on do-it-yourself home automation and Internet of Things which allows creating original and affordable sensors.
