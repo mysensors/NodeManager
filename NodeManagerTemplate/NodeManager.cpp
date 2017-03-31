@@ -13,6 +13,7 @@ const char* AWAKE = "AWAKE";
 const char* REBOOT = "REBOOT";
 const char* CLEAR = "CLEAR";
 const char* WAKEUP = "WAKEUP";
+const char* STARTED = "STARTED";
 
 /***************************************
    PowerManager
@@ -21,7 +22,7 @@ const char* WAKEUP = "WAKEUP";
 // set the vcc and ground pin the sensor is connected to
 void PowerManager::setPowerPins(int ground_pin, int vcc_pin, long wait) {
   #if DEBUG == 1
-    Serial.print("POWER G=");
+    Serial.print("PWR G=");
     Serial.print(ground_pin);
     Serial.print(" V=");
     Serial.println(vcc_pin);
@@ -964,13 +965,6 @@ void NodeManager::setSleepBetweenSend(int value) {
 
 // register a sensor to this manager
 int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
-  #if DEBUG == 1
-    if (_startup) {
-      Serial.print("NodeManager v");
-      Serial.println(VERSION);
-      _startup = false;
-    }
-  #endif
   // get a child_id if not provided by the user
   if (child_id < 0) child_id = _getAvailableChildId();
   // based on the given sensor type instantiate the appropriate class
@@ -1095,6 +1089,10 @@ Sensor* NodeManager::get(int child_id) {
 
 // setup NodeManager
 void NodeManager::before() {
+  #if DEBUG == 1
+    Serial.print("NodeManager v");
+    Serial.println(VERSION);
+  #endif
   if (_reboot_pin > -1) {
     #if DEBUG == 1
       Serial.print("REB P=");
@@ -1157,6 +1155,9 @@ void NodeManager::before() {
 
 // present NodeManager and its sensors
 void NodeManager::presentation() {
+  #if DEBUG == 1
+    Serial.println("RADIO OK");
+  #endif
   // present the service as a custom sensor to the controller
   #if DEBUG == 1
     Serial.print("PRES I=");

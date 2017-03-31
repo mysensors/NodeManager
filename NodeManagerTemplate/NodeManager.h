@@ -41,7 +41,7 @@
 #define EEPROM_SLEEP_UNIT 4
 
 // define NodeManager version
-#define VERSION 1.2
+#define VERSION 1.3
 
 /************************************
  * Include user defined configuration settings
@@ -196,6 +196,7 @@
 // include MySensors libraries
 #include <core/MySensorsCore.h>
 #include <core/MyHwAVR.h>
+//#include <core/MyHwATMega328.h>
 
 // include third party libraries
 #if MODULE_DHT == 1
@@ -665,7 +666,6 @@ class NodeManager {
     void _sleep();
     int _getAvailableChildId();
     int _getInterruptInitialValue(int mode);
-    bool _startup = true;
 };
 
 #endif
