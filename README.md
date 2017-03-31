@@ -314,6 +314,8 @@ Each sensor class can expose additional methods.
     void setDebounce(int value);
     // time to wait in milliseconds after a change is detected to allow the signal to be restored to its normal value (default: 0)
     void setTriggerTime(int value);
+    // Set initial value on the interrupt pin (default: HIGH)
+    void setInitial(int value);
 ~~~
 
 ## Upload your sketch

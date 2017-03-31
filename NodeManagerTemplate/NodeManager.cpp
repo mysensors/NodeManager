@@ -1077,8 +1077,10 @@ int NodeManager::registerSensor(Sensor* sensor) {
     Serial.print(" T=");
     Serial.println(sensor->getType());
   #endif
-  // set auto power pin
-  sensor->setAutoPowerPins(_auto_power_pins);
+  #if POWER_MANAGER == 1
+    // set auto power pin
+    sensor->setAutoPowerPins(_auto_power_pins);
+  #endif
   // add the sensor to the array of registered sensors
   _sensors[sensor->getChildId()] = sensor;
   // return the child_id
