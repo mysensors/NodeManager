@@ -915,6 +915,15 @@ void NodeManager::setRetries(int value) {
   void NodeManager::setBatteryReportCycles(int value) {
     _battery_report_cycles = value;
   }
+  void NodeManager::setBatteryInternalVcc(bool value) {
+    _battery_internal_vcc = value;
+  }
+  void NodeManager::setBatteryPin(int value) {
+    _battery_pin = value;
+  }
+  void NodeManager::setBatteryVoltsPerBit(float value) {
+    _battery_volts_per_bit = value;
+  }
 #endif
 #if SLEEP_MANAGER == 1
   void NodeManager::setSleepMode(int value) {
@@ -1145,6 +1154,10 @@ void NodeManager::before() {
       #endif
     }
   #endif
+  #if POWER_MANAGER == 1
+    // set analogReference to internal if measuring the battery through a pin
+    if (! _battery_internal_vcc && _battery_pin > -1) analogReference(INTERNAL);
+  #endif
   // setup individual sensors
   for (int i = 0; i < 255; i++) {
     if (_sensors[i] == 0) continue;
@@ -1300,7 +1313,9 @@ void NodeManager::_process(const char * message) {
     // BATTERY: return the battery level
     else if (strcmp(message, BATTERY) == 0) {
       // measure the board vcc
-      float volt = _getVcc();
+      float volt = 0;
+      if (_battery_internal_vcc || _battery_pin == -1) volt = _getVcc();
+      else volt = analogRead(_battery_pin) * _battery_volts_per_bit;
       // calculate the percentage
       int percentage = ((volt - _battery_min) / (_battery_max - _battery_min)) * 100;
       if (percentage > 100) percentage = 100;
@@ -1311,7 +1326,7 @@ void NodeManager::_process(const char * message) {
         Serial.print(" P=");
         Serial.println(percentage);
       #endif
-      #if BATTERY_MANAGER == 1 && BATTERY_SENSOR == 1
+      #if BATTERY_SENSOR == 1
         // report battery voltage
         MyMessage battery_msg(BATTERY_CHILD_ID, V_VOLTAGE);
         _send(battery_msg.set(volt, 2));
