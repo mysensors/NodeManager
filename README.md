@@ -96,6 +96,8 @@ Those NodeManager's directives in the `config.h` file control which module/libra
 #define MODULE_BH1750 0
 // Enable this module to use one of the following sensors: SENSOR_MLX90614
 #define MODULE_MLX90614 0
+// Enable this module to use one of the following sensors: SENSOR_BME280
+#define MODULE_BME280 0
 ~~~
 
 ## Installing the dependencies
@@ -109,6 +111,7 @@ MODULE_DHT | https://github.com/adafruit/DHT-sensor-library
 MODULE_DS18B20 | https://github.com/milesburton/Arduino-Temperature-Control-Library
 MODULE_BH1750 | https://github.com/claws/BH1750
 MODULE_MLX90614 | https://github.com/adafruit/Adafruit-MLX90614-Library
+MODULE_BME280 | https://github.com/adafruit/Adafruit_BME280_Library
 
 ## Configure NodeManager
 
@@ -194,6 +197,7 @@ SENSOR_DS18B20 | DS18B20 sensor, return the temperature based on the attached se
 SENSOR_HTU21D | HTU21D sensor, return temperature/humidity based on the attached HTU21D sensor
 SENSOR_BH1750 | BH1750 sensor, return light level in lux
 SENSOR_MLX90614 | MLX90614 contactless temperature sensor, return ambient and object temperature
+SENSOR_BME280 | BME280 sensor, return temperature/humidity/pressure based on the attached BME280 sensor
 
 To register a sensor simply call the NodeManager instance with the sensory type and the pin the sensor is conncted to. For example:
 ~~~c
@@ -468,7 +472,7 @@ Register a LDR sensor attached to pin A1 and send to the gateway the average of 
   ((SensorLDR*)nodeManager.get(sensor_ldr))->setSamples(3);
 ~~~
 
-Register a rain sensor connected to A0. This will be powered with via pins 4 (ground) and 5 (vcc) just before reading its value at each cycle, it will be presented as S_RAIN. sending V_RAINRATE messages, the output will be a percentage (calculated between 200 and 2014) and the value will be reversed (so that no rain will be 0%):
+Register a rain sensor connected to A0. This will be powered with via pins 4 (ground) and 5 (vcc) just before reading its value at each cycle, it will be presented as S_RAIN. sending V_RAINRATE messages, the output will be a percentage (calculated between 200 and 1024) and the value will be reversed (so that no rain will be 0%):
 
 ~~~c
   int rain = nodeManager.registerSensor(SENSOR_ANALOG_INPUT,A0);
@@ -487,4 +491,336 @@ Register a latching relay connecting to pin 6 (set) and pin 7 (unset):
 ~~~c
   nodeManager.registerSensor(SENSOR_LATCHING_RELAY,6);
   nodeManager.registerSensor(SENSOR_LATCHING_RELAY,7);
+~~~
+
+# Example Sketches
+
+## Analog Light and Temperature Sensor
+
+The following sketch can be used to report the temperature and the light level based on a thermistor and LDR sensors attached to two analog pins of the arduino board (A1 and A2). Both the thermistor and the LDR are connected to ground on one side and to vcc via a resistor on the other so to measure the voltage drop across each of them through the analog pins. The sensor will be put to sleep after startup and will report both the measures every 10 minutes. NodeManager will take care of presenting the sensors, managing the sleep cycle, reporting the battery level every 10 cycles and report the measures in the appropriate format. This sketch requires MODULE_ANALOG_INPUT enabled in the global config.h file.
+Even if the sensor is sleeping most of the time, it can be potentially woke up by sending a V_CUSTOM message with a WAKEUP payload to NodeManager service child id (200 by default) just after having reported its heartbeat. At this point the node will report AWAKE and the user can interact with it by e.g. sending REQ messages to its child IDs, changing the duration of a sleep cycle with a V_CUSTOM message to the NodeManager service child id, etc.
+
+~~~c
+/*
+NodeManager is intended to take care on your behalf of all those common tasks a MySensors node has to accomplish, speeding up the development cycle of your projects.
+
+NodeManager includes the following main components:
+- Sleep manager: allows managing automatically the complexity behind battery-powered sensors spending most of their time sleeping
+- Power manager: allows powering on your sensors only while the node is awake
+- Battery manager: provides common functionalities to read and report the battery level
+- Remote configuration: allows configuring remotely the node without the need to have physical access to it
+- Built-in personalities: for the most common sensors, provide embedded code so to allow their configuration with a single line 
+
+Documentation available on: https://mynodemanager.sourceforge.io 
+ */
+
+ 
+// load user settings
+#include "config.h"
+// load MySensors library
+#include <MySensors.h>
+// load NodeManager library
+#include "NodeManager.h"
+
+// create a NodeManager instance
+NodeManager nodeManager;
+
+// before
+void before() {
+  // setup the serial port baud rate
+  Serial.begin(MY_BAUD_RATE);  
+  /*
+   * Register below your sensors
+  */
+  nodeManager.setSleep(SLEEP,10,MINUTES); 
+  nodeManager.registerSensor(SENSOR_THERMISTOR,A1);
+  nodeManager.registerSensor(SENSOR_LDR,A2);
+  /*
+   * Register above your sensors
+  */
+  nodeManager.before();
+}
+
+// presentation
+void presentation() {
+  // Send the sketch version information to the gateway and Controller
+	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
+  // call NodeManager presentation routine
+  nodeManager.presentation();
+
+}
+
+// setup
+void setup() {
+  // call NodeManager setup routine
+  nodeManager.setup();
+}
+
+// loop
+void loop() {
+  // call NodeManager loop routine
+  nodeManager.loop();
+
+}
+
+// receive
+void receive(const MyMessage &message) {
+  // call NodeManager receive routine
+  nodeManager.receive(message);
+}
+~~~
+
+## Motion Sensor
+
+The following sketch can be used to report back to the controller when a motion sensor attached to the board's pin 3 triggers. In this example, the board will be put to sleep just after startup and will report a heartbeat every hour. NodeManager will take care of configuring an interrupt associated to the provided pin so automatically wake up when a motion is detected and report a V_TRIPPED message back. This sketch requires MODULE_SWITCH to be enabled in the global config.h file.
+
+~~~c
+/*
+NodeManager is intended to take care on your behalf of all those common tasks a MySensors node has to accomplish, speeding up the development cycle of your projects.
+
+NodeManager includes the following main components:
+- Sleep manager: allows managing automatically the complexity behind battery-powered sensors spending most of their time sleeping
+- Power manager: allows powering on your sensors only while the node is awake
+- Battery manager: provides common functionalities to read and report the battery level
+- Remote configuration: allows configuring remotely the node without the need to have physical access to it
+- Built-in personalities: for the most common sensors, provide embedded code so to allow their configuration with a single line 
+
+Documentation available on: https://mynodemanager.sourceforge.io 
+ */
+
+ 
+// load user settings
+#include "config.h"
+// load MySensors library
+#include <MySensors.h>
+// load NodeManager library
+#include "NodeManager.h"
+
+// create a NodeManager instance
+NodeManager nodeManager;
+
+// before
+void before() {
+  // setup the serial port baud rate
+  Serial.begin(MY_BAUD_RATE);  
+  /*
+   * Register below your sensors
+  */
+  nodeManager.setSleep(SLEEP,60,MINUTES); 
+  nodeManager.registerSensor(SENSOR_MOTION,3);
+
+  /*
+   * Register above your sensors
+  */
+  nodeManager.before();
+}
+
+// presentation
+void presentation() {
+  // Send the sketch version information to the gateway and Controller
+	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
+  // call NodeManager presentation routine
+  nodeManager.presentation();
+
+}
+
+// setup
+void setup() {
+  // call NodeManager setup routine
+  nodeManager.setup();
+}
+
+// loop
+void loop() {
+  // call NodeManager loop routine
+  nodeManager.loop();
+
+}
+
+// receive
+void receive(const MyMessage &message) {
+  // call NodeManager receive routine
+  nodeManager.receive(message);
+}
+~~~
+
+## Boiler Sensor
+
+The following sketch controls a latching relay connected to a boiler. A latching relay (requiring only a pulse to switch) has been chosen to minimize the power consumption required by a traditional relay to stay on. This relay has normally two pins, one for closing and the other for opening the controlled circuit, connected to pin 6 and 7 of the arduino board. This is why we have to register two sensors against NodeManager so to control the two funtions indipendently. Since using a SENSOR_LATCHING_RELAY type of sensor, NodeManager will take care of just sending out a single pulse only when a REQ command of type V_STATUS is sent to one or the other child id.
+In this example, the board also runs at 1Mhz so it can go down to 1.8V: by setting setBatteryMin() and setBatteryMax(), the battery percentage will be calculated and reported (by default, automatically every 10 sleeping cycles) based on these custom boundaries.
+The board will be put to sleep just after startup and will report back to the controller every 5 minutes. It is the controller's responsability to catch when the board reports its heartbeat (using smart sleep behind the scene) and send a command back if needed. This sketch requires MODULE_DIGITAL_OUTPUT to be enabled in the config.h file.
+
+~~~c
+/*
+NodeManager is intended to take care on your behalf of all those common tasks a MySensors node has to accomplish, speeding up the development cycle of your projects.
+
+NodeManager includes the following main components:
+- Sleep manager: allows managing automatically the complexity behind battery-powered sensors spending most of their time sleeping
+- Power manager: allows powering on your sensors only while the node is awake
+- Battery manager: provides common functionalities to read and report the battery level
+- Remote configuration: allows configuring remotely the node without the need to have physical access to it
+- Built-in personalities: for the most common sensors, provide embedded code so to allow their configuration with a single line 
+
+Documentation available on: https://mynodemanager.sourceforge.io 
+ */
+
+ 
+// load user settings
+#include "config.h"
+// load MySensors library
+#include <MySensors.h>
+// load NodeManager library
+#include "NodeManager.h"
+
+// create a NodeManager instance
+NodeManager nodeManager;
+
+// before
+void before() {
+  // setup the serial port baud rate
+  Serial.begin(MY_BAUD_RATE);  
+  /*
+   * Register below your sensors
+  */
+  nodeManager.setBatteryMin(1.8);
+  nodeManager.setBatteryMax(3.2);
+  nodeManager.setSleep(SLEEP,5,MINUTES);
+  nodeManager.registerSensor(SENSOR_LATCHING_RELAY,6);
+  nodeManager.registerSensor(SENSOR_LATCHING_RELAY,7);
+
+  /*
+   * Register above your sensors
+  */
+  nodeManager.before();
+}
+
+// presentation
+void presentation() {
+  // Send the sketch version information to the gateway and Controller
+	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
+  // call NodeManager presentation routine
+  nodeManager.presentation();
+
+}
+
+// setup
+void setup() {
+  // call NodeManager setup routine
+  nodeManager.setup();
+}
+
+// loop
+void loop() {
+  // call NodeManager loop routine
+  nodeManager.loop();
+
+}
+
+// receive
+void receive(const MyMessage &message) {
+  // call NodeManager receive routine
+  nodeManager.receive(message);
+}
+~~~
+
+
+## Rain and Soil Moisture Sensor
+
+The following sketch can be used to report the rain level and the soil moisture based on two sensors connected to the board's analog pins (A1 and A2). In this case we are customizing the out-of-the-box SENSOR_ANALOG_INPUT sensor type since we just need to measure an analog input but we also want to provide the correct type and presentation for each sensor. 
+We register the sensors first with registerSensor() which returns the child id assigned to the sensor. We then retrieve the sensor's reference by calling get() so we can invoke the sensor-specific functions, like setPresentation() and setType().
+In this example, the two sensors are not directly connected to the battery's ground and vcc but, to save additional power, are powered through two arduino's pins. By using e.g. setPowerPins(4,5,300), NodeManger will assume pin 4 is ground and pin 5 is vcc for that specific sensor so it will turn on the power just before reading the analog input (and waiting 300ms for the sensor to initialize) and back off before going to sleep.
+For both the sensors we want a percentage output and with setRangeMin() and setRangeMax() we define the boundaries for calculating the percentage (if we read e.g. 200 when the rain sensor is completely into the water, we know for sure it will not go below this value which will represent the new lower boundary). 
+Finally, since both the sensors reports low when wet and high when dry but we need the opposite, we set setReverse() so to have 0% reported when there is no rain/moisture, 100% on the opposite situation.
+
+
+~~~c
+/*
+NodeManager is intended to take care on your behalf of all those common tasks a MySensors node has to accomplish, speeding up the development cycle of your projects.
+
+NodeManager includes the following main components:
+- Sleep manager: allows managing automatically the complexity behind battery-powered sensors spending most of their time sleeping
+- Power manager: allows powering on your sensors only while the node is awake
+- Battery manager: provides common functionalities to read and report the battery level
+- Remote configuration: allows configuring remotely the node without the need to have physical access to it
+- Built-in personalities: for the most common sensors, provide embedded code so to allow their configuration with a single line 
+
+Documentation available on: https://mynodemanager.sourceforge.io 
+ */
+
+ 
+// load user settings
+#include "config.h"
+// load MySensors library
+#include <MySensors.h>
+// load NodeManager library
+#include "NodeManager.h"
+
+// create a NodeManager instance
+NodeManager nodeManager;
+
+// before
+void before() {
+  // setup the serial port baud rate
+  Serial.begin(MY_BAUD_RATE);  
+  /*
+   * Register below your sensors
+  */
+  analogReference(DEFAULT);
+  nodeManager.setSleep(SLEEP,10,MINUTES);
+  
+  int rain = nodeManager.registerSensor(SENSOR_ANALOG_INPUT,A1);
+  int soil = nodeManager.registerSensor(SENSOR_ANALOG_INPUT,A2);
+  
+  SensorAnalogInput* rainSensor = ((SensorAnalogInput*)nodeManager.get(rain));
+  SensorAnalogInput* soilSensor = ((SensorAnalogInput*)nodeManager.get(soil));
+  
+  rainSensor->setPresentation(S_RAIN);
+  rainSensor->setType(V_RAINRATE);
+  rainSensor->setPowerPins(4,5,300);
+  rainSensor->setOutputPercentage(true);
+  rainSensor->setRangeMin(200);
+  rainSensor->setRangeMax(1024);
+  rainSensor->setReverse(true);
+  
+  soilSensor->setPresentation(S_MOISTURE);
+  soilSensor->setType(V_LEVEL);
+  soilSensor->setPowerPins(6,7,300);
+  soilSensor->setOutputPercentage(true);
+  soilSensor->setRangeMin(300);
+  soilSensor->setRangeMax(1024);
+  soilSensor->setReverse(true);
+
+  /*
+   * Register above your sensors
+  */
+  nodeManager.before();
+}
+
+// presentation
+void presentation() {
+  // Send the sketch version information to the gateway and Controller
+	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
+  // call NodeManager presentation routine
+  nodeManager.presentation();
+
+}
+
+// setup
+void setup() {
+  // call NodeManager setup routine
+  nodeManager.setup();
+}
+
+// loop
+void loop() {
+  // call NodeManager loop routine
+  nodeManager.loop();
+
+}
+
+// receive
+void receive(const MyMessage &message) {
+  // call NodeManager receive routine
+  nodeManager.receive(message);
+}
 ~~~
