@@ -888,6 +888,93 @@ void SensorMLX90614::onReceive(const MyMessage & message) {
 }
 #endif
 
+
+/*
+   SensorBME280
+*/
+#if MODULE_BME280 == 1
+// contructor
+SensorBME280::SensorBME280(int child_id, Adafruit_BME280* bme, int sensor_type): Sensor(child_id,A4) {
+  // store the sensor type (0: temperature, 1: humidity, 2: pressure)
+  _sensor_type = sensor_type;
+  if (_sensor_type == 0) {
+    // temperature sensor
+    setPresentation(S_TEMP);
+    setType(V_TEMP);
+    setValueType(TYPE_FLOAT);
+  }
+  else if (_sensor_type == 1) {
+    // humidity sensor
+    setPresentation(S_HUM);
+    setType(V_HUM);
+    setValueType(TYPE_FLOAT);
+  }
+  else if (_sensor_type == 2) {
+    // pressure sensor
+    setPresentation(S_BARO);
+    setType(V_PRESSURE);
+    setValueType(TYPE_FLOAT);
+  }
+}
+
+// what do to during setup
+void SensorBME280::onBefore() {
+  // initialize the library
+}
+
+// what do to during loop
+void SensorBME280::onLoop() {
+  // temperature sensor
+  if (_sensor_type == 0) {
+    // read the temperature
+    float temperature = _bme->readTemperature();
+    // convert it
+    if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
+    #if DEBUG == 1
+      Serial.print("BME I=");
+      Serial.print(_child_id);
+      Serial.print(" T=");
+      Serial.println(temperature);
+    #endif
+    // store the value
+    if (! isnan(temperature)) _value_float = temperature;
+  }
+  // Humidity Sensor
+  else if (_sensor_type == 1) {
+    // read humidity
+    float humidity = _bme->readHumidity();
+    if (isnan(humidity)) return;
+    #if DEBUG == 1
+      Serial.print("BME I=");
+      Serial.print(_child_id);
+      Serial.print(" H=");
+      Serial.println(humidity);
+    #endif
+    // store the value
+    if (! isnan(humidity)) _value_float = humidity;
+  }
+  // Pressure Sensor
+  else if (_sensor_type == 2) {
+    // read humidity
+    float pressure = _bme->readPressure() / 100.0F;
+    if (isnan(pressure)) return;
+    #if DEBUG == 1
+      Serial.print("BME I=");
+      Serial.print(_child_id);
+      Serial.print(" P=");
+      Serial.println(pressure);
+    #endif
+    // store the value
+    if (! isnan(pressure)) _value_float = pressure;
+  }
+}
+
+// what do to as the main task when receiving a message
+void SensorBME280::onReceive(const MyMessage & message) {
+  onLoop();
+}
+#endif
+
 /*******************************************
    NodeManager
 */
@@ -1050,13 +1137,26 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   #endif
   #if MODULE_MLX90614 == 1
     else if (sensor_type == SENSOR_MLX90614) {
-      Serial.println("1");
       Adafruit_MLX90614* mlx = new Adafruit_MLX90614();
-      Serial.println("2");
       registerSensor(new SensorMLX90614(child_id,mlx,0));
-      Serial.println("3");
       child_id = _getAvailableChildId();
       return registerSensor(new SensorMLX90614(child_id,mlx,1));
+    }
+  #endif
+  #if MODULE_BME280 == 1
+    else if (sensor_type == SENSOR_BME280) {
+      Adafruit_BME280* bme = new Adafruit_BME280();
+      if (! bme->begin()) {
+        #if DEBUG == 1
+          Serial.println("NO BME");
+        #endif
+        return -1;
+      }
+      registerSensor(new SensorBME280(child_id,bme,0));
+      child_id = _getAvailableChildId();
+      registerSensor(new SensorBME280(child_id,bme,1));
+      child_id = _getAvailableChildId();
+      return registerSensor(new SensorBME280(child_id,bme,2));
     }
   #endif
   else {

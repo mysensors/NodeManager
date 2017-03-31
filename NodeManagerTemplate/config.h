@@ -66,5 +66,7 @@
 #define MODULE_BH1750 0
 // Enable this module to use one of the following sensors: SENSOR_MLX90614
 #define MODULE_MLX90614 0
+// Enable this module to use one of the following sensors: SENSOR_BME280
+#define MODULE_BME280 0
 
 #endif

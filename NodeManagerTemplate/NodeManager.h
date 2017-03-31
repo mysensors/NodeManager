@@ -133,7 +133,10 @@
 #ifndef MODULE_MLX90614
   #define MODULE_MLX90614 0
 #endif
-
+// Enable this module to use one of the following sensors: SENSOR_BME280
+#ifndef MODULE_BME280
+  #define MODULE_BME280 0
+#endif
 /***********************************
    Sensors types
 */
@@ -187,8 +190,11 @@
   // MLX90614 sensor, contactless temperature sensor
   #define SENSOR_MLX90614 17
 #endif
-
-// last Id: 17
+#if MODULE_BME280 == 1
+  // MLX90614 sensor, contactless temperature sensor
+  #define SENSOR_BME280 18
+#endif
+// last Id: 18
 /***********************************
   Libraries
 */
@@ -217,6 +223,12 @@
 #if MODULE_MLX90614 == 1
   #include <Wire.h>
   #include <Adafruit_MLX90614.h>
+#endif
+#if MODULE_BME280 == 1
+  #include <Wire.h>
+  #include <SPI.h>
+  #include <Adafruit_Sensor.h>
+  #include <Adafruit_BME280.h>
 #endif
 
 /**************************************
@@ -574,6 +586,23 @@ class SensorMLX90614: public Sensor {
     void onReceive(const MyMessage & message);
   protected:
     Adafruit_MLX90614* _mlx;
+    int _sensor_type;
+};
+#endif
+
+/*
+   SensorBME280
+*/
+#if MODULE_BME280 == 1
+class SensorBME280: public Sensor {
+  public:
+    SensorBME280(int child_id, Adafruit_BME280* bme, int sensor_type);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+  protected:
+    Adafruit_BME280* _bme;
     int _sensor_type;
 };
 #endif
