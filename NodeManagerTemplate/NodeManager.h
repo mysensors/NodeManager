@@ -593,7 +593,7 @@ class NodeManager {
       void setBatteryMin(float value);
       // the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
       void setBatteryMax(float value);
-      // how frequently (in hours) to report the battery level to the controller. When reset the battery is always reported (default: 1)
+      // after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: 10)
       void setBatteryReportCycles(int value);
     #endif
     #if SLEEP_MANAGER == 1
