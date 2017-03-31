@@ -19,7 +19,7 @@ const char* WAKEUP = "WAKEUP";
 */
 
 // set the vcc and ground pin the sensor is connected to
-void PowerManager::setPowerPins(int ground_pin, int vcc_pin, long wait = 10) {
+void PowerManager::setPowerPins(int ground_pin, int vcc_pin, long wait) {
   #if DEBUG == 1
     Serial.print("POWER G=");
     Serial.print(ground_pin);
@@ -129,7 +129,7 @@ void Sensor::setFloatPrecision(int value) {
   _float_precision = value;
 }
 #if POWER_MANAGER == 1
-    void Sensor::setPowerPins(int ground_pin, int vcc_pin, long wait = 0) {
+    void Sensor::setPowerPins(int ground_pin, int vcc_pin, long wait) {
       _powerManager.setPowerPins(ground_pin, vcc_pin, wait);
     }
     void Sensor::setAutoPowerPins(bool value) {
@@ -928,7 +928,7 @@ void NodeManager::setRetries(int value) {
     _sleep_interrupt_pin = value;
   }
 #endif
-void NodeManager::setInterrupt(int pin, int mode, int pull = -1) {
+void NodeManager::setInterrupt(int pin, int mode, int pull) {
   if (pin == INTERRUPT_PIN_1) {
     _interrupt_1_mode = mode;
     _interrupt_1_pull = pull;
@@ -939,7 +939,7 @@ void NodeManager::setInterrupt(int pin, int mode, int pull = -1) {
   }
 }
 #if POWER_MANAGER == 1
-  void NodeManager::setPowerPins(int ground_pin, int vcc_pin, long wait = 10) {
+  void NodeManager::setPowerPins(int ground_pin, int vcc_pin, long wait) {
     _powerManager.setPowerPins(ground_pin, vcc_pin, wait);
   }
   void NodeManager::setAutoPowerPins(bool value) {
@@ -957,7 +957,7 @@ void NodeManager::setSleepBetweenSend(int value) {
 }
 
 // register a sensor to this manager
-int NodeManager::registerSensor(int sensor_type, int pin = -1, int child_id = -1) {
+int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   #if DEBUG == 1
     if (_startup) {
       Serial.print("NodeManager v");
@@ -968,7 +968,7 @@ int NodeManager::registerSensor(int sensor_type, int pin = -1, int child_id = -1
   // get a child_id if not provided by the user
   if (child_id < 0) child_id = _getAvailableChildId();
   // based on the given sensor type instantiate the appropriate class
-  if (sensor_type == 0) return;
+  if (sensor_type == 0) return -1;
   #if MODULE_ANALOG_INPUT == 1
     else if (sensor_type == SENSOR_ANALOG_INPUT) return registerSensor(new SensorAnalogInput(child_id, pin));
     else if (sensor_type == SENSOR_LDR) return registerSensor(new SensorLDR(child_id, pin));
@@ -988,19 +988,19 @@ int NodeManager::registerSensor(int sensor_type, int pin = -1, int child_id = -1
       int dht_type = sensor_type == SENSOR_DHT11 ? DHT11 : DHT22;
       registerSensor(new SensorDHT(child_id,pin,dht,0,dht_type));
       child_id = _getAvailableChildId();
-      registerSensor(new SensorDHT(child_id,pin,dht,1,dht_type));
+      return registerSensor(new SensorDHT(child_id,pin,dht,1,dht_type));
     }
   #endif
   #if MODULE_SHT21 == 1
     else if (sensor_type == SENSOR_SHT21) {
       registerSensor(new SensorSHT21(child_id,0));
       child_id = _getAvailableChildId();
-      registerSensor(new SensorSHT21(child_id,1));
+      return registerSensor(new SensorSHT21(child_id,1));
     }
     else if (sensor_type == SENSOR_HTU21D) {
       registerSensor(new SensorHTU21D(child_id,0));
       child_id = _getAvailableChildId();
-      registerSensor(new SensorHTU21D(child_id,1));
+      return registerSensor(new SensorHTU21D(child_id,1));
     }
   #endif
   #if MODULE_SWITCH == 1
@@ -1024,11 +1024,13 @@ int NodeManager::registerSensor(int sensor_type, int pin = -1, int child_id = -1
       DallasTemperature* sensors = new DallasTemperature(oneWire);
       // initialize the sensors
       sensors->begin();
+      int index = 0;
       // register a new child for each sensor on the bus
       for(int i = 0; i < sensors->getDeviceCount(); i++) {
         if (i > 0) child_id = _getAvailableChildId();
-        registerSensor(new SensorDs18b20(child_id,pin,sensors,i));
+        index = registerSensor(new SensorDs18b20(child_id,pin,sensors,i));
       }
+      return index;
     }
   #endif
   #if MODULE_BH1750 == 1
@@ -1044,7 +1046,7 @@ int NodeManager::registerSensor(int sensor_type, int pin = -1, int child_id = -1
       registerSensor(new SensorMLX90614(child_id,mlx,0));
       Serial.println("3");
       child_id = _getAvailableChildId();
-      registerSensor(new SensorMLX90614(child_id,mlx,1));
+      return registerSensor(new SensorMLX90614(child_id,mlx,1));
     }
   #endif
   else {

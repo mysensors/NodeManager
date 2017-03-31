@@ -230,7 +230,7 @@ class PowerManager {
   public:
     PowerManager() {};
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-    void setPowerPins(int ground_pin, int vcc_pin, long wait = 10);
+    void setPowerPins(int ground_pin, int vcc_pin, long wait = 50);
     void powerOn();
     void powerOff();
   private:
@@ -277,7 +277,7 @@ class Sensor {
     void setSleepBetweenSend(int value);
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-      void setPowerPins(int ground_pin, int vcc_pin, long wait = 0);
+      void setPowerPins(int ground_pin, int vcc_pin, long wait = 50);
       // if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
       void setAutoPowerPins(bool value);
       // manually turn the power on
@@ -614,7 +614,7 @@ class NodeManager {
     Sensor* get(int sensor_index);
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-      void setPowerPins(int ground_pin, int vcc_pin, long wait = 10);
+      void setPowerPins(int ground_pin, int vcc_pin, long wait = 50);
       // if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
       void setAutoPowerPins(bool value);
       // manually turn the power on
