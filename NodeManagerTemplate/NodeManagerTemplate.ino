@@ -25,7 +25,7 @@ NodeManager nodeManager;
 // before
 void before() {
   // setup the serial port baud rate
-  Serial.begin(9600);  
+  Serial.begin(MY_BAUD_RATE);  
   /*
    * Register below your sensors
   */

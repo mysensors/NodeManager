@@ -11,6 +11,7 @@
 /**********************************
  * MySensors configuration
  */
+#define MY_BAUD_RATE 9800
 //#define MY_DEBUG
 //#define MY_NODE_ID 100
 
