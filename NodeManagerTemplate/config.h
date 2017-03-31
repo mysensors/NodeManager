@@ -6,7 +6,7 @@
  */
 
 #define SKETCH_NAME "NodeManagerTemplate"
-#define SKETCH_VERSION "1.2"
+#define SKETCH_VERSION "1.3-dev"
 
 /**********************************
  * MySensors configuration

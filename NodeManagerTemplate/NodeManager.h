@@ -496,6 +496,9 @@ class SensorSwitch: public Sensor {
     void setDebounce(int value);
     // time to wait in milliseconds after a change is detected to allow the signal to be restored to its normal value (default: 0)
     void setTriggerTime(int value);
+    // Set initial value on the interrupt pin (default: HIGH)
+    void setInitial(int value);
+    int getInitial();
     // define what to do at each stage of the sketch
     void onBefore();
     void onLoop();
@@ -504,6 +507,7 @@ class SensorSwitch: public Sensor {
     int _debounce = 0;
     int _trigger_time = 0;
     int _mode = CHANGE;
+    int _initial = HIGH;
 };
 
 /*

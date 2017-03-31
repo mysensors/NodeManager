@@ -704,13 +704,17 @@ void SensorSwitch::setMode(int value) {
 int SensorSwitch::getMode() {
   return _mode;
 }
-// setter/getter
 void SensorSwitch::setDebounce(int value) {
   _debounce = value;
 }
-// setter/getter
 void SensorSwitch::setTriggerTime(int value) {
   _trigger_time = value;
+}
+void SensorSwitch::setInitial(int value) {
+  _initial = value;
+}
+int SensorSwitch::getInitial() {
+  return _initial;
 }
 
 // what do to during setup
@@ -763,6 +767,8 @@ SensorMotion::SensorMotion(int child_id, int pin): SensorSwitch(child_id,pin) {
   setPresentation(S_MOTION);
   // capture only when it triggers
   setMode(RISING);
+  // set initial value to LOW
+  setInitial(LOW);
 }
 
 /*
@@ -1013,7 +1019,8 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
       else if (sensor_type == SENSOR_DOOR) index = registerSensor(new SensorDoor(child_id, pin));
       else if (sensor_type == SENSOR_MOTION) index = registerSensor(new SensorMotion(child_id, pin));
       // set an interrupt on the pin and activate internal pull up
-      setInterrupt(pin,((SensorSwitch*)get(index))->getMode(),HIGH);
+      SensorSwitch* sensor = (SensorSwitch*)get(index);
+      setInterrupt(pin,sensor->getMode(),sensor->getInitial());
       return index;
     }
   #endif
