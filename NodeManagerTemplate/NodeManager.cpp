@@ -1199,6 +1199,9 @@ void NodeManager::setup() {
     Serial.print(" M=");
     Serial.println(getControllerConfig().isMetric);
   #endif
+  #if SERVICE_MESSAGES == 1
+    _send(_msg.set(STARTED));
+  #endif
 }
 
 // run the main function for all the register sensors
