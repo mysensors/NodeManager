@@ -5,8 +5,8 @@
  * Sketch configuration
  */
 
-#define SKETCH_NAME "NodeManagerTemplate"
-#define SKETCH_VERSION "1.3"
+#define SKETCH_NAME "NodeManager"
+#define SKETCH_VERSION "1.4"
 
 /**********************************
  * MySensors configuration
@@ -16,7 +16,7 @@
 //#define MY_NODE_ID 100
 
 #define MY_RADIO_NRF24
-#define MY_RF24_ENABLE_ENCRYPTION
+//#define MY_RF24_ENABLE_ENCRYPTION
 //#define MY_RF24_CHANNEL 76
 
 //#define MY_RADIO_RFM69
@@ -48,7 +48,7 @@
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
 #define BATTERY_SENSOR 1
 
-// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR
+// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ
 #define MODULE_ANALOG_INPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
 #define MODULE_DIGITAL_INPUT 1

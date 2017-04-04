@@ -29,7 +29,7 @@ void before() {
   /*
    * Register below your sensors
   */
-
+  nodeManager.registerSensor(SENSOR_MQ,A1);
 
   /*
    * Register above your sensors

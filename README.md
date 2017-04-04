@@ -76,7 +76,7 @@ Those NodeManager's directives in the `config.h` file control which module/libra
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
 #define BATTERY_SENSOR 1
 
-// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR
+// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ
 #define MODULE_ANALOG_INPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
 #define MODULE_DIGITAL_INPUT 1
@@ -196,6 +196,7 @@ SENSOR_HTU21D | HTU21D sensor, return temperature/humidity based on the attached
 SENSOR_BH1750 | BH1750 sensor, return light level in lux
 SENSOR_MLX90614 | MLX90614 contactless temperature sensor, return ambient and object temperature
 SENSOR_BME280 | BME280 sensor, return temperature/humidity/pressure based on the attached BME280 sensor
+SENSOR_MQ | MQ sensor, return ppm of the target gas
 
 To register a sensor simply call the NodeManager instance with the sensory type and the pin the sensor is conncted to. For example:
 ~~~c
@@ -213,6 +214,8 @@ If you want to create a custom sensor and register it with NodeManager so it can
 ~~~c
     // define what to do during before() to setup the sensor
     void onBefore();
+	// define what to do during setup() by executing the sensor's main task
+    void onSetup();
     // define what to do during loop() by executing the sensor's main task
     void onLoop();
     // define what to do during receive() when the sensor receives a message
@@ -258,7 +261,7 @@ The following methods are available for all the sensors:
     void setForceUpdate(int value);
     // the value type of this sensor (default: TYPE_INTEGER)
     void setValueType(int value);
-// for float values, set the float precision (default: 2)
+	// for float values, set the float precision (default: 2)
     void setFloatPrecision(int value);
     // optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
@@ -304,6 +307,32 @@ Each sensor class can expose additional methods.
     void setSeriesResistor(int value);
     // set a temperature offset
     void setOffset(float value);
+~~~
+
+#### SensorMQ
+~~~c
+    // define the target gas whose ppm has to be returned. 0: LPG, 1: CO, 2: Smoke (default: 1);
+    void setTargetGas(int value);
+    // define the load resistance on the board, in kilo ohms (default: 1);
+    void setRlValue(float value);
+    // define the Ro resistance on the board (default: 10000);
+    void setRoValue(float value);
+    // Sensor resistance in clean air (default: 9.83);
+    void setCleanAirFactor(float value);
+    // define how many samples you are going to take in the calibration phase (default: 50);
+    void setCalibrationSampleTimes(int value);
+    // define the time interal(in milisecond) between each samples in the cablibration phase (default: 500);
+    void setCalibrationSampleInterval(int value);
+    // define how many samples you are going to take in normal operation (default: 50);
+    void setReadSampleTimes(int value);
+    // define the time interal(in milisecond) between each samples in the normal operations (default: 5);
+    void setReadSampleInterval(int value);
+    // set the LPGCurve array (default: {2.3,0.21,-0.47})
+    void setLPGCurve(float *value);
+    // set the COCurve array (default: {2.3,0.72,-0.34})
+    void setCOCurve(float *value);
+    // set the SmokeCurve array (default: {2.3,0.53,-0.44})
+    void setSmokeCurve(float *value);
 ~~~
 
 #### SensorDigitalOutput / SensorRelay / SensorLatchingRelay

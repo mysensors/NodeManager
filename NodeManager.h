@@ -41,7 +41,7 @@
 #define EEPROM_SLEEP_UNIT 4
 
 // define NodeManager version
-#define VERSION 1.3
+#define VERSION 1.4
 
 /************************************
  * Include user defined configuration settings
@@ -97,7 +97,7 @@
   #define BATTERY_CHILD_ID 201
 #endif
 
-// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR
+// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ
 #ifndef MODULE_ANALOG_INPUT
   #define MODULE_ANALOG_INPUT 0
 #endif
@@ -147,6 +147,8 @@
   #define SENSOR_LDR 2
   // Thermistor sensor, return the temperature based on the attached thermistor
   #define SENSOR_THERMISTOR 3
+  // MQ2 air quality sensor
+  #define SENSOR_MQ 19
 #endif
 #if MODULE_DIGITAL_INPUT == 1
   // Generic digital sensor, return a pin's digital value
@@ -194,7 +196,7 @@
   // MLX90614 sensor, contactless temperature sensor
   #define SENSOR_BME280 18
 #endif
-// last Id: 18
+// last Id: 19
 /***********************************
   Libraries
 */
@@ -301,10 +303,12 @@ class Sensor {
     // define what to do at each stage of the sketch
     virtual void before();
     virtual void presentation();
+    virtual void setup();
     virtual void loop(const MyMessage & message);
     virtual void receive(const MyMessage & message);
     // abstract functions, subclasses need to implement
     virtual void onBefore() = 0;
+    virtual void onSetup() = 0;
     virtual void onLoop() = 0;
     virtual void onReceive(const MyMessage & message) = 0;
   protected:
@@ -353,6 +357,7 @@ class SensorAnalogInput: public Sensor {
     void setRangeMax(int value);
     // define what to do at each stage of the sketch
     void onBefore();
+    void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
   protected:
@@ -391,6 +396,7 @@ class SensorThermistor: public Sensor {
     void setOffset(float value);
     // define what to do at each stage of the sketch
     void onBefore();
+    void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
   protected:
@@ -409,6 +415,7 @@ class SensorDigitalInput: public Sensor {
     SensorDigitalInput(int child_id, int pin);
     // define what to do at each stage of the sketch
     void onBefore();
+    void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
 };
@@ -425,6 +432,7 @@ class SensorDigitalOutput: public Sensor {
     void setPulseWidth(int value);
     // define what to do at each stage of the sketch
     void onBefore();
+    void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
   protected:
@@ -460,6 +468,7 @@ class SensorDHT: public Sensor {
     SensorDHT(int child_id, int pin, DHT* dht, int sensor_type, int dht_type);
     // define what to do at each stage of the sketch
     void onBefore();
+    void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
   protected:
@@ -479,6 +488,7 @@ class SensorSHT21: public Sensor {
     SensorSHT21(int child_id, int sensor_type);
     // define what to do at each stage of the sketch
     void onBefore();
+    void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
   protected:
@@ -514,6 +524,7 @@ class SensorSwitch: public Sensor {
     int getInitial();
     // define what to do at each stage of the sketch
     void onBefore();
+    void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
   protected:
@@ -548,6 +559,7 @@ class SensorDs18b20: public Sensor {
     SensorDs18b20(int child_id, int pin, DallasTemperature* sensors, int index);
     // define what to do at each stage of the sketch
     void onBefore();
+    void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
   protected:
@@ -566,6 +578,7 @@ class SensorBH1750: public Sensor {
     SensorBH1750(int child_id);
     // define what to do at each stage of the sketch
     void onBefore();
+    void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
   protected:
@@ -582,6 +595,7 @@ class SensorMLX90614: public Sensor {
     SensorMLX90614(int child_id, Adafruit_MLX90614* mlx, int sensor_type);
     // define what to do at each stage of the sketch
     void onBefore();
+    void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
   protected:
@@ -599,6 +613,7 @@ class SensorBME280: public Sensor {
     SensorBME280(int child_id, Adafruit_BME280* bme, int sensor_type);
     // define what to do at each stage of the sketch
     void onBefore();
+    void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
   protected:
@@ -606,6 +621,61 @@ class SensorBME280: public Sensor {
     int _sensor_type;
 };
 #endif
+
+/*
+    SensorMQ
+ */
+class SensorMQ: public Sensor {
+  public:
+    SensorMQ(int child_id, int pin);
+    // define the target gas whose ppm has to be returned. 0: LPG, 1: CO, 2: Smoke (default: 1);
+    void setTargetGas(int value);
+    // define the load resistance on the board, in kilo ohms (default: 1);
+    void setRlValue(float value);
+    // define the Ro resistance on the board (default: 10000);
+    void setRoValue(float value);
+    // Sensor resistance in clean air (default: 9.83);
+    void setCleanAirFactor(float value);
+    // define how many samples you are going to take in the calibration phase (default: 50);
+    void setCalibrationSampleTimes(int value);
+    // define the time interal(in milisecond) between each samples in the cablibration phase (default: 500);
+    void setCalibrationSampleInterval(int value);
+    // define how many samples you are going to take in normal operation (default: 50);
+    void setReadSampleTimes(int value);
+    // define the time interal(in milisecond) between each samples in the normal operations (default: 5);
+    void setReadSampleInterval(int value);
+    // set the LPGCurve array (default: {2.3,0.21,-0.47})
+    void setLPGCurve(float *value);
+    // set the COCurve array (default: {2.3,0.72,-0.34})
+    void setCOCurve(float *value);
+    // set the SmokeCurve array (default: {2.3,0.53,-0.44})
+    void setSmokeCurve(float *value);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+  protected:
+    float _rl_value = 1.0;
+    float _ro_clean_air_factor = 9.83;
+    int _calibration_sample_times = 50;
+    int _calibration_sample_interval = 500;
+    int _read_sample_interval = 50;
+    int _read_sample_times = 5;
+    float _ro = 10000.0;
+    float _LPGCurve[3] = {2.3,0.21,-0.47};
+    float _COCurve[3] = {2.3,0.72,-0.34};
+    float _SmokeCurve[3] = {2.3,0.53,-0.44};
+    float _MQResistanceCalculation(int raw_adc);
+    float _MQCalibration();
+    float _MQRead();
+    int _MQGetGasPercentage(float rs_ro_ratio, int gas_id);
+    int  _MQGetPercentage(float rs_ro_ratio, float *pcurve);
+    int _gas_lpg = 0;
+    int _gas_co = 1;
+    int _gas_smoke = 2;
+    int _target_gas = _gas_co;
+};
 
 /***************************************
    NodeManager: manages all the aspects of the node
