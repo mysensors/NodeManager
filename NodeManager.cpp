@@ -54,7 +54,7 @@ void PowerManager::powerOn() {
   // power on the sensor by turning high the vcc pin
   digitalWrite(_vcc_pin, HIGH);
   // wait a bit for the device to settle down
-  if (_wait > 0) sleep(_wait);
+  if (_wait > 0) wait(_wait);
 }
 
 // turn off the sensor
@@ -190,7 +190,7 @@ void Sensor::loop(const MyMessage & message) {
     if (_value_type == TYPE_INTEGER) total += (float)_value_int;
     else if (_value_type == TYPE_FLOAT) total += _value_float;
     // wait between samples
-    if (_samples_interval > 0) sleep(_samples_interval);
+    if (_samples_interval > 0) wait(_samples_interval);
   }
   // process the result and send a response back. 
   if (_value_type == TYPE_INTEGER && total > -1) {
@@ -242,7 +242,7 @@ void Sensor::_send(MyMessage & message) {
   // send the message, multiple times if requested
   for (int i = 0; i < _retries; i++) {
     // if configured, sleep beetween each send
-    if (_sleep_between_send > 0) sleep(_sleep_between_send);
+    if (_sleep_between_send > 0) wait(_sleep_between_send);
     #if DEBUG == 1
       Serial.print("SEND D=");
       Serial.print(message.destination);
@@ -323,7 +323,7 @@ int SensorAnalogInput::_getAnalogRead() {
   // set the reference
   if (_reference != -1) {
     analogReference(_reference);
-    sleep(100);
+    wait(100);
   }
   // read and return the value
   int value = analogRead(_pin);
@@ -511,7 +511,7 @@ void SensorDigitalOutput::onReceive(const MyMessage & message) {
   digitalWrite(_pin, value);
   if (_pulse_width > 0) {
     // if this is a pulse output, restore the value to the original value after the pulse
-    sleep(_pulse_width);
+    wait(_pulse_width);
     digitalWrite(_pin, value == 0 ? HIGH: LOW);
   }
   // store the current value
@@ -728,7 +728,7 @@ void SensorSwitch::onBefore() {
 // what do to during loop
 void SensorSwitch::onLoop() {
   // wait to ensure the the input is not floating
-  if (_debounce > 0) sleep(_debounce);
+  if (_debounce > 0) wait(_debounce);
   // read the value of the pin
   int value = digitalRead(_pin);
   // process the value
@@ -743,7 +743,7 @@ void SensorSwitch::onLoop() {
     #endif
     _value_int = value;
     // allow the signal to be restored to its normal value
-    if (_trigger_time > 0) sleep(_trigger_time);
+    if (_trigger_time > 0) wait(_trigger_time);
   } else {
     // invalid
     _value_int = -1;
@@ -1382,7 +1382,7 @@ void NodeManager::_send(MyMessage & message) {
   // send the message, multiple times if requested
   for (int i = 0; i < _retries; i++) {
     // if configured, sleep beetween each send
-    if (_sleep_between_send > 0) sleep(_sleep_between_send);
+    if (_sleep_between_send > 0) wait(_sleep_between_send);
     #if DEBUG == 1
       Serial.print("SEND D=");
       Serial.print(message.destination);

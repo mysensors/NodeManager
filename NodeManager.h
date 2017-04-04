@@ -632,7 +632,7 @@ class NodeManager {
       void setBatteryVoltsPerBit(float value);
     #endif
     #if SLEEP_MANAGER == 1
-      // define if the board has to sleep every time entering loop (default: IDLE). It can be IDLE (no sleep), SLEEP (sleep at every cycle), WAIT (wait at every cycle
+      // define if the board has to sleep every time entering loop (default: IDLE). It can be IDLE (no sleep), SLEEP (sleep at every cycle), WAIT (wait at every cycle)
       void setSleepMode(int value);
       // define for how long the board will sleep (default: 0)
       void setSleepTime(int value);
