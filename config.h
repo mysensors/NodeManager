@@ -16,7 +16,7 @@
 //#define MY_NODE_ID 100
 
 #define MY_RADIO_NRF24
-//#define MY_RF24_ENABLE_ENCRYPTION
+#define MY_RF24_ENABLE_ENCRYPTION
 //#define MY_RF24_CHANNEL 76
 
 //#define MY_RADIO_RFM69

@@ -4,16 +4,6 @@
 
 #include "NodeManager.h"
 
-/*
- * Constants
- */
-
-const char* BATTERY = "BATTERY";
-const char* AWAKE = "AWAKE";
-const char* REBOOT = "REBOOT";
-const char* CLEAR = "CLEAR";
-const char* WAKEUP = "WAKEUP";
-const char* STARTED = "STARTED";
 
 /***************************************
    PowerManager
@@ -22,9 +12,9 @@ const char* STARTED = "STARTED";
 // set the vcc and ground pin the sensor is connected to
 void PowerManager::setPowerPins(int ground_pin, int vcc_pin, long wait) {
   #if DEBUG == 1
-    Serial.print("PWR G=");
+    Serial.print(F("PWR G="));
     Serial.print(ground_pin);
-    Serial.print(" V=");
+    Serial.print(F(" V="));
     Serial.println(vcc_pin);
   #endif
   // configure the vcc pin as output and initialize to low (power off)
@@ -48,7 +38,7 @@ bool PowerManager::_hasPowerManager() {
 void PowerManager::powerOn() {
   if (! _hasPowerManager()) return;
   #if DEBUG == 1
-    Serial.print("ON P=");
+    Serial.print(F("ON P="));
     Serial.println(_vcc_pin);
   #endif
   // power on the sensor by turning high the vcc pin
@@ -61,7 +51,7 @@ void PowerManager::powerOn() {
 void PowerManager::powerOff() {
   if (! _hasPowerManager()) return;
   #if DEBUG == 1
-    Serial.print("OFF P=");
+    Serial.print(F("OFF P="));
     Serial.println(_vcc_pin);
   #endif
   // power off the sensor by turning low the vcc pin
@@ -150,9 +140,9 @@ void Sensor::setSleepBetweenSend(int value) {
 // present the sensor to the gateway and controller
 void Sensor::presentation() {
   #if DEBUG == 1
-    Serial.print("PRES I=");
+    Serial.print(F("PRES I="));
     Serial.print(_child_id);
-    Serial.print(" T=");
+    Serial.print(F(" T="));
     Serial.println(_presentation);
   #endif
   present(_child_id, _presentation);
@@ -244,19 +234,19 @@ void Sensor::_send(MyMessage & message) {
     // if configured, sleep beetween each send
     if (_sleep_between_send > 0) wait(_sleep_between_send);
     #if DEBUG == 1
-      Serial.print("SEND D=");
+      Serial.print(F("SEND D="));
       Serial.print(message.destination);
-      Serial.print(" I=");
+      Serial.print(F(" I="));
       Serial.print(message.sensor);
-      Serial.print(" C=");
+      Serial.print(F(" C="));
       Serial.print(message.getCommand());
-      Serial.print(" T=");
+      Serial.print(F(" T="));
       Serial.print(message.type);
-      Serial.print(" S=");
+      Serial.print(F(" S="));
       Serial.print(message.getString());
-      Serial.print(" N=");
+      Serial.print(F(" N="));
       Serial.print(message.getInt());
-      Serial.print(" F=");
+      Serial.print(F(" F="));
       Serial.println(message.getFloat());
     #endif
     send(message);
@@ -302,11 +292,11 @@ void SensorAnalogInput::onLoop() {
   int percentage = 0;
   if (_output_percentage) percentage = _getPercentage(adc);
   #if DEBUG == 1
-    Serial.print("A-IN I=");
+    Serial.print(F("A-IN I="));
     Serial.print(_child_id);
-    Serial.print(" V=");
+    Serial.print(F(" V="));
     Serial.print(adc);
-    Serial.print(" %=");
+    Serial.print(F(" %="));
     Serial.println(percentage);
   #endif
   // store the result
@@ -407,13 +397,13 @@ void SensorThermistor::onLoop() {
   temperature -= 273.15;                         // convert to C
   if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
   #if DEBUG == 1
-    Serial.print("THER I=");
+    Serial.print(F("THER I="));
     Serial.print(_child_id);
-    Serial.print(" V=");
+    Serial.print(F(" V="));
     Serial.print(adc);
-    Serial.print(" T=");
+    Serial.print(F(" T="));
     Serial.println(temperature);
-    Serial.print(" M=");
+    Serial.print(F(" M="));
     Serial.println(getControllerConfig().isMetric);
   #endif
   // store the value
@@ -444,11 +434,11 @@ void SensorDigitalInput::onLoop() {
   // read the value
   int value = digitalRead(_pin);
   #if DEBUG == 1
-    Serial.print("D-IN I=");
+    Serial.print(F("D-IN I="));
     Serial.print(_child_id);
-    Serial.print(" P=");
+    Serial.print(F(" P="));
     Serial.print(_pin);
-    Serial.print(" V=");
+    Serial.print(F(" V="));
     Serial.println(value);
   #endif
   // store the value
@@ -496,15 +486,15 @@ void SensorDigitalOutput::onReceive(const MyMessage & message) {
   int value = message.getInt();
   if (value != 0 && value != 1) return;
   #if DEBUG == 1
-    Serial.print("DOUT I=");
+    Serial.print(F("DOUT I="));
     Serial.print(_child_id);
-    Serial.print(" P=");
+    Serial.print(F(" P="));
     Serial.print(_pin);
-    Serial.print(" S=");
+    Serial.print(F(" S="));
     Serial.print(_initial_value);
-    Serial.print(" V=");
+    Serial.print(F(" V="));
     Serial.print(value);
-    Serial.print(" P=");
+    Serial.print(F(" P="));
     Serial.println(_pulse_width);
   #endif
   // set the value
@@ -585,9 +575,9 @@ void SensorDHT::onLoop() {
     // convert it
     if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
     #if DEBUG == 1
-      Serial.print("DHT I=");
+      Serial.print(F("DHT I="));
       Serial.print(_child_id);
-      Serial.print(" T=");
+      Serial.print(F(" T="));
       Serial.println(temperature);
     #endif
     // store the value
@@ -599,9 +589,9 @@ void SensorDHT::onLoop() {
     float humidity = _dht->readHumidity();
     if (isnan(humidity)) return;
     #if DEBUG == 1
-      Serial.print("DHT I=");
+      Serial.print(F("DHT I="));
       Serial.print(_child_id);
-      Serial.print(" H=");
+      Serial.print(F(" H="));
       Serial.println(humidity);
     #endif
     // store the value
@@ -652,9 +642,9 @@ void SensorSHT21::onLoop() {
     // convert it
     if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
     #if DEBUG == 1
-      Serial.print("SHT I=");
+      Serial.print(F("SHT I="));
       Serial.print(_child_id);
-      Serial.print(" T=");
+      Serial.print(F(" T="));
       Serial.println(temperature);
     #endif
     // store the value
@@ -666,9 +656,9 @@ void SensorSHT21::onLoop() {
     float humidity = SHT2x.GetHumidity();
     if (isnan(humidity)) return;
     #if DEBUG == 1
-      Serial.print("SHT I=");
+      Serial.print(F("SHT I="));
       Serial.print(_child_id);
-      Serial.print(" H=");
+      Serial.print(F(" H="));
       Serial.println(humidity);
     #endif
     // store the value
@@ -734,11 +724,11 @@ void SensorSwitch::onLoop() {
   // process the value
   if ( (_mode == RISING && value == HIGH ) || (_mode == FALLING && value == LOW) || (_mode == CHANGE) )  {
     #if DEBUG == 1
-      Serial.print("SWITCH I=");
+      Serial.print(F("SWITCH I="));
       Serial.print(_child_id);
-      Serial.print(" P=");
+      Serial.print(F(" P="));
       Serial.print(_pin);
-      Serial.print(" V=");
+      Serial.print(F(" V="));
       Serial.println(value);
     #endif
     _value_int = value;
@@ -798,9 +788,9 @@ void SensorDs18b20::onLoop() {
   // convert it
   if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
   #if DEBUG == 1
-    Serial.print("DS18 I=");
+    Serial.print(F("DS18 I="));
     Serial.print(_child_id);
-    Serial.print(" T=");
+    Serial.print(F(" T="));
     Serial.println(temperature);
   #endif
   // store the value
@@ -834,9 +824,9 @@ void SensorBH1750::onLoop() {
   // request the light level
   _value_int = _lightSensor->readLightLevel();
   #if DEBUG == 1
-    Serial.print("BH1 I=");
+    Serial.print(F("BH1 I="));
     Serial.print(_child_id);
-    Serial.print(" L=");
+    Serial.print(F(" L="));
     Serial.println(_value_int);
   #endif
 }
@@ -874,9 +864,9 @@ void SensorMLX90614::onLoop() {
   // convert it
   if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
   #if DEBUG == 1
-    Serial.print("MLX I=");
+    Serial.print(F("MLX I="));
     Serial.print(_child_id);
-    Serial.print(" T=");
+    Serial.print(F(" T="));
     Serial.println(temperature);
   #endif
   if (! isnan(temperature)) _value_float = temperature;
@@ -931,9 +921,9 @@ void SensorBME280::onLoop() {
     // convert it
     if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
     #if DEBUG == 1
-      Serial.print("BME I=");
+      Serial.print(F("BME I="));
       Serial.print(_child_id);
-      Serial.print(" T=");
+      Serial.print(F(" T="));
       Serial.println(temperature);
     #endif
     // store the value
@@ -945,9 +935,9 @@ void SensorBME280::onLoop() {
     float humidity = _bme->readHumidity();
     if (isnan(humidity)) return;
     #if DEBUG == 1
-      Serial.print("BME I=");
+      Serial.print(F("BME I="));
       Serial.print(_child_id);
-      Serial.print(" H=");
+      Serial.print(F(" H="));
       Serial.println(humidity);
     #endif
     // store the value
@@ -959,9 +949,9 @@ void SensorBME280::onLoop() {
     float pressure = _bme->readPressure() / 100.0F;
     if (isnan(pressure)) return;
     #if DEBUG == 1
-      Serial.print("BME I=");
+      Serial.print(F("BME I="));
       Serial.print(_child_id);
-      Serial.print(" P=");
+      Serial.print(F(" P="));
       Serial.println(pressure);
     #endif
     // store the value
@@ -1148,7 +1138,7 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
       Adafruit_BME280* bme = new Adafruit_BME280();
       if (! bme->begin()) {
         #if DEBUG == 1
-          Serial.println("NO BME");
+          Serial.println(F("NO BME"));
         #endif
         return -1;
       }
@@ -1161,7 +1151,7 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   #endif
   else {
     #if DEBUG == 1
-      Serial.print("INVALID ");
+      Serial.print(F("INVALID "));
       Serial.println(sensor_type);
     #endif
     return -1;
@@ -1171,13 +1161,13 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
 // attach a built-in or custom sensor to this manager
 int NodeManager::registerSensor(Sensor* sensor) {
   #if DEBUG == 1
-    Serial.print("REG I=");
+    Serial.print(F("REG I="));
     Serial.print(sensor->getChildId());
-    Serial.print(" P=");
+    Serial.print(F(" P="));
     Serial.print(sensor->getPin());
-    Serial.print(" P=");
+    Serial.print(F(" P="));
     Serial.print(sensor->getPresentation());
-    Serial.print(" T=");
+    Serial.print(F(" T="));
     Serial.println(sensor->getType());
   #endif
   #if POWER_MANAGER == 1
@@ -1199,12 +1189,12 @@ Sensor* NodeManager::get(int child_id) {
 // setup NodeManager
 void NodeManager::before() {
   #if DEBUG == 1
-    Serial.print("NodeManager v");
+    Serial.print(F("NodeManager v"));
     Serial.println(VERSION);
   #endif
   if (_reboot_pin > -1) {
     #if DEBUG == 1
-      Serial.print("REB P=");
+      Serial.print(F("REB P="));
       Serial.println(_reboot_pin);
     #endif
     // setup the reboot pin
@@ -1228,9 +1218,9 @@ void NodeManager::before() {
     if (_interrupt_2_pull > -1) digitalWrite(INTERRUPT_PIN_2,_interrupt_2_pull);
   }
   #if DEBUG == 1
-    Serial.print("INT1 M=");
+    Serial.print(F("INT1 M="));
     Serial.println(_interrupt_1_mode);
-    Serial.print("INT2 M=");
+    Serial.print(F("INT2 M="));
     Serial.println(_interrupt_2_mode);
   #endif
   #if REMOTE_CONFIGURATION == 1 && SLEEP_MANAGER == 1 && PERSIST == 1
@@ -1245,11 +1235,11 @@ void NodeManager::before() {
       else if (major == 3) _sleep_time =  _sleep_time + 250 * 3;
       _sleep_unit = loadState(EEPROM_SLEEP_UNIT);
       #if DEBUG == 1
-        Serial.print("LOADSLP M=");
+        Serial.print(F("LOADSLP M="));
         Serial.print(_sleep_mode);
-        Serial.print(" T=");
+        Serial.print(F(" T="));
         Serial.print(_sleep_time);
-        Serial.print(" U=");
+        Serial.print(F(" U="));
         Serial.println(_sleep_unit);
       #endif
     }
@@ -1269,27 +1259,27 @@ void NodeManager::before() {
 // present NodeManager and its sensors
 void NodeManager::presentation() {
   #if DEBUG == 1
-    Serial.println("RADIO OK");
+    Serial.println(F("RADIO OK"));
   #endif
   // present the service as a custom sensor to the controller
   #if DEBUG == 1
-    Serial.print("PRES I=");
+    Serial.print(F("PRES I="));
     Serial.print(CONFIGURATION_CHILD_ID);
-    Serial.print(", T=");
+    Serial.print(F(", T="));
     Serial.println(S_CUSTOM);
   #endif
   present(CONFIGURATION_CHILD_ID, S_CUSTOM);
   #if BATTERY_MANAGER == 1 && BATTERY_SENSOR == 1
     #if DEBUG == 1
-      Serial.print("PRES I=");
+      Serial.print(F("PRES I="));
       Serial.print(BATTERY_CHILD_ID);
-      Serial.print(", T=");
+      Serial.print(F(", T="));
       Serial.println(S_MULTIMETER);
     #endif
     // present the battery service
     present(BATTERY_CHILD_ID, S_MULTIMETER);
     // report battery level
-    _process(BATTERY);
+    _process("BATTERY");
   #endif
   // present each sensor
   for (int i = 0; i < 255; i++) {
@@ -1298,7 +1288,7 @@ void NodeManager::presentation() {
     _sensors[i]->presentation();
   }
   #if DEBUG == 1
-    Serial.println("READY");
+    Serial.println(F("READY"));
     Serial.println("");
   #endif
 }
@@ -1307,13 +1297,13 @@ void NodeManager::presentation() {
 // setup NodeManager
 void NodeManager::setup() {
   #if DEBUG == 1
-    Serial.print("MY I=");
+    Serial.print(F("MY I="));
     Serial.print(getNodeId());
-    Serial.print(" M=");
+    Serial.print(F(" M="));
     Serial.println(getControllerConfig().isMetric);
   #endif
   #if SERVICE_MESSAGES == 1
-    _send(_msg.set(STARTED));
+    _send(_msg.set("STARTED"));
   #endif
 }
 
@@ -1347,15 +1337,15 @@ void NodeManager::loop() {
 // dispacth inbound messages
 void NodeManager::receive(const MyMessage &message) {
   #if DEBUG == 1
-    Serial.print("RECV S=");
+    Serial.print(F("RECV S="));
     Serial.print(message.sender);
-    Serial.print(" I=");
+    Serial.print(F(" I="));
     Serial.print(message.sensor);
-    Serial.print(" C=");
+    Serial.print(F(" C="));
     Serial.print(message.getCommand());
-    Serial.print(" T=");
+    Serial.print(F(" T="));
     Serial.print(message.type);
-    Serial.print(" D=");
+    Serial.print(F(" D="));
     Serial.println(message.getString());
   #endif
   // process incoming service messages
@@ -1384,19 +1374,19 @@ void NodeManager::_send(MyMessage & message) {
     // if configured, sleep beetween each send
     if (_sleep_between_send > 0) wait(_sleep_between_send);
     #if DEBUG == 1
-      Serial.print("SEND D=");
+      Serial.print(F("SEND D="));
       Serial.print(message.destination);
-      Serial.print(" I=");
+      Serial.print(F(" I="));
       Serial.print(message.sensor);
-      Serial.print(" C=");
+      Serial.print(F(" C="));
       Serial.print(message.getCommand());
-      Serial.print(" T=");
+      Serial.print(F(" T="));
       Serial.print(message.type);
-      Serial.print(" S=");
+      Serial.print(F(" S="));
       Serial.print(message.getString());
-      Serial.print(" I=");
+      Serial.print(F(" I="));
       Serial.print(message.getInt());
-      Serial.print(" F=");
+      Serial.print(F(" F="));
       Serial.println(message.getFloat());
     #endif
     send(message);
@@ -1411,7 +1401,7 @@ void NodeManager::_process(const char * message) {
   }
   #if BATTERY_MANAGER == 1
     // BATTERY: return the battery level
-    else if (strcmp(message, BATTERY) == 0) {
+    else if (strcmp(message, "BATTERY") == 0) {
       // measure the board vcc
       float volt = 0;
       if (_battery_internal_vcc || _battery_pin == -1) volt = _getVcc();
@@ -1421,9 +1411,9 @@ void NodeManager::_process(const char * message) {
       if (percentage > 100) percentage = 100;
       if (percentage < 0) percentage = 0;
       #if DEBUG == 1
-        Serial.print("BATT V=");
+        Serial.print(F("BATT V="));
         Serial.print(volt);
-        Serial.print(" P=");
+        Serial.print(F(" P="));
         Serial.println(percentage);
       #endif
       #if BATTERY_SENSOR == 1
@@ -1436,18 +1426,18 @@ void NodeManager::_process(const char * message) {
     }
   #endif
   // REBOOT: reboot the board
-  else if (strcmp(message, REBOOT) == 0 && _reboot_pin > -1) {
+  else if (strcmp(message, "REBOOT") == 0 && _reboot_pin > -1) {
     #if DEBUG == 1
-      Serial.println(REBOOT);
+      Serial.println(F("REBOOT"));
     #endif
     // set the reboot pin connected to RST to low so to reboot the board
     _send(_msg.set(message));
     digitalWrite(_reboot_pin, LOW);
   }
   // CLEAR: clear the user's eeprom
-  else if (strcmp(message, CLEAR) == 0) {
+  else if (strcmp(message, "CLEAR") == 0) {
     #if DEBUG == 1
-      Serial.println(CLEAR);
+      Serial.println(F("CLEAR"));
     #endif
     for (int i = 0; i <= EEPROM_LAST_ID; i++) saveState(i, 0xFF);
     _send(_msg.set(message));
@@ -1467,7 +1457,7 @@ void NodeManager::_process(const char * message) {
       s[3] = '\0';
       int node_id = atoi(s);
       #if DEBUG == 1
-        Serial.print("MY I=");
+        Serial.print(F("MY I="));
         Serial.println(node_id);
       #endif
       // Save static ID to eeprom
@@ -1486,7 +1476,7 @@ void NodeManager::_process(const char * message) {
         s[1] = '\0';
         _sleep_mode = atoi(s);
         #if DEBUG == 1
-          Serial.print("SLEEP M=");
+          Serial.print(F("SLEEP M="));
           Serial.println(_sleep_mode);
         #endif
         #if PERSIST == 1
@@ -1517,9 +1507,9 @@ void NodeManager::_process(const char * message) {
         s[3] = '\0';
         _sleep_time = atoi(s);
         #if DEBUG == 1
-          Serial.print("SLEEP T=");
+          Serial.print(F("SLEEP T="));
           Serial.print(_sleep_time);
-          Serial.print(" U=");
+          Serial.print(F(" U="));
           Serial.println(_sleep_unit);
         #endif
         #if PERSIST == 1
@@ -1543,9 +1533,9 @@ void NodeManager::_process(const char * message) {
   #endif
   // WAKEUP: when received after a sleeping cycle or during wait, abort the cycle and stay awake
   #if SLEEP_MANAGER == 1
-    else if (strcmp(message, WAKEUP) == 0) {
+    else if (strcmp(message, "WAKEUP") == 0) {
       #if DEBUG == 1
-        Serial.println(WAKEUP);
+        Serial.println(F("WAKEUP"));
       #endif
       _send(_msg.set(message));
       _sleep_mode = IDLE;
@@ -1563,9 +1553,9 @@ void NodeManager::_sleep() {
   else if (_sleep_unit == DAYS) sleep_sec = sleep_sec * 43200;
   long sleep_ms = sleep_sec * 1000;
   #if DEBUG == 1
-    Serial.print("SLEEP ");
+    Serial.print(F("SLEEP "));
     Serial.print(sleep_sec);
-    Serial.println("s");
+    Serial.println(F("s"));
   #endif
   #if SERVICE_MESSAGES == 1
     // notify the controller I'm going to sleep
@@ -1598,9 +1588,9 @@ void NodeManager::_sleep() {
         interrupt_mode = _interrupt_2_mode;
       }
       #if DEBUG == 1
-        Serial.print("WAKE P=");
+        Serial.print(F("WAKE P="));
         Serial.print(pin_number);
-        Serial.print(", M=");
+        Serial.print(F(", M="));
         Serial.println(interrupt_mode);
       #endif
       #if SLEEP_MANAGER == 1
@@ -1611,11 +1601,11 @@ void NodeManager::_sleep() {
   }
   // coming out of sleep
   #if DEBUG == 1
-    Serial.println(AWAKE);
+    Serial.println(F("AWAKE"));
   #endif
   #if SERVICE_MESSAGES == 1
     // notify the controller I am awake
-    _send(_msg.set(AWAKE));
+    _send(_msg.set("AWAKE"));
   #endif
   #if BATTERY_MANAGER == 1
     // keep track of the number of sleeping cycles
@@ -1623,7 +1613,7 @@ void NodeManager::_sleep() {
     // battery has to be reported after the configured number of sleep cycles
     if (_battery_report_cycles == _cycles) {
       // time to report the battery level again
-      _process(BATTERY);
+      _process("BATTERY");
       _cycles = 0;
     }
   #endif
