@@ -1080,8 +1080,8 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   #endif
   #if MODULE_DHT == 1
     else if (sensor_type == SENSOR_DHT11 || sensor_type == SENSOR_DHT22) {
-      DHT* dht = new DHT(pin,DHT22);
       int dht_type = sensor_type == SENSOR_DHT11 ? DHT11 : DHT22;
+      DHT* dht = new DHT(pin,dht_type);
       registerSensor(new SensorDHT(child_id,pin,dht,0,dht_type));
       child_id = _getAvailableChildId();
       return registerSensor(new SensorDHT(child_id,pin,dht,1,dht_type));
