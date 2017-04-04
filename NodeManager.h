@@ -149,6 +149,8 @@
   #define SENSOR_THERMISTOR 3
   // MQ2 air quality sensor
   #define SENSOR_MQ 19
+  // ML8511 UV sensor
+  #define SENSOR_ML8511 20
 #endif
 #if MODULE_DIGITAL_INPUT == 1
   // Generic digital sensor, return a pin's digital value
@@ -196,7 +198,7 @@
   // MLX90614 sensor, contactless temperature sensor
   #define SENSOR_BME280 18
 #endif
-// last Id: 19
+// last Id: 20
 /***********************************
   Libraries
 */
@@ -248,6 +250,7 @@ class PowerManager {
     void setPowerPins(int ground_pin, int vcc_pin, long wait = 50);
     void powerOn();
     void powerOff();
+    float getVcc();
   private:
     int _vcc_pin = -1;
     int _ground_pin = -1;
@@ -406,6 +409,78 @@ class SensorThermistor: public Sensor {
     int _series_resistor = 10000;
     float _offset = 0;
 };
+
+/*
+    SensorMQ
+ */
+class SensorMQ: public Sensor {
+  public:
+    SensorMQ(int child_id, int pin);
+    // define the target gas whose ppm has to be returned. 0: LPG, 1: CO, 2: Smoke (default: 1);
+    void setTargetGas(int value);
+    // define the load resistance on the board, in kilo ohms (default: 1);
+    void setRlValue(float value);
+    // define the Ro resistance on the board (default: 10000);
+    void setRoValue(float value);
+    // Sensor resistance in clean air (default: 9.83);
+    void setCleanAirFactor(float value);
+    // define how many samples you are going to take in the calibration phase (default: 50);
+    void setCalibrationSampleTimes(int value);
+    // define the time interal(in milisecond) between each samples in the cablibration phase (default: 500);
+    void setCalibrationSampleInterval(int value);
+    // define how many samples you are going to take in normal operation (default: 50);
+    void setReadSampleTimes(int value);
+    // define the time interal(in milisecond) between each samples in the normal operations (default: 5);
+    void setReadSampleInterval(int value);
+    // set the LPGCurve array (default: {2.3,0.21,-0.47})
+    void setLPGCurve(float *value);
+    // set the COCurve array (default: {2.3,0.72,-0.34})
+    void setCOCurve(float *value);
+    // set the SmokeCurve array (default: {2.3,0.53,-0.44})
+    void setSmokeCurve(float *value);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+  protected:
+    float _rl_value = 1.0;
+    float _ro_clean_air_factor = 9.83;
+    int _calibration_sample_times = 50;
+    int _calibration_sample_interval = 500;
+    int _read_sample_interval = 50;
+    int _read_sample_times = 5;
+    float _ro = 10000.0;
+    float _LPGCurve[3] = {2.3,0.21,-0.47};
+    float _COCurve[3] = {2.3,0.72,-0.34};
+    float _SmokeCurve[3] = {2.3,0.53,-0.44};
+    float _MQResistanceCalculation(int raw_adc);
+    float _MQCalibration();
+    float _MQRead();
+    int _MQGetGasPercentage(float rs_ro_ratio, int gas_id);
+    int  _MQGetPercentage(float rs_ro_ratio, float *pcurve);
+    int _gas_lpg = 0;
+    int _gas_co = 1;
+    int _gas_smoke = 2;
+    int _target_gas = _gas_co;
+};
+
+/*
+    SensorML8511
+ */
+
+class SensorML8511: public Sensor {
+  public:
+    SensorML8511(int child_id, int pin);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+  protected:
+    float _mapfloat(float x, float in_min, float in_max, float out_min, float out_max);
+};
+  
 
 /*
    SensorDigitalInput: read the digital input of the configured pin
@@ -622,60 +697,7 @@ class SensorBME280: public Sensor {
 };
 #endif
 
-/*
-    SensorMQ
- */
-class SensorMQ: public Sensor {
-  public:
-    SensorMQ(int child_id, int pin);
-    // define the target gas whose ppm has to be returned. 0: LPG, 1: CO, 2: Smoke (default: 1);
-    void setTargetGas(int value);
-    // define the load resistance on the board, in kilo ohms (default: 1);
-    void setRlValue(float value);
-    // define the Ro resistance on the board (default: 10000);
-    void setRoValue(float value);
-    // Sensor resistance in clean air (default: 9.83);
-    void setCleanAirFactor(float value);
-    // define how many samples you are going to take in the calibration phase (default: 50);
-    void setCalibrationSampleTimes(int value);
-    // define the time interal(in milisecond) between each samples in the cablibration phase (default: 500);
-    void setCalibrationSampleInterval(int value);
-    // define how many samples you are going to take in normal operation (default: 50);
-    void setReadSampleTimes(int value);
-    // define the time interal(in milisecond) between each samples in the normal operations (default: 5);
-    void setReadSampleInterval(int value);
-    // set the LPGCurve array (default: {2.3,0.21,-0.47})
-    void setLPGCurve(float *value);
-    // set the COCurve array (default: {2.3,0.72,-0.34})
-    void setCOCurve(float *value);
-    // set the SmokeCurve array (default: {2.3,0.53,-0.44})
-    void setSmokeCurve(float *value);
-    // define what to do at each stage of the sketch
-    void onBefore();
-    void onSetup();
-    void onLoop();
-    void onReceive(const MyMessage & message);
-  protected:
-    float _rl_value = 1.0;
-    float _ro_clean_air_factor = 9.83;
-    int _calibration_sample_times = 50;
-    int _calibration_sample_interval = 500;
-    int _read_sample_interval = 50;
-    int _read_sample_times = 5;
-    float _ro = 10000.0;
-    float _LPGCurve[3] = {2.3,0.21,-0.47};
-    float _COCurve[3] = {2.3,0.72,-0.34};
-    float _SmokeCurve[3] = {2.3,0.53,-0.44};
-    float _MQResistanceCalculation(int raw_adc);
-    float _MQCalibration();
-    float _MQRead();
-    int _MQGetGasPercentage(float rs_ro_ratio, int gas_id);
-    int  _MQGetPercentage(float rs_ro_ratio, float *pcurve);
-    int _gas_lpg = 0;
-    int _gas_co = 1;
-    int _gas_smoke = 2;
-    int _target_gas = _gas_co;
-};
+
 
 /***************************************
    NodeManager: manages all the aspects of the node

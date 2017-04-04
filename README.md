@@ -38,8 +38,9 @@ NodeManager configuration includes compile-time configuration directives (which 
 ## Setup MySensors
 Since NodeManager has to communicate with the MySensors gateway on your behalf, it has to know how to do it. Place on top of the `config.h` file all the MySensors typical directives you are used to set on top of your sketch so both your sketch AND NodeManager will be able to share the same configuration. For example:
 ~~~c
+#define MY_BAUD_RATE 9600
 //#define MY_DEBUG
-#define MY_NODE_ID 100
+//#define MY_NODE_ID 100
 
 #define MY_RADIO_NRF24
 //#define MY_RF24_ENABLE_ENCRYPTION
@@ -76,7 +77,7 @@ Those NodeManager's directives in the `config.h` file control which module/libra
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
 #define BATTERY_SENSOR 1
 
-// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ
+// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ, SENSOR_ML8511
 #define MODULE_ANALOG_INPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
 #define MODULE_DIGITAL_INPUT 1
@@ -197,6 +198,7 @@ SENSOR_BH1750 | BH1750 sensor, return light level in lux
 SENSOR_MLX90614 | MLX90614 contactless temperature sensor, return ambient and object temperature
 SENSOR_BME280 | BME280 sensor, return temperature/humidity/pressure based on the attached BME280 sensor
 SENSOR_MQ | MQ sensor, return ppm of the target gas
+SENSOR_ML8511 | ML8511 sensor, return UV intensity
 
 To register a sensor simply call the NodeManager instance with the sensory type and the pin the sensor is conncted to. For example:
 ~~~c
@@ -426,6 +428,13 @@ A NodeManager object must be created and called from within your sketch during `
 
 ### Sensor::before()
 * Call sensor-specific implementation of before by invoking `onBefore()` to initialize the sensor
+
+## NodeManager::setup()
+* Send a custom message with a STARTED payload to the controller
+* Call `setup()` of each registered sensor
+
+### Sensor::setup()
+* Call sensor-specific implementation of setup by invoking `onSetup()` to initialize the sensor
 
 ## NodeManager::loop()
 * If all the sensors are powered by an arduino pin, this is set to HIGH

@@ -4,6 +4,30 @@
 
 #include "NodeManager.h"
 
+/***************************************
+   Global functions
+*/
+
+// return vcc in V
+float getVcc() {
+  // Measure Vcc against 1.1V Vref
+  #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+    ADMUX = (_BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
+  #elif defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
+    ADMUX = (_BV(MUX5) | _BV(MUX0));
+  #elif defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
+    ADMUX = (_BV(MUX3) | _BV(MUX2));
+  #else
+    ADMUX = (_BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
+  #endif
+  // Vref settle
+  delay(70);
+  // Do conversion
+  ADCSRA |= _BV(ADSC);
+  while (bit_is_set(ADCSRA, ADSC)) {};
+  // return Vcc in mV
+  return (float)((1125300UL) / ADC) / 1000;
+}
 
 /***************************************
    PowerManager
@@ -57,6 +81,7 @@ void PowerManager::powerOff() {
   // power off the sensor by turning low the vcc pin
   digitalWrite(_vcc_pin, LOW);
 }
+
 
 /******************************************
     Sensors
@@ -428,6 +453,205 @@ void SensorThermistor::onLoop() {
 void SensorThermistor::onReceive(const MyMessage & message) {
   onLoop();
 }
+
+
+/*
+   SensorML8511
+*/
+
+// contructor
+SensorML8511::SensorML8511(int child_id, int pin): Sensor(child_id, pin) {
+  // set presentation, type and value type
+  setPresentation(S_UV);
+  setType(V_UV);
+  setValueType(TYPE_FLOAT);
+}
+
+// what do to during before
+void SensorML8511::onBefore() {
+  // set the pin as input
+  pinMode(_pin, INPUT);
+}
+
+// what do to during setup
+void SensorML8511::onSetup() {
+  onLoop();
+}
+
+// what do to during loop
+void SensorML8511::onLoop() {
+  // read the voltage 
+  int uvLevel = analogRead(_pin);
+  int refLevel = getVcc()*1024/3.3;
+  //Use the 3.3V power pin as a reference to get a very accurate output value from sensor
+  float outputVoltage = 3.3 / refLevel * uvLevel;
+  //Convert the voltage to a UV intensity level
+  float uvIntensity = _mapfloat(outputVoltage, 0.99, 2.8, 0.0, 15.0); 
+  #if DEBUG == 1
+    Serial.print(F("UV I="));
+    Serial.print(_child_id);
+    Serial.print(F(" V="));
+    Serial.print(outputVoltage);
+    Serial.print(F(" I="));
+    Serial.println(uvIntensity);
+  #endif
+  // store the value
+  _value_float = uvIntensity;
+}
+
+// what do to as the main task when receiving a message
+void SensorML8511::onReceive(const MyMessage & message) {
+  onLoop();
+}
+
+// The Arduino Map function but for floats
+float SensorML8511::_mapfloat(float x, float in_min, float in_max, float out_min, float out_max) {
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+/*
+ * SensorMQ
+ */
+SensorMQ::SensorMQ(int child_id, int pin): Sensor(child_id,pin) {
+  setPresentation(S_AIR_QUALITY);
+  setType(V_LEVEL);
+}
+
+//setter/getter
+void SensorMQ::setRlValue(float value) {
+  _rl_value = value;
+}
+void SensorMQ::setRoValue(float value) {
+  _ro = value;
+}
+void SensorMQ::setCleanAirFactor(float value) {
+  _ro_clean_air_factor = value;
+}
+void SensorMQ::setCalibrationSampleTimes(int value) {
+  _calibration_sample_times = value;
+}
+void SensorMQ::setCalibrationSampleInterval(int value){
+  _calibration_sample_interval = value;
+}
+void SensorMQ::setReadSampleTimes(int value) {
+  _read_sample_times = value;
+}
+void SensorMQ::setReadSampleInterval(int value) {
+  _read_sample_interval = value;
+}
+void SensorMQ::setLPGCurve(float *value) {
+  _LPGCurve[0] = value[0];
+  _LPGCurve[2] = value[1];
+  _LPGCurve[2] = value[2];
+}
+void SensorMQ::setCOCurve(float *value) {
+  _COCurve[0] = value[0];
+  _COCurve[2] = value[1];
+  _COCurve[2] = value[2];
+}
+void SensorMQ::setSmokeCurve(float *value) {
+  _SmokeCurve[0] = value[0];
+  _SmokeCurve[2] = value[1];
+  _SmokeCurve[2] = value[2];
+}
+
+// what do to during before
+void SensorMQ::onBefore() {
+  // prepare the pin for input
+  pinMode(_pin, INPUT);
+}
+
+// what do to during setup
+void SensorMQ::onSetup() {
+  _ro = _MQCalibration();
+}
+
+// what do to during loop
+void SensorMQ::onLoop() {
+  if (_pin == -1) return;
+  // calculate rs/ro
+  float mq = _MQRead()/_ro;
+  // calculate the ppm
+  float lpg = _MQGetGasPercentage(mq,_gas_lpg);
+  float co = _MQGetGasPercentage(mq,_gas_co);
+  float smoke = _MQGetGasPercentage(mq,_gas_smoke);
+  // assign to the value the requested gas
+  uint16_t value;
+  if (_target_gas == _gas_lpg) value = lpg;
+  if (_target_gas == _gas_co) value = co;
+  if (_target_gas == _gas_smoke) value = smoke;
+  #if DEBUG == 1
+    Serial.print(F("MQ I="));
+    Serial.print(_child_id);
+    Serial.print(F(" V="));
+    Serial.print(value);
+    Serial.print(F(" LPG="));
+    Serial.print(lpg);
+    Serial.print(F(" CO="));
+    Serial.print(co);
+    Serial.print(F(" SMOKE="));
+    Serial.println(smoke);
+  #endif
+  // store the value
+  _value_int = (int16_t)ceil(value);
+}
+
+// what do to as the main task when receiving a message
+void SensorMQ::onReceive(const MyMessage & message) {
+  onLoop();
+}
+
+// returns the calculated sensor resistance
+float SensorMQ::_MQResistanceCalculation(int raw_adc) {
+  return ( ((float)_rl_value*(1023-raw_adc)/raw_adc));
+}
+
+//  This function assumes that the sensor is in clean air
+float SensorMQ::_MQCalibration() {
+  int i;
+  float val=0;
+  //take multiple samples
+  for (i=0; i< _calibration_sample_times; i++) {  
+    val += _MQResistanceCalculation(analogRead(_pin));
+    delay(_calibration_sample_interval);
+  }
+  //calculate the average value
+  val = val/_calibration_sample_times;                   
+  //divided by RO_CLEAN_AIR_FACTOR yields the Ro
+  val = val/_ro_clean_air_factor;
+  //according to the chart in the datasheet
+  return val;
+}
+
+// This function use MQResistanceCalculation to caculate the sensor resistenc (Rs).
+float SensorMQ::_MQRead() {
+  int i;
+  float rs=0;
+  for (i=0; i<_read_sample_times; i++) {
+    rs += _MQResistanceCalculation(analogRead(_pin));
+    delay(_read_sample_interval);
+  }
+  rs = rs/_read_sample_times;
+  return rs;
+}
+
+// This function passes different curves to the MQGetPercentage function which calculates the ppm (parts per million) of the target gas.
+int SensorMQ::_MQGetGasPercentage(float rs_ro_ratio, int gas_id) {
+  if ( gas_id == _gas_lpg ) {
+    return _MQGetPercentage(rs_ro_ratio,_LPGCurve);
+  } else if ( gas_id == _gas_co) {
+    return _MQGetPercentage(rs_ro_ratio,_COCurve);
+  } else if ( gas_id == _gas_smoke) {
+    return _MQGetPercentage(rs_ro_ratio,_SmokeCurve);
+  }
+  return 0;
+}
+
+// returns ppm of the target gas
+int SensorMQ::_MQGetPercentage(float rs_ro_ratio, float *pcurve) {
+  return (pow(10,( ((log10(rs_ro_ratio)-pcurve[1])/pcurve[2]) + pcurve[0])));
+}
+
 
 /*
    SensorDigitalInput
@@ -1015,150 +1239,6 @@ void SensorBME280::onReceive(const MyMessage & message) {
 }
 #endif
 
-/*
- * SensorMQ
- */
-SensorMQ::SensorMQ(int child_id, int pin): Sensor(child_id,pin) {
-  setPresentation(S_AIR_QUALITY);
-  setType(V_LEVEL);
-}
-
-//setter/getter
-void SensorMQ::setRlValue(float value) {
-  _rl_value = value;
-}
-void SensorMQ::setRoValue(float value) {
-  _ro = value;
-}
-void SensorMQ::setCleanAirFactor(float value) {
-  _ro_clean_air_factor = value;
-}
-void SensorMQ::setCalibrationSampleTimes(int value) {
-  _calibration_sample_times = value;
-}
-void SensorMQ::setCalibrationSampleInterval(int value){
-  _calibration_sample_interval = value;
-}
-void SensorMQ::setReadSampleTimes(int value) {
-  _read_sample_times = value;
-}
-void SensorMQ::setReadSampleInterval(int value) {
-  _read_sample_interval = value;
-}
-void SensorMQ::setLPGCurve(float *value) {
-  _LPGCurve[0] = value[0];
-  _LPGCurve[2] = value[1];
-  _LPGCurve[2] = value[2];
-}
-void SensorMQ::setCOCurve(float *value) {
-  _COCurve[0] = value[0];
-  _COCurve[2] = value[1];
-  _COCurve[2] = value[2];
-}
-void SensorMQ::setSmokeCurve(float *value) {
-  _SmokeCurve[0] = value[0];
-  _SmokeCurve[2] = value[1];
-  _SmokeCurve[2] = value[2];
-}
-
-// what do to during before
-void SensorMQ::onBefore() {
-  // prepare the pin for input
-  pinMode(_pin, INPUT);
-}
-
-// what do to during setup
-void SensorMQ::onSetup() {
-  _ro = _MQCalibration();
-  onLoop();
-}
-
-// what do to during loop
-void SensorMQ::onLoop() {
-  if (_pin == -1) return;
-  // calculate rs/ro
-  float mq = _MQRead()/_ro;
-  // calculate the ppm
-  float lpg = _MQGetGasPercentage(mq,_gas_lpg);
-  float co = _MQGetGasPercentage(mq,_gas_co);
-  float smoke = _MQGetGasPercentage(mq,_gas_smoke);
-  // assign to the value the requested gas
-  uint16_t value;
-  if (_target_gas == _gas_lpg) value = lpg;
-  if (_target_gas == _gas_co) value = co;
-  if (_target_gas == _gas_smoke) value = smoke;
-  #if DEBUG == 1
-    Serial.print(F("MQ I="));
-    Serial.print(_child_id);
-    Serial.print(F(" V="));
-    Serial.print(value);
-    Serial.print(F(" LPG="));
-    Serial.print(lpg);
-    Serial.print(F(" CO="));
-    Serial.print(co);
-    Serial.print(F(" SMOKE="));
-    Serial.println(smoke);
-  #endif
-  // store the value
-  _value_int = (int16_t)ceil(value);
-}
-
-// what do to as the main task when receiving a message
-void SensorMQ::onReceive(const MyMessage & message) {
-  onLoop();
-}
-
-// returns the calculated sensor resistance
-float SensorMQ::_MQResistanceCalculation(int raw_adc) {
-  return ( ((float)_rl_value*(1023-raw_adc)/raw_adc));
-}
-
-//  This function assumes that the sensor is in clean air
-float SensorMQ::_MQCalibration() {
-  int i;
-  float val=0;
-  //take multiple samples
-  for (i=0; i< _calibration_sample_times; i++) {  
-    val += _MQResistanceCalculation(analogRead(_pin));
-    delay(_calibration_sample_interval);
-  }
-  //calculate the average value
-  val = val/_calibration_sample_times;                   
-  //divided by RO_CLEAN_AIR_FACTOR yields the Ro
-  val = val/_ro_clean_air_factor;
-  //according to the chart in the datasheet
-  return val;
-}
-
-// This function use MQResistanceCalculation to caculate the sensor resistenc (Rs).
-float SensorMQ::_MQRead() {
-  int i;
-  float rs=0;
-  for (i=0; i<_read_sample_times; i++) {
-    rs += _MQResistanceCalculation(analogRead(_pin));
-    delay(_read_sample_interval);
-  }
-  rs = rs/_read_sample_times;
-  return rs;
-}
-
-
-// This function passes different curves to the MQGetPercentage function which calculates the ppm (parts per million) of the target gas.
-int SensorMQ::_MQGetGasPercentage(float rs_ro_ratio, int gas_id) {
-  if ( gas_id == _gas_lpg ) {
-    return _MQGetPercentage(rs_ro_ratio,_LPGCurve);
-  } else if ( gas_id == _gas_co) {
-    return _MQGetPercentage(rs_ro_ratio,_COCurve);
-  } else if ( gas_id == _gas_smoke) {
-    return _MQGetPercentage(rs_ro_ratio,_SmokeCurve);
-  }
-  return 0;
-}
-
-// returns ppm of the target gas
-int SensorMQ::_MQGetPercentage(float rs_ro_ratio, float *pcurve) {
-  return (pow(10,( ((log10(rs_ro_ratio)-pcurve[1])/pcurve[2]) + pcurve[0])));
-}
 
 
 /*******************************************
@@ -1256,6 +1336,7 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     else if (sensor_type == SENSOR_LDR) return registerSensor(new SensorLDR(child_id, pin));
     else if (sensor_type == SENSOR_THERMISTOR) return registerSensor(new SensorThermistor(child_id, pin));
     else if (sensor_type == SENSOR_MQ) return registerSensor(new SensorMQ(child_id, pin));
+    else if (sensor_type == SENSOR_ML8511) return registerSensor(new SensorML8511(child_id, pin));
   #endif
   #if MODULE_DIGITAL_INPUT == 1
     else if (sensor_type == SENSOR_DIGITAL_INPUT) return registerSensor(new SensorDigitalInput(child_id, pin));
@@ -1607,7 +1688,7 @@ void NodeManager::_process(const char * message) {
     else if (strcmp(message, "BATTERY") == 0) {
       // measure the board vcc
       float volt = 0;
-      if (_battery_internal_vcc || _battery_pin == -1) volt = _getVcc();
+      if (_battery_internal_vcc || _battery_pin == -1) volt = getVcc();
       else volt = analogRead(_battery_pin) * _battery_volts_per_bit;
       // calculate the percentage
       int percentage = ((volt - _battery_min) / (_battery_max - _battery_min)) * 100;
@@ -1834,33 +1915,11 @@ int NodeManager::_getAvailableChildId() {
   }
 }
 
-#if BATTERY_MANAGER == 1
-// return vcc in V
-float NodeManager::_getVcc() {
-  // Measure Vcc against 1.1V Vref
-  #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-    ADMUX = (_BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
-  #elif defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
-    ADMUX = (_BV(MUX5) | _BV(MUX0));
-  #elif defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
-    ADMUX = (_BV(MUX3) | _BV(MUX2));
-  #else
-    ADMUX = (_BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
-  #endif
-  // Vref settle
-  delay(70);
-  // Do conversion
-  ADCSRA |= _BV(ADSC);
-  while (bit_is_set(ADCSRA, ADSC)) {};
-  // return Vcc in mV
-  return (float)((1125300UL) / ADC) / 1000;
-}
-#endif
-
 // guess the initial value of a digital output based on the configured interrupt mode
 int NodeManager::_getInterruptInitialValue(int mode) {
   if (mode == RISING) return LOW; 
   if (mode == FALLING) return HIGH; 
   return -1;
 }
+
 
