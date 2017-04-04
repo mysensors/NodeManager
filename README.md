@@ -1,7 +1,5 @@
 # Introduction
 
-MySensors (<https://www.mysensors.org>) is an open source hardware and software community focusing on do-it-yourself home automation and Internet of Things which allows creating original and affordable sensors.
-
 NodeManager is intended to take care on your behalf of all those common tasks a MySensors node has to accomplish, speeding up the development cycle of your projects.
 
 NodeManager includes the following main components:
@@ -26,7 +24,7 @@ NodeManager includes the following main components:
 * Provide out-of-the-box sensors personalities and automatically execute their main task at each cycle
 
 # Installation
-* Download the package from https://mynodemanager.sourceforge.io
+* Download the package or clone the git repository at https://github.com/mysensors/NodeManager
 * Open the provided sketch template and save it under a different name
 * Open `config.h` and customize both MySensors configuration and NodeManager global settings
 * Register your sensors in the sketch file
@@ -511,7 +509,7 @@ NodeManager includes the following main components:
 - Remote configuration: allows configuring remotely the node without the need to have physical access to it
 - Built-in personalities: for the most common sensors, provide embedded code so to allow their configuration with a single line 
 
-Documentation available on: https://mynodemanager.sourceforge.io 
+Documentation available on: https://github.com/mysensors/NodeManager
  */
 
  
@@ -585,7 +583,7 @@ NodeManager includes the following main components:
 - Remote configuration: allows configuring remotely the node without the need to have physical access to it
 - Built-in personalities: for the most common sensors, provide embedded code so to allow their configuration with a single line 
 
-Documentation available on: https://mynodemanager.sourceforge.io 
+Documentation available on: https://github.com/mysensors/NodeManager 
  */
 
  
@@ -661,7 +659,7 @@ NodeManager includes the following main components:
 - Remote configuration: allows configuring remotely the node without the need to have physical access to it
 - Built-in personalities: for the most common sensors, provide embedded code so to allow their configuration with a single line 
 
-Documentation available on: https://mynodemanager.sourceforge.io 
+Documentation available on: https://github.com/mysensors/NodeManager 
  */
 
  
@@ -744,7 +742,7 @@ NodeManager includes the following main components:
 - Remote configuration: allows configuring remotely the node without the need to have physical access to it
 - Built-in personalities: for the most common sensors, provide embedded code so to allow their configuration with a single line 
 
-Documentation available on: https://mynodemanager.sourceforge.io 
+Documentation available on: https://github.com/mysensors/NodeManager 
  */
 
  

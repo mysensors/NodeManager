@@ -8,7 +8,7 @@ NodeManager includes the following main components:
 - Remote configuration: allows configuring remotely the node without the need to have physical access to it
 - Built-in personalities: for the most common sensors, provide embedded code so to allow their configuration with a single line 
 
-Documentation available on: https://mynodemanager.sourceforge.io 
+Documentation available on: https://github.com/mysensors/NodeManager
  */
 
  
