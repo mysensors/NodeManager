@@ -134,6 +134,8 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
       void setBatteryPin(int value);
       // if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
       void setBatteryVoltsPerBit(float value);
+      // If true, wake up by an interrupt counts as a valid cycle for battery reports otherwise only uninterrupted sleep cycles would contribute (default: false)
+      void setBatteryReportWithInterrupt(bool value);
     #endif
     #if SLEEP_MANAGER == 1
       // define if the board has to sleep every time entering loop (default: IDLE). It can be IDLE (no sleep), SLEEP (sleep at every cycle), WAIT (wait at every cycle

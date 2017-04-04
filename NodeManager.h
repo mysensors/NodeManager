@@ -722,6 +722,8 @@ class NodeManager {
       void setBatteryPin(int value);
       // if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
       void setBatteryVoltsPerBit(float value);
+      // If true, wake up by an interrupt counts as a valid cycle for battery reports otherwise only uninterrupted sleep cycles would contribute (default: false)
+      void setBatteryReportWithInterrupt(bool value);
     #endif
     #if SLEEP_MANAGER == 1
       // define if the board has to sleep every time entering loop (default: IDLE). It can be IDLE (no sleep), SLEEP (sleep at every cycle), WAIT (wait at every cycle)
@@ -771,6 +773,7 @@ class NodeManager {
       float _battery_min = 2.6;
       float _battery_max = 3.3;
       int _battery_report_cycles = 10;
+      bool _battery_report_with_interrupt = false;
       bool _battery_internal_vcc = true;
       int _battery_pin = -1;
       float _battery_volts_per_bit = 0.003363075;

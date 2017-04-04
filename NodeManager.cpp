@@ -1277,6 +1277,9 @@ void NodeManager::setRetries(int value) {
   void NodeManager::setBatteryVoltsPerBit(float value) {
     _battery_volts_per_bit = value;
   }
+  void NodeManager::setBatteryReportWithInterrupt(bool value) {
+    _battery_report_with_interrupt = value;
+  }
 #endif
 #if SLEEP_MANAGER == 1
   void NodeManager::setSleepMode(int value) {
@@ -1850,6 +1853,7 @@ void NodeManager::_sleep() {
     Serial.println("");
   #endif
   // go to sleep
+  int interrupt = -1;
   if (_sleep_mode == WAIT) {
     // wait for the given interval
     wait(sleep_ms);
@@ -1859,15 +1863,17 @@ void NodeManager::_sleep() {
     int interrupt_1_pin = _interrupt_1_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_1);
     int interrupt_2_pin = _interrupt_2_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_2);
     // enter smart sleep for the requested sleep interval and with the configured interrupts
-    int ret = sleep(interrupt_1_pin,_interrupt_1_mode,interrupt_2_pin,_interrupt_2_mode,sleep_ms, true);
-    if (ret > -1) {
+    interrupt = sleep(interrupt_1_pin,_interrupt_1_mode,interrupt_2_pin,_interrupt_2_mode,sleep_ms, true);
+    if (interrupt > -1) {
+      // woke up by an interrupt
       int pin_number = -1;
-      int interrupt_mode = -1;      
-      if (digitalPinToInterrupt(INTERRUPT_PIN_1) == ret) {
+      int interrupt_mode = -1;
+      // map the interrupt to the pin
+      if (digitalPinToInterrupt(INTERRUPT_PIN_1) == interrupt) {
         pin_number = INTERRUPT_PIN_1;
         interrupt_mode = _interrupt_1_mode;
       }
-      if (digitalPinToInterrupt(INTERRUPT_PIN_2) == ret) {
+      if (digitalPinToInterrupt(INTERRUPT_PIN_2) == interrupt) {
         pin_number = INTERRUPT_PIN_2;
         interrupt_mode = _interrupt_2_mode;
       }
@@ -1892,8 +1898,8 @@ void NodeManager::_sleep() {
     _send(_msg.set("AWAKE"));
   #endif
   #if BATTERY_MANAGER == 1
-    // keep track of the number of sleeping cycles
-    _cycles++;
+    // keep track of the number of sleeping cycles (ignoring if woke up by an interrupt)
+    if (interrupt == -1 || _battery_report_with_interrupt) _cycles++;
     // battery has to be reported after the configured number of sleep cycles
     if (_battery_report_cycles == _cycles) {
       // time to report the battery level again
