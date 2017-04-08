@@ -134,7 +134,7 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
       void setBatteryPin(int value);
       // if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
       void setBatteryVoltsPerBit(float value);
-      // If true, wake up by an interrupt counts as a valid cycle for battery reports otherwise only uninterrupted sleep cycles would contribute (default: false)
+      // If true, wake up by an interrupt counts as a valid cycle for battery reports otherwise only uninterrupted sleep cycles would contribute (default: true)
       void setBatteryReportWithInterrupt(bool value);
     #endif
     #if SLEEP_MANAGER == 1
@@ -158,6 +158,9 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
     int registerSensor(Sensor* sensor);
     // return a sensor by its index
     Sensor* get(int sensor_index);
+	Sensor* getSensor(int sensor_index);
+	// assign a different child id to a sensor
+    bool renameSensor(int old_child_id, int new_child_id);
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
       void setPowerPins(int ground_pin, int vcc_pin, long wait = 0);
@@ -234,10 +237,10 @@ nodeManager.registerSensor(new SensorCustom(child_id, pin));
 ## Configuring the sensors
 Each built-in sensor class comes with reasonable default settings. In case you want/need to customize any of those settings, after having registered the sensor, you can retrieve it back and call set functions common to all the sensors or specific for a given class.
 
-To do so, use `nodeManager.get(child_id)` which will return a pointer to the sensor. Remeber to cast it to the right class before calling their functions. For example:
+To do so, use `nodeManager.getSensor(child_id)` which will return a pointer to the sensor. Remeber to cast it to the right class before calling their functions. For example:
 
 ~~~c
-((SensorLatchingRelay*)nodeManager.get(2))->setPulseWidth(50);
+((SensorLatchingRelay*)nodeManager.getSensor(2))->setPulseWidth(50);
 ~~~
 
 
@@ -357,6 +360,16 @@ Each sensor class can expose additional methods.
     void setTriggerTime(int value);
     // Set initial value on the interrupt pin (default: HIGH)
     void setInitial(int value);
+~~~
+
+#### SensorDs18b20
+~~~c
+    // return the sensors' device address
+    DeviceAddress* getDeviceAddress();
+    // returns the sensor's resolution in bits
+    int getResolution();
+    // set the sensor's resolution in bits
+    void setResolution(int value);
 ~~~
 
 ## Upload your sketch
@@ -507,14 +520,14 @@ Register a LDR sensor attached to pin A1 and send to the gateway the average of 
 
 ~~~c
   int sensor_ldr = nodeManager.registerSensor(SENSOR_LDR,A1);
-  ((SensorLDR*)nodeManager.get(sensor_ldr))->setSamples(3);
+  ((SensorLDR*)nodeManager.getSensor(sensor_ldr))->setSamples(3);
 ~~~
 
 Register a rain sensor connected to A0. This will be powered with via pins 4 (ground) and 5 (vcc) just before reading its value at each cycle, it will be presented as S_RAIN. sending V_RAINRATE messages, the output will be a percentage (calculated between 200 and 1024) and the value will be reversed (so that no rain will be 0%):
 
 ~~~c
   int rain = nodeManager.registerSensor(SENSOR_ANALOG_INPUT,A0);
-  SensorAnalogInput* rainSensor = ((SensorAnalogInput*)nodeManager.get(rain));
+  SensorAnalogInput* rainSensor = ((SensorAnalogInput*)nodeManager.getSensor(rain));
   rainSensor->setPowerPins(4,5,300);
   rainSensor->setPresentation(S_RAIN);
   rainSensor->setType(V_RAINRATE);
@@ -765,7 +778,7 @@ void receive(const MyMessage &message) {
 ## Rain and Soil Moisture Sensor
 
 The following sketch can be used to report the rain level and the soil moisture based on two sensors connected to the board's analog pins (A1 and A2). In this case we are customizing the out-of-the-box SENSOR_ANALOG_INPUT sensor type since we just need to measure an analog input but we also want to provide the correct type and presentation for each sensor. 
-We register the sensors first with registerSensor() which returns the child id assigned to the sensor. We then retrieve the sensor's reference by calling get() so we can invoke the sensor-specific functions, like setPresentation() and setType().
+We register the sensors first with registerSensor() which returns the child id assigned to the sensor. We then retrieve the sensor's reference by calling getSensor() so we can invoke the sensor-specific functions, like setPresentation() and setType().
 In this example, the two sensors are not directly connected to the battery's ground and vcc but, to save additional power, are powered through two arduino's pins. By using e.g. setPowerPins(4,5,300), NodeManger will assume pin 4 is ground and pin 5 is vcc for that specific sensor so it will turn on the power just before reading the analog input (and waiting 300ms for the sensor to initialize) and back off before going to sleep.
 For both the sensors we want a percentage output and with setRangeMin() and setRangeMax() we define the boundaries for calculating the percentage (if we read e.g. 200 when the rain sensor is completely into the water, we know for sure it will not go below this value which will represent the new lower boundary). 
 Finally, since both the sensors reports low when wet and high when dry but we need the opposite, we set setReverse() so to have 0% reported when there is no rain/moisture, 100% on the opposite situation.
@@ -809,8 +822,8 @@ void before() {
   int rain = nodeManager.registerSensor(SENSOR_ANALOG_INPUT,A1);
   int soil = nodeManager.registerSensor(SENSOR_ANALOG_INPUT,A2);
   
-  SensorAnalogInput* rainSensor = ((SensorAnalogInput*)nodeManager.get(rain));
-  SensorAnalogInput* soilSensor = ((SensorAnalogInput*)nodeManager.get(soil));
+  SensorAnalogInput* rainSensor = ((SensorAnalogInput*)nodeManager.getSensor(rain));
+  SensorAnalogInput* soilSensor = ((SensorAnalogInput*)nodeManager.getSensor(soil));
   
   rainSensor->setPresentation(S_RAIN);
   rainSensor->setType(V_RAINRATE);

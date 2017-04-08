@@ -34,33 +34,33 @@ float getVcc() {
 */
 
 // set the vcc and ground pin the sensor is connected to
-void PowerManager::setPowerPins(int ground_pin, int vcc_pin, long wait) {
+void PowerManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
   #if DEBUG == 1
     Serial.print(F("PWR G="));
     Serial.print(ground_pin);
     Serial.print(F(" V="));
     Serial.println(vcc_pin);
   #endif
-  // configure the vcc pin as output and initialize to low (power off)
+  // configure the vcc pin as output and initialize to high (power on)
   _vcc_pin = vcc_pin;
   pinMode(_vcc_pin, OUTPUT);
-  digitalWrite(_vcc_pin, LOW);
+  digitalWrite(_vcc_pin, HIGH);
   // configure the ground pin as output and initialize to low
   _ground_pin = ground_pin;
   pinMode(_ground_pin, OUTPUT);
   digitalWrite(_ground_pin, LOW);
-  _wait = wait;
+  _wait = wait_time;
 }
 
 // return true if power pins have been configured
-bool PowerManager::_hasPowerManager() {
+bool PowerManager::isConfigured() {
   if (_vcc_pin != -1 && _ground_pin != -1) return true;
   return false;
 }
 
 // turn on the sensor by activating its power pins
 void PowerManager::powerOn() {
-  if (! _hasPowerManager()) return;
+  if (! isConfigured()) return;
   #if DEBUG == 1
     Serial.print(F("ON P="));
     Serial.println(_vcc_pin);
@@ -73,7 +73,7 @@ void PowerManager::powerOn() {
 
 // turn off the sensor
 void PowerManager::powerOff() {
-  if (! _hasPowerManager()) return;
+  if (! isConfigured()) return;
   #if DEBUG == 1
     Serial.print(F("OFF P="));
     Serial.println(_vcc_pin);
@@ -145,8 +145,8 @@ void Sensor::setFloatPrecision(int value) {
   _float_precision = value;
 }
 #if POWER_MANAGER == 1
-    void Sensor::setPowerPins(int ground_pin, int vcc_pin, long wait) {
-      _powerManager.setPowerPins(ground_pin, vcc_pin, wait);
+    void Sensor::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
+      _powerManager.setPowerPins(ground_pin, vcc_pin, wait_time);
     }
     void Sensor::setAutoPowerPins(bool value) {
       _auto_power_pins = value;
@@ -1032,6 +1032,8 @@ SensorDs18b20::SensorDs18b20(int child_id, int pin, DallasTemperature* sensors, 
   setValueType(TYPE_FLOAT);
   _index = index;
   _sensors = sensors;
+  // retrieve and store the address from the index
+  _sensors->getAddress(_device_address, index);
 }
 
 // what do to during before
@@ -1045,13 +1047,13 @@ void SensorDs18b20::onSetup() {
 // what do to during loop
 void SensorDs18b20::onLoop() {
   // request the temperature
-  _sensors->requestTemperaturesByIndex(_index);
+  _sensors->requestTemperatures();
   // read the temperature
   float temperature = _sensors->getTempCByIndex(_index);
   // convert it
   if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
   #if DEBUG == 1
-    Serial.print(F("DS18 I="));
+    Serial.print(F("DS18B20 I="));
     Serial.print(_child_id);
     Serial.print(F(" T="));
     Serial.println(temperature);
@@ -1064,6 +1066,22 @@ void SensorDs18b20::onLoop() {
 void SensorDs18b20::onReceive(const MyMessage & message) {
   onLoop();
 }
+
+// function to print a device address
+DeviceAddress* SensorDs18b20::getDeviceAddress() {
+  return &_device_address;
+}
+
+// returns the sensor's resolution in bits
+int SensorDs18b20::getResolution() {
+  return _sensors->getResolution(_device_address);
+}
+
+// set the sensor's resolution in bits
+void SensorDs18b20::setResolution(int value) {
+   _sensors->setResolution(_device_address, value);
+}
+
 #endif
 
 /*
@@ -1311,8 +1329,8 @@ void NodeManager::setInterrupt(int pin, int mode, int pull) {
   }
 }
 #if POWER_MANAGER == 1
-  void NodeManager::setPowerPins(int ground_pin, int vcc_pin, long wait) {
-    _powerManager.setPowerPins(ground_pin, vcc_pin, wait);
+  void NodeManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
+    _powerManager.setPowerPins(ground_pin, vcc_pin, wait_time);
   }
   void NodeManager::setAutoPowerPins(bool value) {
     _auto_power_pins = value;
@@ -1380,7 +1398,7 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
       else if (sensor_type == SENSOR_DOOR) index = registerSensor(new SensorDoor(child_id, pin));
       else if (sensor_type == SENSOR_MOTION) index = registerSensor(new SensorMotion(child_id, pin));
       // set an interrupt on the pin and activate internal pull up
-      SensorSwitch* sensor = (SensorSwitch*)get(index);
+      SensorSwitch* sensor = (SensorSwitch*)getSensor(index);
       setInterrupt(pin,sensor->getMode(),sensor->getInitial());
       return index;
     }
@@ -1466,6 +1484,22 @@ Sensor* NodeManager::get(int child_id) {
   // return a pointer to the sensor from the given child_id
   return _sensors[child_id];
 }
+Sensor* NodeManager::getSensor(int child_id) {
+  return get(child_id);
+}
+
+// assign a different child id to a sensor'
+bool NodeManager::renameSensor(int old_child_id, int new_child_id) {
+  // ensure the old id exists and the new is available
+  if (_sensors[old_child_id] == 0 || _sensors[new_child_id] != 0) return false;
+  // assign the sensor to new id
+  _sensors[new_child_id] = _sensors[old_child_id];
+  // set the new child id
+  _sensors[new_child_id]->setChildId(new_child_id);
+  // free up the old id
+  _sensors[old_child_id] = 0;
+  return true;
+}
 
 // setup NodeManager
 void NodeManager::before() {
@@ -1525,7 +1559,7 @@ void NodeManager::before() {
       #endif
     }
   #endif
-  #if POWER_MANAGER == 1
+  #if BATTERY_MANAGER == 1
     // set analogReference to internal if measuring the battery through a pin
     if (! _battery_internal_vcc && _battery_pin > -1) analogReference(INTERNAL);
   #endif
@@ -1731,7 +1765,7 @@ void NodeManager::_process(const char * message) {
   }
   // VERSION: send back the extension's version
   else if (strcmp(message, "VERSION") == 0) {
-    _send(_msg.set(VERSION, 1));
+    _send(_msg.set(VERSION));
   }
   #if REMOTE_CONFIGURATION == 1
     // IDxxx: change the node id to the provided one. E.g. ID025: change the node id to 25. Requires a reboot/restart

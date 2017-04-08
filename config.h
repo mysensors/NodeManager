@@ -5,8 +5,8 @@
  * Sketch configuration
  */
 
-#define SKETCH_NAME "NodeManager"
-#define SKETCH_VERSION "1.4"
+#define SKETCH_NAME "NodeManagerTemplate"
+#define SKETCH_VERSION "1.0"
 
 /**********************************
  * MySensors configuration
