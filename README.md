@@ -72,7 +72,7 @@ Those NodeManager's directives in the `config.h` file control which module/libra
 // if enabled, enable debug messages on serial port
 #define DEBUG 1
 
-// if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle
+// if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle and STARTED when starting/rebooting
 #define SERVICE_MESSAGES 1
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
 #define BATTERY_SENSOR 1
@@ -176,7 +176,7 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
 For example
 
 ~~~c
-nodeManager.setBatteryMin(1.8);
+	nodeManager.setBatteryMin(1.8);
 ~~~
 
 ## Register your sensors
@@ -207,11 +207,11 @@ SENSOR_ML8511 | ML8511 sensor, return UV intensity
 
 To register a sensor simply call the NodeManager instance with the sensory type and the pin the sensor is conncted to. For example:
 ~~~c
-nodeManager.registerSensor(SENSOR_THERMISTOR,A2);
-nodeManager.registerSensor(SENSOR_DOOR,3);
+	nodeManager.registerSensor(SENSOR_THERMISTOR,A2);
+	nodeManager.registerSensor(SENSOR_DOOR,3);
 ~~~
 
-Once registered, your job is done. NodeManager will assign a child id automatically, present each sensor for you to the controller, query each sensor and report the value back to the gateway/controller at at the end of each sleep cycle . For actuators (e.g. relays) those can be triggered by sending a `REQ` message to their assigned child id.
+Once registered, your job is done. NodeManager will assign a child id automatically, present each sensor for you to the controller, query each sensor and report the value back to the gateway/controller at at the end of each sleep cycle. An optional child id can be provided as a third argument if you want to assign it manually. For actuators (e.g. relays) those can be triggered by sending a `REQ` message to their assigned child id.
 
 When called, registerSensor returns the child_id of the sensor so you will be able to retrieve it later if needed. If you want to set a child_id manually, this can be passed as third argument to the function.
 
@@ -231,7 +231,7 @@ If you want to create a custom sensor and register it with NodeManager so it can
 
 You can then instantiate your newly created class and register with NodeManager:
 ~~~c
-nodeManager.registerSensor(new SensorCustom(child_id, pin));
+	nodeManager.registerSensor(new SensorCustom(child_id, pin));
 ~~~
 
 ## Configuring the sensors
@@ -240,7 +240,7 @@ Each built-in sensor class comes with reasonable default settings. In case you w
 To do so, use `nodeManager.getSensor(child_id)` which will return a pointer to the sensor. Remeber to cast it to the right class before calling their functions. For example:
 
 ~~~c
-((SensorLatchingRelay*)nodeManager.getSensor(2))->setPulseWidth(50);
+	((SensorLatchingRelay*)nodeManager.getSensor(2))->setPulseWidth(50);
 ~~~
 
 
@@ -548,7 +548,10 @@ Register a latching relay connecting to pin 6 (set) and pin 7 (unset):
 
 ## Analog Light and Temperature Sensor
 
-The following sketch can be used to report the temperature and the light level based on a thermistor and LDR sensors attached to two analog pins of the arduino board (A1 and A2). Both the thermistor and the LDR are connected to ground on one side and to vcc via a resistor on the other so to measure the voltage drop across each of them through the analog pins. The sensor will be put to sleep after startup and will report both the measures every 10 minutes. NodeManager will take care of presenting the sensors, managing the sleep cycle, reporting the battery level every 10 cycles and report the measures in the appropriate format. This sketch requires MODULE_ANALOG_INPUT enabled in the global config.h file.
+The following sketch can be used to report the temperature and the light level based on a thermistor and LDR sensors attached to two analog pins of the arduino board (A1 and A2). Both the thermistor and the LDR are connected to ground on one side and to vcc via a resistor on the other so to measure the voltage drop across each of them through the analog pins. 
+
+The sensor will be put to sleep after startup and will report both the measures every 10 minutes. NodeManager will take care of presenting the sensors, managing the sleep cycle, reporting the battery level every 10 cycles and report the measures in the appropriate format. This sketch requires MODULE_ANALOG_INPUT enabled in the global config.h file.
+
 Even if the sensor is sleeping most of the time, it can be potentially woke up by sending a V_CUSTOM message with a WAKEUP payload to NodeManager service child id (200 by default) just after having reported its heartbeat. At this point the node will report AWAKE and the user can interact with it by e.g. sending REQ messages to its child IDs, changing the duration of a sleep cycle with a V_CUSTOM message to the NodeManager service child id, etc.
 
 ~~~c
@@ -698,7 +701,9 @@ void receive(const MyMessage &message) {
 ## Boiler Sensor
 
 The following sketch controls a latching relay connected to a boiler. A latching relay (requiring only a pulse to switch) has been chosen to minimize the power consumption required by a traditional relay to stay on. This relay has normally two pins, one for closing and the other for opening the controlled circuit, connected to pin 6 and 7 of the arduino board. This is why we have to register two sensors against NodeManager so to control the two funtions indipendently. Since using a SENSOR_LATCHING_RELAY type of sensor, NodeManager will take care of just sending out a single pulse only when a REQ command of type V_STATUS is sent to one or the other child id.
+
 In this example, the board also runs at 1Mhz so it can go down to 1.8V: by setting setBatteryMin() and setBatteryMax(), the battery percentage will be calculated and reported (by default, automatically every 10 sleeping cycles) based on these custom boundaries.
+
 The board will be put to sleep just after startup and will report back to the controller every 5 minutes. It is the controller's responsability to catch when the board reports its heartbeat (using smart sleep behind the scene) and send a command back if needed. This sketch requires MODULE_DIGITAL_OUTPUT to be enabled in the config.h file.
 
 ~~~c
@@ -778,11 +783,13 @@ void receive(const MyMessage &message) {
 ## Rain and Soil Moisture Sensor
 
 The following sketch can be used to report the rain level and the soil moisture based on two sensors connected to the board's analog pins (A1 and A2). In this case we are customizing the out-of-the-box SENSOR_ANALOG_INPUT sensor type since we just need to measure an analog input but we also want to provide the correct type and presentation for each sensor. 
+
 We register the sensors first with registerSensor() which returns the child id assigned to the sensor. We then retrieve the sensor's reference by calling getSensor() so we can invoke the sensor-specific functions, like setPresentation() and setType().
+
 In this example, the two sensors are not directly connected to the battery's ground and vcc but, to save additional power, are powered through two arduino's pins. By using e.g. setPowerPins(4,5,300), NodeManger will assume pin 4 is ground and pin 5 is vcc for that specific sensor so it will turn on the power just before reading the analog input (and waiting 300ms for the sensor to initialize) and back off before going to sleep.
+
 For both the sensors we want a percentage output and with setRangeMin() and setRangeMax() we define the boundaries for calculating the percentage (if we read e.g. 200 when the rain sensor is completely into the water, we know for sure it will not go below this value which will represent the new lower boundary). 
 Finally, since both the sensors reports low when wet and high when dry but we need the opposite, we set setReverse() so to have 0% reported when there is no rain/moisture, 100% on the opposite situation.
-
 
 ~~~c
 /*

@@ -43,8 +43,8 @@
 // if enabled, persist the remote configuration settings on EEPROM
 #define PERSIST 0
 
-// if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle
-#define SERVICE_MESSAGES 1
+// if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle and STARTED when starting/rebooting
+#define SERVICE_MESSAGES 0
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
 #define BATTERY_SENSOR 1
 
