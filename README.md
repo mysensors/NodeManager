@@ -173,6 +173,8 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
       // manually turn the power off
       void powerOff();
     #endif
+    // set this to true if you want destination node to send ack back to this node (default: false)
+    void setAck(bool value);
 ~~~
 
 For example
@@ -260,6 +262,8 @@ The following methods are available for all the sensors:
     void setType(int value);
     // description of the sensor (default: '')
     void setDescription(char *value);
+    // set this to true if you want destination node to send ack back to this node (default: false)
+    void setAck(bool value);
     // when queried, send the message multiple times (default: 1)
     void setRetries(int value);
     // For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)

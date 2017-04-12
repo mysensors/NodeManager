@@ -126,6 +126,9 @@ int Sensor::getType() {
 void Sensor::setDescription(char* value) {
   _description = value;
 }
+void Sensor::setAck(bool value) {
+  _ack = value;
+}
 void Sensor::setRetries(int value) {
   _retries = value;
 }
@@ -173,7 +176,7 @@ void Sensor::presentation() {
     Serial.print(F(" T="));
     Serial.println(_presentation);
   #endif
-  present(_child_id, _presentation,_description);
+  present(_child_id, _presentation,_description,_ack);
 }
 
 // call the sensor-specific implementation of before
@@ -283,7 +286,7 @@ void Sensor::_send(MyMessage & message) {
       Serial.print(F(" F="));
       Serial.println(message.getFloat());
     #endif
-    send(message);
+    send(message,_ack);
   }
 }
 
@@ -1447,6 +1450,9 @@ void NodeManager::setInterrupt(int pin, int mode, int pull) {
 void NodeManager::setSleepBetweenSend(int value) {
   _sleep_between_send = value;
 }
+void NodeManager::setAck(bool value) {
+    _ack = value;
+}
 
 // register a sensor to this manager
 int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
@@ -1701,22 +1707,10 @@ void NodeManager::presentation() {
   // Send the sketch version information to the gateway and Controller
   sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
   // present the service as a custom sensor to the controller
-  #if DEBUG == 1
-    Serial.print(F("PRES I="));
-    Serial.print(CONFIGURATION_CHILD_ID);
-    Serial.print(F(", T="));
-    Serial.println(S_CUSTOM);
-  #endif
-  present(CONFIGURATION_CHILD_ID, S_CUSTOM);
+  _present(CONFIGURATION_CHILD_ID, S_CUSTOM);
   #if BATTERY_MANAGER == 1 && BATTERY_SENSOR == 1
-    #if DEBUG == 1
-      Serial.print(F("PRES I="));
-      Serial.print(BATTERY_CHILD_ID);
-      Serial.print(F(", T="));
-      Serial.println(S_MULTIMETER);
-    #endif
     // present the battery service
-    present(BATTERY_CHILD_ID, S_MULTIMETER);
+    _present(BATTERY_CHILD_ID, S_MULTIMETER);
     // report battery level
     _process("BATTERY");
   #endif
@@ -1832,7 +1826,7 @@ void NodeManager::_send(MyMessage & message) {
       Serial.print(F(" F="));
       Serial.println(message.getFloat());
     #endif
-    send(message);
+    send(message,_ack);
   }
 }
 
@@ -2068,6 +2062,16 @@ void NodeManager::_sleep() {
 }
 #endif
 
+// present the service
+void NodeManager::_present(int child_id, int type) {
+  #if DEBUG == 1
+    Serial.print(F("PRES I="));
+    Serial.print(child_id);
+    Serial.print(F(", T="));
+    Serial.println(type);
+  #endif
+  present(child_id,type,"",_ack);
+}
 
 // return the next available child_id
 int NodeManager::_getAvailableChildId() {

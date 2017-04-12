@@ -278,6 +278,8 @@ class Sensor {
     int getType();
     // description of the sensor (default: '')
     void setDescription(char *value);
+    // set this to true if you want destination node to send ack back to this node (default: false)
+    void setAck(bool value);
     // when queried, send the message multiple times (default: 1)
     void setRetries(int value);
     // For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)
@@ -323,6 +325,7 @@ class Sensor {
     int _presentation = S_CUSTOM;
     int _type = V_CUSTOM;
     char* _description = "";
+    bool _ack = false;
     int _retries = 1;
     int _samples = 1;
     int _samples_interval = 0;
@@ -781,6 +784,8 @@ class NodeManager {
       // manually turn the power off
       void powerOff();
     #endif
+    // set this to true if you want destination node to send ack back to this node (default: false)
+    void setAck(bool value);
     // hook into the main sketch functions
     void before();
     void presentation();
@@ -820,8 +825,10 @@ class NodeManager {
     int _interrupt_2_pull = -1;
     int _reboot_pin = -1;
     Sensor* _sensors[255] = {0};
+    bool _ack = false;
     void _process(const char * message);
     void _sleep();
+    void _present(int child_id, int type);
     int _getAvailableChildId();
     int _getInterruptInitialValue(int mode);
 };
