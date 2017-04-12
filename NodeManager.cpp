@@ -123,6 +123,9 @@ void Sensor::setType(int value) {
 int Sensor::getType() {
   return _type;
 }
+void Sensor::setDescription(char* value) {
+  _description = value;
+}
 void Sensor::setRetries(int value) {
   _retries = value;
 }
@@ -170,7 +173,7 @@ void Sensor::presentation() {
     Serial.print(F(" T="));
     Serial.println(_presentation);
   #endif
-  present(_child_id, _presentation);
+  present(_child_id, _presentation,_description);
 }
 
 // call the sensor-specific implementation of before

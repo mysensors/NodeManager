@@ -258,6 +258,8 @@ The following methods are available for all the sensors:
     void setPresentation(int value);
     // type of this sensor (default: V_CUSTOM)
     void setType(int value);
+    // description of the sensor (default: '')
+    void setDescription(char *value);
     // when queried, send the message multiple times (default: 1)
     void setRetries(int value);
     // For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)

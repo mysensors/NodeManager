@@ -276,6 +276,8 @@ class Sensor {
     // type of this sensor (default: V_CUSTOM)
     void setType(int value);
     int getType();
+    // description of the sensor (default: '')
+    void setDescription(char *value);
     // when queried, send the message multiple times (default: 1)
     void setRetries(int value);
     // For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)
@@ -320,6 +322,7 @@ class Sensor {
     int _child_id;
     int _presentation = S_CUSTOM;
     int _type = V_CUSTOM;
+    char* _description = "";
     int _retries = 1;
     int _samples = 1;
     int _samples_interval = 0;
