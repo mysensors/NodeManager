@@ -1695,6 +1695,8 @@ void NodeManager::presentation() {
   #if DEBUG == 1
     Serial.println(F("RADIO OK"));
   #endif
+  // Send the sketch version information to the gateway and Controller
+  sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
   // present the service as a custom sensor to the controller
   #if DEBUG == 1
     Serial.print(F("PRES I="));
