@@ -374,6 +374,12 @@ Each sensor class can expose additional methods.
     void setResolution(int value);
 ~~~
 
+#### SensorBME280
+~~~c
+    // define how many pressure samples to keep track of for calculating the forecast (default: 5)
+    void setForecastSamplesCount(int value);
+~~~
+
 ## Upload your sketch
 
 Upload your sketch to your arduino board as you are used to.

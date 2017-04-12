@@ -1174,7 +1174,7 @@ void SensorMLX90614::onReceive(const MyMessage & message) {
 #if MODULE_BME280 == 1
 // contructor
 SensorBME280::SensorBME280(int child_id, Adafruit_BME280* bme, int sensor_type): Sensor(child_id,A4) {
-  // store the sensor type (0: temperature, 1: humidity, 2: pressure)
+  // sensor type (0: temperature, 1: humidity, 2: pressure, 3: forecast)
   _sensor_type = sensor_type;
   if (_sensor_type == 0) {
     // temperature sensor
@@ -1194,10 +1194,23 @@ SensorBME280::SensorBME280(int child_id, Adafruit_BME280* bme, int sensor_type):
     setType(V_PRESSURE);
     setValueType(TYPE_FLOAT);
   }
+  else if (_sensor_type == 3) {
+    // pressure sensor
+    setPresentation(S_BARO);
+    setType(V_FORECAST);
+    setValueType(TYPE_STRING);
+  }
+}
+
+// setter/getter
+void SensorBME280::setForecastSamplesCount(int value) {
+  _forecast_samples_count = value;
 }
 
 // what do to during before
 void SensorBME280::onBefore() {
+  // initialize the forecast samples array
+  _forecast_samples = new float[_forecast_samples_count];
 }
 
 // what do to during setup
@@ -1237,7 +1250,7 @@ void SensorBME280::onLoop() {
   }
   // Pressure Sensor
   else if (_sensor_type == 2) {
-    // read humidity
+    // read pressure
     float pressure = _bme->readPressure() / 100.0F;
     if (isnan(pressure)) return;
     #if DEBUG == 1
@@ -1249,11 +1262,97 @@ void SensorBME280::onLoop() {
     // store the value
     if (! isnan(pressure)) _value_float = pressure;
   }
+  // Forecast Sensor
+  else if (_sensor_type == 3) {
+    // read pressure
+    float pressure = _bme->readPressure() / 100.0F;
+    if (isnan(pressure)) return;
+    // Calculate the average of the last n minutes.
+    int index = _minute_count % _forecast_samples_count;
+    _forecast_samples[index] = pressure;
+    _minute_count++;
+    if (_minute_count > 185) _minute_count = 6;
+    if (_minute_count == 5) _pressure_avg = _getLastPressureSamplesAverage();
+    else if (_minute_count == 35) {
+      float last_pressure_avg = _getLastPressureSamplesAverage();
+      float change = (last_pressure_avg - _pressure_avg) * 0.1;
+      // first time initial 3 hour
+      if (_first_round) _dP_dt = change * 2; // note this is for t = 0.5hour
+      else _dP_dt = change / 1.5; // divide by 1.5 as this is the difference in time from 0 value.
+    }
+    else if (_minute_count == 65) {
+      float last_pressure_avg = _getLastPressureSamplesAverage();
+      float change = (last_pressure_avg - _pressure_avg) * 0.1;
+      //first time initial 3 hour
+      if (_first_round) _dP_dt = change; //note this is for t = 1 hour
+      else _dP_dt = change / 2; //divide by 2 as this is the difference in time from 0 value
+    }
+    else if (_minute_count == 95) {
+      float last_pressure_avg = _getLastPressureSamplesAverage();
+      float change = (last_pressure_avg - _pressure_avg) * 0.1;
+      // first time initial 3 hour
+      if (_first_round)_dP_dt = change / 1.5; // note this is for t = 1.5 hour
+      else _dP_dt = change / 2.5; // divide by 2.5 as this is the difference in time from 0 value
+    }
+    else if (_minute_count == 125) {
+      float last_pressure_avg = _getLastPressureSamplesAverage();
+      // store for later use.
+      _pressure_avg2 = last_pressure_avg; 
+      float change = (last_pressure_avg - _pressure_avg) * 0.1;
+      if (_first_round) _dP_dt = change / 2; // note this is for t = 2 hour
+      else _dP_dt = change / 3; // divide by 3 as this is the difference in time from 0 value
+    }
+    else if (_minute_count == 155) {
+      float last_pressure_avg = _getLastPressureSamplesAverage();
+      float change = (last_pressure_avg - _pressure_avg) * 0.1;
+      if (_first_round) _dP_dt = change / 2.5; // note this is for t = 2.5 hour
+      else _dP_dt = change / 3.5; // divide by 3.5 as this is the difference in time from 0 value
+    }
+    else if (_minute_count == 185) {
+      float last_pressure_avg = _getLastPressureSamplesAverage();
+      float change = (last_pressure_avg - _pressure_avg) * 0.1;
+      if (_first_round) _dP_dt = change / 3; // note this is for t = 3 hour
+      else _dP_dt = change / 4; // divide by 4 as this is the difference in time from 0 value
+    }
+    // Equating the pressure at 0 to the pressure at 2 hour after 3 hours have past.
+    _pressure_avg = _pressure_avg2; 
+    // flag to let you know that this is on the past 3 hour mark. Initialized to 0 outside main loop.
+    _first_round = false; 
+    // calculate the forecast (STABLE = 0, SUNNY = 1, CLOUDY = 2, UNSTABLE = 3, THUNDERSTORM = 4, UNKNOWN = 5)
+    int forecast = 5;
+    //if time is less than 35 min on the first 3 hour interval.
+    if (_minute_count < 35 && _first_round) forecast = 5;
+    else if (_dP_dt < (-0.25)) forecast = 5;
+    else if (_dP_dt > 0.25) forecast = 4;
+    else if ((_dP_dt > (-0.25)) && (_dP_dt < (-0.05))) forecast = 2;
+    else if ((_dP_dt > 0.05) && (_dP_dt < 0.25)) forecast = 1;
+    else if ((_dP_dt >(-0.05)) && (_dP_dt < 0.05)) forecast = 0;
+    else forecast = 5;
+    _value_string = _weather[forecast];
+    #if DEBUG == 1
+      Serial.print(F("BME I="));
+      Serial.print(_child_id);
+      Serial.print(F(" M="));
+      Serial.print(_minute_count);
+      Serial.print(F(" dP="));
+      Serial.print(_dP_dt);
+      Serial.print(F(" F="));
+      Serial.println(_value_string);
+    #endif
+  }
 }
 
 // what do to as the main task when receiving a message
 void SensorBME280::onReceive(const MyMessage & message) {
   onLoop();
+}
+
+// returns the average of the latest pressure samples
+float SensorBME280::_getLastPressureSamplesAverage() {
+  float avg = 0;
+  for (int i = 0; i < _forecast_samples_count; i++) avg += _forecast_samples[i];
+  avg /= _forecast_samples_count;
+  return avg;
 }
 #endif
 
@@ -1371,19 +1470,25 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     else if (sensor_type == SENSOR_DHT11 || sensor_type == SENSOR_DHT22) {
       int dht_type = sensor_type == SENSOR_DHT11 ? DHT11 : DHT22;
       DHT* dht = new DHT(pin,dht_type);
+      // register temperature sensor
       registerSensor(new SensorDHT(child_id,pin,dht,0,dht_type));
+      // register humidity sensor
       child_id = _getAvailableChildId();
       return registerSensor(new SensorDHT(child_id,pin,dht,1,dht_type));
     }
   #endif
   #if MODULE_SHT21 == 1
     else if (sensor_type == SENSOR_SHT21) {
+      // register temperature sensor
       registerSensor(new SensorSHT21(child_id,0));
+      // register humidity sensor
       child_id = _getAvailableChildId();
       return registerSensor(new SensorSHT21(child_id,1));
     }
     else if (sensor_type == SENSOR_HTU21D) {
+      // register temperature sensor
       registerSensor(new SensorHTU21D(child_id,0));
+      // register humidity sensor
       child_id = _getAvailableChildId();
       return registerSensor(new SensorHTU21D(child_id,1));
     }
@@ -1427,7 +1532,9 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   #if MODULE_MLX90614 == 1
     else if (sensor_type == SENSOR_MLX90614) {
       Adafruit_MLX90614* mlx = new Adafruit_MLX90614();
+      // register ambient temperature sensor
       registerSensor(new SensorMLX90614(child_id,mlx,0));
+      // register object temperature sensor
       child_id = _getAvailableChildId();
       return registerSensor(new SensorMLX90614(child_id,mlx,1));
     }
@@ -1441,11 +1548,17 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
         #endif
         return -1;
       }
+      // register temperature sensor
       registerSensor(new SensorBME280(child_id,bme,0));
       child_id = _getAvailableChildId();
+      // register humidity sensor
       registerSensor(new SensorBME280(child_id,bme,1));
+      // register pressure sensor
       child_id = _getAvailableChildId();
       return registerSensor(new SensorBME280(child_id,bme,2));
+      // register forecast sensor
+      child_id = _getAvailableChildId();
+      return registerSensor(new SensorBME280(child_id,bme,3));
     }
   #endif
   else {

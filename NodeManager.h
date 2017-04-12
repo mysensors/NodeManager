@@ -692,6 +692,8 @@ class SensorMLX90614: public Sensor {
 class SensorBME280: public Sensor {
   public:
     SensorBME280(int child_id, Adafruit_BME280* bme, int sensor_type);
+    // define how many pressure samples to keep track of for calculating the forecast (default: 5)
+    void setForecastSamplesCount(int value);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
@@ -700,6 +702,15 @@ class SensorBME280: public Sensor {
   protected:
     Adafruit_BME280* _bme;
     int _sensor_type;
+    char* _weather[6] = { "stable", "sunny", "cloudy", "unstable", "thunderstorm", "unknown" };
+    int _forecast_samples_count = 5;
+    float* _forecast_samples;
+    int _minute_count = 0;
+    float _pressure_avg;
+    float _pressure_avg2;
+    float _dP_dt;
+    bool _first_round = true;
+    float _getLastPressureSamplesAverage();
 };
 #endif
 
