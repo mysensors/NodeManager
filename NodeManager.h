@@ -750,6 +750,8 @@ class NodeManager {
     int registerSensor(int sensor_type, int pin = -1, int child_id = -1);
     // register a custom sensor
     int registerSensor(Sensor* sensor);
+    // un-register a sensor
+    void unRegisterSensor(int sensor_index);
     // return a sensor by its index
     Sensor* get(int sensor_index);
     Sensor* getSensor(int sensor_index);

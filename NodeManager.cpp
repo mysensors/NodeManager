@@ -1479,6 +1479,12 @@ int NodeManager::registerSensor(Sensor* sensor) {
   return sensor->getChildId();
 }
 
+// un-register a sensor to this manager
+void NodeManager::unRegisterSensor(int sensor_index) {
+  // unlink the pointer to this sensor
+  _sensors[sensor_index] == 0;
+}
+
 // return a sensor given its index
 Sensor* NodeManager::get(int child_id) {
   // return a pointer to the sensor from the given child_id

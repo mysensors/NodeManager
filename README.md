@@ -154,6 +154,8 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
     void setSleepBetweenSend(int value);
     // register a built-in sensor
     int registerSensor(int sensor_type, int pin = -1, int child_id = -1);
+    // un-register a sensor
+    void unRegisterSensor(int sensor_index);
     // register a custom sensor
     int registerSensor(Sensor* sensor);
     // return a sensor by its index
@@ -305,13 +307,13 @@ Each sensor class can expose additional methods.
 #### SensorThermistor
 ~~~c
     // resistance at 25 degrees C (default: 10000)
-    void setNominalResistor(int value);
+    void setNominalResistor(long value);
     // temperature for nominal resistance (default: 25)
     void setNominalTemperature(int value);
     // The beta coefficient of the thermistor (default: 3950)
     void setBCoefficient(int value);
     // the value of the resistor in series with the thermistor (default: 10000)
-    void setSeriesResistor(int value);
+    void setSeriesResistor(long value);
     // set a temperature offset
     void setOffset(float value);
 ~~~
