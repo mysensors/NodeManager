@@ -41,7 +41,7 @@ void before() {
 // presentation
 void presentation() {
   // Send the sketch version information to the gateway and Controller
-	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
+  sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
   // call NodeManager presentation routine
   nodeManager.presentation();
 

@@ -441,7 +441,7 @@ void SensorThermistor::onLoop() {
     Serial.print(F(" V="));
     Serial.print(adc);
     Serial.print(F(" T="));
-    Serial.println(temperature);
+    Serial.print(temperature);
     Serial.print(F(" M="));
     Serial.println(getControllerConfig().isMetric);
   #endif
@@ -1891,6 +1891,8 @@ void NodeManager::_sleep() {
   if (_sleep_mode == WAIT) {
     // wait for the given interval
     wait(sleep_ms);
+    // send heartbeat to the controller
+    sendHeartbeat();
   }
   else if (_sleep_mode == SLEEP) {
     // setup interrupt pins

@@ -8,7 +8,7 @@
 #include <Arduino.h>
 
 // define NodeManager version
-#define VERSION "1.4"
+#define VERSION "1.5-dev1"
 
 /***********************************
    Constants
