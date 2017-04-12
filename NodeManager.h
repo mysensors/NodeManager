@@ -387,13 +387,13 @@ class SensorThermistor: public Sensor {
   public:
     SensorThermistor(int child_id, int pin);
     // resistance at 25 degrees C (default: 10000)
-    void setNominalResistor(int value);
+    void setNominalResistor(long value);
     // temperature for nominal resistance (default: 25)
     void setNominalTemperature(int value);
     // The beta coefficient of the thermistor (default: 3950)
     void setBCoefficient(int value);
     // the value of the resistor in series with the thermistor (default: 10000)
-    void setSeriesResistor(int value);
+    void setSeriesResistor(long value);
     // set a temperature offset
     void setOffset(float value);
     // define what to do at each stage of the sketch
@@ -402,10 +402,10 @@ class SensorThermistor: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
   protected:
-    int _nominal_resistor = 10000;
+    long _nominal_resistor = 10000;
     int _nominal_temperature = 25;
     int _b_coefficient = 3950;
-    int _series_resistor = 10000;
+    long _series_resistor = 10000;
     float _offset = 0;
 };
 

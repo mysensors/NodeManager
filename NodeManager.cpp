@@ -394,7 +394,7 @@ SensorThermistor::SensorThermistor(int child_id, int pin): Sensor(child_id, pin)
 }
 
 // setter/getter
-void SensorThermistor::setNominalResistor(int value) {
+void SensorThermistor::setNominalResistor(long value) {
   _nominal_resistor = value;
 }
 void SensorThermistor::setNominalTemperature(int value) {
@@ -403,7 +403,7 @@ void SensorThermistor::setNominalTemperature(int value) {
 void SensorThermistor::setBCoefficient(int value) {
   _b_coefficient = value;
 }
-void SensorThermistor::setSeriesResistor(int value) {
+void SensorThermistor::setSeriesResistor(long value) {
   _series_resistor = value;
 }
 void SensorThermistor::setOffset(float value) {
