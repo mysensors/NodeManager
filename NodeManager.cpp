@@ -1647,10 +1647,8 @@ void NodeManager::loop() {
         // turn off the pin powering all the sensors
         if (_auto_power_pins) powerOff();
       #endif
-      #if SLEEP_MANAGER == 1
-        // continue/start sleeping as requested
-        _sleep();
-      #endif
+      // continue/start sleeping as requested
+      if (_sleep_mode != WAIT) _sleep();
     }
   #endif
 }
