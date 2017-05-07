@@ -5,25 +5,80 @@
  * Sketch configuration
  */
 
-#define SKETCH_NAME "NodeManagerTemplate"
+#define SKETCH_NAME "NodeManager"
 #define SKETCH_VERSION "1.0"
 
 /**********************************
- * MySensors configuration
+ * MySensors node configuration
  */
+
+// General settings
 #define MY_BAUD_RATE 9600
 //#define MY_DEBUG
 //#define MY_NODE_ID 100
 
+// NRF24 radio settings
 #define MY_RADIO_NRF24
 //#define MY_RF24_ENABLE_ENCRYPTION
 //#define MY_RF24_CHANNEL 76
+//#define MY_RF24_PA_LEVEL RF24_PA_HIGH
 
+// RFM69 radio settings
 //#define MY_RADIO_RFM69
 //#define MY_RFM69_FREQUENCY RF69_868MHZ
 //#define MY_IS_RFM69HW
+//#define MY_RFM69_NEW_DRIVER
 //#define MY_RFM69_ENABLE_ENCRYPTION
 //#define MY_RFM69_NETWORKID 100
+//#define MY_RF69_IRQ_PIN D1
+//#define MY_RF69_IRQ_NUM MY_RF69_IRQ_PIN
+//#define MY_RF69_SPI_CS D2
+
+/**********************************
+ * MySensors gateway configuration
+ */
+// Common gateway settings
+//#define MY_REPEATER_FEATURE
+
+// Serial gateway settings
+//#define MY_GATEWAY_SERIAL
+
+// Ethernet gateway settings
+//#define MY_GATEWAY_W5100
+
+// ESP8266 gateway settings
+//#define MY_GATEWAY_ESP8266
+//#define MY_ESP8266_SSID ""
+//#define MY_ESP8266_PASSWORD ""
+
+// Gateway networking settings
+//#define MY_IP_ADDRESS 192,168,178,87
+//#define MY_IP_GATEWAY_ADDRESS 192,168,178,1
+//#define MY_IP_SUBNET_ADDRESS 255,255,255,0
+//#define MY_PORT 5003
+//#define MY_GATEWAY_MAX_CLIENTS 2
+//#define MY_USE_UDP
+
+// Gateway MQTT settings
+//#define MY_GATEWAY_MQTT_CLIENT
+//#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 68
+//#define MY_PORT 1883
+//#define MY_MQTT_USER "username"
+//#define MY_MQTT_PASSWORD "password"
+//#define MY_MQTT_CLIENT_ID "mysensors-1"
+//#define MY_MQTT_PUBLISH_TOPIC_PREFIX "mygateway1-out"
+//#define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "mygateway1-in"
+
+// Gateway inclusion mode
+//#define MY_INCLUSION_MODE_FEATURE
+//#define MY_INCLUSION_BUTTON_FEATURE
+//#define MY_INCLUSION_MODE_DURATION 60
+//#define MY_DEFAULT_LED_BLINK_PERIOD 300
+
+// Gateway Leds settings
+//#define MY_DEFAULT_ERR_LED_PIN 4
+//#define MY_DEFAULT_RX_LED_PIN  5
+//#define MY_DEFAULT_TX_LED_PIN  6
 
 /***********************************
  * NodeManager configuration
@@ -32,8 +87,6 @@
 // if enabled, enable debug messages on serial port
 #define DEBUG 1
 
-// if enabled, will load the sleep manager library. Sleep mode and sleep interval have to be configured to make the board sleeping/waiting
-#define SLEEP_MANAGER 1
 // if enabled, enable the capability to power on sensors with the arduino's pins to save battery while sleeping
 #define POWER_MANAGER 1
 // if enabled, will load the battery manager library to allow the battery level to be reported automatically or on demand
@@ -48,7 +101,7 @@
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
 #define BATTERY_SENSOR 1
 
-// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ, SENSOR_ML8511
+// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ, SENSOR_ML8511, SENSOR_ACS712
 #define MODULE_ANALOG_INPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
 #define MODULE_DIGITAL_INPUT 1
@@ -68,5 +121,11 @@
 #define MODULE_MLX90614 0
 // Enable this module to use one of the following sensors: SENSOR_BME280
 #define MODULE_BME280 0
-
+// Enable this module to use one of the following sensors: SENSOR_SONOFF
+#define MODULE_SONOFF 0
+// Enable this module to use one of the following sensors: SENSOR_BMP085
+#define MODULE_BMP085 0
+// Enable this module to use one of the following sensors: SENSOR_HCSR04
+#define MODULE_HCSR04 0
 #endif
+

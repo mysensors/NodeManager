@@ -8,7 +8,7 @@
 #include <Arduino.h>
 
 // define NodeManager version
-#define VERSION "1.5-dev1"
+#define VERSION "1.5-dev2"
 
 /***********************************
    Constants
@@ -18,6 +18,7 @@
 #define IDLE 0
 #define SLEEP 1
 #define WAIT 2
+#define ALWAYS_ON 3
 
 // define time unit
 #define SECONDS 0
@@ -52,10 +53,6 @@
    Default configuration settings
 */
 
-// if enabled, will load the sleep manager library. Sleep mode and sleep interval have to be configured to make the board sleeping/waiting
-#ifndef SLEEP_MANAGER
-  #define SLEEP_MANAGER 1
-#endif
 // if enabled, enable the capability to power on sensors with the arduino's pins to save battery while sleeping
 #ifndef POWER_MANAGER
   #define POWER_MANAGER 1
@@ -96,7 +93,7 @@
   #define BATTERY_CHILD_ID 201
 #endif
 
-// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ
+// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ, SENSOR_ACS712
 #ifndef MODULE_ANALOG_INPUT
   #define MODULE_ANALOG_INPUT 0
 #endif
@@ -136,6 +133,18 @@
 #ifndef MODULE_BME280
   #define MODULE_BME280 0
 #endif
+// Enable this module to use one of the following sensors: SENSOR_SONOFF
+#ifndef MODULE_SONOFF
+  #define MODULE_SONOFF 0
+#endif
+// Enable this module to use one of the following sensors: SENSOR_BMP085
+#ifndef MODULE_BMP085
+  #define MODULE_BMP085 0
+#endif
+// Enable this module to use one of the following sensors: SENSOR_HCSR04
+#ifndef MODULE_HCSR04
+  #define MODULE_HCSR04 0
+#endif
 /***********************************
    Sensors types
 */
@@ -150,6 +159,8 @@
   #define SENSOR_MQ 19
   // ML8511 UV sensor
   #define SENSOR_ML8511 20
+  // Current sensor
+  #define SENSOR_ACS712 24
 #endif
 #if MODULE_DIGITAL_INPUT == 1
   // Generic digital sensor, return a pin's digital value
@@ -197,15 +208,37 @@
   // MLX90614 sensor, contactless temperature sensor
   #define SENSOR_BME280 18
 #endif
-// last Id: 20
+#if MODULE_SONOFF == 1
+  // Sonoff wireless smart switch
+  #define SENSOR_SONOFF 21
+#endif
+#if MODULE_BMP085 == 1
+  // BMP085/BMP180 sensor, return temperature and pressure
+  #define SENSOR_BMP085 22
+#endif
+#if MODULE_HCSR04 == 1
+  // HC-SR04 sensor, return the distance between the sensor and an object
+  #define SENSOR_HCSR04 23
+#endif
+// last Id: 24
 /***********************************
   Libraries
 */
 
+// include supporting libraries
+#ifdef MY_USE_UDP
+    #include <WiFiUdp.h>
+#endif
+#ifdef MY_GATEWAY_ESP8266
+  #include <ESP8266WiFi.h>
+#endif
+
 // include MySensors libraries
 #include <core/MySensorsCore.h>
-#include <core/MyHwAVR.h>
-//#include <core/MyHwATMega328.h>
+#ifndef MY_GATEWAY_ESP8266
+  #include <core/MyHwAVR.h>
+  //#include <core/MyHwATMega328.h>
+#endif
 
 // include third party libraries
 #if MODULE_DHT == 1
@@ -232,6 +265,16 @@
   #include <SPI.h>
   #include <Adafruit_Sensor.h>
   #include <Adafruit_BME280.h>
+#endif
+#if MODULE_SONOFF == 1
+  #include <Bounce2.h>
+#endif
+#if MODULE_BMP085 == 1
+  #include <Wire.h>
+  #include <Adafruit_BMP085.h>
+#endif
+#if MODULE_HCSR04 == 1
+  #include <NewPing.h>
 #endif
 
 /**************************************
@@ -296,6 +339,9 @@ class Sensor {
     void setFloatPrecision(int value);
     // optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
+    // set the interrupt pin the sensor is attached to so its loop() will be executed only upon that interrupt (default: -1)
+    void setInterruptPin(int value);
+    int getInterruptPin();
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
       void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
@@ -332,11 +378,6 @@ class Sensor {
     bool _track_last_value = false;
     int _cycles = 0;
     int _force_update = -1;
-    void _send(MyMessage & msg);
-    #if POWER_MANAGER  == 1
-      PowerManager _powerManager;
-      bool _auto_power_pins = true;
-    #endif
     int _value_type = TYPE_INTEGER;
     int _float_precision = 2;
     int _value_int = -1;
@@ -345,6 +386,12 @@ class Sensor {
     int _last_value_int = -1;
     float _last_value_float = -1;
     char * _last_value_string = "";
+    int _interrupt_pin = -1;
+    #if POWER_MANAGER  == 1
+      PowerManager _powerManager;
+      bool _auto_power_pins = true;
+    #endif
+    void _send(MyMessage & msg);
 };
 
 /*
@@ -472,7 +519,7 @@ class SensorMQ: public Sensor {
 
 /*
     SensorML8511
- */
+*/
 
 class SensorML8511: public Sensor {
   public:
@@ -484,6 +531,27 @@ class SensorML8511: public Sensor {
     void onReceive(const MyMessage & message);
   protected:
     float _mapfloat(float x, float in_min, float in_max, float out_min, float out_max);
+};
+
+/*
+    SensorACS712
+*/
+
+class SensorACS712: public Sensor {
+  public:
+    SensorACS712(int child_id, int pin);
+    // set how many mV are equivalent to 1 Amp. The value depends on the module (100 for 20A Module, 66 for 30A Module) (default: 185);
+    void setmVPerAmp(int value);
+    // set ACS offset (default: 2500);
+    void setOffset(int value);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+  protected:
+    int _ACS_offset = 2500;
+    int _mv_per_amp = 185;
 };
   
 
@@ -517,6 +585,7 @@ class SensorDigitalOutput: public Sensor {
     void onReceive(const MyMessage & message);
   protected:
     int _initial_value = LOW;
+    int _state = 0;
     int _pulse_width = 0;
 };
 
@@ -637,20 +706,23 @@ class SensorMotion: public SensorSwitch {
 class SensorDs18b20: public Sensor {
   public:
     SensorDs18b20(int child_id, int pin, DallasTemperature* sensors, int index);
-    // define what to do at each stage of the sketch
-    void onBefore();
-    void onSetup();
-    void onLoop();
-    void onReceive(const MyMessage & message);
     // return the sensors' device address
     DeviceAddress* getDeviceAddress();
     // returns the sensor's resolution in bits
     int getResolution();
     // set the sensor's resolution in bits
     void setResolution(int value);
+    // sleep while DS18B20 calculates temperature (default: false)
+    void setSleepDuringConversion(bool value);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
   protected:
     float _offset = 0;
     int _index;
+    bool _sleep_during_conversion = false;
     DallasTemperature* _sensors;
     DeviceAddress _device_address;
 };
@@ -720,7 +792,94 @@ class SensorBME280: public Sensor {
 };
 #endif
 
+/*
+   SensorHCSR04
+*/
+#if MODULE_HCSR04 == 1
+class SensorHCSR04: public Sensor {
+  public:
+    SensorHCSR04(int child_id, int pin);
+    // Arduino pin tied to trigger pin on the ultrasonic sensor (default: the pin set while registering the sensor)
+    void setTriggerPin(int value);
+    // Arduino pin tied to echo pin on the ultrasonic sensor (default: the pin set while registering the sensor)
+    void setEchoPin(int value);
+    // Maximum distance we want to ping for (in centimeters) (default: 300)
+    void setMaxDistance(int value);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+  protected:
+    int _trigger_pin;
+    int _echo_pin;
+    int _max_distance = 300;
+    NewPing* _sonar;
+};
+#endif
 
+/*
+   SensorSonoff
+*/
+#if MODULE_SONOFF == 1
+class SensorSonoff: public Sensor {
+  public:
+    SensorSonoff(int child_id);
+    // set the button's pin (default: 0)
+    void setButtonPin(int value);
+    // set the relay's pin (default: 12)
+    void setRelayPin(int value);
+    // set the led's pin (default: 13)
+    void setLedPin(int value);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+  protected:
+    Bounce _debouncer = Bounce();
+    int _button_pin = 0;
+    int _relay_pin = 12;
+    int _led_pin = 13;
+    int _old_value = 0;
+    bool _state = false;
+    int _relay_on = 1;
+    int _relay_off = 0;
+    int _led_on = 0;
+    int _led_off = 1;
+    void _blink();
+    void _toggle();
+};
+#endif
+
+/*
+   SensorBME280
+*/
+#if MODULE_BMP085 == 1
+class SensorBMP085: public Sensor {
+  public:
+    SensorBMP085(int child_id, Adafruit_BMP085* bmp, int sensor_type);
+    // define how many pressure samples to keep track of for calculating the forecast (default: 5)
+    void setForecastSamplesCount(int value);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+  protected:
+    Adafruit_BMP085* _bmp;
+    int _sensor_type;
+    char* _weather[6] = { "stable", "sunny", "cloudy", "unstable", "thunderstorm", "unknown" };
+    int _forecast_samples_count = 5;
+    float* _forecast_samples;
+    int _minute_count = 0;
+    float _pressure_avg;
+    float _pressure_avg2;
+    float _dP_dt;
+    bool _first_round = true;
+    float _getLastPressureSamplesAverage();
+};
+#endif
 
 /***************************************
    NodeManager: manages all the aspects of the node
@@ -748,17 +907,17 @@ class NodeManager {
       // If true, wake up by an interrupt counts as a valid cycle for battery reports otherwise only uninterrupted sleep cycles would contribute (default: true)
       void setBatteryReportWithInterrupt(bool value);
     #endif
-    #if SLEEP_MANAGER == 1
-      // define if the board has to sleep every time entering loop (default: IDLE). It can be IDLE (no sleep), SLEEP (sleep at every cycle), WAIT (wait at every cycle)
-      void setSleepMode(int value);
-      // define for how long the board will sleep (default: 0)
-      void setSleepTime(int value);
-      // define the unit of SLEEP_TIME. It can be SECONDS, MINUTES, HOURS or DAYS (default: MINUTES)
-      void setSleep(int value1, int value2, int value3);
-      void setSleepUnit(int value);
-      // if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
-      void setSleepInterruptPin(int value);
-    #endif
+    // define the way the node should behave. It can be IDLE (stay awake withtout executing each sensors' loop), SLEEP (go to sleep for the configured interval), WAIT (wait for the configured interval), ALWAYS_ON (stay awake and execute each sensors' loop)
+    void setSleepMode(int value);
+    void setMode(int value);
+    // define for how long the board will sleep (default: 0)
+    void setSleepTime(int value);
+    // define the unit of SLEEP_TIME. It can be SECONDS, MINUTES, HOURS or DAYS (default: MINUTES)
+    void setSleepUnit(int value);
+    // configure the node's behavior, parameters are mode, time and unit
+    void setSleep(int value1, int value2, int value3);
+    // if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
+    void setSleepInterruptPin(int value);
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
     void setInterrupt(int pin, int mode, int pull = -1);
     // optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
@@ -786,19 +945,16 @@ class NodeManager {
     #endif
     // set this to true if you want destination node to send ack back to this node (default: false)
     void setAck(bool value);
+    // request and return the current timestamp from the controller
+    long getTimestamp();
     // hook into the main sketch functions
     void before();
     void presentation();
     void setup();
     void loop();
     void receive(const MyMessage & msg);
+    void receiveTime(unsigned long ts);
   private:
-    #if SLEEP_MANAGER == 1
-      int _sleep_mode = IDLE;
-      int _sleep_time = 0;
-      int _sleep_unit = MINUTES;
-      int _sleep_interrupt_pin = -1;
-    #endif
     #if BATTERY_MANAGER == 1
       float _battery_min = 2.6;
       float _battery_max = 3.3;
@@ -817,13 +973,19 @@ class NodeManager {
     #endif
     MyMessage _msg;
     void _send(MyMessage & msg);
+    int _sleep_mode = IDLE;
+    int _sleep_time = 0;
+    int _sleep_unit = MINUTES;
+    int _sleep_interrupt_pin = -1;
     int _sleep_between_send = 0;
     int _retries = 1;
     int _interrupt_1_mode = MODE_NOT_DEFINED;
     int _interrupt_2_mode = MODE_NOT_DEFINED;
     int _interrupt_1_pull = -1;
     int _interrupt_2_pull = -1;
+    int _last_interrupt_pin = -1;
     int _reboot_pin = -1;
+    long _timestamp = -1;
     Sensor* _sensors[255] = {0};
     bool _ack = false;
     void _process(const char * message);

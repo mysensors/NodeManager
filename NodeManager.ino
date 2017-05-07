@@ -14,6 +14,10 @@ Documentation available on: https://github.com/mysensors/NodeManager
  
 // load user settings
 #include "config.h"
+// include supporting libraries
+#ifdef MY_GATEWAY_ESP8266
+  #include <ESP8266WiFi.h>
+#endif
 // load MySensors library
 #include <MySensors.h>
 // load NodeManager library
@@ -42,7 +46,6 @@ void before() {
 void presentation() {
   // call NodeManager presentation routine
   nodeManager.presentation();
-
 }
 
 // setup
@@ -62,6 +65,12 @@ void loop() {
 void receive(const MyMessage &message) {
   // call NodeManager receive routine
   nodeManager.receive(message);
+}
+
+// receiveTime
+void receiveTime(unsigned long ts) {
+  // call NodeManager receiveTime routine
+  nodeManager.receiveTime(ts);
 }
 
 
