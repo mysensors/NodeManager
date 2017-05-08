@@ -442,6 +442,8 @@ Each sensor class can expose additional methods.
     void setInitialValue(int value);
     // if greater than 0, send a pulse of the given duration in ms and then restore the output back to the original value (default: 0)
     void setPulseWidth(int value);
+    // define which value to set to the output when set to on (default: HIGH)
+    void setOnValue(int value);
 ~~~
 
 #### SensorSwitch / SensorDoor / SensorMotion

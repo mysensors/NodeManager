@@ -578,6 +578,8 @@ class SensorDigitalOutput: public Sensor {
     void setInitialValue(int value);
     // if greater than 0, send a pulse of the given duration in ms and then restore the output back to the original value (default: 0)
     void setPulseWidth(int value);
+    // define which value to set to the output when set to on (default: HIGH)
+    void setOnValue(int value);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
@@ -585,6 +587,7 @@ class SensorDigitalOutput: public Sensor {
     void onReceive(const MyMessage & message);
   protected:
     int _initial_value = LOW;
+    int _on_value = HIGH;
     int _state = 0;
     int _pulse_width = 0;
 };

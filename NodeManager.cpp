@@ -790,6 +790,9 @@ void SensorDigitalOutput::setInitialValue(int value) {
 void SensorDigitalOutput::setPulseWidth(int value) {
   _pulse_width = value;
 }
+void SensorDigitalOutput::setOnValue(int value) {
+  _on_value = value;
+}
 
 // main task
 void SensorDigitalOutput::onLoop() {
@@ -812,15 +815,21 @@ void SensorDigitalOutput::onReceive(const MyMessage & message) {
       Serial.print(F(" P="));
       Serial.println(_pulse_width);
     #endif
+    // reverse the value if needed
+    int value_to_write = value;
+    if (_on_value == LOW) {
+      if (value == HIGH) value_to_write = LOW;
+      if (value == LOW) value_to_write = HIGH;
+    }
     // set the value
-    digitalWrite(_pin, value);
-    _state = value;
+    digitalWrite(_pin, value_to_write);
     if (_pulse_width > 0) {
       // if this is a pulse output, restore the value to the original value after the pulse
       wait(_pulse_width);
-      digitalWrite(_pin, value == 0 ? HIGH: LOW);
+      digitalWrite(_pin, value_to_write == 0 ? HIGH: LOW);
     }
     // store the current value so it will be sent to the controller
+    _state = value;
     _value_int = value;
   }
   if (message.getCommand() == C_REQ) {
