@@ -8,7 +8,7 @@
 #include <Arduino.h>
 
 // define NodeManager version
-#define VERSION "1.5-dev2"
+#define VERSION "1.5-dev3"
 
 /***********************************
    Constants
@@ -623,6 +623,9 @@ class SensorDHT: public Sensor {
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    // constants
+    const static int TEMPERATURE = 0;
+    const static int HUMIDITY = 1;
   protected:
     DHT* _dht;
     int _dht_type = DHT11;
@@ -643,6 +646,9 @@ class SensorSHT21: public Sensor {
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    // constants
+    const static int TEMPERATURE = 0;
+    const static int HUMIDITY = 1;
   protected:
     float _offset = 0;
     int _sensor_type = 0;
@@ -760,19 +766,24 @@ class SensorMLX90614: public Sensor {
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    // constants
+    const static int TEMPERATURE_AMBIENT = 0;
+    const static int TEMPERATURE_OBJECT = 1;
   protected:
     Adafruit_MLX90614* _mlx;
     int _sensor_type;
 };
 #endif
 
+
 /*
-   SensorBME280
+ * SensorBosch
 */
-#if MODULE_BME280 == 1
-class SensorBME280: public Sensor {
+
+#if MODULE_BME280 == 1 || MODULE_BMP085 == 1
+class SensorBosch: public Sensor {
   public:
-    SensorBME280(int child_id, Adafruit_BME280* bme, int sensor_type);
+    SensorBosch(int child_id, int sensor_type);
     // define how many pressure samples to keep track of for calculating the forecast (default: 5)
     void setForecastSamplesCount(int value);
     // define what to do at each stage of the sketch
@@ -780,8 +791,13 @@ class SensorBME280: public Sensor {
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    // constants
+    const static int TEMPERATURE = 0;
+    const static int HUMIDITY = 1;
+    const static int PRESSURE = 2;
+    const static int FORECAST = 3;
+    static uint8_t GetI2CAddress(uint8_t chip_id);
   protected:
-    Adafruit_BME280* _bme;
     int _sensor_type;
     char* _weather[6] = { "stable", "sunny", "cloudy", "unstable", "thunderstorm", "unknown" };
     int _forecast_samples_count = 5;
@@ -792,6 +808,33 @@ class SensorBME280: public Sensor {
     float _dP_dt;
     bool _first_round = true;
     float _getLastPressureSamplesAverage();
+    void _forecast(float pressure);
+};
+#endif
+
+/*
+   SensorBME280
+*/
+#if MODULE_BME280 == 1
+class SensorBME280: public SensorBosch {
+  public:
+    SensorBME280(int child_id, Adafruit_BME280* bme, int sensor_type);
+    void onLoop();
+  protected:
+    Adafruit_BME280* _bme;
+};
+#endif
+
+/*
+   SensorBMP085
+*/
+#if MODULE_BMP085 == 1
+class SensorBMP085: public SensorBosch {
+  public:
+    SensorBMP085(int child_id, Adafruit_BMP085* bmp, int sensor_type);
+    void onLoop();
+  protected:
+    Adafruit_BMP085* _bmp;
 };
 #endif
 
@@ -855,34 +898,6 @@ class SensorSonoff: public Sensor {
 };
 #endif
 
-/*
-   SensorBME280
-*/
-#if MODULE_BMP085 == 1
-class SensorBMP085: public Sensor {
-  public:
-    SensorBMP085(int child_id, Adafruit_BMP085* bmp, int sensor_type);
-    // define how many pressure samples to keep track of for calculating the forecast (default: 5)
-    void setForecastSamplesCount(int value);
-    // define what to do at each stage of the sketch
-    void onBefore();
-    void onSetup();
-    void onLoop();
-    void onReceive(const MyMessage & message);
-  protected:
-    Adafruit_BMP085* _bmp;
-    int _sensor_type;
-    char* _weather[6] = { "stable", "sunny", "cloudy", "unstable", "thunderstorm", "unknown" };
-    int _forecast_samples_count = 5;
-    float* _forecast_samples;
-    int _minute_count = 0;
-    float _pressure_avg;
-    float _pressure_avg2;
-    float _dP_dt;
-    bool _first_round = true;
-    float _getLastPressureSamplesAverage();
-};
-#endif
 
 /***************************************
    NodeManager: manages all the aspects of the node

@@ -873,16 +873,15 @@ SensorLatchingRelay::SensorLatchingRelay(int child_id, int pin): SensorRelay(chi
 SensorDHT::SensorDHT(int child_id, int pin, DHT* dht, int sensor_type, int dht_type): Sensor(child_id, pin) {
   // store the dht object
   _dht = dht;
-  // store the sensor type (0: temperature, 1: humidity)
   _sensor_type = sensor_type;
   _dht_type = dht_type;
-  if (_sensor_type == 0) {
+  if (_sensor_type == SensorDHT::TEMPERATURE) {
     // temperature sensor
     setPresentation(S_TEMP);
     setType(V_TEMP);
     setValueType(TYPE_FLOAT);
   }
-  else if (_sensor_type == 1) {
+  else if (_sensor_type == SensorDHT::HUMIDITY) {
     // humidity sensor
     setPresentation(S_HUM);
     setType(V_HUM);
@@ -903,7 +902,7 @@ void SensorDHT::onSetup() {
 // what do to during loop
 void SensorDHT::onLoop() {
   // temperature sensor
-  if (_sensor_type == 0) {
+  if (_sensor_type == SensorDHT::TEMPERATURE) {
     // read the temperature
     float temperature = _dht->readTemperature();
     // convert it
@@ -918,7 +917,7 @@ void SensorDHT::onLoop() {
     if (! isnan(temperature)) _value_float = temperature;
   }
   // humidity sensor
-  else if (_sensor_type == 1) {
+  else if (_sensor_type == SensorDHT::HUMIDITY) {
     // read humidity
     float humidity = _dht->readHumidity();
     if (isnan(humidity)) return;
@@ -947,13 +946,13 @@ void SensorDHT::onReceive(const MyMessage & message) {
 SensorSHT21::SensorSHT21(int child_id, int sensor_type): Sensor(child_id,A2) {
   // store the sensor type (0: temperature, 1: humidity)
   _sensor_type = sensor_type;
-  if (_sensor_type == 0) {
+  if (_sensor_type == SensorSHT21::TEMPERATURE) {
     // temperature sensor
     setPresentation(S_TEMP);
     setType(V_TEMP);
     setValueType(TYPE_FLOAT);
   }
-  else if (_sensor_type == 1) {
+  else if (_sensor_type == SensorSHT21::HUMIDITY) {
     // humidity sensor
     setPresentation(S_HUM);
     setType(V_HUM);
@@ -974,7 +973,7 @@ void SensorSHT21::onSetup() {
 // what do to during loop
 void SensorSHT21::onLoop() {
   // temperature sensor
-  if (_sensor_type == 0) {
+  if (_sensor_type == SensorSHT21::TEMPERATURE) {
     // read the temperature
     float temperature = SHT2x.GetTemperature();
     // convert it
@@ -989,7 +988,7 @@ void SensorSHT21::onLoop() {
     if (! isnan(temperature)) _value_float = temperature;
   }
   // Humidity Sensor
-  else if (_sensor_type == 1) {
+  else if (_sensor_type == SensorSHT21::HUMIDITY) {
     // read humidity
     float humidity = SHT2x.GetHumidity();
     if (isnan(humidity)) return;
@@ -1223,7 +1222,6 @@ void SensorBH1750::onReceive(const MyMessage & message) {
 #if MODULE_MLX90614 == 1
 // contructor
 SensorMLX90614::SensorMLX90614(int child_id, Adafruit_MLX90614* mlx, int sensor_type): Sensor(child_id,A4) {
-  // store the sensor type (0: ambient, 1: object)
   _sensor_type = sensor_type;
   _mlx = mlx;
   // set presentation and type
@@ -1244,7 +1242,7 @@ void SensorMLX90614::onSetup() {
 
 // what do to during loop
 void SensorMLX90614::onLoop() {
-  float temperature = _sensor_type == 0 ? _mlx->readAmbientTempC() : _mlx->readObjectTempC();
+  float temperature = _sensor_type == SensorMLX90614::TEMPERATURE_OBJECT ? _mlx->readAmbientTempC() : _mlx->readObjectTempC();
   // convert it
   if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
   #if DEBUG == 1
@@ -1264,32 +1262,31 @@ void SensorMLX90614::onReceive(const MyMessage & message) {
 
 
 /*
-   SensorBME280
+   SensorBosch
 */
-#if MODULE_BME280 == 1
+#if MODULE_BME280 == 1 || MODULE_BMP085 == 1
 // contructor
-SensorBME280::SensorBME280(int child_id, Adafruit_BME280* bme, int sensor_type): Sensor(child_id,A4) {
-  // sensor type (0: temperature, 1: humidity, 2: pressure, 3: forecast)
+SensorBosch::SensorBosch(int child_id, int sensor_type): Sensor(child_id,A4) {
   _sensor_type = sensor_type;
-  if (_sensor_type == 0) {
+  if (_sensor_type == SensorBosch::TEMPERATURE) {
     // temperature sensor
     setPresentation(S_TEMP);
     setType(V_TEMP);
     setValueType(TYPE_FLOAT);
   }
-  else if (_sensor_type == 1) {
+  else if (_sensor_type == SensorBosch::HUMIDITY) {
     // humidity sensor
     setPresentation(S_HUM);
     setType(V_HUM);
     setValueType(TYPE_FLOAT);
   }
-  else if (_sensor_type == 2) {
+  else if (_sensor_type == SensorBosch::PRESSURE) {
     // pressure sensor
     setPresentation(S_BARO);
     setType(V_PRESSURE);
     setValueType(TYPE_FLOAT);
   }
-  else if (_sensor_type == 3) {
+  else if (_sensor_type == SensorBosch::FORECAST) {
     // pressure sensor
     setPresentation(S_BARO);
     setType(V_FORECAST);
@@ -1298,24 +1295,149 @@ SensorBME280::SensorBME280(int child_id, Adafruit_BME280* bme, int sensor_type):
 }
 
 // setter/getter
-void SensorBME280::setForecastSamplesCount(int value) {
+void SensorBosch::setForecastSamplesCount(int value) {
   _forecast_samples_count = value;
 }
 
 // what do to during before
-void SensorBME280::onBefore() {
+void SensorBosch::onBefore() {
   // initialize the forecast samples array
   _forecast_samples = new float[_forecast_samples_count];
 }
 
 // what do to during setup
-void SensorBME280::onSetup() {
+void SensorBosch::onSetup() {
 }
 
 // what do to during loop
+void SensorBosch::onLoop() {
+}
+
+// what do to as the main task when receiving a message
+void SensorBosch::onReceive(const MyMessage & message) {
+  if (message.getCommand() == C_REQ) onLoop();
+}
+
+
+void SensorBosch::_forecast(float pressure) {
+  if (isnan(pressure)) return;
+  // Calculate the average of the last n minutes.
+  int index = _minute_count % _forecast_samples_count;
+  _forecast_samples[index] = pressure;
+  _minute_count++;
+  if (_minute_count > 185) _minute_count = 6;
+  if (_minute_count == 5) _pressure_avg = _getLastPressureSamplesAverage();
+  else if (_minute_count == 35) {
+    float last_pressure_avg = _getLastPressureSamplesAverage();
+    float change = (last_pressure_avg - _pressure_avg) * 0.1;
+    // first time initial 3 hour
+    if (_first_round) _dP_dt = change * 2; // note this is for t = 0.5hour
+    else _dP_dt = change / 1.5; // divide by 1.5 as this is the difference in time from 0 value.
+  }
+  else if (_minute_count == 65) {
+    float last_pressure_avg = _getLastPressureSamplesAverage();
+    float change = (last_pressure_avg - _pressure_avg) * 0.1;
+    //first time initial 3 hour
+    if (_first_round) _dP_dt = change; //note this is for t = 1 hour
+    else _dP_dt = change / 2; //divide by 2 as this is the difference in time from 0 value
+  }
+  else if (_minute_count == 95) {
+    float last_pressure_avg = _getLastPressureSamplesAverage();
+    float change = (last_pressure_avg - _pressure_avg) * 0.1;
+    // first time initial 3 hour
+    if (_first_round)_dP_dt = change / 1.5; // note this is for t = 1.5 hour
+    else _dP_dt = change / 2.5; // divide by 2.5 as this is the difference in time from 0 value
+  }
+  else if (_minute_count == 125) {
+    float last_pressure_avg = _getLastPressureSamplesAverage();
+    // store for later use.
+    _pressure_avg2 = last_pressure_avg; 
+    float change = (last_pressure_avg - _pressure_avg) * 0.1;
+    if (_first_round) _dP_dt = change / 2; // note this is for t = 2 hour
+    else _dP_dt = change / 3; // divide by 3 as this is the difference in time from 0 value
+  }
+  else if (_minute_count == 155) {
+    float last_pressure_avg = _getLastPressureSamplesAverage();
+    float change = (last_pressure_avg - _pressure_avg) * 0.1;
+    if (_first_round) _dP_dt = change / 2.5; // note this is for t = 2.5 hour
+    else _dP_dt = change / 3.5; // divide by 3.5 as this is the difference in time from 0 value
+  }
+  else if (_minute_count == 185) {
+    float last_pressure_avg = _getLastPressureSamplesAverage();
+    float change = (last_pressure_avg - _pressure_avg) * 0.1;
+    if (_first_round) _dP_dt = change / 3; // note this is for t = 3 hour
+    else _dP_dt = change / 4; // divide by 4 as this is the difference in time from 0 value
+  }
+  // Equating the pressure at 0 to the pressure at 2 hour after 3 hours have past.
+  _pressure_avg = _pressure_avg2; 
+  // flag to let you know that this is on the past 3 hour mark. Initialized to 0 outside main loop.
+  _first_round = false; 
+  // calculate the forecast (STABLE = 0, SUNNY = 1, CLOUDY = 2, UNSTABLE = 3, THUNDERSTORM = 4, UNKNOWN = 5)
+  int forecast = 5;
+  //if time is less than 35 min on the first 3 hour interval.
+  if (_minute_count < 35 && _first_round) forecast = 5;
+  else if (_dP_dt < (-0.25)) forecast = 5;
+  else if (_dP_dt > 0.25) forecast = 4;
+  else if ((_dP_dt > (-0.25)) && (_dP_dt < (-0.05))) forecast = 2;
+  else if ((_dP_dt > 0.05) && (_dP_dt < 0.25)) forecast = 1;
+  else if ((_dP_dt >(-0.05)) && (_dP_dt < 0.05)) forecast = 0;
+  else forecast = 5;
+  _value_string = _weather[forecast];
+  #if DEBUG == 1
+    Serial.print(F("BMP I="));
+    Serial.print(_child_id);
+    Serial.print(F(" M="));
+    Serial.print(_minute_count);
+    Serial.print(F(" dP="));
+    Serial.print(_dP_dt);
+    Serial.print(F(" F="));
+    Serial.println(_value_string);
+  #endif
+}
+
+// returns the average of the latest pressure samples
+float SensorBosch::_getLastPressureSamplesAverage() {
+  float avg = 0;
+  for (int i = 0; i < _forecast_samples_count; i++) avg += _forecast_samples[i];
+  avg /= _forecast_samples_count;
+  return avg;
+}
+
+// search for a given chip on i2c bus
+uint8_t SensorBosch::GetI2CAddress(uint8_t chip_id) {
+  uint8_t addresses[] = {0x77, 0x76};
+  uint8_t register_address = 0xD0;
+  for (int i = 0; i <= sizeof(addresses); i++) { 
+    uint8_t i2c_address = addresses[i];
+    uint8_t value;
+    Wire.beginTransmission((uint8_t)i2c_address);
+    Wire.write((uint8_t)register_address);
+    Wire.endTransmission();
+    Wire.requestFrom((uint8_t)i2c_address, (byte)1);
+    value = Wire.read();
+    if (value == chip_id) {
+      #if DEBUG == 1
+        Serial.print(F("I2C=")); 
+        Serial.println(i2c_address);
+      #endif
+      return i2c_address;
+    }
+  }
+  return addresses[0]; 
+}
+#endif
+
+/*
+ * SensorBME280
+ */
+#if MODULE_BME280 == 1
+SensorBME280::SensorBME280(int child_id, Adafruit_BME280* bme, int sensor_type): SensorBosch(child_id,sensor_type) {
+  _bme = bme;
+}
+
 void SensorBME280::onLoop() {
   // temperature sensor
-  if (_sensor_type == 0) {
+  if (_sensor_type == SensorBME280::TEMPERATURE) {
     // read the temperature
     float temperature = _bme->readTemperature();
     // convert it
@@ -1326,25 +1448,26 @@ void SensorBME280::onLoop() {
       Serial.print(F(" T="));
       Serial.println(temperature);
     #endif
+    if (isnan(temperature)) return;
     // store the value
-    if (! isnan(temperature)) _value_float = temperature;
+    _value_float = temperature;
   }
   // Humidity Sensor
-  else if (_sensor_type == 1) {
+  else if (_sensor_type == SensorBME280::HUMIDITY) {
     // read humidity
     float humidity = _bme->readHumidity();
-    if (isnan(humidity)) return;
     #if DEBUG == 1
       Serial.print(F("BME I="));
       Serial.print(_child_id);
       Serial.print(F(" H="));
       Serial.println(humidity);
     #endif
+    if (isnan(humidity)) return;
     // store the value
-    if (! isnan(humidity)) _value_float = humidity;
+    _value_float = humidity;
   }
   // Pressure Sensor
-  else if (_sensor_type == 2) {
+  else if (_sensor_type == SensorBME280::PRESSURE) {
     // read pressure
     float pressure = _bme->readPressure() / 100.0F;
     if (isnan(pressure)) return;
@@ -1354,100 +1477,64 @@ void SensorBME280::onLoop() {
       Serial.print(F(" P="));
       Serial.println(pressure);
     #endif
+    if (isnan(pressure)) return;
     // store the value
-    if (! isnan(pressure)) _value_float = pressure;
+    _value_float = pressure;
   }
   // Forecast Sensor
-  else if (_sensor_type == 3) {
-    // read pressure
+  else if (_sensor_type == SensorBME280::FORECAST) {
     float pressure = _bme->readPressure() / 100.0F;
-    if (isnan(pressure)) return;
-    // Calculate the average of the last n minutes.
-    int index = _minute_count % _forecast_samples_count;
-    _forecast_samples[index] = pressure;
-    _minute_count++;
-    if (_minute_count > 185) _minute_count = 6;
-    if (_minute_count == 5) _pressure_avg = _getLastPressureSamplesAverage();
-    else if (_minute_count == 35) {
-      float last_pressure_avg = _getLastPressureSamplesAverage();
-      float change = (last_pressure_avg - _pressure_avg) * 0.1;
-      // first time initial 3 hour
-      if (_first_round) _dP_dt = change * 2; // note this is for t = 0.5hour
-      else _dP_dt = change / 1.5; // divide by 1.5 as this is the difference in time from 0 value.
-    }
-    else if (_minute_count == 65) {
-      float last_pressure_avg = _getLastPressureSamplesAverage();
-      float change = (last_pressure_avg - _pressure_avg) * 0.1;
-      //first time initial 3 hour
-      if (_first_round) _dP_dt = change; //note this is for t = 1 hour
-      else _dP_dt = change / 2; //divide by 2 as this is the difference in time from 0 value
-    }
-    else if (_minute_count == 95) {
-      float last_pressure_avg = _getLastPressureSamplesAverage();
-      float change = (last_pressure_avg - _pressure_avg) * 0.1;
-      // first time initial 3 hour
-      if (_first_round)_dP_dt = change / 1.5; // note this is for t = 1.5 hour
-      else _dP_dt = change / 2.5; // divide by 2.5 as this is the difference in time from 0 value
-    }
-    else if (_minute_count == 125) {
-      float last_pressure_avg = _getLastPressureSamplesAverage();
-      // store for later use.
-      _pressure_avg2 = last_pressure_avg; 
-      float change = (last_pressure_avg - _pressure_avg) * 0.1;
-      if (_first_round) _dP_dt = change / 2; // note this is for t = 2 hour
-      else _dP_dt = change / 3; // divide by 3 as this is the difference in time from 0 value
-    }
-    else if (_minute_count == 155) {
-      float last_pressure_avg = _getLastPressureSamplesAverage();
-      float change = (last_pressure_avg - _pressure_avg) * 0.1;
-      if (_first_round) _dP_dt = change / 2.5; // note this is for t = 2.5 hour
-      else _dP_dt = change / 3.5; // divide by 3.5 as this is the difference in time from 0 value
-    }
-    else if (_minute_count == 185) {
-      float last_pressure_avg = _getLastPressureSamplesAverage();
-      float change = (last_pressure_avg - _pressure_avg) * 0.1;
-      if (_first_round) _dP_dt = change / 3; // note this is for t = 3 hour
-      else _dP_dt = change / 4; // divide by 4 as this is the difference in time from 0 value
-    }
-    // Equating the pressure at 0 to the pressure at 2 hour after 3 hours have past.
-    _pressure_avg = _pressure_avg2; 
-    // flag to let you know that this is on the past 3 hour mark. Initialized to 0 outside main loop.
-    _first_round = false; 
-    // calculate the forecast (STABLE = 0, SUNNY = 1, CLOUDY = 2, UNSTABLE = 3, THUNDERSTORM = 4, UNKNOWN = 5)
-    int forecast = 5;
-    //if time is less than 35 min on the first 3 hour interval.
-    if (_minute_count < 35 && _first_round) forecast = 5;
-    else if (_dP_dt < (-0.25)) forecast = 5;
-    else if (_dP_dt > 0.25) forecast = 4;
-    else if ((_dP_dt > (-0.25)) && (_dP_dt < (-0.05))) forecast = 2;
-    else if ((_dP_dt > 0.05) && (_dP_dt < 0.25)) forecast = 1;
-    else if ((_dP_dt >(-0.05)) && (_dP_dt < 0.05)) forecast = 0;
-    else forecast = 5;
-    _value_string = _weather[forecast];
-    #if DEBUG == 1
-      Serial.print(F("BME I="));
-      Serial.print(_child_id);
-      Serial.print(F(" M="));
-      Serial.print(_minute_count);
-      Serial.print(F(" dP="));
-      Serial.print(_dP_dt);
-      Serial.print(F(" F="));
-      Serial.println(_value_string);
-    #endif
+    _forecast(pressure);
   }
 }
+#endif
 
-// what do to as the main task when receiving a message
-void SensorBME280::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
+/*
+   SensorBMP085
+*/
+#if MODULE_BMP085 == 1
+// contructor
+SensorBMP085::SensorBMP085(int child_id, Adafruit_BMP085* bmp, int sensor_type): SensorBosch(child_id,sensor_type) {
+  _bmp = bmp;
 }
 
-// returns the average of the latest pressure samples
-float SensorBME280::_getLastPressureSamplesAverage() {
-  float avg = 0;
-  for (int i = 0; i < _forecast_samples_count; i++) avg += _forecast_samples[i];
-  avg /= _forecast_samples_count;
-  return avg;
+// what do to during loop
+void SensorBMP085::onLoop() {
+  // temperature sensor
+  if (_sensor_type == SensorBMP085::TEMPERATURE) {
+    // read the temperature
+    float temperature = _bmp->readTemperature();
+    // convert it
+    if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
+    #if DEBUG == 1
+      Serial.print(F("BMP I="));
+      Serial.print(_child_id);
+      Serial.print(F(" T="));
+      Serial.println(temperature);
+    #endif
+    if (isnan(temperature)) return;
+    // store the value
+    _value_float = temperature;
+  }
+  // Pressure Sensor
+  else if (_sensor_type == SensorBMP085::PRESSURE) {
+    // read pressure
+    float pressure = _bmp->readPressure() / 100.0F;
+    #if DEBUG == 1
+      Serial.print(F("BMP I="));
+      Serial.print(_child_id);
+      Serial.print(F(" P="));
+      Serial.println(pressure);
+    #endif
+    if (isnan(pressure)) return;
+    // store the value
+    _value_float = pressure;
+  }
+  // Forecast Sensor
+  else if (_sensor_type == SensorBMP085::FORECAST) {
+    float pressure = _bmp->readPressure() / 100.0F;
+    _forecast(pressure);    
+  }
 }
 #endif
 
@@ -1551,174 +1638,6 @@ void SensorSonoff::_blink() {
 }
 #endif
 
-/*
-   SensorBMP085
-*/
-#if MODULE_BMP085 == 1
-// contructor
-SensorBMP085::SensorBMP085(int child_id, Adafruit_BMP085* bmp, int sensor_type): Sensor(child_id,A4) {
-  // sensor type (0: temperature, 1: pressure, 2: forecast)
-  Serial.println(_sensor_type);
-  _sensor_type = sensor_type;
-  if (_sensor_type == 0) {
-    // temperature sensor
-    setPresentation(S_TEMP);
-    setType(V_TEMP);
-    setValueType(TYPE_FLOAT);
-  }
-  else if (_sensor_type == 1) {
-    // pressure sensor
-    setPresentation(S_BARO);
-    setType(V_PRESSURE);
-    setValueType(TYPE_FLOAT);
-  }
-  else if (_sensor_type == 2) {
-    // pressure sensor
-    setPresentation(S_BARO);
-    setType(V_FORECAST);
-    setValueType(TYPE_STRING);
-  }
-}
-
-// setter/getter
-void SensorBMP085::setForecastSamplesCount(int value) {
-  _forecast_samples_count = value;
-}
-
-// what do to during before
-void SensorBMP085::onBefore() {
-  // initialize the forecast samples array
-  _forecast_samples = new float[_forecast_samples_count];
-}
-
-// what do to during setup
-void SensorBMP085::onSetup() {
-}
-
-// what do to during loop
-void SensorBMP085::onLoop() {
-  // temperature sensor
-  if (_sensor_type == 0) {
-    // read the temperature
-    float temperature = _bmp->readTemperature();
-    // convert it
-    if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
-    #if DEBUG == 1
-      Serial.print(F("BMP I="));
-      Serial.print(_child_id);
-      Serial.print(F(" T="));
-      Serial.println(temperature);
-    #endif
-    // store the value
-    if (! isnan(temperature)) _value_float = temperature;
-  }
-  // Pressure Sensor
-  else if (_sensor_type == 1) {
-    // read pressure
-    float pressure = _bmp->readPressure() / 100.0F;
-    if (isnan(pressure)) return;
-    #if DEBUG == 1
-      Serial.print(F("BMP I="));
-      Serial.print(_child_id);
-      Serial.print(F(" P="));
-      Serial.println(pressure);
-    #endif
-    // store the value
-    if (! isnan(pressure)) _value_float = pressure;
-  }
-  // Forecast Sensor
-  else if (_sensor_type == 2) {
-    // read pressure
-    float pressure = _bmp->readPressure() / 100.0F;
-    if (isnan(pressure)) return;
-    // Calculate the average of the last n minutes.
-    int index = _minute_count % _forecast_samples_count;
-    _forecast_samples[index] = pressure;
-    _minute_count++;
-    if (_minute_count > 185) _minute_count = 6;
-    if (_minute_count == 5) _pressure_avg = _getLastPressureSamplesAverage();
-    else if (_minute_count == 35) {
-      float last_pressure_avg = _getLastPressureSamplesAverage();
-      float change = (last_pressure_avg - _pressure_avg) * 0.1;
-      // first time initial 3 hour
-      if (_first_round) _dP_dt = change * 2; // note this is for t = 0.5hour
-      else _dP_dt = change / 1.5; // divide by 1.5 as this is the difference in time from 0 value.
-    }
-    else if (_minute_count == 65) {
-      float last_pressure_avg = _getLastPressureSamplesAverage();
-      float change = (last_pressure_avg - _pressure_avg) * 0.1;
-      //first time initial 3 hour
-      if (_first_round) _dP_dt = change; //note this is for t = 1 hour
-      else _dP_dt = change / 2; //divide by 2 as this is the difference in time from 0 value
-    }
-    else if (_minute_count == 95) {
-      float last_pressure_avg = _getLastPressureSamplesAverage();
-      float change = (last_pressure_avg - _pressure_avg) * 0.1;
-      // first time initial 3 hour
-      if (_first_round)_dP_dt = change / 1.5; // note this is for t = 1.5 hour
-      else _dP_dt = change / 2.5; // divide by 2.5 as this is the difference in time from 0 value
-    }
-    else if (_minute_count == 125) {
-      float last_pressure_avg = _getLastPressureSamplesAverage();
-      // store for later use.
-      _pressure_avg2 = last_pressure_avg; 
-      float change = (last_pressure_avg - _pressure_avg) * 0.1;
-      if (_first_round) _dP_dt = change / 2; // note this is for t = 2 hour
-      else _dP_dt = change / 3; // divide by 3 as this is the difference in time from 0 value
-    }
-    else if (_minute_count == 155) {
-      float last_pressure_avg = _getLastPressureSamplesAverage();
-      float change = (last_pressure_avg - _pressure_avg) * 0.1;
-      if (_first_round) _dP_dt = change / 2.5; // note this is for t = 2.5 hour
-      else _dP_dt = change / 3.5; // divide by 3.5 as this is the difference in time from 0 value
-    }
-    else if (_minute_count == 185) {
-      float last_pressure_avg = _getLastPressureSamplesAverage();
-      float change = (last_pressure_avg - _pressure_avg) * 0.1;
-      if (_first_round) _dP_dt = change / 3; // note this is for t = 3 hour
-      else _dP_dt = change / 4; // divide by 4 as this is the difference in time from 0 value
-    }
-    // Equating the pressure at 0 to the pressure at 2 hour after 3 hours have past.
-    _pressure_avg = _pressure_avg2; 
-    // flag to let you know that this is on the past 3 hour mark. Initialized to 0 outside main loop.
-    _first_round = false; 
-    // calculate the forecast (STABLE = 0, SUNNY = 1, CLOUDY = 2, UNSTABLE = 3, THUNDERSTORM = 4, UNKNOWN = 5)
-    int forecast = 5;
-    //if time is less than 35 min on the first 3 hour interval.
-    if (_minute_count < 35 && _first_round) forecast = 5;
-    else if (_dP_dt < (-0.25)) forecast = 5;
-    else if (_dP_dt > 0.25) forecast = 4;
-    else if ((_dP_dt > (-0.25)) && (_dP_dt < (-0.05))) forecast = 2;
-    else if ((_dP_dt > 0.05) && (_dP_dt < 0.25)) forecast = 1;
-    else if ((_dP_dt >(-0.05)) && (_dP_dt < 0.05)) forecast = 0;
-    else forecast = 5;
-    _value_string = _weather[forecast];
-    #if DEBUG == 1
-      Serial.print(F("BMP I="));
-      Serial.print(_child_id);
-      Serial.print(F(" M="));
-      Serial.print(_minute_count);
-      Serial.print(F(" dP="));
-      Serial.print(_dP_dt);
-      Serial.print(F(" F="));
-      Serial.println(_value_string);
-    #endif
-  }
-}
-
-// what do to as the main task when receiving a message
-void SensorBMP085::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
-}
-
-// returns the average of the latest pressure samples
-float SensorBMP085::_getLastPressureSamplesAverage() {
-  float avg = 0;
-  for (int i = 0; i < _forecast_samples_count; i++) avg += _forecast_samples[i];
-  avg /= _forecast_samples_count;
-  return avg;
-}
-#endif
 
 /*
    SensorHCSR04
@@ -1890,26 +1809,26 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
       int dht_type = sensor_type == SENSOR_DHT11 ? DHT11 : DHT22;
       DHT* dht = new DHT(pin,dht_type);
       // register temperature sensor
-      registerSensor(new SensorDHT(child_id,pin,dht,0,dht_type));
+      registerSensor(new SensorDHT(child_id,pin,dht,SensorDHT::TEMPERATURE,dht_type));
       // register humidity sensor
       child_id = _getAvailableChildId();
-      return registerSensor(new SensorDHT(child_id,pin,dht,1,dht_type));
+      return registerSensor(new SensorDHT(child_id,pin,dht,SensorDHT::HUMIDITY,dht_type));
     }
   #endif
   #if MODULE_SHT21 == 1
     else if (sensor_type == SENSOR_SHT21) {
       // register temperature sensor
-      registerSensor(new SensorSHT21(child_id,0));
+      registerSensor(new SensorSHT21(child_id,SensorSHT21::TEMPERATURE));
       // register humidity sensor
       child_id = _getAvailableChildId();
-      return registerSensor(new SensorSHT21(child_id,1));
+      return registerSensor(new SensorSHT21(child_id,SensorSHT21::HUMIDITY));
     }
     else if (sensor_type == SENSOR_HTU21D) {
       // register temperature sensor
-      registerSensor(new SensorHTU21D(child_id,0));
+      registerSensor(new SensorHTU21D(child_id,SensorHTU21D::TEMPERATURE));
       // register humidity sensor
       child_id = _getAvailableChildId();
-      return registerSensor(new SensorHTU21D(child_id,1));
+      return registerSensor(new SensorHTU21D(child_id,SensorHTU21D::HUMIDITY));
     }
   #endif
   #if MODULE_SWITCH == 1
@@ -1953,32 +1872,32 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     else if (sensor_type == SENSOR_MLX90614) {
       Adafruit_MLX90614* mlx = new Adafruit_MLX90614();
       // register ambient temperature sensor
-      registerSensor(new SensorMLX90614(child_id,mlx,0));
+      registerSensor(new SensorMLX90614(child_id,mlx,SensorMLX90614::TEMPERATURE_AMBIENT));
       // register object temperature sensor
       child_id = _getAvailableChildId();
-      return registerSensor(new SensorMLX90614(child_id,mlx,1));
+      return registerSensor(new SensorMLX90614(child_id,mlx,SensorMLX90614::TEMPERATURE_OBJECT));
     }
   #endif
   #if MODULE_BME280 == 1
     else if (sensor_type == SENSOR_BME280) {
       Adafruit_BME280* bme = new Adafruit_BME280();
-      if (! bme->begin()) {
+      if (! bme->begin(SensorBosch::GetI2CAddress(0x60))) {
         #if DEBUG == 1
           Serial.println(F("NO BME"));
         #endif
         return -1;
       }
       // register temperature sensor
-      registerSensor(new SensorBME280(child_id,bme,0));
+      registerSensor(new SensorBME280(child_id,bme,SensorBME280::TEMPERATURE));
       child_id = _getAvailableChildId();
       // register humidity sensor
-      registerSensor(new SensorBME280(child_id,bme,1));
+      registerSensor(new SensorBME280(child_id,bme,SensorBME280::HUMIDITY));
       // register pressure sensor
       child_id = _getAvailableChildId();
-      return registerSensor(new SensorBME280(child_id,bme,2));
+      registerSensor(new SensorBME280(child_id,bme,SensorBME280::PRESSURE));
       // register forecast sensor
       child_id = _getAvailableChildId();
-      return registerSensor(new SensorBME280(child_id,bme,3));
+      return registerSensor(new SensorBME280(child_id,bme,SensorBME280::FORECAST));
     }
   #endif
   #if MODULE_SONOFF == 1
@@ -1989,20 +1908,20 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   #if MODULE_BMP085 == 1
     else if (sensor_type == SENSOR_BMP085) {
       Adafruit_BMP085* bmp = new Adafruit_BMP085();
-      if (! bmp->begin()) {
+      if (! bmp->begin(SensorBosch::GetI2CAddress(0x55))) {
         #if DEBUG == 1
           Serial.println(F("NO BMP"));
         #endif
         return -1;
       }
       // register temperature sensor
-      registerSensor(new SensorBMP085(child_id,bmp,0));
+      registerSensor(new SensorBMP085(child_id,bmp,SensorBMP085::TEMPERATURE));
       // register pressure sensor
       child_id = _getAvailableChildId();
-      return registerSensor(new SensorBMP085(child_id,bmp,1));
+      registerSensor(new SensorBMP085(child_id,bmp,SensorBMP085::PRESSURE));
       // register forecast sensor
       child_id = _getAvailableChildId();
-      return registerSensor(new SensorBMP085(child_id,bmp,2));
+      return registerSensor(new SensorBMP085(child_id,bmp,SensorBMP085::FORECAST));
     }
   #endif
   #if MODULE_HCSR04 == 1
