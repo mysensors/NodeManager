@@ -279,7 +279,7 @@ void Sensor::_send(MyMessage & message) {
   // send the message, multiple times if requested
   for (int i = 0; i < _retries; i++) {
     // if configured, sleep beetween each send
-    if (_sleep_between_send > 0) wait(_sleep_between_send);
+    if (_sleep_between_send > 0) sleep(_sleep_between_send);
     #if DEBUG == 1
       Serial.print(F("SEND D="));
       Serial.print(message.destination);
@@ -2003,13 +2003,11 @@ void NodeManager::before() {
     pinMode(_reboot_pin, OUTPUT);
     digitalWrite(_reboot_pin, HIGH);
   }
-  #if SLEEP_MANAGER == 1
-    // setup the sleep interrupt pin
-    if (_sleep_interrupt_pin > -1) {
-      // set the interrupt when the pin is connected to ground
-      setInterrupt(_sleep_interrupt_pin,FALLING,HIGH);
-    }
-  #endif
+  // setup the sleep interrupt pin
+  if (_sleep_interrupt_pin > -1) {
+    // set the interrupt when the pin is connected to ground
+    setInterrupt(_sleep_interrupt_pin,FALLING,HIGH);
+  }
   // setup the interrupt pins
   if (_interrupt_1_mode != MODE_NOT_DEFINED) {
     pinMode(INTERRUPT_PIN_1,INPUT);
@@ -2064,6 +2062,7 @@ void NodeManager::presentation() {
     Serial.println(F("RADIO OK"));
   #endif
   // Send the sketch version information to the gateway and Controller
+  if (_sleep_between_send > 0) sleep(_sleep_between_send);
   sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
   // present the service as a custom sensor to the controller
   _present(CONFIGURATION_CHILD_ID, S_CUSTOM);
@@ -2077,6 +2076,7 @@ void NodeManager::presentation() {
   for (int i = 0; i < 255; i++) {
     if (_sensors[i] == 0) continue;
     // call each sensor's presentation()
+    if (_sleep_between_send > 0) sleep(_sleep_between_send);
     _sensors[i]->presentation();
   }
   #if DEBUG == 1
@@ -2197,7 +2197,7 @@ void NodeManager::_send(MyMessage & message) {
   // send the message, multiple times if requested
   for (int i = 0; i < _retries; i++) {
     // if configured, sleep beetween each send
-    if (_sleep_between_send > 0) wait(_sleep_between_send);
+    if (_sleep_between_send > 0) sleep(_sleep_between_send);
     #if DEBUG == 1
       Serial.print(F("SEND D="));
       Serial.print(message.destination);
@@ -2422,10 +2422,8 @@ void NodeManager::_sleep() {
         Serial.print(F(", M="));
         Serial.println(interrupt_mode);
       #endif
-      #if SLEEP_MANAGER == 1
-        // when waking up from an interrupt on the wakup pin, stop sleeping
-        if (_sleep_interrupt_pin == pin_number) _sleep_mode = IDLE;
-      #endif
+      // when waking up from an interrupt on the wakup pin, stop sleeping
+      if (_sleep_interrupt_pin == pin_number) _sleep_mode = IDLE;
     }
   }
   // coming out of sleep
@@ -2456,6 +2454,7 @@ void NodeManager::_present(int child_id, int type) {
     Serial.print(F(", T="));
     Serial.println(type);
   #endif
+  if (_sleep_between_send > 0) sleep(_sleep_between_send);
   present(child_id,type,"",_ack);
 }
 
