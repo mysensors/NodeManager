@@ -22,7 +22,7 @@ float getVcc() {
       ADMUX = (_BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
     #endif
     // Vref settle
-    delay(70);
+    wait(70);
     // Do conversion
     ADCSRA |= _BV(ADSC);
     while (bit_is_set(ADCSRA, ADSC)) {};
@@ -681,7 +681,7 @@ float SensorMQ::_MQCalibration() {
   //take multiple samples
   for (i=0; i< _calibration_sample_times; i++) {  
     val += _MQResistanceCalculation(analogRead(_pin));
-    delay(_calibration_sample_interval);
+    wait(_calibration_sample_interval);
   }
   //calculate the average value
   val = val/_calibration_sample_times;                   
@@ -697,7 +697,7 @@ float SensorMQ::_MQRead() {
   float rs=0;
   for (i=0; i<_read_sample_times; i++) {
     rs += _MQResistanceCalculation(analogRead(_pin));
-    delay(_read_sample_interval);
+    wait(_read_sample_interval);
   }
   rs = rs/_read_sample_times;
   return rs;
