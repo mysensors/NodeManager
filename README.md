@@ -171,6 +171,8 @@ Those NodeManager's directives in the `config.h` file control which module/libra
 #define MODULE_BMP085 0
 // Enable this module to use one of the following sensors: SENSOR_HCSR04
 #define MODULE_HCSR04 0
+// Enable this module to use one of the following sensors: SENSOR_MCP9808
+#define MODULE_MCP9808 0
 ~~~
 
 ## Installing the dependencies
@@ -188,6 +190,7 @@ MODULE_BME280 | https://github.com/adafruit/Adafruit_BME280_Library
 MODULE_SONOFF | https://github.com/thomasfredericks/Bounce2
 MODULE_BMP085 | https://github.com/adafruit/Adafruit-BMP085-Library
 MODULE_HCSR04 | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/NewPing
+MODULE_MCP9808 | https://github.com/adafruit/Adafruit_MCP9808_Library
 
 ## Configure NodeManager
 
@@ -294,6 +297,7 @@ SENSOR_SONOFF | Sonoff wireless smart switch
 SENSOR_BMP085 | BMP085/BMP180 sensor, return temperature and pressure
 SENSOR_HCSR04 | HC-SR04 sensor, return the distance between the sensor and an object
 SENSOR_ACS712 | ACS712 sensor, measure the current going through the attached module
+SENSOR_MCP9808 | MCP9808 sensor, measure the temperature through the attached module
 
 To register a sensor simply call the NodeManager instance with the sensory type and the pin the sensor is conncted to. For example:
 ~~~c

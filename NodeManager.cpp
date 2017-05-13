@@ -1691,6 +1691,47 @@ void SensorHCSR04::onReceive(const MyMessage & message) {
 }
 #endif
 
+/*
+   SensorMCP9808
+*/
+#if MODULE_MCP9808 == 1
+// contructor
+SensorMCP9808::SensorMCP9808(int child_id, Adafruit_MCP9808* mcp): Sensor(child_id,A2) {
+  _mcp = mcp;
+  setPresentation(S_TEMP);
+  setType(V_TEMP);
+  setValueType(TYPE_FLOAT);
+}
+
+// what do to during before
+void SensorMCP9808::onBefore() {
+}
+
+// what do to during setup
+void SensorMCP9808::onSetup() {
+}
+
+// what do to during loop
+void SensorMCP9808::onLoop() {
+  float temperature = _mcp->readTempC();
+  // convert it
+  if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
+  #if DEBUG == 1
+    Serial.print(F("MCP I="));
+    Serial.print(_child_id);
+    Serial.print(F(" T="));
+    Serial.println(temperature);
+  #endif
+  // store the value
+  if (! isnan(temperature)) _value_float = temperature;
+}
+
+// what do to as the main task when receiving a message
+void SensorMCP9808::onReceive(const MyMessage & message) {
+  if (message.getCommand() == C_REQ) onLoop();
+}
+#endif
+
 /*******************************************
    NodeManager
 */
@@ -1927,6 +1968,19 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   #if MODULE_HCSR04 == 1
     else if (sensor_type == SENSOR_HCSR04) {
       return registerSensor(new SensorHCSR04(child_id, pin));
+    }
+  #endif
+  #if MODULE_MCP9808 == 1
+    else if (sensor_type == SENSOR_MCP9808) {
+      Adafruit_MCP9808 * mcp = new Adafruit_MCP9808();
+      if (! mcp->begin()) {
+        #if DEBUG == 1
+          Serial.println(F("NO MCP"));
+        #endif
+        return -1;
+      }
+      // register temperature sensor
+      registerSensor(new SensorMCP9808(child_id,mcp));
     }
   #endif
   else {

@@ -99,7 +99,7 @@
 #define PERSIST 0
 
 // if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle and STARTED when starting/rebooting
-#define SERVICE_MESSAGES 1
+#define SERVICE_MESSAGES 0
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
 #define BATTERY_SENSOR 1
 
@@ -129,5 +129,7 @@
 #define MODULE_BMP085 0
 // Enable this module to use one of the following sensors: SENSOR_HCSR04
 #define MODULE_HCSR04 0
+// Enable this module to use one of the following sensors: SENSOR_MCP9808
+#define MODULE_MCP9808 0
 #endif
 

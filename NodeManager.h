@@ -8,7 +8,7 @@
 #include <Arduino.h>
 
 // define NodeManager version
-#define VERSION "1.5-dev3"
+#define VERSION "1.5-dev4"
 
 /***********************************
    Constants
@@ -145,6 +145,11 @@
 #ifndef MODULE_HCSR04
   #define MODULE_HCSR04 0
 #endif
+// Enable this module to use one of the following sensors: SENSOR_MCP9808
+#ifndef MODULE_MCP9808
+  #define MODULE_MCP9808 0
+#endif
+
 /***********************************
    Sensors types
 */
@@ -220,7 +225,11 @@
   // HC-SR04 sensor, return the distance between the sensor and an object
   #define SENSOR_HCSR04 23
 #endif
-// last Id: 24
+#if MODULE_MCP9808 == 1
+  // MCP9808 sensor, precision temperature sensor
+  #define SENSOR_MCP9808 25
+#endif
+// last Id: 25
 /***********************************
   Libraries
 */
@@ -275,6 +284,10 @@
 #endif
 #if MODULE_HCSR04 == 1
   #include <NewPing.h>
+#endif
+#if MODULE_MCP9808 == 1
+  #include <Wire.h>
+  #include "Adafruit_MCP9808.h"
 #endif
 
 /**************************************
@@ -895,6 +908,23 @@ class SensorSonoff: public Sensor {
     int _led_off = 1;
     void _blink();
     void _toggle();
+};
+#endif
+
+/*
+   SensorMCP9808
+*/
+#if MODULE_MCP9808 == 1
+class SensorMCP9808: public Sensor {
+  public:
+    SensorMCP9808(int child_id, Adafruit_MCP9808* mcp);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+  protected:
+    Adafruit_MCP9808* _mcp;
 };
 #endif
 
