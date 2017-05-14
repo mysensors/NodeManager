@@ -33,6 +33,7 @@ float getVcc() {
   #endif
 }
 
+
 /***************************************
    PowerManager
 */
@@ -325,17 +326,17 @@ void SensorAnalogInput::setRangeMax(int value) {
   _range_max = value;
 }
 
-// what do to during before
+// what to do during before
 void SensorAnalogInput::onBefore() {
   // prepare the pin for input
   pinMode(_pin, INPUT);
 }
 
-// what do to during setup
+// what to do during setup
 void SensorAnalogInput::onSetup() {
 }
 
-// what do to during loop
+// what to do during loop
 void SensorAnalogInput::onLoop() {
   // read the input
   int adc = _getAnalogRead();
@@ -354,7 +355,7 @@ void SensorAnalogInput::onLoop() {
   _value_int = _output_percentage ? percentage : adc;
 }
 
-// what do to during loop
+// what to do during loop
 void SensorAnalogInput::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
@@ -428,17 +429,17 @@ void SensorThermistor::setOffset(float value) {
   _offset = value;
 }
 
-// what do to during before
+// what to do during before
 void SensorThermistor::onBefore() {
   // set the pin as input
   pinMode(_pin, INPUT);
 }
 
-// what do to during setup
+// what to do during setup
 void SensorThermistor::onSetup() {
 }
 
-// what do to during loop
+// what to do during loop
 void SensorThermistor::onLoop() {
   // read the voltage across the thermistor
   float adc = analogRead(_pin);
@@ -467,7 +468,7 @@ void SensorThermistor::onLoop() {
   _value_float = temperature;
 }
 
-// what do to as the main task when receiving a message
+// what to do as the main task when receiving a message
 void SensorThermistor::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
@@ -485,17 +486,17 @@ SensorML8511::SensorML8511(int child_id, int pin): Sensor(child_id, pin) {
   setValueType(TYPE_FLOAT);
 }
 
-// what do to during before
+// what to do during before
 void SensorML8511::onBefore() {
   // set the pin as input
   pinMode(_pin, INPUT);
 }
 
-// what do to during setup
+// what to do during setup
 void SensorML8511::onSetup() {
 }
 
-// what do to during loop
+// what to do during loop
 void SensorML8511::onLoop() {
   // read the voltage 
   int uvLevel = analogRead(_pin);
@@ -516,7 +517,7 @@ void SensorML8511::onLoop() {
   _value_float = uvIntensity;
 }
 
-// what do to as the main task when receiving a message
+// what to do as the main task when receiving a message
 void SensorML8511::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
@@ -546,17 +547,17 @@ void SensorACS712::setOffset(int value) {
   _ACS_offset = value;
 }
 
-// what do to during before
+// what to do during before
 void SensorACS712::onBefore() {
   // set the pin as input
   pinMode(_pin, INPUT);
 }
 
-// what do to during setup
+// what to do during setup
 void SensorACS712::onSetup() {
 }
 
-// what do to during loop
+// what to do during loop
 void SensorACS712::onLoop() {
   int value = analogRead(_pin);
   // convert the analog read in mV
@@ -571,9 +572,91 @@ void SensorACS712::onLoop() {
   #endif
 }
 
-// what do to as the main task when receiving a message
+// what to do as the main task when receiving a message
 void SensorACS712::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
+}
+
+/*
+   SensorRainGauge
+*/
+
+// contructor
+SensorRainGauge::SensorRainGauge(int child_id, int pin): Sensor(child_id, pin) {
+  // set presentation, type and value type
+  setPresentation(S_RAIN);
+  setType(V_RAIN);
+  setValueType(TYPE_FLOAT);
+
+}
+
+// initialize static variables
+long SensorRainGauge::_last_tip = 0;
+long SensorRainGauge::_count = 0;
+
+// setter/getter
+void SensorRainGauge::setReportInterval(int value) {
+  _report_interval = value;
+}
+void SensorRainGauge::setSingleTip(float value) {
+  _single_tip = value;
+}
+
+// what to do during before
+void SensorRainGauge::onBefore() {
+  // set the pin as input and enabled pull up
+  pinMode(_pin, INPUT_PULLUP);
+  // attach to the pin's interrupt and execute the routine on falling
+  attachInterrupt(digitalPinToInterrupt(_pin), _onTipped, FALLING);
+}
+
+// what to do during setup
+void SensorRainGauge::onSetup() {
+}
+
+// what to do when when receiving an interrupt
+void SensorRainGauge::_onTipped() {
+  // on tipping, two consecutive interrupts are received, ignore the second one
+  if (millis() - _last_tip > 100){
+    // increase the counter
+    _count++;
+    #if DEBUG == 1
+      Serial.println(F("RAIN+"));
+    #endif
+  }
+  _last_tip = millis();
+}
+
+// what to do during loop
+void SensorRainGauge::onLoop() {
+  // avoid reporting the same value multiple times
+  _value_float = -1;
+  // time elapsed since the last report
+  long elapsed = millis() - _last_report;
+  // minimum time interval between reports
+  long min_interval = ((long)_report_interval*1000)*60;
+  // time to report
+  if (elapsed > min_interval) {
+    // report the total amount of rain for the last period
+    _value_float = _count*_single_tip;
+    #if DEBUG == 1
+      Serial.print(F("RAIN I="));
+      Serial.print(_child_id);
+      Serial.print(F(" T="));
+      Serial.println(_value_float);
+    #endif
+    // reset the counters
+    _count = 0;
+    _last_report = millis();
+  }
+}
+
+// what to do as the main task when receiving a message
+void SensorRainGauge::onReceive(const MyMessage & message) {
+  if (message.getCommand() == C_REQ) {
+    // report the total amount of rain for the last period
+    _value_float = _count*_single_tip;    
+  }
 }
 
 
@@ -623,18 +706,18 @@ void SensorMQ::setSmokeCurve(float *value) {
   _SmokeCurve[2] = value[2];
 }
 
-// what do to during before
+// what to do during before
 void SensorMQ::onBefore() {
   // prepare the pin for input
   pinMode(_pin, INPUT);
 }
 
-// what do to during setup
+// what to do during setup
 void SensorMQ::onSetup() {
   _ro = _MQCalibration();
 }
 
-// what do to during loop
+// what to do during loop
 void SensorMQ::onLoop() {
   if (_pin == -1) return;
   // calculate rs/ro
@@ -664,7 +747,7 @@ void SensorMQ::onLoop() {
   _value_int = (int16_t)ceil(value);
 }
 
-// what do to as the main task when receiving a message
+// what to do as the main task when receiving a message
 void SensorMQ::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
@@ -729,17 +812,17 @@ int SensorMQ::_MQGetPercentage(float rs_ro_ratio, float *pcurve) {
 SensorDigitalInput::SensorDigitalInput(int child_id, int pin): Sensor(child_id, pin) {
 }
 
-// what do to during before
+// what to do during before
 void SensorDigitalInput::onBefore() {
   // set the pin for input
   pinMode(_pin, INPUT);
 }
 
-// what do to during setup
+// what to do during setup
 void SensorDigitalInput::onSetup() {
 }
 
-// what do to during loop
+// what to do during loop
 void SensorDigitalInput::onLoop() {
   // read the value
   int value = digitalRead(_pin);
@@ -755,7 +838,7 @@ void SensorDigitalInput::onLoop() {
   _value_int = value;
 }
 
-// what do to as the main task when receiving a message
+// what to do as the main task when receiving a message
 void SensorDigitalInput::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
@@ -769,7 +852,7 @@ void SensorDigitalInput::onReceive(const MyMessage & message) {
 SensorDigitalOutput::SensorDigitalOutput(int child_id, int pin): Sensor(child_id, pin) {
 }
 
-// what do to during before
+// what to do during before
 void SensorDigitalOutput::onBefore() {
   // set the pin as output and initialize it accordingly
   pinMode(_pin, OUTPUT);
@@ -779,7 +862,7 @@ void SensorDigitalOutput::onBefore() {
   _value_int = _initial_value;
 }
 
-// what do to during setup
+// what to do during setup
 void SensorDigitalOutput::onSetup() {
 }
 
@@ -799,7 +882,7 @@ void SensorDigitalOutput::onLoop() {
   // do nothing on loop
 }
 
-// what do to as the main task when receiving a message
+// what to do as the main task when receiving a message
 void SensorDigitalOutput::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_SET) {
     // retrieve from the message the value to set
@@ -889,17 +972,17 @@ SensorDHT::SensorDHT(int child_id, int pin, DHT* dht, int sensor_type, int dht_t
   }
 }
 
-// what do to during before
+// what to do during before
 void SensorDHT::onBefore() {
     // initialize the dht library
     _dht->begin();
 }
 
-// what do to during setup
+// what to do during setup
 void SensorDHT::onSetup() {
 }
 
-// what do to during loop
+// what to do during loop
 void SensorDHT::onLoop() {
   // temperature sensor
   if (_sensor_type == SensorDHT::TEMPERATURE) {
@@ -932,7 +1015,7 @@ void SensorDHT::onLoop() {
   }
 }
 
-// what do to as the main task when receiving a message
+// what to do as the main task when receiving a message
 void SensorDHT::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
@@ -960,17 +1043,17 @@ SensorSHT21::SensorSHT21(int child_id, int sensor_type): Sensor(child_id,A2) {
   }
 }
 
-// what do to during before
+// what to do during before
 void SensorSHT21::onBefore() {
   // initialize the library
   Wire.begin();
 }
 
-// what do to during setup
+// what to do during setup
 void SensorSHT21::onSetup() {
 }
 
-// what do to during loop
+// what to do during loop
 void SensorSHT21::onLoop() {
   // temperature sensor
   if (_sensor_type == SensorSHT21::TEMPERATURE) {
@@ -1003,7 +1086,7 @@ void SensorSHT21::onLoop() {
   }
 }
 
-// what do to as the main task when receiving a message
+// what to do as the main task when receiving a message
 void SensorSHT21::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
@@ -1045,18 +1128,18 @@ int SensorSwitch::getInitial() {
   return _initial;
 }
 
-// what do to during before
+// what to do during before
 void SensorSwitch::onBefore() {
   // initialize the value
   if (_mode == RISING) _value_int = LOW;
   else if (_mode == FALLING) _value_int = HIGH;
 }
 
-// what do to during setup
+// what to do during setup
 void SensorSwitch::onSetup() {
 }
 
-// what do to during loop
+// what to do during loop
 void SensorSwitch::onLoop() {
   // wait to ensure the the input is not floating
   if (_debounce > 0) wait(_debounce);
@@ -1080,7 +1163,7 @@ void SensorSwitch::onLoop() {
     _value_int = -1;
   }
 }
-// what do to as the main task when receiving a message
+// what to do as the main task when receiving a message
 void SensorSwitch::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
@@ -1118,15 +1201,15 @@ SensorDs18b20::SensorDs18b20(int child_id, int pin, DallasTemperature* sensors, 
   _sensors->getAddress(_device_address, index);
 }
 
-// what do to during before
+// what to do during before
 void SensorDs18b20::onBefore() {
 }
 
-// what do to during setup
+// what to do during setup
 void SensorDs18b20::onSetup() {
 }
 
-// what do to during loop
+// what to do during loop
 void SensorDs18b20::onLoop() {
   // do not wait for conversion, will sleep manually during it
   if (_sleep_during_conversion) _sensors->setWaitForConversion(false);
@@ -1151,7 +1234,7 @@ void SensorDs18b20::onLoop() {
   _value_float = temperature;
 }
 
-// what do to as the main task when receiving a message
+// what to do as the main task when receiving a message
 void SensorDs18b20::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
@@ -1189,16 +1272,16 @@ SensorBH1750::SensorBH1750(int child_id): Sensor(child_id,A4) {
   _lightSensor = new BH1750();
 }
 
-// what do to during before
+// what to do during before
 void SensorBH1750::onBefore() {
   _lightSensor->begin();
 }
 
-// what do to during setup
+// what to do during setup
 void SensorBH1750::onSetup() {
 }
 
-// what do to during loop
+// what to do during loop
 void SensorBH1750::onLoop() {
   // request the light level
   _value_int = _lightSensor->readLightLevel();
@@ -1210,7 +1293,7 @@ void SensorBH1750::onLoop() {
   #endif
 }
 
-// what do to as the main task when receiving a message
+// what to do as the main task when receiving a message
 void SensorBH1750::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
@@ -1230,17 +1313,17 @@ SensorMLX90614::SensorMLX90614(int child_id, Adafruit_MLX90614* mlx, int sensor_
   setValueType(TYPE_FLOAT);
 }
 
-// what do to during before
+// what to do during before
 void SensorMLX90614::onBefore() {
   // initialize the library
   _mlx->begin();
 }
 
-// what do to during setup
+// what to do during setup
 void SensorMLX90614::onSetup() {
 }
 
-// what do to during loop
+// what to do during loop
 void SensorMLX90614::onLoop() {
   float temperature = _sensor_type == SensorMLX90614::TEMPERATURE_OBJECT ? _mlx->readAmbientTempC() : _mlx->readObjectTempC();
   // convert it
@@ -1254,7 +1337,7 @@ void SensorMLX90614::onLoop() {
   if (! isnan(temperature)) _value_float = temperature;
 }
 
-// what do to as the main task when receiving a message
+// what to do as the main task when receiving a message
 void SensorMLX90614::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
@@ -1299,21 +1382,21 @@ void SensorBosch::setForecastSamplesCount(int value) {
   _forecast_samples_count = value;
 }
 
-// what do to during before
+// what to do during before
 void SensorBosch::onBefore() {
   // initialize the forecast samples array
   _forecast_samples = new float[_forecast_samples_count];
 }
 
-// what do to during setup
+// what to do during setup
 void SensorBosch::onSetup() {
 }
 
-// what do to during loop
+// what to do during loop
 void SensorBosch::onLoop() {
 }
 
-// what do to as the main task when receiving a message
+// what to do as the main task when receiving a message
 void SensorBosch::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
@@ -1498,7 +1581,7 @@ SensorBMP085::SensorBMP085(int child_id, Adafruit_BMP085* bmp, int sensor_type):
   _bmp = bmp;
 }
 
-// what do to during loop
+// what to do during loop
 void SensorBMP085::onLoop() {
   // temperature sensor
   if (_sensor_type == SensorBMP085::TEMPERATURE) {
@@ -1560,11 +1643,11 @@ void SensorSonoff::setLedPin(int value) {
     _led_pin = value;
 }
 
-// what do to during before
+// what to do during before
 void SensorSonoff::onBefore() {
 }
 
-// what do to during setup
+// what to do during setup
 void SensorSonoff::onSetup() {
   // Setup the button
   pinMode(_button_pin, INPUT_PULLUP);
@@ -1580,7 +1663,7 @@ void SensorSonoff::onSetup() {
   _blink();
 }
 
-// what do to during loop
+// what to do during loop
 void SensorSonoff::onLoop() {
   // set the value to -1 so to avoid reporting to the gateway during loop
   _value_int = -1;
@@ -1594,7 +1677,7 @@ void SensorSonoff::onLoop() {
   _old_value = value;
 }
 
-// what do to as the main task when receiving a message
+// what to do as the main task when receiving a message
 void SensorSonoff::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_SET) {
     // retrieve from the message the value to set
@@ -1652,7 +1735,7 @@ SensorHCSR04::SensorHCSR04(int child_id, int pin): Sensor(child_id, pin) {
   _echo_pin = pin;
 }
 
-// what do to during before
+// what to do during before
 void SensorHCSR04::onBefore() {
   // initialize the library
   _sonar = new NewPing(_trigger_pin,_echo_pin,_max_distance);
@@ -1669,11 +1752,11 @@ void SensorHCSR04::setMaxDistance(int value) {
   _max_distance = value;
 }
 
-// what do to during setup
+// what to do during setup
 void SensorHCSR04::onSetup() {
 }
 
-// what do to during loop
+// what to do during loop
 void SensorHCSR04::onLoop() {
   int distance = getControllerConfig().isMetric ? _sonar->ping_cm() : _sonar->ping_in();
   #if DEBUG == 1
@@ -1685,7 +1768,7 @@ void SensorHCSR04::onLoop() {
   _value_int = distance;
 }
 
-// what do to as the main task when receiving a message
+// what to do as the main task when receiving a message
 void SensorHCSR04::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
@@ -1703,15 +1786,15 @@ SensorMCP9808::SensorMCP9808(int child_id, Adafruit_MCP9808* mcp): Sensor(child_
   setValueType(TYPE_FLOAT);
 }
 
-// what do to during before
+// what to do during before
 void SensorMCP9808::onBefore() {
 }
 
-// what do to during setup
+// what to do during setup
 void SensorMCP9808::onSetup() {
 }
 
-// what do to during loop
+// what to do during loop
 void SensorMCP9808::onLoop() {
   float temperature = _mcp->readTempC();
   // convert it
@@ -1726,7 +1809,7 @@ void SensorMCP9808::onLoop() {
   if (! isnan(temperature)) _value_float = temperature;
 }
 
-// what do to as the main task when receiving a message
+// what to do as the main task when receiving a message
 void SensorMCP9808::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
@@ -1836,6 +1919,7 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     else if (sensor_type == SENSOR_MQ) return registerSensor(new SensorMQ(child_id, pin));
     else if (sensor_type == SENSOR_ML8511) return registerSensor(new SensorML8511(child_id, pin));
     else if (sensor_type == SENSOR_ACS712) return registerSensor(new SensorACS712(child_id, pin));
+    else if (sensor_type == SENSOR_RAIN_GAUGE) return registerSensor(new SensorRainGauge(child_id, pin));
   #endif
   #if MODULE_DIGITAL_INPUT == 1
     else if (sensor_type == SENSOR_DIGITAL_INPUT) return registerSensor(new SensorDigitalInput(child_id, pin));

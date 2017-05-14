@@ -145,7 +145,7 @@ Those NodeManager's directives in the `config.h` file control which module/libra
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
 #define BATTERY_SENSOR 1
 
-// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ, SENSOR_ML8511, SENSOR_ACS712
+// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN_GAUGE
 #define MODULE_ANALOG_INPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
 #define MODULE_DIGITAL_INPUT 1
@@ -298,6 +298,7 @@ SENSOR_BMP085 | BMP085/BMP180 sensor, return temperature and pressure
 SENSOR_HCSR04 | HC-SR04 sensor, return the distance between the sensor and an object
 SENSOR_ACS712 | ACS712 sensor, measure the current going through the attached module
 SENSOR_MCP9808 | MCP9808 sensor, measure the temperature through the attached module
+SENSOR_RAIN_GAUGE | Rain gauge sensor
 
 To register a sensor simply call the NodeManager instance with the sensory type and the pin the sensor is conncted to. For example:
 ~~~c
@@ -512,6 +513,14 @@ Each sensor class can expose additional methods.
     void setmVPerAmp(int value);
     // set ACS offset (default: 2500);
     void setOffset(int value);
+~~~
+
+#### SensorRainGauge
+~~~c
+    // set how frequently to report back to the controller in minutes. After reporting the measure is resetted (default: 60);
+    void setReportInterval(int value);
+    // set how many mm of rain to count for each tip (default: 0.11);
+    void setSingleTip(float value);
 ~~~
 
 ## Upload your sketch

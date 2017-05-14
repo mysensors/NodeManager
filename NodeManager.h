@@ -1,14 +1,13 @@
 /*
  * NodeManager
  */
- 
 #ifndef NodeManager_h
 #define NodeManager_h
 
 #include <Arduino.h>
 
 // define NodeManager version
-#define VERSION "1.5-dev4"
+#define VERSION "1.5-dev5"
 
 /***********************************
    Constants
@@ -166,6 +165,8 @@
   #define SENSOR_ML8511 20
   // Current sensor
   #define SENSOR_ACS712 24
+  // rain gauge sensor
+  #define SENSOR_RAIN_GAUGE 26
 #endif
 #if MODULE_DIGITAL_INPUT == 1
   // Generic digital sensor, return a pin's digital value
@@ -229,7 +230,7 @@
   // MCP9808 sensor, precision temperature sensor
   #define SENSOR_MCP9808 25
 #endif
-// last Id: 25
+// last Id: 26
 /***********************************
   Libraries
 */
@@ -566,7 +567,32 @@ class SensorACS712: public Sensor {
     int _ACS_offset = 2500;
     int _mv_per_amp = 185;
 };
-  
+
+/*
+    SensorRainGauge
+*/
+
+class SensorRainGauge: public Sensor {
+  public:
+    SensorRainGauge(int child_id, int pin);
+    // set how frequently to report back to the controller in minutes. After reporting the measure is resetted (default: 60);
+    void setReportInterval(int value);
+    // set how many mm of rain to count for each tip (default: 0.11);
+    void setSingleTip(float value);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+  public:
+    static void _onTipped();
+    static long _last_tip;
+    static long _count;
+  protected:
+    int _report_interval = 4;
+    float _single_tip = 0.11;
+    long _last_report = 0;
+};
 
 /*
    SensorDigitalInput: read the digital input of the configured pin
