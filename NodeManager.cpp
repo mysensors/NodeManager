@@ -616,27 +616,29 @@ void SensorRainGauge::onSetup() {
 
 // what to do when when receiving an interrupt
 void SensorRainGauge::_onTipped() {
+  long now = millis();
   // on tipping, two consecutive interrupts are received, ignore the second one
-  if (millis() - _last_tip > 100){
+  if ( (now - _last_tip > 100) || (now < _last_tip) ){
     // increase the counter
     _count++;
     #if DEBUG == 1
       Serial.println(F("RAIN+"));
     #endif
   }
-  _last_tip = millis();
+  _last_tip = now;
 }
 
 // what to do during loop
 void SensorRainGauge::onLoop() {
   // avoid reporting the same value multiple times
   _value_float = -1;
+  long now = millis();
   // time elapsed since the last report
-  long elapsed = millis() - _last_report;
+  long elapsed = now - _last_report;
   // minimum time interval between reports
   long min_interval = ((long)_report_interval*1000)*60;
-  // time to report
-  if (elapsed > min_interval) {
+  // time to report or millis() reset
+  if ( (elapsed > min_interval) || (now < _last_report)) {
     // report the total amount of rain for the last period
     _value_float = _count*_single_tip;
     #if DEBUG == 1
@@ -647,7 +649,7 @@ void SensorRainGauge::onLoop() {
     #endif
     // reset the counters
     _count = 0;
-    _last_report = millis();
+    _last_report = now;
   }
 }
 
@@ -876,6 +878,9 @@ void SensorDigitalOutput::setPulseWidth(int value) {
 void SensorDigitalOutput::setOnValue(int value) {
   _on_value = value;
 }
+void SensorDigitalOutput::setLegacyMode(bool value) {
+  _legacy_mode = value;
+}
 
 // main task
 void SensorDigitalOutput::onLoop() {
@@ -884,7 +889,8 @@ void SensorDigitalOutput::onLoop() {
 
 // what to do as the main task when receiving a message
 void SensorDigitalOutput::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_SET) {
+  // by default handle a SET message but when legacy mode is set when a REQ message is expected instead
+  if ( (message.getCommand() == C_SET && ! _legacy_mode) || (message.getCommand() == C_REQ && _legacy_mode)) {
     // retrieve from the message the value to set
     int value = message.getInt();
     if (value != 0 && value != 1) return;
@@ -915,7 +921,7 @@ void SensorDigitalOutput::onReceive(const MyMessage & message) {
     _state = value;
     _value_int = value;
   }
-  if (message.getCommand() == C_REQ) {
+  if (message.getCommand() == C_REQ && ! _legacy_mode) {
     // return the current status
     _value_int = _state;
   }
@@ -1826,9 +1832,6 @@ NodeManager::NodeManager() {
 }
 
 // setter/getter
-void NodeManager::setRebootPin(int value) {
-    _reboot_pin = value;
-}
 void NodeManager::setRetries(int value) {
   _retries = value;
 }
@@ -2132,15 +2135,6 @@ void NodeManager::before() {
     Serial.print(F("NodeManager v"));
     Serial.println(VERSION);
   #endif
-  if (_reboot_pin > -1) {
-    #if DEBUG == 1
-      Serial.print(F("REB P="));
-      Serial.println(_reboot_pin);
-    #endif
-    // setup the reboot pin
-    pinMode(_reboot_pin, OUTPUT);
-    digitalWrite(_reboot_pin, HIGH);
-  }
   // setup the sleep interrupt pin
   if (_sleep_interrupt_pin > -1) {
     // set the interrupt when the pin is connected to ground
@@ -2388,15 +2382,22 @@ void NodeManager::_process(const char * message) {
       sendBatteryLevel(percentage,_ack);
     }
   #endif
-  // REBOOT: reboot the board
-  else if (strcmp(message, "REBOOT") == 0 && _reboot_pin > -1) {
-    #if DEBUG == 1
-      Serial.println(F("REBOOT"));
-    #endif
-    // set the reboot pin connected to RST to low so to reboot the board
-    _send(_msg.set(message));
-    digitalWrite(_reboot_pin, LOW);
-  }
+  #ifndef MY_GATEWAY_ESP8266
+    // REBOOT: reboot the board
+    else if (strcmp(message, "REBOOT") == 0) {
+      #if DEBUG == 1
+        Serial.println(F("REBOOT"));
+      #endif
+      // set the reboot pin connected to RST to low so to reboot the board
+      _send(_msg.set(message));
+      // Software reboot with watchdog timer. Enter Watchdog Configuration mode:
+      WDTCSR |= (1<<WDCE) | (1<<WDE);
+      // Reset enable
+      WDTCSR= (1<<WDE);
+      // Infinite loop until watchdog reset after 16 ms
+      while(true){}
+    }
+  #endif
   // CLEAR: clear the user's eeprom
   else if (strcmp(message, "CLEAR") == 0) {
     #if DEBUG == 1
@@ -2425,12 +2426,10 @@ void NodeManager::_process(const char * message) {
       #endif
       #ifndef MY_GATEWAY_ESP8266
         // Save static ID to eeprom
-        hwWriteConfig(EEPROM_NODE_ID_ADDRESS, (uint8_t)node_id);
+        //hwWriteConfig(EEPROM_NODE_ID_ADDRESS, (uint8_t)node_id);
       #endif
       // reboot the board
-      #if REBOOT_PIN == 1
-        _process(REBOOT);
-      #endif
+      _process("REBOOT");
     }
     // MODEx: change the way the node behaves. 0: stay awake withtout executing each sensors' loop(), 1: go to sleep for the configured interval, 2: wait for the configured interval, 3: stay awake and execute each sensors' loop() (e.g. MODE1)
     else if (strlen(message) == 5 && strncmp("MODE", message, strlen("MODE")) == 0) {

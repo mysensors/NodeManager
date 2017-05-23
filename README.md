@@ -197,8 +197,6 @@ MODULE_MCP9808 | https://github.com/adafruit/Adafruit_MCP9808_Library
 Node Manager comes with a reasonable default configuration. If you want/need to change its settings, this can be done in your sketch, inside the `before()` function and just before registering your sensors. The following methods are exposed for your convenience:
 
 ~~~c
-    // the pin to connect to the RST pin to reboot the board (default: 4)
-    void setRebootPin(int value);
     // send the same service message multiple times (default: 1)
     void setRetries(int value);
     #if BATTERY_MANAGER == 1
@@ -449,6 +447,8 @@ Each sensor class can expose additional methods.
     void setPulseWidth(int value);
     // define which value to set to the output when set to on (default: HIGH)
     void setOnValue(int value);
+    // when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
+    void setLegacyMode(bool value);
 ~~~
 
 #### SensorSwitch / SensorDoor / SensorMotion
@@ -587,7 +587,6 @@ If `PERSIST` is enabled, the settings provided with `INTVLnnnX` and `MODEx` are 
 A NodeManager object must be created and called from within your sketch during `before()`, `presentation()`, `loop()` and `receive()` to work properly. NodeManager will do the following during each phase:
 
 ## NodeManager::before()
-* Configure the reboot pin so to allow rebooting the board
 * Setup the interrupt pins to wake up the board based on the configured interrupts (e.g. stop sleeping when the pin is connected to ground or wake up and notify when a motion sensor has trigger)
 * If persistance is enabled, restore from the EEPROM the latest sleeping settings
 * Call `before()` of each registered sensor
@@ -623,12 +622,6 @@ A NodeManager object must be created and called from within your sketch during `
 
 # Examples
 All the examples below takes place within the before() function in the main sketch, just below the "Register below your sensors" comment.
-
-Enable reboot pin, connect pin 4 to RST to enable rebooting the board with the REBOOT message:
-
-~~~c
-  nodeManager.setRebootPin(4);
-~~~
 
 Set battery minimum and maxium voltage. This will be used to calculate the level percentage:
 
@@ -1076,11 +1069,14 @@ v1.5:
 * Added support for HC-SR04 distance sensor
 * Added support for BMP085/BMP180 temperature and pressure sensor
 * Added support for Sonoff smart switch
-* Added forecast output to BME280 sensor
-* Added capability to retrieve the time from the controller
+* Added support for Rain Gauge sensor
+* Added support for MCP9808 temperature sensor
+* Added forecast output to all Bosch sensors
+* Added I2C address auto-discovery for all Bosch sensors
 * Added support for running as a gateway
 * A heartbeat is sent when waking up from a wait cycle
 * Allowed combining sensors waking up from an interrupt and sensors reporting periodically
+* Added capability to retrieve the time from the controller
 * Optimized battery life for DS18B20 sensors
 * SLEEP_MANAGER has been deprecated and setMode() replaces setSleepMode()
 * New mode ALWAYS_ON to let the node staying awake and executing each sensors' loop

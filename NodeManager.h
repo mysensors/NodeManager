@@ -7,7 +7,7 @@
 #include <Arduino.h>
 
 // define NodeManager version
-#define VERSION "1.5-dev5"
+#define VERSION "1.5"
 
 /***********************************
    Constants
@@ -245,10 +245,6 @@
 
 // include MySensors libraries
 #include <core/MySensorsCore.h>
-#ifndef MY_GATEWAY_ESP8266
-  #include <core/MyHwAVR.h>
-  //#include <core/MyHwATMega328.h>
-#endif
 
 // include third party libraries
 #if MODULE_DHT == 1
@@ -589,7 +585,7 @@ class SensorRainGauge: public Sensor {
     static long _last_tip;
     static long _count;
   protected:
-    int _report_interval = 4;
+    int _report_interval = 60;
     float _single_tip = 0.11;
     long _last_report = 0;
 };
@@ -619,6 +615,8 @@ class SensorDigitalOutput: public Sensor {
     void setPulseWidth(int value);
     // define which value to set to the output when set to on (default: HIGH)
     void setOnValue(int value);
+    // when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
+    void setLegacyMode(bool value);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
@@ -629,6 +627,7 @@ class SensorDigitalOutput: public Sensor {
     int _on_value = HIGH;
     int _state = 0;
     int _pulse_width = 0;
+    bool _legacy_mode = false;
 };
 
 
@@ -1058,7 +1057,6 @@ class NodeManager {
     int _interrupt_1_pull = -1;
     int _interrupt_2_pull = -1;
     int _last_interrupt_pin = -1;
-    int _reboot_pin = -1;
     long _timestamp = -1;
     Sensor* _sensors[255] = {0};
     bool _ack = false;
