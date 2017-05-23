@@ -387,7 +387,7 @@ The following methods are available for all the sensors:
       // manually turn the power off
       void powerOff();
     #endif
-    // get the latest value from the sensor
+    // get the latest recorded value from the sensor
     int getValueInt();
     float getValueFloat();
     char* getValueString();
@@ -1086,11 +1086,13 @@ v1.5:
 * Added forecast output to all Bosch sensors
 * Added I2C address auto-discovery for all Bosch sensors
 * Added support for running as a gateway
-* A heartbeat is sent when waking up from a wait cycle
-* Allowed combining sensors waking up from an interrupt and sensors reporting periodically
+* Added option to retrieve the latest value of a sensor from outside NodeManager
+* Remote reboot now does not need a reboot pin configured
+* A heartbeat is now sent also when waking up from a wait cycle
+* When waking up for an interrupt, only the code of the sensor expecting that interrupt is executed
 * Added capability to retrieve the time from the controller
 * Optimized battery life for DS18B20 sensors
-* SLEEP_MANAGER has been deprecated and setMode() replaces setSleepMode()
+* SLEEP_MANAGER has been deprecated (now always enabled) and setMode() replaces setSleepMode()
 * New mode ALWAYS_ON to let the node staying awake and executing each sensors' loop
 * ESP8266WiFi.h has to be included in the main sketch if MY_GATEWAY_ESP8266 is defined
 * Added receiveTime() wrapper in the main sketch
