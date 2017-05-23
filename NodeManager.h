@@ -345,6 +345,7 @@ class Sensor {
     void setForceUpdate(int value);
     // the value type of this sensor (default: TYPE_INTEGER)
     void setValueType(int value);
+    int getValueType();
     // for float values, set the float precision (default: 2)
     void setFloatPrecision(int value);
     // optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
@@ -362,6 +363,10 @@ class Sensor {
       // manually turn the power off
       void powerOff();
     #endif
+    // get the latest recorded value from the sensor
+    int getValueInt();
+    float getValueFloat();
+    char* getValueString();
     // define what to do at each stage of the sketch
     virtual void before();
     virtual void presentation();

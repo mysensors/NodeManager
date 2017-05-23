@@ -343,12 +343,16 @@ The following methods are available for all the sensors:
 ~~~c
     // where the sensor is attached to (default: not set)
     void setPin(int value);
+	int getPin();
     // child_id of this sensor (default: not set)
     void setChildId(int value);
+	int getChildId();
     // presentation of this sensor (default: S_CUSTOM)
     void setPresentation(int value);
+	int getPresentation();
     // type of this sensor (default: V_CUSTOM)
     void setType(int value);
+	int getType();
     // description of the sensor (default: '')
     void setDescription(char *value);
     // set this to true if you want destination node to send ack back to this node (default: false)
@@ -365,10 +369,14 @@ The following methods are available for all the sensors:
     void setForceUpdate(int value);
     // the value type of this sensor (default: TYPE_INTEGER)
     void setValueType(int value);
+	int getValueType();
 	// for float values, set the float precision (default: 2)
     void setFloatPrecision(int value);
     // optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
+    // set the interrupt pin the sensor is attached to so its loop() will be executed only upon that interrupt (default: -1)
+    void setInterruptPin(int value);
+    int getInterruptPin();
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
       void setPowerPins(int ground_pin, int vcc_pin, long wait = 0);
@@ -379,6 +387,10 @@ The following methods are available for all the sensors:
       // manually turn the power off
       void powerOff();
     #endif
+    // get the latest value from the sensor
+    int getValueInt();
+    float getValueFloat();
+    char* getValueString();
 ~~~
 
 ### Sensor's specific configuration

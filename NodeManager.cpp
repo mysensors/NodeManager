@@ -152,6 +152,9 @@ void Sensor::setForceUpdate(int value) {
 void Sensor::setValueType(int value) {
   _value_type = value;
 }
+int Sensor::getValueType() {
+  return _value_type;
+}
 void Sensor::setFloatPrecision(int value) {
   _float_precision = value;
 }
@@ -177,6 +180,15 @@ void Sensor::setInterruptPin(int value) {
 }
 int Sensor::getInterruptPin() {
   return _interrupt_pin;
+}
+int Sensor::getValueInt() {
+  return _last_value_int;
+}
+float Sensor::getValueFloat() {
+  return _last_value_float;
+}
+char* Sensor::getValueString() {
+  return _last_value_string;
 }
 
 // present the sensor to the gateway and controller
