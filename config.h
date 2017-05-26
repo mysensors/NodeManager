@@ -23,6 +23,7 @@
 //#define MY_RF24_CHANNEL 76
 //#define MY_RF24_PA_LEVEL RF24_PA_HIGH
 //#define MY_DEBUG_VERBOSE_RF24
+//#define MY_RF24_DATARATE RF24_250KBPS
 
 // RFM69 radio settings
 //#define MY_RADIO_RFM69
@@ -35,6 +36,21 @@
 //#define MY_RF69_IRQ_PIN D1
 //#define MY_RF69_IRQ_NUM MY_RF69_IRQ_PIN
 //#define MY_RF69_SPI_CS D2
+
+//#define MY_REPEATER_FEATURE
+//#define MY_TRANSPORT_WAIT_READY_MS (5*1000ul)
+//#define MY_TRANSPORT_TIMEOUT_EXT_FAILURE_STATE (15*60*1000ul)
+//#define MY_TRANSPORT_SANITY_CHECK
+// already set as default
+//#define MY_TRANSPORT_SANITY_CHECK_INTERVAL_MS (15*60*1000ul)
+//#define MY_TRANSPORT_STATE_RETRIES 2
+
+// Enable to support OTA for this node (needs DualOptiBoot boot-loader to fully work)
+//#define MY_OTA_FIRMWARE_FEATURE
+// How many milli seconds should we wait for OTA?
+//#define OTA_WAIT_PERIOD 300
+//#define FIRMWARE_MAX_REQUESTS 2
+//#define MY_OTA_RETRY 2
 
 /**********************************
  * MySensors gateway configuration
@@ -110,6 +126,8 @@
 #define MODULE_DIGITAL_OUTPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
 #define MODULE_DHT 0
+// Enable this module to use one of the following sensors: SENSOR_AM2320
+#define MODULE_AM2320 0
 // Enable this module to use one of the following sensors: SENSOR_SHT21
 #define MODULE_SHT21 0
 // Enable this module to use one of the following sensors: SENSOR_SWITCH, SENSOR_DOOR, SENSOR_MOTION
@@ -118,6 +136,8 @@
 #define MODULE_DS18B20 0
 // Enable this module to use one of the following sensors: SENSOR_BH1750
 #define MODULE_BH1750 0
+// Enable this module to use one of the following sensors: SENSOR_TSL2561
+#define MODULE_TSL2561 0
 // Enable this module to use one of the following sensors: SENSOR_MLX90614
 #define MODULE_MLX90614 0
 // Enable this module to use one of the following sensors: SENSOR_BME280

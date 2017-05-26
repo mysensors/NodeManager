@@ -108,6 +108,10 @@
 #ifndef MODULE_SHT21
   #define MODULE_SHT21 0
 #endif
+// Enable this module to use one of the following sensors: SENSOR_AM2320
+#ifndef MODULE_AM2320
+  #define MODULE_AM2320 0
+#endif
 // Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
 #ifndef MODULE_DHT
   #define MODULE_DHT 0
@@ -123,6 +127,10 @@
 // Enable this module to use one of the following sensors: SENSOR_BH1750
 #ifndef MODULE_BH1750
   #define MODULE_BH1750 0
+#endif
+// Enable this module to use one of the following sensors: SENSOR_TSL2561
+#ifndef MODULE_TSL2561
+  #define MODULE_TSL2561 0
 #endif
 // Enable this module to use one of the following sensors: SENSOR_MLX90614
 #ifndef MODULE_MLX90614
@@ -184,6 +192,11 @@
   // DHT11/DHT22 sensors, return temperature/humidity based on the attached DHT sensor
   #define SENSOR_DHT11 8
   #define SENSOR_DHT22 9
+  #define SENSOR_DHT21 27
+#endif
+#if MODULE_AM2320 == 1
+  // AM2320 sensors, return temperature/humidity based on the attached AM2320 sensor
+  #define SENSOR_AM2320 28
 #endif
 #if MODULE_SHT21 == 1
   // SHT21 sensor, return temperature/humidity based on the attached SHT21 sensor
@@ -205,6 +218,10 @@
 #if MODULE_BH1750 == 1
   // BH1750 sensor, return light in lux
   #define SENSOR_BH1750 16
+#endif
+#if MODULE_TSL2561 == 1
+  // TSL2561 sensor, return light in lux
+  #define SENSOR_TSL2561 28
 #endif
 #if MODULE_MLX90614 == 1
   // MLX90614 sensor, contactless temperature sensor
@@ -230,7 +247,7 @@
   // MCP9808 sensor, precision temperature sensor
   #define SENSOR_MCP9808 25
 #endif
-// last Id: 26
+// last Id: 28
 /***********************************
   Libraries
 */
@@ -250,6 +267,10 @@
 #if MODULE_DHT == 1
   #include <DHT.h>
 #endif
+#if MODULE_AM2320 == 1
+  #include <Wire.h>
+  #include <AM2320.h>
+#endif
 #if MODULE_SHT21 == 1
   #include <Wire.h>
   #include <Sodaq_SHT2x.h>
@@ -260,6 +281,10 @@
 #endif
 #if MODULE_BH1750 == 1
   #include <BH1750.h>
+  #include <Wire.h>
+#endif
+#if MODULE_TSL2561 == 1
+  #include <TSL2561.h>
   #include <Wire.h>
 #endif
 #if MODULE_MLX90614 == 1
@@ -678,6 +703,25 @@ class SensorDHT: public Sensor {
 #endif
 
 /*
+   SensorAM2320
+*/
+#if MODULE_AM2320 == 1
+class SensorAM2320: public Sensor {
+  public:
+    SensorAM2320(int child_id, int sensor_type);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+  protected:
+    AM2320* _th;
+    float _offset = 0;
+    int _sensor_type = 0;
+};
+#endif
+
+/*
    SensorSHT21: temperature and humidity sensor
 */
 #if MODULE_SHT21 == 1
@@ -794,6 +838,26 @@ class SensorBH1750: public Sensor {
     void onReceive(const MyMessage & message);
   protected:
     BH1750* _lightSensor;
+};
+#endif
+
+/*
+   SensorTSL2561
+*/
+#if MODULE_TSL2561 == 1
+class SensorTSL2561: public Sensor {
+  public:
+    SensorTSL2561(int child_id);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+  protected:
+    TSL2561* _tsl;
+// The address will be different depending on whether you let
+// the ADDR pin float (addr 0x39), or tie it to ground or vcc. In those cases
+// use TSL2561_ADDR_LOW (0x29) or TSL2561_ADDR_HIGH (0x49) respectively
 };
 #endif
 
