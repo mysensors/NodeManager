@@ -1040,6 +1040,86 @@ void SensorDHT::onReceive(const MyMessage & message) {
 #endif
 
 /*
+   SensorAM2320
+*/
+#if MODULE_AM2320 == 1
+// contructor
+SensorAM2320::SensorAM2320(int child_id, int sensor_type): Sensor(child_id,A2) {
+  //_th = new AM2320(); another approach to try if it doesn't work
+  _th = th;
+  // store the sensor type (0: temperature, 1: humidity)
+  _sensor_type = sensor_type;
+  if (_sensor_type == SensorAM2320::TEMPERATURE) {
+    // temperature sensor
+    setPresentation(S_TEMP);
+    setType(V_TEMP);
+    setValueType(TYPE_FLOAT);
+  }
+  else if (_sensor_type == SensorAM2320::HUMIDITY) {
+    // humidity sensor
+    setPresentation(S_HUM);
+    setType(V_HUM);
+    setValueType(TYPE_FLOAT);
+  }
+
+}
+
+// what do to during before
+void SensorAM2320::onBefore() {
+
+}
+
+// what do to during setup
+void SensorAM2320::onSetup() {
+}
+
+// what do to during loop
+void SensorAM2320::onLoop() {
+
+    switch(_th->Read()) {
+      case 2:
+        Serial.println(F("AM2320 CRC failed"));
+        break;
+      case 1:
+        Serial.println(F("AM2320 offline"));
+        break;
+      case 0:
+    // temperature sensor
+        if (_sensor_type == SensorAM2320::TEMPERATURE) {
+          // read the temperature
+         float temperature = _th->t;
+          #if DEBUG == 1
+            Serial.print(F("AM2320 I="));
+            Serial.print(_child_id);
+            Serial.print(F(" T="));
+            Serial.println(temperature);
+          #endif
+          // store the value
+          _value_float = temperature;
+        }
+        // humidity sensor
+        else if (_sensor_type == SensorAM2320::HUMIDITY) {
+          // read humidity
+          float humidity = _th->h;
+          if (isnan(humidity)) return;
+          #if DEBUG == 1
+            Serial.print(F("AM2320 I="));
+            Serial.print(_child_id);
+            Serial.print(F(" H="));
+            Serial.println(humidity);
+          #endif
+          // store the value
+          _value_float = humidity;
+        }
+}
+
+// what do to as the main task when receiving a message
+void SensorAM2320::onReceive(const MyMessage & message) {
+  onLoop();
+}
+#endif
+
+/*
    SensorSHT21
 */
 #if MODULE_SHT21 == 1
@@ -1314,6 +1394,81 @@ void SensorBH1750::onLoop() {
 // what to do as the main task when receiving a message
 void SensorBH1750::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
+}
+#endif
+
+/*
+   SensorTSL2561
+*/
+#if MODULE_TSL2561 == 1
+// contructor
+SensorTSL2561::SensorTSL2561(int child_id, int tsl_gain, int tsl_timing, int tsl_spectrum, ): Sensor(child_id,A4) {
+  setPresentation(S_LIGHT_LEVEL);
+  setType(V_LEVEL);
+  _tsl = new TLS2561(TSL2561_ADDR_FLOAT);
+}
+
+// what do to during before
+void SensorTSL2561::onBefore() {
+  _tsl->begin();
+    // You can change the gain on the fly, to adapt to brighter/dimmer light situations
+  //tsl.setGain(TSL2561_GAIN_0X);         // set no gain (for bright situtations)
+  //_tsl->setGain(TSL2561_GAIN_16X);      // set 16x gain (for dim situations)
+  _tsl->setGain(tsl_gain);      
+  // Changing the integration time gives you a longer time over which to sense light
+  // longer timelines are slower, but are good in very low light situtations!
+  //_tsl->setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
+  //tsl.setTiming(TSL2561_INTEGRATIONTIME_101MS);  // medium integration time (medium light)
+  //tsl.setTiming(TSL2561_INTEGRATIONTIME_402MS);  // longest integration time (dim light)
+  _tsl->setTiming(tsl_timing);  // shortest integration time (bright light)
+  
+}
+
+// what do to during setup
+void SensorTSL2561::onSetup() {
+  
+}
+
+// what do to during loop
+void SensorTSL2561::onLoop() {
+  // request the light level
+  _value_int = _tsl->getLuminosity(tsl_spectrum); 
+//  _value_int = _tsl->getLuminosity(TSL2561_VISIBLE); 
+//  _value_int = _tsl->getLuminosity(TSL2561_FULLSPECTRUM); 
+//  _value_int = _tsl->getLuminosity(TSL2561_INFRARED); 
+  #if DEBUG == 1
+    Serial.print(F("TSL I="));
+    Serial.print(_child_id);
+    Serial.print(F(" L="));
+    Serial.println(_value_int);
+  #endif
+
+#if defined TSL2561_FULL_LUM
+    // request the full light level
+//  uint32_t lum = _tsl->getFullLuminosity(); 
+//  uint16_t ir, full;
+//  ir = lum >> 16;
+//  full = lum & 0xFFFF;
+//  _value_int = _tsl->getFullLuminosity(); 
+  #if DEBUG == 1
+    Serial.print(F("TLS I="));
+    Serial.print(_child_id);
+    Serial.print(F(" IR="));
+    Serial.println(ir);
+    Serial.print(F(" FULL="));
+    Serial.println(full);
+    Serial.print(F(" VISIBLE="));
+    Serial.println(full-ir);
+    Serial.print(F(" LUX="));
+    Serial.println(_tsl->calculateLux(full, ir));
+  #endif
+#endif
+
+}
+
+// what do to as the main task when receiving a message
+void SensorTSL2561::onReceive(const MyMessage & message) {
+  onLoop();
 }
 #endif
 
@@ -1945,14 +2100,25 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     else if (sensor_type == SENSOR_LATCHING_RELAY) return registerSensor(new SensorLatchingRelay(child_id, pin));
   #endif
   #if MODULE_DHT == 1
-    else if (sensor_type == SENSOR_DHT11 || sensor_type == SENSOR_DHT22) {
-      int dht_type = sensor_type == SENSOR_DHT11 ? DHT11 : DHT22;
+    else if (sensor_type == SENSOR_DHT11 || sensor_type == SENSOR_DHT22 || sensor_type == SENSOR_DHT21) {
+      int dht_type;
+      if (sensor_type == SENSOR_DHT11) dht_type = DHT11;
+      else if (sensor_type == SENSOR_DHT21) dht_type = DHT21;
+      else if (sensor_type == SENSOR_DHT22) dht_type = DHT22;
       DHT* dht = new DHT(pin,dht_type);
       // register temperature sensor
       registerSensor(new SensorDHT(child_id,pin,dht,SensorDHT::TEMPERATURE,dht_type));
       // register humidity sensor
       child_id = _getAvailableChildId();
       return registerSensor(new SensorDHT(child_id,pin,dht,SensorDHT::HUMIDITY,dht_type));
+    }
+  #endif
+  #if MODULE_AM2320 == 1
+    else if (sensor_type == SENSOR_AM2320) {
+      AM2320* th = new AM2320();
+      registerSensor(new SensorAM2320(child_id,SensorAM2320::TEMPERATURE));
+      child_id = _getAvailableChildId();
+      return registerSensor(new SensorAM2320(child_id,SensorAM2320::HUMIDITY));
     }
   #endif
   #if MODULE_SHT21 == 1
@@ -2006,6 +2172,26 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   #if MODULE_BH1750 == 1
     else if (sensor_type == SENSOR_BH1750) {
       return registerSensor(new SensorBH1750(child_id));
+    }
+  #endif
+  #if MODULE_TSL2561 == 1
+    else if (sensor_type == SENSOR_TSL2561) {
+      int tsl_gain;
+      if (sensor_type == SENSOR_DHT11) tsl_gain = TSL2561_GAIN_16X;
+      else if (sensor_type == SENSOR_DHT21) tsl_gain = TSL2561_GAIN_0X;
+      int tsl_timing;
+      if (sensor_type == SENSOR_DHT11) tsl_timing = TSL2561_INTEGRATIONTIME_13MS;
+      else if (sensor_type == SENSOR_DHT21) tsl_timing = TSL2561_INTEGRATIONTIME_101MS;
+      else if (sensor_type == SENSOR_DHT21) tsl_timing = TSL2561_INTEGRATIONTIME_402MS;
+      int tsl_spectrum;
+      if (sensor_type == SENSOR_DHT11) tsl_spectrum = TSL2561_VISIBLE;
+      else if (sensor_type == SENSOR_DHT21) tsl_spectrum = TSL2561_FULLSPECTRUM;
+      else if (sensor_type == SENSOR_DHT21) tsl_spectrum = TSL2561_INFRARED;
+
+      //DHT* dht = new DHT(pin,dht_type);
+      // register temperature sensor
+      registerSensor(new SensorDHT(child_id,pin,dht,SensorDHT::TEMPERATURE,dht_type));
+      return registerSensor(new SensorTSL2561(child_id,tsl_gain,tsl_timing,tsl_spectrum));
     }
   #endif
   #if MODULE_MLX90614 == 1
