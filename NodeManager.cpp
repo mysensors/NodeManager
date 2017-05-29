@@ -2193,7 +2193,7 @@ void NodeManager::before() {
     if (! _battery_internal_vcc && _battery_pin > -1) analogReference(INTERNAL);
   #endif
   // setup individual sensors
-  for (int i = 0; i < 255; i++) {
+  for (int i = 0; i < MAX_SENSORS; i++) {
     if (_sensors[i] == 0) continue;
     // call each sensor's setup()
     _sensors[i]->before();
@@ -2217,7 +2217,7 @@ void NodeManager::presentation() {
     _process("BATTERY");
   #endif
   // present each sensor
-  for (int i = 0; i < 255; i++) {
+  for (int i = 0; i < MAX_SENSORS; i++) {
     if (_sensors[i] == 0) continue;
     // call each sensor's presentation()
     if (_sleep_between_send > 0) sleep(_sleep_between_send);
@@ -2242,7 +2242,7 @@ void NodeManager::setup() {
     _send(_msg.set("STARTED"));
   #endif
   // run setup for all the registered sensors
-  for (int i = 0; i < 255; i++) {
+  for (int i = 0; i < MAX_SENSORS; i++) {
     if (_sensors[i] == 0) continue;
     // call each sensor's setup()
     _sensors[i]->setup();
@@ -2261,7 +2261,7 @@ void NodeManager::loop() {
       if (_auto_power_pins) powerOn();
     #endif
     // run loop for all the registered sensors
-    for (int i = 0; i < 255; i++) {
+    for (int i = 0; i < MAX_SENSORS; i++) {
       // skip not configured sensors
       if (_sensors[i] == 0) continue;
       // if waking up from an interrupt skip all the sensor without that interrupt configured
@@ -2609,7 +2609,7 @@ void NodeManager::_present(int child_id, int type) {
 
 // return the next available child_id
 int NodeManager::_getAvailableChildId() {
-  for (int i = 1; i < 255; i++) {
+  for (int i = 1; i < MAX_SENSORS; i++) {
     if (i == CONFIGURATION_CHILD_ID) continue;
     if (i == BATTERY_CHILD_ID) continue;
     // empty place, return it
