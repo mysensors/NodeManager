@@ -608,6 +608,14 @@ class SensorRainGauge: public Sensor {
 };
 
 /*
+   SensorRain
+*/
+class SensorRain: public SensorAnalogInput {
+  public:
+    SensorRain(int child_id, int pin);
+};
+
+/*
    SensorDigitalInput: read the digital input of the configured pin
 */
 class SensorDigitalInput: public Sensor {

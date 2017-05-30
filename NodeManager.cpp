@@ -673,6 +673,21 @@ void SensorRainGauge::onReceive(const MyMessage & message) {
   }
 }
 
+/*
+   SensorRain
+*/
+
+// contructor
+SensorRain::SensorRain(int child_id, int pin): SensorAnalogInput(child_id, pin) {
+  // set presentation and type and reverse
+  setPresentation(S_RAIN);
+  setType(V_RAINRATE);
+  setReference(DEFAULT);
+  setOutputPercentage(true);
+  setReverse(true);
+  setRangeMin(100);
+}
+
 
 /*
  * SensorMQ
