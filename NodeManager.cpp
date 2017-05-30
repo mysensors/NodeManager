@@ -474,8 +474,6 @@ void SensorThermistor::onLoop() {
     Serial.print(adc);
     Serial.print(F(" T="));
     Serial.print(temperature);
-    Serial.print(F(" M="));
-    Serial.println(getControllerConfig().isMetric);
   #endif
   // store the value
   _value_float = temperature;
@@ -1951,6 +1949,15 @@ void NodeManager::setSleepBetweenSend(int value) {
 void NodeManager::setAck(bool value) {
     _ack = value;
 }
+void NodeManager::setGetControllerConfig(bool value) {
+  _get_controller_config = value;
+}
+void NodeManager::setIsMetric(bool value) {
+  _is_metric = value;
+}
+bool NodeManager::getIsMetric() {
+  return _is_metric;
+}
 
 // register a sensor to this manager
 int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
@@ -2283,11 +2290,13 @@ void NodeManager::presentation() {
 
 // setup NodeManager
 void NodeManager::setup() {
+  // retrieve and store isMetric from the controller
+  if (_get_controller_config) _is_metric = getControllerConfig().isMetric;
   #if DEBUG == 1
     Serial.print(F("MY I="));
     Serial.print(getNodeId());
     Serial.print(F(" M="));
-    Serial.println(getControllerConfig().isMetric);
+    Serial.println(_is_metric);
   #endif
   #if SERVICE_MESSAGES == 1
     _send(_msg.set("STARTED"));
