@@ -96,7 +96,8 @@ void PowerManager::powerOff() {
    Sensor class
 */
 // constructor
-Sensor::Sensor(int child_id, int pin) {
+Sensor::Sensor(NodeManager* node_manager, int child_id, int pin) {
+  _node_manager = node_manager;
   _child_id = child_id;
   _pin = pin;
   _msg = MyMessage(_child_id, _type);
@@ -318,7 +319,7 @@ void Sensor::_send(MyMessage & message) {
 */
 
 // contructor
-SensorAnalogInput::SensorAnalogInput(int child_id, int pin): Sensor(child_id, pin) {
+SensorAnalogInput::SensorAnalogInput(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
 }
 
 // setter/getter
@@ -405,7 +406,7 @@ int SensorAnalogInput::_getPercentage(int adc) {
 */
 
 // contructor
-SensorLDR::SensorLDR(int child_id, int pin): SensorAnalogInput(child_id, pin) {
+SensorLDR::SensorLDR(NodeManager* node_manager, int child_id, int pin): SensorAnalogInput(node_manager, child_id, pin) {
   // set presentation and type and reverse (0: no light, 100: max light)
   setPresentation(S_LIGHT_LEVEL);
   setType(V_LIGHT_LEVEL);
@@ -417,7 +418,7 @@ SensorLDR::SensorLDR(int child_id, int pin): SensorAnalogInput(child_id, pin) {
 */
 
 // contructor
-SensorThermistor::SensorThermistor(int child_id, int pin): Sensor(child_id, pin) {
+SensorThermistor::SensorThermistor(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
   // set presentation, type and value type
   setPresentation(S_TEMP);
   setType(V_TEMP);
@@ -491,7 +492,7 @@ void SensorThermistor::onReceive(const MyMessage & message) {
 */
 
 // contructor
-SensorML8511::SensorML8511(int child_id, int pin): Sensor(child_id, pin) {
+SensorML8511::SensorML8511(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
   // set presentation, type and value type
   setPresentation(S_UV);
   setType(V_UV);
@@ -544,7 +545,7 @@ float SensorML8511::_mapfloat(float x, float in_min, float in_max, float out_min
 */
 
 // contructor
-SensorACS712::SensorACS712(int child_id, int pin): Sensor(child_id, pin) {
+SensorACS712::SensorACS712(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
   // set presentation, type and value type
   setPresentation(S_MULTIMETER);
   setType(V_CURRENT);
@@ -594,7 +595,7 @@ void SensorACS712::onReceive(const MyMessage & message) {
 */
 
 // contructor
-SensorRainGauge::SensorRainGauge(int child_id, int pin): Sensor(child_id, pin) {
+SensorRainGauge::SensorRainGauge(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id, pin) {
   // set presentation, type and value type
   setPresentation(S_RAIN);
   setType(V_RAIN);
@@ -678,7 +679,7 @@ void SensorRainGauge::onReceive(const MyMessage & message) {
 */
 
 // contructor
-SensorRain::SensorRain(int child_id, int pin): SensorAnalogInput(child_id, pin) {
+SensorRain::SensorRain(NodeManager* node_manager, int child_id, int pin): SensorAnalogInput(node_manager,child_id, pin) {
   // set presentation and type and reverse
   setPresentation(S_RAIN);
   setType(V_RAINRATE);
@@ -693,7 +694,7 @@ SensorRain::SensorRain(int child_id, int pin): SensorAnalogInput(child_id, pin) 
 */
 
 // contructor
-SensorSoilMoisture::SensorSoilMoisture(int child_id, int pin): SensorAnalogInput(child_id, pin) {
+SensorSoilMoisture::SensorSoilMoisture(NodeManager* node_manager, int child_id, int pin): SensorAnalogInput(node_manager, child_id, pin) {
   // set presentation and type and reverse
   setPresentation(S_MOISTURE);
   setType(V_LEVEL);
@@ -707,7 +708,7 @@ SensorSoilMoisture::SensorSoilMoisture(int child_id, int pin): SensorAnalogInput
 /*
  * SensorMQ
  */
-SensorMQ::SensorMQ(int child_id, int pin): Sensor(child_id,pin) {
+SensorMQ::SensorMQ(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id,pin) {
   setPresentation(S_AIR_QUALITY);
   setType(V_LEVEL);
 }
@@ -853,7 +854,7 @@ int SensorMQ::_MQGetPercentage(float rs_ro_ratio, float *pcurve) {
 */
 
 // contructor
-SensorDigitalInput::SensorDigitalInput(int child_id, int pin): Sensor(child_id, pin) {
+SensorDigitalInput::SensorDigitalInput(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id, pin) {
 }
 
 // what to do during before
@@ -893,7 +894,7 @@ void SensorDigitalInput::onReceive(const MyMessage & message) {
 */
 
 // contructor
-SensorDigitalOutput::SensorDigitalOutput(int child_id, int pin): Sensor(child_id, pin) {
+SensorDigitalOutput::SensorDigitalOutput(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id, pin) {
 }
 
 // what to do during before
@@ -974,7 +975,7 @@ void SensorDigitalOutput::onReceive(const MyMessage & message) {
 */
 
 // contructor
-SensorRelay::SensorRelay(int child_id, int pin): SensorDigitalOutput(child_id, pin) {
+SensorRelay::SensorRelay(NodeManager* node_manager, int child_id, int pin): SensorDigitalOutput(node_manager, child_id, pin) {
   // set presentation and type
   setPresentation(S_BINARY);
   setType(V_STATUS);
@@ -991,7 +992,7 @@ void SensorRelay::onLoop() {
 */
 
 // contructor
-SensorLatchingRelay::SensorLatchingRelay(int child_id, int pin): SensorRelay(child_id, pin) {
+SensorLatchingRelay::SensorLatchingRelay(NodeManager* node_manager, int child_id, int pin): SensorRelay(node_manager, child_id, pin) {
   // like a sensor with a default pulse set
   setPulseWidth(50);
 }
@@ -1001,7 +1002,7 @@ SensorLatchingRelay::SensorLatchingRelay(int child_id, int pin): SensorRelay(chi
 */
 #if MODULE_DHT == 1
 // contructor
-SensorDHT::SensorDHT(int child_id, int pin, DHT* dht, int sensor_type, int dht_type): Sensor(child_id, pin) {
+SensorDHT::SensorDHT(NodeManager* node_manager, int child_id, int pin, DHT* dht, int sensor_type, int dht_type): Sensor(node_manager, child_id, pin) {
   // store the dht object
   _dht = dht;
   _sensor_type = sensor_type;
@@ -1074,7 +1075,7 @@ void SensorDHT::onReceive(const MyMessage & message) {
 */
 #if MODULE_SHT21 == 1
 // contructor
-SensorSHT21::SensorSHT21(int child_id, int sensor_type): Sensor(child_id,A2) {
+SensorSHT21::SensorSHT21(NodeManager* node_manager, int child_id, int sensor_type): Sensor(node_manager,child_id,A2) {
   // store the sensor type (0: temperature, 1: humidity)
   _sensor_type = sensor_type;
   if (_sensor_type == SensorSHT21::TEMPERATURE) {
@@ -1145,14 +1146,14 @@ void SensorSHT21::onReceive(const MyMessage & message) {
  */
  #if MODULE_SHT21 == 1
 // constructor
-SensorHTU21D::SensorHTU21D(int child_id, int pin): SensorSHT21(child_id, pin) {
+SensorHTU21D::SensorHTU21D(NodeManager* node_manager, int child_id, int pin): SensorSHT21(node_manager, child_id, pin) {
 }
 #endif 
 
 /*
  * SensorSwitch
  */
-SensorSwitch::SensorSwitch(int child_id, int pin): Sensor(child_id,pin) {
+SensorSwitch::SensorSwitch(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id,pin) {
   setType(V_TRIPPED);
 }
 
@@ -1219,14 +1220,14 @@ void SensorSwitch::onReceive(const MyMessage & message) {
 /*
  * SensorDoor
  */
-SensorDoor::SensorDoor(int child_id, int pin): SensorSwitch(child_id,pin) {
+SensorDoor::SensorDoor(NodeManager* node_manager, int child_id, int pin): SensorSwitch(node_manager,child_id,pin) {
   setPresentation(S_DOOR);
 }
 
 /*
  * SensorMotion
  */
-SensorMotion::SensorMotion(int child_id, int pin): SensorSwitch(child_id,pin) {
+SensorMotion::SensorMotion(NodeManager* node_manager, int child_id, int pin): SensorSwitch(node_manager, child_id,pin) {
   setPresentation(S_MOTION);
   // capture only when it triggers
   setMode(RISING);
@@ -1239,7 +1240,7 @@ SensorMotion::SensorMotion(int child_id, int pin): SensorSwitch(child_id,pin) {
 */
 #if MODULE_DS18B20 == 1
 // contructor
-SensorDs18b20::SensorDs18b20(int child_id, int pin, DallasTemperature* sensors, int index): Sensor(child_id, pin) {
+SensorDs18b20::SensorDs18b20(NodeManager* node_manager, int child_id, int pin, DallasTemperature* sensors, int index): Sensor(node_manager,child_id, pin) {
   setPresentation(S_TEMP);
   setType(V_TEMP);
   setValueType(TYPE_FLOAT);
@@ -1314,7 +1315,7 @@ void SensorDs18b20::setSleepDuringConversion(bool value) {
 */
 #if MODULE_BH1750 == 1
 // contructor
-SensorBH1750::SensorBH1750(int child_id): Sensor(child_id,A4) {
+SensorBH1750::SensorBH1750(NodeManager* node_manager, int child_id): Sensor(node_manager,child_id,A4) {
   setPresentation(S_LIGHT_LEVEL);
   setType(V_LEVEL);
   _lightSensor = new BH1750();
@@ -1352,7 +1353,7 @@ void SensorBH1750::onReceive(const MyMessage & message) {
 */
 #if MODULE_MLX90614 == 1
 // contructor
-SensorMLX90614::SensorMLX90614(int child_id, Adafruit_MLX90614* mlx, int sensor_type): Sensor(child_id,A4) {
+SensorMLX90614::SensorMLX90614(NodeManager* node_manager, int child_id, Adafruit_MLX90614* mlx, int sensor_type): Sensor(node_manager,child_id,A4) {
   _sensor_type = sensor_type;
   _mlx = mlx;
   // set presentation and type
@@ -1397,7 +1398,7 @@ void SensorMLX90614::onReceive(const MyMessage & message) {
 */
 #if MODULE_BME280 == 1 || MODULE_BMP085 == 1
 // contructor
-SensorBosch::SensorBosch(int child_id, int sensor_type): Sensor(child_id,A4) {
+SensorBosch::SensorBosch(NodeManager* node_manager, int child_id, int sensor_type): Sensor(node_manager, child_id,A4) {
   _sensor_type = sensor_type;
   if (_sensor_type == SensorBosch::TEMPERATURE) {
     // temperature sensor
@@ -1562,7 +1563,7 @@ uint8_t SensorBosch::GetI2CAddress(uint8_t chip_id) {
  * SensorBME280
  */
 #if MODULE_BME280 == 1
-SensorBME280::SensorBME280(int child_id, Adafruit_BME280* bme, int sensor_type): SensorBosch(child_id,sensor_type) {
+SensorBME280::SensorBME280(NodeManager* node_manager, int child_id, Adafruit_BME280* bme, int sensor_type): SensorBosch(node_manager, child_id,sensor_type) {
   _bme = bme;
 }
 
@@ -1625,7 +1626,7 @@ void SensorBME280::onLoop() {
 */
 #if MODULE_BMP085 == 1
 // contructor
-SensorBMP085::SensorBMP085(int child_id, Adafruit_BMP085* bmp, int sensor_type): SensorBosch(child_id,sensor_type) {
+SensorBMP085::SensorBMP085(NodeManager* node_manager, int child_id, Adafruit_BMP085* bmp, int sensor_type): SensorBosch(node_manager, child_id,sensor_type) {
   _bmp = bmp;
 }
 
@@ -1675,7 +1676,7 @@ void SensorBMP085::onLoop() {
 */
 #if MODULE_SONOFF == 1
 // contructor
-SensorSonoff::SensorSonoff(int child_id): Sensor(child_id,1) {
+SensorSonoff::SensorSonoff(NodeManager* node_manager, int child_id): Sensor(node_manager, child_id,1) {
   setPresentation(S_BINARY);
   setType(V_STATUS);
 }
@@ -1775,7 +1776,7 @@ void SensorSonoff::_blink() {
 */
 #if MODULE_HCSR04 == 1
 // contructor
-SensorHCSR04::SensorHCSR04(int child_id, int pin): Sensor(child_id, pin) {
+SensorHCSR04::SensorHCSR04(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
   // set presentation and type
   setPresentation(S_DISTANCE);
   setType(V_DISTANCE);
@@ -1827,7 +1828,7 @@ void SensorHCSR04::onReceive(const MyMessage & message) {
 */
 #if MODULE_MCP9808 == 1
 // contructor
-SensorMCP9808::SensorMCP9808(int child_id, Adafruit_MCP9808* mcp): Sensor(child_id,A2) {
+SensorMCP9808::SensorMCP9808(NodeManager* node_manager, int child_id, Adafruit_MCP9808* mcp): Sensor(node_manager, child_id,A2) {
   _mcp = mcp;
   setPresentation(S_TEMP);
   setType(V_TEMP);
@@ -1958,49 +1959,49 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   // based on the given sensor type instantiate the appropriate class
   if (sensor_type == 0) return -1;
   #if MODULE_ANALOG_INPUT == 1
-    else if (sensor_type == SENSOR_ANALOG_INPUT) return registerSensor(new SensorAnalogInput(child_id, pin));
-    else if (sensor_type == SENSOR_LDR) return registerSensor(new SensorLDR(child_id, pin));
-    else if (sensor_type == SENSOR_THERMISTOR) return registerSensor(new SensorThermistor(child_id, pin));
-    else if (sensor_type == SENSOR_MQ) return registerSensor(new SensorMQ(child_id, pin));
-    else if (sensor_type == SENSOR_ML8511) return registerSensor(new SensorML8511(child_id, pin));
-    else if (sensor_type == SENSOR_ACS712) return registerSensor(new SensorACS712(child_id, pin));
-    else if (sensor_type == SENSOR_RAIN_GAUGE) return registerSensor(new SensorRainGauge(child_id, pin));
-    else if (sensor_type == SENSOR_RAIN) return registerSensor(new SensorRain(child_id, pin));
-    else if (sensor_type == SENSOR_SOIL_MOISTURE) return registerSensor(new SensorSoilMoisture(child_id, pin));
+    else if (sensor_type == SENSOR_ANALOG_INPUT) return registerSensor(new SensorAnalogInput(this,child_id, pin));
+    else if (sensor_type == SENSOR_LDR) return registerSensor(new SensorLDR(this,child_id, pin));
+    else if (sensor_type == SENSOR_THERMISTOR) return registerSensor(new SensorThermistor(this,child_id, pin));
+    else if (sensor_type == SENSOR_MQ) return registerSensor(new SensorMQ(this,child_id, pin));
+    else if (sensor_type == SENSOR_ML8511) return registerSensor(new SensorML8511(this,child_id, pin));
+    else if (sensor_type == SENSOR_ACS712) return registerSensor(new SensorACS712(this,child_id, pin));
+    else if (sensor_type == SENSOR_RAIN_GAUGE) return registerSensor(new SensorRainGauge(this,child_id, pin));
+    else if (sensor_type == SENSOR_RAIN) return registerSensor(new SensorRain(this,child_id, pin));
+    else if (sensor_type == SENSOR_SOIL_MOISTURE) return registerSensor(new SensorSoilMoisture(this,child_id, pin));
   #endif
   #if MODULE_DIGITAL_INPUT == 1
-    else if (sensor_type == SENSOR_DIGITAL_INPUT) return registerSensor(new SensorDigitalInput(child_id, pin));
+    else if (sensor_type == SENSOR_DIGITAL_INPUT) return registerSensor(new SensorDigitalInput(this,child_id, pin));
   #endif
   #if MODULE_DIGITAL_OUTPUT == 1
-    else if (sensor_type == SENSOR_DIGITAL_OUTPUT) return registerSensor(new SensorDigitalOutput(child_id, pin));
-    else if (sensor_type == SENSOR_RELAY) return registerSensor(new SensorRelay(child_id, pin));
-    else if (sensor_type == SENSOR_LATCHING_RELAY) return registerSensor(new SensorLatchingRelay(child_id, pin));
+    else if (sensor_type == SENSOR_DIGITAL_OUTPUT) return registerSensor(new SensorDigitalOutput(this,child_id, pin));
+    else if (sensor_type == SENSOR_RELAY) return registerSensor(new SensorRelay(this,child_id, pin));
+    else if (sensor_type == SENSOR_LATCHING_RELAY) return registerSensor(new SensorLatchingRelay(this,child_id, pin));
   #endif
   #if MODULE_DHT == 1
     else if (sensor_type == SENSOR_DHT11 || sensor_type == SENSOR_DHT22) {
       int dht_type = sensor_type == SENSOR_DHT11 ? DHT11 : DHT22;
       DHT* dht = new DHT(pin,dht_type);
       // register temperature sensor
-      registerSensor(new SensorDHT(child_id,pin,dht,SensorDHT::TEMPERATURE,dht_type));
+      registerSensor(new SensorDHT(this,child_id,pin,dht,SensorDHT::TEMPERATURE,dht_type));
       // register humidity sensor
       child_id = _getAvailableChildId();
-      return registerSensor(new SensorDHT(child_id,pin,dht,SensorDHT::HUMIDITY,dht_type));
+      return registerSensor(new SensorDHT(this,child_id,pin,dht,SensorDHT::HUMIDITY,dht_type));
     }
   #endif
   #if MODULE_SHT21 == 1
     else if (sensor_type == SENSOR_SHT21) {
       // register temperature sensor
-      registerSensor(new SensorSHT21(child_id,SensorSHT21::TEMPERATURE));
+      registerSensor(new SensorSHT21(this,child_id,SensorSHT21::TEMPERATURE));
       // register humidity sensor
       child_id = _getAvailableChildId();
-      return registerSensor(new SensorSHT21(child_id,SensorSHT21::HUMIDITY));
+      return registerSensor(new SensorSHT21(this,child_id,SensorSHT21::HUMIDITY));
     }
     else if (sensor_type == SENSOR_HTU21D) {
       // register temperature sensor
-      registerSensor(new SensorHTU21D(child_id,SensorHTU21D::TEMPERATURE));
+      registerSensor(new SensorHTU21D(this,child_id,SensorHTU21D::TEMPERATURE));
       // register humidity sensor
       child_id = _getAvailableChildId();
-      return registerSensor(new SensorHTU21D(child_id,SensorHTU21D::HUMIDITY));
+      return registerSensor(new SensorHTU21D(this,child_id,SensorHTU21D::HUMIDITY));
     }
   #endif
   #if MODULE_SWITCH == 1
@@ -2009,9 +2010,9 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
       if (pin != INTERRUPT_PIN_1 && pin != INTERRUPT_PIN_2) return -1;
       // register the sensor
       int index = 0;
-      if (sensor_type == SENSOR_SWITCH) index = registerSensor(new SensorSwitch(child_id, pin));
-      else if (sensor_type == SENSOR_DOOR) index = registerSensor(new SensorDoor(child_id, pin));
-      else if (sensor_type == SENSOR_MOTION) index = registerSensor(new SensorMotion(child_id, pin));
+      if (sensor_type == SENSOR_SWITCH) index = registerSensor(new SensorSwitch(this,child_id, pin));
+      else if (sensor_type == SENSOR_DOOR) index = registerSensor(new SensorDoor(this,child_id, pin));
+      else if (sensor_type == SENSOR_MOTION) index = registerSensor(new SensorMotion(this,child_id, pin));
       // set an interrupt on the pin and set the initial value
       SensorSwitch* sensor = (SensorSwitch*)getSensor(index);
       sensor->setInterruptPin(pin);
@@ -2030,24 +2031,24 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
       // register a new child for each sensor on the bus
       for(int i = 0; i < sensors->getDeviceCount(); i++) {
         if (i > 0) child_id = _getAvailableChildId();
-        index = registerSensor(new SensorDs18b20(child_id,pin,sensors,i));
+        index = registerSensor(new SensorDs18b20(this,child_id,pin,sensors,i));
       }
       return index;
     }
   #endif
   #if MODULE_BH1750 == 1
     else if (sensor_type == SENSOR_BH1750) {
-      return registerSensor(new SensorBH1750(child_id));
+      return registerSensor(new SensorBH1750(this,child_id));
     }
   #endif
   #if MODULE_MLX90614 == 1
     else if (sensor_type == SENSOR_MLX90614) {
       Adafruit_MLX90614* mlx = new Adafruit_MLX90614();
       // register ambient temperature sensor
-      registerSensor(new SensorMLX90614(child_id,mlx,SensorMLX90614::TEMPERATURE_AMBIENT));
+      registerSensor(new SensorMLX90614(this,child_id,mlx,SensorMLX90614::TEMPERATURE_AMBIENT));
       // register object temperature sensor
       child_id = _getAvailableChildId();
-      return registerSensor(new SensorMLX90614(child_id,mlx,SensorMLX90614::TEMPERATURE_OBJECT));
+      return registerSensor(new SensorMLX90614(this,child_id,mlx,SensorMLX90614::TEMPERATURE_OBJECT));
     }
   #endif
   #if MODULE_BME280 == 1
@@ -2060,21 +2061,21 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
         return -1;
       }
       // register temperature sensor
-      registerSensor(new SensorBME280(child_id,bme,SensorBME280::TEMPERATURE));
+      registerSensor(new SensorBME280(this,child_id,bme,SensorBME280::TEMPERATURE));
       child_id = _getAvailableChildId();
       // register humidity sensor
-      registerSensor(new SensorBME280(child_id,bme,SensorBME280::HUMIDITY));
+      registerSensor(new SensorBME280(this,child_id,bme,SensorBME280::HUMIDITY));
       // register pressure sensor
       child_id = _getAvailableChildId();
-      registerSensor(new SensorBME280(child_id,bme,SensorBME280::PRESSURE));
+      registerSensor(new SensorBME280(this,child_id,bme,SensorBME280::PRESSURE));
       // register forecast sensor
       child_id = _getAvailableChildId();
-      return registerSensor(new SensorBME280(child_id,bme,SensorBME280::FORECAST));
+      return registerSensor(new SensorBME280(this,child_id,bme,SensorBME280::FORECAST));
     }
   #endif
   #if MODULE_SONOFF == 1
     else if (sensor_type == SENSOR_SONOFF) {
-      return registerSensor(new SensorSonoff(child_id));
+      return registerSensor(new SensorSonoff(this,child_id));
     }
   #endif
   #if MODULE_BMP085 == 1
@@ -2087,18 +2088,18 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
         return -1;
       }
       // register temperature sensor
-      registerSensor(new SensorBMP085(child_id,bmp,SensorBMP085::TEMPERATURE));
+      registerSensor(new SensorBMP085(this,child_id,bmp,SensorBMP085::TEMPERATURE));
       // register pressure sensor
       child_id = _getAvailableChildId();
-      registerSensor(new SensorBMP085(child_id,bmp,SensorBMP085::PRESSURE));
+      registerSensor(new SensorBMP085(this,child_id,bmp,SensorBMP085::PRESSURE));
       // register forecast sensor
       child_id = _getAvailableChildId();
-      return registerSensor(new SensorBMP085(child_id,bmp,SensorBMP085::FORECAST));
+      return registerSensor(new SensorBMP085(this,child_id,bmp,SensorBMP085::FORECAST));
     }
   #endif
   #if MODULE_HCSR04 == 1
     else if (sensor_type == SENSOR_HCSR04) {
-      return registerSensor(new SensorHCSR04(child_id, pin));
+      return registerSensor(new SensorHCSR04(this,child_id, pin));
     }
   #endif
   #if MODULE_MCP9808 == 1
@@ -2111,7 +2112,7 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
         return -1;
       }
       // register temperature sensor
-      registerSensor(new SensorMCP9808(child_id,mcp));
+      registerSensor(new SensorMCP9808(this,child_id,mcp));
     }
   #endif
   else {

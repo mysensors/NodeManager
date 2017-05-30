@@ -310,7 +310,7 @@ When called, registerSensor returns the child_id of the sensor so you will be ab
 
 #### Creating a custom sensor
 
-If you want to create a custom sensor and register it with NodeManager so it can take care of all the common tasks, you can create a class inheriting from `Sensor` and implement the following methods:
+If you want to create a custom sensor and register it with NodeManager so it can take care of all the common tasks, you can create an inline class inheriting from `Sensor` or other subclasses and implement the following methods:
 ~~~c
     // define what to do during before() to setup the sensor
     void onBefore();
@@ -324,7 +324,7 @@ If you want to create a custom sensor and register it with NodeManager so it can
 
 You can then instantiate your newly created class and register with NodeManager:
 ~~~c
-	nodeManager.registerSensor(new SensorCustom(child_id, pin));
+	nodeManager.registerSensor(new SensorCustom(&nodeManager,child_id, pin));
 ~~~
 
 ### Configuring the sensors
@@ -397,7 +397,7 @@ The following methods are available for all the sensors:
 
 Each sensor class can expose additional methods.
 
-** SensorAnalogInput / SensorLDR / SensorRain / SensorSoilMoisture **
+* SensorAnalogInput / SensorLDR / SensorRain / SensorSoilMoisture *
 ~~~c
     // the analog reference to use (default: not set, can be either INTERNAL or DEFAULT)
     void setReference(int value);
@@ -411,7 +411,7 @@ Each sensor class can expose additional methods.
     void setRangeMax(int value);
 ~~~
 
-** SensorThermistor **
+* SensorThermistor *
 ~~~c
     // resistance at 25 degrees C (default: 10000)
     void setNominalResistor(long value);
@@ -425,7 +425,7 @@ Each sensor class can expose additional methods.
     void setOffset(float value);
 ~~~
 
-** SensorMQ **
+* SensorMQ *
 ~~~c
     // define the target gas whose ppm has to be returned. 0: LPG, 1: CO, 2: Smoke (default: 1);
     void setTargetGas(int value);
@@ -451,7 +451,7 @@ Each sensor class can expose additional methods.
     void setSmokeCurve(float *value);
 ~~~
 
-** SensorDigitalOutput / SensorRelay / SensorLatchingRelay ** 
+* SensorDigitalOutput / SensorRelay / SensorLatchingRelay * 
 ~~~c
     // set how to initialize the output (default: LOW)
     void setInitialValue(int value);
@@ -463,7 +463,7 @@ Each sensor class can expose additional methods.
     void setLegacyMode(bool value);
 ~~~
 
-**  SensorSwitch / SensorDoor / SensorMotion **
+*  SensorSwitch / SensorDoor / SensorMotion *
 ~~~c
     // set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
     void setMode(int value);
@@ -475,7 +475,7 @@ Each sensor class can expose additional methods.
     void setInitial(int value);
 ~~~
 
-**  SensorDs18b20**
+*  SensorDs18b20**
 ~~~c
     // return the sensors' device address
     DeviceAddress* getDeviceAddress();
@@ -487,13 +487,13 @@ Each sensor class can expose additional methods.
     void setSleepDuringConversion(bool value);
 ~~~
 
-**  SensorBME280 **
+*  SensorBME280 *
 ~~~c
     // define how many pressure samples to keep track of for calculating the forecast (default: 5)
     void setForecastSamplesCount(int value);
 ~~~
 
-**  SensorSonoff **
+*  SensorSonoff *
 ~~~c
     // set the button's pin (default: 0)
     void setButtonPin(int value);
@@ -503,13 +503,13 @@ Each sensor class can expose additional methods.
     void setLedPin(int value);
 ~~~
 
-** SensorBMP085 **
+* SensorBMP085 *
 ~~~c
     // define how many pressure samples to keep track of for calculating the forecast (default: 5)
     void setForecastSamplesCount(int value);
 ~~~
 
-** SensorHCSR04 **
+* SensorHCSR04 *
 ~~~c
     // Arduino pin tied to trigger pin on the ultrasonic sensor (default: the pin set while registering the sensor)
     void setTriggerPin(int value);
@@ -519,7 +519,7 @@ Each sensor class can expose additional methods.
     void setMaxDistance(int value);
 ~~~
 
-** SensorACS712 **
+* SensorACS712 *
 ~~~c
     // set how many mV are equivalent to 1 Amp. The value depends on the module (100 for 20A Module, 66 for 30A Module) (default: 185);
     void setmVPerAmp(int value);
@@ -527,7 +527,7 @@ Each sensor class can expose additional methods.
     void setOffset(int value);
 ~~~
 
-** SensorRainGauge **
+* SensorRainGauge *
 ~~~c
     // set how frequently to report back to the controller in minutes. After reporting the measure is resetted (default: 60);
     void setReportInterval(int value);
@@ -594,38 +594,38 @@ If `PERSIST` is enabled, the settings provided with `INTVLnnnX` and `MODEx` are 
 
 A NodeManager object must be created and called from within your sketch during `before()`, `presentation()`, `loop()` and `receive()` to work properly. NodeManager will do the following during each phase:
 
-** NodeManager::before() **
+* NodeManager::before() *
 * Setup the interrupt pins to wake up the board based on the configured interrupts (e.g. stop sleeping when the pin is connected to ground or wake up and notify when a motion sensor has trigger)
 * If persistance is enabled, restore from the EEPROM the latest sleeping settings
 * Call `before()` of each registered sensor
 
-**  Sensor::before() **
+*  Sensor::before() *
 * Call sensor-specific implementation of before by invoking `onBefore()` to initialize the sensor
 
-**  NodeManager::setup() ** 
+*  NodeManager::setup() * 
 * Send a custom message with a STARTED payload to the controller
 * Call `setup()` of each registered sensor
 
-**  Sensor::setup() ** 
+*  Sensor::setup() * 
 * Call sensor-specific implementation of setup by invoking `onSetup()` to initialize the sensor
 
-**  NodeManager::loop() ** 
+*  NodeManager::loop() * 
 * If all the sensors are powered by an arduino pin, this is set to HIGH
 * Call `loop()` of each registered sensor
 * If all the sensors are powered by an arduino pin, this is set to LOW
 
-**  Sensor::loop() ** 
+*  Sensor::loop() * 
 * If the sensor is powered by an arduino pin, this is set to HIGH
 * For each registered sensor, the sensor-specific `onLoop()` is called. If multiple samples are requested, this is run multiple times.
 * In case multiple samples have been collected, the average is calculated
 * A message is sent to the gateway with the calculated value. Depending on the configuration, this is not sent if it is the same as the previous value or sent anyway after a given number of cycles. These functionalies are not sensor-specific and common to all the sensors inheriting from the `Sensor` class.
 * If the sensor is powered by an arduino pin, this is set to LOW
 
-**  NodeManager::receive() ** 
+*  NodeManager::receive() * 
 * Receive a message from the radio network 
 * If the destination child id is the configuration node, it will handle the incoming message, otherwise will dispatch the message to the recipient sensor
 
-**  Sensor::receive() ** 
+*  Sensor::receive() * 
 * Invoke `Sensor::loop()` which will execute the sensor main taks and eventually call `Sensor::onReceive()`
 
 ## Examples
@@ -698,7 +698,7 @@ Register a latching relay connecting to pin 6 (set) and pin 7 (unset):
 
 ## Example Sketches
 
-**  Analog Light and Temperature Sensor ** 
+*  Analog Light and Temperature Sensor * 
 
 The following sketch can be used to report the temperature and the light level based on a thermistor and LDR sensors attached to two analog pins of the arduino board (A1 and A2). Both the thermistor and the LDR are connected to ground on one side and to vcc via a resistor on the other so to measure the voltage drop across each of them through the analog pins. 
 
@@ -749,8 +749,6 @@ void before() {
 
 // presentation
 void presentation() {
-  // Send the sketch version information to the gateway and Controller
-	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
   // call NodeManager presentation routine
   nodeManager.presentation();
 
@@ -774,9 +772,15 @@ void receive(const MyMessage &message) {
   // call NodeManager receive routine
   nodeManager.receive(message);
 }
+
+// receiveTime
+void receiveTime(unsigned long ts) {
+  // call NodeManager receiveTime routine
+  nodeManager.receiveTime(ts);
+}
 ~~~
 
-**  Motion Sensor ** 
+*  Motion Sensor * 
 
 The following sketch can be used to report back to the controller when a motion sensor attached to the board's pin 3 triggers. In this example, the board will be put to sleep just after startup and will report a heartbeat every hour. NodeManager will take care of configuring an interrupt associated to the provided pin so automatically wake up when a motion is detected and report a V_TRIPPED message back. This sketch requires MODULE_SWITCH to be enabled in the global config.h file.
 
@@ -797,6 +801,10 @@ Documentation available on: https://github.com/mysensors/NodeManager
  
 // load user settings
 #include "config.h"
+// include supporting libraries
+#ifdef MY_GATEWAY_ESP8266
+  #include <ESP8266WiFi.h>
+#endif
 // load MySensors library
 #include <MySensors.h>
 // load NodeManager library
@@ -823,8 +831,6 @@ void before() {
 
 // presentation
 void presentation() {
-  // Send the sketch version information to the gateway and Controller
-	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
   // call NodeManager presentation routine
   nodeManager.presentation();
 
@@ -848,9 +854,15 @@ void receive(const MyMessage &message) {
   // call NodeManager receive routine
   nodeManager.receive(message);
 }
+
+// receiveTime
+void receiveTime(unsigned long ts) {
+  // call NodeManager receiveTime routine
+  nodeManager.receiveTime(ts);
+}
 ~~~
 
-**  Boiler Sensor ** 
+*  Boiler Sensor * 
 
 The following sketch controls a latching relay connected to a boiler. A latching relay (requiring only a pulse to switch) has been chosen to minimize the power consumption required by a traditional relay to stay on. This relay has normally two pins, one for closing and the other for opening the controlled circuit, connected to pin 6 and 7 of the arduino board. This is why we have to register two sensors against NodeManager so to control the two funtions indipendently. Since using a SENSOR_LATCHING_RELAY type of sensor, NodeManager will take care of just sending out a single pulse only when a REQ command of type V_STATUS is sent to one or the other child id.
 
@@ -875,6 +887,10 @@ Documentation available on: https://github.com/mysensors/NodeManager
  
 // load user settings
 #include "config.h"
+// include supporting libraries
+#ifdef MY_GATEWAY_ESP8266
+  #include <ESP8266WiFi.h>
+#endif
 // load MySensors library
 #include <MySensors.h>
 // load NodeManager library
@@ -904,8 +920,6 @@ void before() {
 
 // presentation
 void presentation() {
-  // Send the sketch version information to the gateway and Controller
-	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
   // call NodeManager presentation routine
   nodeManager.presentation();
 
@@ -929,10 +943,16 @@ void receive(const MyMessage &message) {
   // call NodeManager receive routine
   nodeManager.receive(message);
 }
+
+// receiveTime
+void receiveTime(unsigned long ts) {
+  // call NodeManager receiveTime routine
+  nodeManager.receiveTime(ts);
+}
 ~~~
 
 
-**  Rain and Soil Moisture Sensor ** 
+*  Rain and Soil Moisture Sensor * 
 
 The following sketch can be used to report the rain level and the soil moisture based on two sensors connected to the board's analog pins (A1 and A2). In this case we are customizing the out-of-the-box SENSOR_ANALOG_INPUT sensor type since we just need to measure an analog input but we also want to provide the correct type and presentation for each sensor. 
 
@@ -960,6 +980,10 @@ Documentation available on: https://github.com/mysensors/NodeManager
  
 // load user settings
 #include "config.h"
+// include supporting libraries
+#ifdef MY_GATEWAY_ESP8266
+  #include <ESP8266WiFi.h>
+#endif
 // load MySensors library
 #include <MySensors.h>
 // load NodeManager library
@@ -1008,8 +1032,6 @@ void before() {
 
 // presentation
 void presentation() {
-  // Send the sketch version information to the gateway and Controller
-	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
   // call NodeManager presentation routine
   nodeManager.presentation();
 
@@ -1032,6 +1054,12 @@ void loop() {
 void receive(const MyMessage &message) {
   // call NodeManager receive routine
   nodeManager.receive(message);
+}
+
+// receiveTime
+void receiveTime(unsigned long ts) {
+  // call NodeManager receiveTime routine
+  nodeManager.receiveTime(ts);
 }
 ~~~
 
@@ -1069,6 +1097,7 @@ Create a branch for the fix/feature you want to work on and apply changes to the
 * Fill in the request with a significant title and description and select the "development" branch from the main repository to be compared against your branch
 * Submit the request and start the discussion
 * Any additional commits to your branch which will be presented within the same pull request
+* When the pull request is merged, delete your working branch: `git branch -d <yourbranch>`
 
 If there are changes introduced to the development branch that conflicts with an open pull request, you will have to resolve the conflicts and update the PR:
 * Fetch and merge into development any change from upstream/development as detailed above
