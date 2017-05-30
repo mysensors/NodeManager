@@ -1,5 +1,3 @@
-# Introduction
-
 NodeManager is intended to take care on your behalf of all those common tasks a MySensors node has to accomplish, speeding up the development cycle of your projects.
 
 NodeManager includes the following main components:
@@ -23,7 +21,7 @@ NodeManager includes the following main components:
 * Allow rebooting the board remotely
 * Provide out-of-the-box sensors personalities and automatically execute their main task at each cycle
 
-# Installation
+## Installation
 * Download the package or clone the git repository at https://github.com/mysensors/NodeManager
 * Open the provided sketch template and save it under a different name
 * Open `config.h` and customize both MySensors configuration and NodeManager global settings
@@ -32,15 +30,15 @@ NodeManager includes the following main components:
 
 Please note NodeManager cannot be used as an arduino library since requires access to your MySensors configuration directives, hence its files have to be placed into the same directory of your sketch.
 
-## Upgrade
+### Upgrade
 * Download the package
 * Replace the NodeManager.cpp and NodeManager.h of your project with those just downloaded
 * Review the release notes in case there is any manual change required to the existing sketch or config.h file
 
-# Configuration
+## Configuration
 NodeManager configuration includes compile-time configuration directives (which can be set in config.h), runtime global and per-sensor configuration settings (which can be set in your sketch) and settings that can be customized remotely (via a special child id).
 
-## Setup MySensors
+### Setup MySensors
 Since NodeManager has to communicate with the MySensors gateway on your behalf, it has to know how to do it. Place on top of the `config.h` file all the MySensors typical directives you are used to set on top of your sketch so both your sketch AND NodeManager will be able to share the same configuration. For example:
 ~~~c
 /**********************************
@@ -123,7 +121,7 @@ Since NodeManager has to communicate with the MySensors gateway on your behalf, 
 //#define MY_DEFAULT_TX_LED_PIN  6
 ~~~
 
-## Enable/Disable NodeManager's modules
+### Enable/Disable NodeManager's modules
 
 Those NodeManager's directives in the `config.h` file control which module/library/functionality will be made available to your sketch. Enable (e.g. set to 1) only what you need to ensure enough space is left to your custom code.
 
@@ -175,7 +173,7 @@ Those NodeManager's directives in the `config.h` file control which module/libra
 #define MODULE_MCP9808 0
 ~~~
 
-## Installing the dependencies
+### Installing the dependencies
 
 Some of the modules above rely on third party libraries. Those libraries are not included within NodeManager and have to be installed from the Arduino IDE Library Manager (Sketch -> Include Library -> Manager Libraries). You need to install the library ONLY if the module is enabled:
 
@@ -192,7 +190,7 @@ MODULE_BMP085 | https://github.com/adafruit/Adafruit-BMP085-Library
 MODULE_HCSR04 | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/NewPing
 MODULE_MCP9808 | https://github.com/adafruit/Adafruit_MCP9808_Library
 
-## Configure NodeManager
+### Configure NodeManager
 
 Node Manager comes with a reasonable default configuration. If you want/need to change its settings, this can be done in your sketch, inside the `before()` function and just before registering your sensors. The following methods are exposed for your convenience:
 
@@ -266,7 +264,7 @@ For example
 	nodeManager.setBatteryMin(1.8);
 ~~~
 
-## Register your sensors
+### Register your sensors
 In your sketch, inside the `before()` function and just before calling `nodeManager.before()`, you can register your sensors against NodeManager. The following built-in sensor types are available:
 
 Sensor type  | Description
@@ -310,7 +308,7 @@ Once registered, your job is done. NodeManager will assign a child id automatica
 
 When called, registerSensor returns the child_id of the sensor so you will be able to retrieve it later if needed. If you want to set a child_id manually, this can be passed as third argument to the function.
 
-### Creating a custom sensor
+#### Creating a custom sensor
 
 If you want to create a custom sensor and register it with NodeManager so it can take care of all the common tasks, you can create a class inheriting from `Sensor` and implement the following methods:
 ~~~c
@@ -329,7 +327,7 @@ You can then instantiate your newly created class and register with NodeManager:
 	nodeManager.registerSensor(new SensorCustom(child_id, pin));
 ~~~
 
-## Configuring the sensors
+### Configuring the sensors
 Each built-in sensor class comes with reasonable default settings. In case you want/need to customize any of those settings, after having registered the sensor, you can retrieve it back and call set functions common to all the sensors or specific for a given class.
 
 To do so, use `nodeManager.getSensor(child_id)` which will return a pointer to the sensor. Remeber to cast it to the right class before calling their functions. For example:
@@ -339,7 +337,7 @@ To do so, use `nodeManager.getSensor(child_id)` which will return a pointer to t
 ~~~
 
 
-### Sensor's general configuration
+#### Sensor's general configuration
 
 The following methods are available for all the sensors:
 ~~~c
@@ -395,11 +393,11 @@ The following methods are available for all the sensors:
     char* getValueString();
 ~~~
 
-### Sensor's specific configuration
+#### Sensor's specific configuration
 
 Each sensor class can expose additional methods.
 
-#### SensorAnalogInput / SensorLDR / SensorRain / SensorSoilMoisture
+** SensorAnalogInput / SensorLDR / SensorRain / SensorSoilMoisture **
 ~~~c
     // the analog reference to use (default: not set, can be either INTERNAL or DEFAULT)
     void setReference(int value);
@@ -413,7 +411,7 @@ Each sensor class can expose additional methods.
     void setRangeMax(int value);
 ~~~
 
-#### SensorThermistor
+** SensorThermistor **
 ~~~c
     // resistance at 25 degrees C (default: 10000)
     void setNominalResistor(long value);
@@ -427,7 +425,7 @@ Each sensor class can expose additional methods.
     void setOffset(float value);
 ~~~
 
-#### SensorMQ
+** SensorMQ **
 ~~~c
     // define the target gas whose ppm has to be returned. 0: LPG, 1: CO, 2: Smoke (default: 1);
     void setTargetGas(int value);
@@ -453,7 +451,7 @@ Each sensor class can expose additional methods.
     void setSmokeCurve(float *value);
 ~~~
 
-#### SensorDigitalOutput / SensorRelay / SensorLatchingRelay
+** SensorDigitalOutput / SensorRelay / SensorLatchingRelay ** 
 ~~~c
     // set how to initialize the output (default: LOW)
     void setInitialValue(int value);
@@ -465,7 +463,7 @@ Each sensor class can expose additional methods.
     void setLegacyMode(bool value);
 ~~~
 
-#### SensorSwitch / SensorDoor / SensorMotion
+**  SensorSwitch / SensorDoor / SensorMotion **
 ~~~c
     // set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
     void setMode(int value);
@@ -477,7 +475,7 @@ Each sensor class can expose additional methods.
     void setInitial(int value);
 ~~~
 
-#### SensorDs18b20
+**  SensorDs18b20**
 ~~~c
     // return the sensors' device address
     DeviceAddress* getDeviceAddress();
@@ -489,13 +487,13 @@ Each sensor class can expose additional methods.
     void setSleepDuringConversion(bool value);
 ~~~
 
-#### SensorBME280
+**  SensorBME280 **
 ~~~c
     // define how many pressure samples to keep track of for calculating the forecast (default: 5)
     void setForecastSamplesCount(int value);
 ~~~
 
-#### SensorSonoff
+**  SensorSonoff **
 ~~~c
     // set the button's pin (default: 0)
     void setButtonPin(int value);
@@ -505,13 +503,13 @@ Each sensor class can expose additional methods.
     void setLedPin(int value);
 ~~~
 
-#### SensorBMP085
+** SensorBMP085 **
 ~~~c
     // define how many pressure samples to keep track of for calculating the forecast (default: 5)
     void setForecastSamplesCount(int value);
 ~~~
 
-#### SensorHCSR04
+** SensorHCSR04 **
 ~~~c
     // Arduino pin tied to trigger pin on the ultrasonic sensor (default: the pin set while registering the sensor)
     void setTriggerPin(int value);
@@ -521,7 +519,7 @@ Each sensor class can expose additional methods.
     void setMaxDistance(int value);
 ~~~
 
-#### SensorACS712
+** SensorACS712 **
 ~~~c
     // set how many mV are equivalent to 1 Amp. The value depends on the module (100 for 20A Module, 66 for 30A Module) (default: 185);
     void setmVPerAmp(int value);
@@ -529,7 +527,7 @@ Each sensor class can expose additional methods.
     void setOffset(int value);
 ~~~
 
-#### SensorRainGauge
+** SensorRainGauge **
 ~~~c
     // set how frequently to report back to the controller in minutes. After reporting the measure is resetted (default: 60);
     void setReportInterval(int value);
@@ -537,16 +535,14 @@ Each sensor class can expose additional methods.
     void setSingleTip(float value);
 ~~~
 
-## Upload your sketch
+### Upload your sketch
 
 Upload your sketch to your arduino board as you are used to.
-
-## Verify if everything works fine
 
 Check your gateway's logs to ensure the node is working as expected. You should see the node presenting itself, reporting battery level, presenting all the registered sensors and the configuration child id service.
 When `DEBUG` is enabled, detailed information is available through the serial port. Remember to disable debug once the tests have been completed.
 
-## Communicate with each sensor
+### Communicate with NodeManager and its sensors
 
 You can interact with each registered sensor asking to execute their main tasks by sending to the child id a `REQ` command. For example to request the temperature to node_id 254 and child_id 1:
 
@@ -558,8 +554,6 @@ To activate a relay connected to the same node, child_id 100:
 
 No need to implement anything on your side since for built-in sensor types this is handled automatically. 
 Once the node will be sleeping, it will report automatically each measure at the end of every sleep cycle.
-
-## Communicate with the node
 
 NodeManager exposes a configuration service by default on child_id 200 so you can interact with it by sending `V_CUSTOM` type of messages and commands within the payload. For each `REQ` message, the node will respond with a `SET` message.
 The following custom commands are available:
@@ -596,45 +590,45 @@ In addition, NodeManager will report with custom messages every time the board i
 
 If `PERSIST` is enabled, the settings provided with `INTVLnnnX` and `MODEx` are saved to the EEPROM to be persistent even after rebooting the board.
 
-# How it works
+## Understanding NodeManager: how it works
 
 A NodeManager object must be created and called from within your sketch during `before()`, `presentation()`, `loop()` and `receive()` to work properly. NodeManager will do the following during each phase:
 
-## NodeManager::before()
+** NodeManager::before() **
 * Setup the interrupt pins to wake up the board based on the configured interrupts (e.g. stop sleeping when the pin is connected to ground or wake up and notify when a motion sensor has trigger)
 * If persistance is enabled, restore from the EEPROM the latest sleeping settings
 * Call `before()` of each registered sensor
 
-### Sensor::before()
+**  Sensor::before() **
 * Call sensor-specific implementation of before by invoking `onBefore()` to initialize the sensor
 
-## NodeManager::setup()
+**  NodeManager::setup() ** 
 * Send a custom message with a STARTED payload to the controller
 * Call `setup()` of each registered sensor
 
-### Sensor::setup()
+**  Sensor::setup() ** 
 * Call sensor-specific implementation of setup by invoking `onSetup()` to initialize the sensor
 
-## NodeManager::loop()
+**  NodeManager::loop() ** 
 * If all the sensors are powered by an arduino pin, this is set to HIGH
 * Call `loop()` of each registered sensor
 * If all the sensors are powered by an arduino pin, this is set to LOW
 
-### Sensor::loop()
+**  Sensor::loop() ** 
 * If the sensor is powered by an arduino pin, this is set to HIGH
 * For each registered sensor, the sensor-specific `onLoop()` is called. If multiple samples are requested, this is run multiple times.
 * In case multiple samples have been collected, the average is calculated
 * A message is sent to the gateway with the calculated value. Depending on the configuration, this is not sent if it is the same as the previous value or sent anyway after a given number of cycles. These functionalies are not sensor-specific and common to all the sensors inheriting from the `Sensor` class.
 * If the sensor is powered by an arduino pin, this is set to LOW
 
-## NodeManager::receive()
+**  NodeManager::receive() ** 
 * Receive a message from the radio network 
 * If the destination child id is the configuration node, it will handle the incoming message, otherwise will dispatch the message to the recipient sensor
 
-### Sensor::receive()
+**  Sensor::receive() ** 
 * Invoke `Sensor::loop()` which will execute the sensor main taks and eventually call `Sensor::onReceive()`
 
-# Examples
+## Examples
 All the examples below takes place within the before() function in the main sketch, just below the "Register below your sensors" comment.
 
 Set battery minimum and maxium voltage. This will be used to calculate the level percentage:
@@ -702,9 +696,9 @@ Register a latching relay connecting to pin 6 (set) and pin 7 (unset):
   nodeManager.registerSensor(SENSOR_LATCHING_RELAY,7);
 ~~~
 
-# Example Sketches
+## Example Sketches
 
-## Analog Light and Temperature Sensor
+**  Analog Light and Temperature Sensor ** 
 
 The following sketch can be used to report the temperature and the light level based on a thermistor and LDR sensors attached to two analog pins of the arduino board (A1 and A2). Both the thermistor and the LDR are connected to ground on one side and to vcc via a resistor on the other so to measure the voltage drop across each of them through the analog pins. 
 
@@ -782,7 +776,7 @@ void receive(const MyMessage &message) {
 }
 ~~~
 
-## Motion Sensor
+**  Motion Sensor ** 
 
 The following sketch can be used to report back to the controller when a motion sensor attached to the board's pin 3 triggers. In this example, the board will be put to sleep just after startup and will report a heartbeat every hour. NodeManager will take care of configuring an interrupt associated to the provided pin so automatically wake up when a motion is detected and report a V_TRIPPED message back. This sketch requires MODULE_SWITCH to be enabled in the global config.h file.
 
@@ -856,7 +850,7 @@ void receive(const MyMessage &message) {
 }
 ~~~
 
-## Boiler Sensor
+**  Boiler Sensor ** 
 
 The following sketch controls a latching relay connected to a boiler. A latching relay (requiring only a pulse to switch) has been chosen to minimize the power consumption required by a traditional relay to stay on. This relay has normally two pins, one for closing and the other for opening the controlled circuit, connected to pin 6 and 7 of the arduino board. This is why we have to register two sensors against NodeManager so to control the two funtions indipendently. Since using a SENSOR_LATCHING_RELAY type of sensor, NodeManager will take care of just sending out a single pulse only when a REQ command of type V_STATUS is sent to one or the other child id.
 
@@ -938,7 +932,7 @@ void receive(const MyMessage &message) {
 ~~~
 
 
-## Rain and Soil Moisture Sensor
+**  Rain and Soil Moisture Sensor ** 
 
 The following sketch can be used to report the rain level and the soil moisture based on two sensors connected to the board's analog pins (A1 and A2). In this case we are customizing the out-of-the-box SENSOR_ANALOG_INPUT sensor type since we just need to measure an analog input but we also want to provide the correct type and presentation for each sensor. 
 
@@ -1041,7 +1035,49 @@ void receive(const MyMessage &message) {
 }
 ~~~
 
-# Release Notes
+## Contributing
+
+Contributes to NodeManager are of course more than welcome. 
+
+### Reporting an issue or request an enhancement
+
+For reporting an issue, requesting support for a new sensor or any other kind of enhancement, please drop a message either on the project's main page (<https://www.mysensors.org/download/node-manager>) or directly on Github (<https://github.com/mysensors/NodeManager/issues>).
+
+
+### Contributing to the code
+
+If you want to contribute to the code, a pull request on Github is the way to go. First of all setup your development environment:
+
+* Create a copy of the project in your Github account by clicking on the "Fork" button on https://github.com/mysensors/NodeManager. 
+* Check the copy actually exists on https://github.com/<username>/NodeManager
+* Clone your repository on your computer: `git clone https://github.com/<username>/NodeManager.git`
+* Configure the main project's repository as an upstream: `git remote add upstream https://github.com/mysensors/NodeManager.git`
+* Create and switch to a local development branch: `git checkout -b development origin/development`
+
+Before applying any change, ensure you have the latest development version available:
+* Switch to your local development branch: `git checkout development`
+* Fetch the latest version from the main project's repository: `git fetch upstream`
+* Merge into your development copy all the changes from the main repository: `git merge development upstream/development`
+
+Create a branch for the fix/feature you want to work on and apply changes to the code:
+* Create and switch to a new branch (give it a significant name, e.g. fix/enum-sensors): `git checkout -b <yourbranch>`
+* Do any required change to the code
+* Include all the files changed for your commit: `git add .`
+* Commit the changes: `git  commit -m"Use enum instead of define for defining each sensor #121"`
+* Push the branch with the changes to your repository: `git push origin <yourbranch>`
+* Visit https://github.com/<username>/NodeManager/branches and click the "New pull request" button just aside your newly created branch
+* Fill in the request with a significant title and description and select the "development" branch from the main repository to be compared against your branch
+* Submit the request and start the discussion
+* Any additional commits to your branch which will be presented within the same pull request
+
+If there are changes introduced to the development branch that conflicts with an open pull request, you will have to resolve the conflicts and update the PR:
+* Fetch and merge into development any change from upstream/development as detailed above
+* Switch to your branch: `git checkout <yourbranch>`
+* Rebase the branch you filed the PR from against your updated development branch: `git rebase development`
+* Resolve the conflicts and commit again
+* Force push your updated branch so the PR gets updated: `git push HEAD:<yourbranch> -f`
+
+## Release Notes
 
 v1.0:
 
