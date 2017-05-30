@@ -1056,11 +1056,13 @@ class NodeManager {
     void setAck(bool value);
     // request and return the current timestamp from the controller
     long getTimestamp();
-    // Request the controller's configuration (default: true)
+    // Request the controller's configuration on startup (default: true)
     void setGetControllerConfig(bool value);
-    // Manually set isMetric configuration
+    // Manually set isMetric setting
     void setIsMetric(bool value);
     bool getIsMetric();
+    // Convert a temperature from celsius to fahrenheit depending on how isMetric is set
+    float celsiusToFahrenheit(float temperature);
     // hook into the main sketch functions
     void before();
     void presentation();
