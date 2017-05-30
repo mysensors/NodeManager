@@ -48,10 +48,10 @@ void before() {
 //  nodeManager.powerOn();
 
 //////// SLEEP MANAGER
-  nodeManager.setSleep(SLEEP,5,MINUTES);
-//  nodeManager.setSleepMode(WAIT); 
-//  nodeManager.setSleepTime(5);
-//  nodeManager.setSleepUnit(SECONDS);
+//  nodeManager.setSleep(SLEEP,5,MINUTES);
+  nodeManager.setSleepMode(SLEEP); 
+  nodeManager.setSleepTime(10);
+  nodeManager.setSleepUnit(SECONDS);
 //  nodeManager.setSleepBetweenSend(10);
 
 //////// TEMPERATURE AND HUMIDITY SENSORS
@@ -87,10 +87,10 @@ void before() {
 //   LightSensor->setRetries(2);
 
 //   nodeManager.registerSensor(SENSOR_TSL2561,1);
-   int Light = nodeManager.registerSensor(SENSOR_TSL2561,2);
+   int Light = nodeManager.registerSensor(SENSOR_TSL2561_ADDR_FLOAT,2);
    SensorTSL2561* LightSensor = ((SensorTSL2561*)nodeManager.getSensor(Light));
    LightSensor->setGain(0);
-   LightSensor->setTiming(0);
+   LightSensor->setTiming(1);
    LightSensor->setSpectrum(0);
 
   /*

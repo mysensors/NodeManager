@@ -221,7 +221,11 @@
 #endif
 #if MODULE_TSL2561 == 1
   // TSL2561 sensor, return light in lux
-  #define SENSOR_TSL2561 29
+  #define SENSOR_TSL2561_ADDR_FLOAT 29
+    // TSL2561 sensor, return light in lux
+  #define SENSOR_TSL2561_ADDR_LOW 30
+    // TSL2561 sensor, return light in lux
+  #define SENSOR_TSL2561_ADDR_HIGH 31
 #endif
 #if MODULE_MLX90614 == 1
   // MLX90614 sensor, contactless temperature sensor
@@ -247,7 +251,7 @@
   // MCP9808 sensor, precision temperature sensor
   #define SENSOR_MCP9808 25
 #endif
-// last Id: 29
+// last Id: 31
 /***********************************
   Libraries
 */
@@ -850,8 +854,7 @@ class SensorBH1750: public Sensor {
 #if MODULE_TSL2561 == 1
 class SensorTSL2561: public Sensor {
   public:
-    SensorTSL2561(int child_id, TSL2561* tsl, int tsl_address, int tsl_gain, int tsl_timing, int tsl_spectrum);
-    void setAddress(int value);
+    SensorTSL2561(int child_id, TSL2561* tsl, int tsl_gain, int tsl_timing, int tsl_spectrum);
     void setGain(int value);
     void setTiming(int value);
     void setSpectrum(int value);
@@ -861,7 +864,7 @@ class SensorTSL2561: public Sensor {
     void onReceive(const MyMessage & message);
   protected:
     TSL2561* _tsl;
-    int _tsl_address;
+    int _tsl_address = TSL2561_ADDR_FLOAT;
     int _tsl_gain;
     int _tsl_timing;
     int _tsl_spectrum;

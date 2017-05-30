@@ -1403,39 +1403,12 @@ void SensorBH1750::onReceive(const MyMessage & message) {
 */
 #if MODULE_TSL2561 == 1
 // contructor
-SensorTSL2561::SensorTSL2561(int child_id, TSL2561* tsl, int tsl_address, int tsl_gain, int tsl_timing, int tsl_spectrum): Sensor(child_id,A6) {
+SensorTSL2561::SensorTSL2561(int child_id, TSL2561* tsl, int tsl_gain, int tsl_timing, int tsl_spectrum): Sensor(child_id,A5) {
   setPresentation(S_LIGHT_LEVEL);
   setType(V_LEVEL);
-  _tsl = new TSL2561(TSL2561_ADDR_FLOAT); //another approach to try
-  _tsl_address = tsl_address;
-//  TSL2561 tsl(TSL2561_ADDR_FLOAT); 
-  //_tsl = new tsl(0x39);
-//  _tsl_address = tsl_address;
-//  switch (_tsl_address) {
-//  // The address will be different depending on whether you let
-//  // the ADDR pin float (addr 0x39), or tie it to ground or vcc. In those cases
-//  // use TSL2561_ADDR_LOW (0x29) or TSL2561_ADDR_HIGH (0x49) respectively
-//    case 0:
-//     // _tsl = new tsl(0x39);
-//     // TSL2561 tsl(TSL2561_ADDR_FLOAT) = new TSL2561(); 
-//      TSL2561 tsl(TSL2561_ADDR_FLOAT); 
-//      break;
-//    case 1:
-//      TSL2561 tsl(TSL2561_ADDR_LOW); 
-//     // _tsl = new tsl(0x29);
-//      break;
-//    case 2:
-//      TSL2561 tsl(TSL2561_ADDR_HIGH); 
-//     // _tsl = new tsl(0x49);
-//      break;
-//  }
   _tsl_gain = tsl_gain;
   _tsl_timing = tsl_timing;
   _tsl_spectrum = tsl_spectrum;
-}
-
-void SensorTSL2561::setAddress(int value) {
-  _tsl_address = value;
 }
 
 void SensorTSL2561::setGain(int value) {
@@ -2234,27 +2207,18 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
       return registerSensor(new SensorBH1750(child_id));
     }
   #endif
-  #if MODULE_TSL2561 == 1
-    else if (sensor_type == SENSOR_TSL2561) {
+  #if MODULE_TSL2561 == 1 
+    else if (sensor_type == SENSOR_TSL2561_ADDR_FLOAT || sensor_type == SENSOR_TSL2561_ADDR_LOW || sensor_type == SENSOR_TSL2561_ADDR_HIGH) {
       TSL2561* tsl;
-      int tsl_address;
-      if (tsl_address == 0) {
-        tsl = new TSL2561(TSL2561_ADDR_FLOAT); 
-       // TSL2561 tsl(0X39); 
-      }
-      else if (tsl_address == 1) {
-      //  TSL2561* tsl = new TSL2561(TSL2561_ADDR_LOW); 
-       // TSL2561 tsl(0x29); 
-      }
-      else if (tsl_address == 2) {
-     //   TSL2561* tsl = new TSL2561(TSL2561_ADDR_HIGH); 
-      //  TSL2561 tsl(0x49); 
-      }
+      // register sensor by his I2C address
+      if (sensor_type == SENSOR_TSL2561_ADDR_FLOAT) tsl = new TSL2561(TSL2561_ADDR_FLOAT); 
+      else if (sensor_type == SENSOR_TSL2561_ADDR_LOW) tsl = new TSL2561(TSL2561_ADDR_LOW); 
+      else if (sensor_type == SENSOR_TSL2561_ADDR_HIGH) tsl = new TSL2561(TSL2561_ADDR_HIGH); 
       int tsl_gain;
       int tsl_timing;
       int tsl_spectrum;
       // register light sensor
-      return registerSensor(new SensorTSL2561(child_id,tsl,tsl_address,tsl_gain,tsl_timing,tsl_spectrum));
+      return registerSensor(new SensorTSL2561(child_id,tsl,tsl_gain,tsl_timing,tsl_spectrum));
     }
   #endif
   #if MODULE_MLX90614 == 1
