@@ -175,6 +175,10 @@ enum supported_sensors {
     SENSOR_ACS712,
     // rain gauge sensor
     SENSOR_RAIN_GAUGE,
+    // Rain sensor, return the percentage of rain from an attached analog sensor
+    SENSOR_RAIN,
+    // Soil moisture sensor, return the percentage of moisture from an attached analog sensor
+    SENSOR_SOIL_MOISTURE,
   #endif
   #if MODULE_DIGITAL_INPUT == 1
     // Generic digital sensor, return a pin's digital value
@@ -601,6 +605,22 @@ class SensorRainGauge: public Sensor {
     int _report_interval = 60;
     float _single_tip = 0.11;
     long _last_report = 0;
+};
+
+/*
+   SensorRain
+*/
+class SensorRain: public SensorAnalogInput {
+  public:
+    SensorRain(int child_id, int pin);
+};
+
+/*
+   SensorSoilMoisture
+*/
+class SensorSoilMoisture: public SensorAnalogInput {
+  public:
+    SensorSoilMoisture(int child_id, int pin);
 };
 
 /*
