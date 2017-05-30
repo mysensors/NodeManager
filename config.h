@@ -15,27 +15,30 @@
 // General settings
 #define MY_BAUD_RATE 115200
 //#define MY_DEBUG
-#define MY_NODE_ID 110
+#define MY_NODE_ID 140
 
 // NRF24 radio settings
-//#define MY_RADIO_NRF24
+#define MY_RADIO_NRF24
 //#define MY_RF24_ENABLE_ENCRYPTION
-//#define MY_RF24_CHANNEL 76
+#define MY_RF24_CHANNEL 108
 //#define MY_RF24_PA_LEVEL RF24_PA_HIGH
 //#define MY_DEBUG_VERBOSE_RF24
 //#define MY_RF24_DATARATE RF24_250KBPS
+#define MY_RF24_DATARATE RF24_1MBPS
 
 // RFM69 radio settings
-#define MY_RADIO_RFM69
-#define MY_RFM69_FREQUENCY RFM69_433MHZ
+//#define MY_RADIO_RFM69
+//#define MY_RFM69_FREQUENCY RFM69_433MHZ
 //#define MY_IS_RFM69HW
-#define MY_DEBUG_VERBOSE_RFM69
+//#define MY_DEBUG_VERBOSE_RFM69
 //#define MY_RFM69_NEW_DRIVER
 //#define MY_RFM69_ENABLE_ENCRYPTION
 //#define MY_RFM69_NETWORKID 100
 //#define MY_RF69_IRQ_PIN D1
 //#define MY_RF69_IRQ_NUM MY_RF69_IRQ_PIN
 //#define MY_RF69_SPI_CS D2
+
+//#define MY_SENSOR_NETWORK
 
 // Avoid battery drain if Gateway disconnected and the node sends more than MY_TRANSPORT_STATE_RETRIES times message.
 #define MY_TRANSPORT_UPLINK_CHECK_DISABLED
@@ -115,7 +118,7 @@
 #define DEBUG 1
 
 // if enabled, enable the capability to power on sensors with the arduino's pins to save battery while sleeping
-#define POWER_MANAGER 1
+#define POWER_MANAGER 0
 // if enabled, will load the battery manager library to allow the battery level to be reported automatically or on demand
 #define BATTERY_MANAGER 1
 // if enabled, allow modifying the configuration remotely by interacting with the configuration child id
@@ -123,7 +126,7 @@
 // if enabled, persist the remote configuration settings on EEPROM
 #define PERSIST 1
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
-#define BATTERY_SENSOR 1
+#define BATTERY_SENSOR 0
 // if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle and STARTED when starting/rebooting
 #define SERVICE_MESSAGES 0
 
@@ -136,17 +139,17 @@
 // Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
 #define MODULE_DHT 0
 // Enable this module to use one of the following sensors: SENSOR_AM2320
-#define MODULE_AM2320 0
+#define MODULE_AM2320 1
 // Enable this module to use one of the following sensors: SENSOR_SHT21
-#define MODULE_SHT21 1
+#define MODULE_SHT21 0
 // Enable this module to use one of the following sensors: SENSOR_SWITCH, SENSOR_DOOR, SENSOR_MOTION
 #define MODULE_SWITCH 0
 // Enable this module to use one of the following sensors: SENSOR_DS18B20
 #define MODULE_DS18B20 0
 // Enable this module to use one of the following sensors: SENSOR_BH1750
-#define MODULE_BH1750 1
+#define MODULE_BH1750 0
 // Enable this module to use one of the following sensors: SENSOR_TSL2561
-#define MODULE_TSL2561 0
+#define MODULE_TSL2561 1
 // Enable this module to use one of the following sensors: SENSOR_MLX90614
 #define MODULE_MLX90614 0
 // Enable this module to use one of the following sensors: SENSOR_BME280

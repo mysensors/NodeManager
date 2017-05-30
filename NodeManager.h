@@ -714,6 +714,9 @@ class SensorAM2320: public Sensor {
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    // constants
+    const static int TEMPERATURE = 0;
+    const static int HUMIDITY = 1;
   protected:
     AM2320* _th;
     float _offset = 0;
@@ -847,17 +850,21 @@ class SensorBH1750: public Sensor {
 #if MODULE_TSL2561 == 1
 class SensorTSL2561: public Sensor {
   public:
-    SensorTSL2561(int child_id);
-    // define what to do at each stage of the sketch
+    SensorTSL2561(int child_id, TSL2561* tsl, int tsl_address, int tsl_gain, int tsl_timing, int tsl_spectrum);
+    void setAddress(int value);
+    void setGain(int value);
+    void setTiming(int value);
+    void setSpectrum(int value);
     void onBefore();
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
   protected:
     TSL2561* _tsl;
-// The address will be different depending on whether you let
-// the ADDR pin float (addr 0x39), or tie it to ground or vcc. In those cases
-// use TSL2561_ADDR_LOW (0x29) or TSL2561_ADDR_HIGH (0x49) respectively
+    int _tsl_address;
+    int _tsl_gain;
+    int _tsl_timing;
+    int _tsl_spectrum;
 };
 #endif
 

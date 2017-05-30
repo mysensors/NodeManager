@@ -1045,8 +1045,8 @@ void SensorDHT::onReceive(const MyMessage & message) {
 #if MODULE_AM2320 == 1
 // contructor
 SensorAM2320::SensorAM2320(int child_id, int sensor_type): Sensor(child_id,A2) {
-  //_th = new AM2320(); another approach to try if it doesn't work
-  _th = th;
+  _th = new AM2320(); //another approach to try
+  //_th = th;
   // store the sensor type (0: temperature, 1: humidity)
   _sensor_type = sensor_type;
   if (_sensor_type == SensorAM2320::TEMPERATURE) {
@@ -1111,6 +1111,7 @@ void SensorAM2320::onLoop() {
           // store the value
           _value_float = humidity;
         }
+    }
 }
 
 // what do to as the main task when receiving a message
@@ -1402,68 +1403,127 @@ void SensorBH1750::onReceive(const MyMessage & message) {
 */
 #if MODULE_TSL2561 == 1
 // contructor
-SensorTSL2561::SensorTSL2561(int child_id, int tsl_gain, int tsl_timing, int tsl_spectrum, ): Sensor(child_id,A4) {
+SensorTSL2561::SensorTSL2561(int child_id, TSL2561* tsl, int tsl_address, int tsl_gain, int tsl_timing, int tsl_spectrum): Sensor(child_id,A6) {
   setPresentation(S_LIGHT_LEVEL);
   setType(V_LEVEL);
-  _tsl = new TLS2561(TSL2561_ADDR_FLOAT);
+  _tsl = new TSL2561(TSL2561_ADDR_FLOAT); //another approach to try
+  _tsl_address = tsl_address;
+//  TSL2561 tsl(TSL2561_ADDR_FLOAT); 
+  //_tsl = new tsl(0x39);
+//  _tsl_address = tsl_address;
+//  switch (_tsl_address) {
+//  // The address will be different depending on whether you let
+//  // the ADDR pin float (addr 0x39), or tie it to ground or vcc. In those cases
+//  // use TSL2561_ADDR_LOW (0x29) or TSL2561_ADDR_HIGH (0x49) respectively
+//    case 0:
+//     // _tsl = new tsl(0x39);
+//     // TSL2561 tsl(TSL2561_ADDR_FLOAT) = new TSL2561(); 
+//      TSL2561 tsl(TSL2561_ADDR_FLOAT); 
+//      break;
+//    case 1:
+//      TSL2561 tsl(TSL2561_ADDR_LOW); 
+//     // _tsl = new tsl(0x29);
+//      break;
+//    case 2:
+//      TSL2561 tsl(TSL2561_ADDR_HIGH); 
+//     // _tsl = new tsl(0x49);
+//      break;
+//  }
+  _tsl_gain = tsl_gain;
+  _tsl_timing = tsl_timing;
+  _tsl_spectrum = tsl_spectrum;
+}
+
+void SensorTSL2561::setAddress(int value) {
+  _tsl_address = value;
+}
+
+void SensorTSL2561::setGain(int value) {
+  _tsl_gain = value;
+}
+
+void SensorTSL2561::setTiming(int value) {
+  _tsl_timing = value;
+}
+  
+void SensorTSL2561::setSpectrum(int value) {
+  _tsl_spectrum = value;
 }
 
 // what do to during before
 void SensorTSL2561::onBefore() {
-  _tsl->begin();
-    // You can change the gain on the fly, to adapt to brighter/dimmer light situations
-  //tsl.setGain(TSL2561_GAIN_0X);         // set no gain (for bright situtations)
-  //_tsl->setGain(TSL2561_GAIN_16X);      // set 16x gain (for dim situations)
-  _tsl->setGain(tsl_gain);      
-  // Changing the integration time gives you a longer time over which to sense light
-  // longer timelines are slower, but are good in very low light situtations!
-  //_tsl->setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
-  //tsl.setTiming(TSL2561_INTEGRATIONTIME_101MS);  // medium integration time (medium light)
-  //tsl.setTiming(TSL2561_INTEGRATIONTIME_402MS);  // longest integration time (dim light)
-  _tsl->setTiming(tsl_timing);  // shortest integration time (bright light)
-  
+   _tsl->begin();      
 }
 
 // what do to during setup
 void SensorTSL2561::onSetup() {
-  
+  // You can change the gain on the fly, to adapt to brighter/dimmer light situations     
+  switch (_tsl_gain) {
+    case 0:
+      _tsl->setGain(TSL2561_GAIN_0X); // set no gain (for bright situtations)
+      break; 
+    case 1:
+      _tsl->setGain(TSL2561_GAIN_16X); // set 16x gain (for dim situations)
+      break;      
+  }
+  // Changing the integration time gives you a longer time over which to sense light
+  // longer timelines are slower, but are good in very low light situtations!
+  //_tsl->setTiming(tsl_timing);  // shortest integration time (bright light)
+  switch (_tsl_timing) {
+    case 0:
+      _tsl->setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
+      break; 
+    case 1:
+      _tsl->setTiming(TSL2561_INTEGRATIONTIME_101MS);  // medium integration time (medium light)
+      break; 
+    case 2:
+      _tsl->setTiming(TSL2561_INTEGRATIONTIME_402MS);  // longest integration time (dim light)
+      break;
+  } 
 }
 
 // what do to during loop
 void SensorTSL2561::onLoop() {
   // request the light level
-  _value_int = _tsl->getLuminosity(tsl_spectrum); 
-//  _value_int = _tsl->getLuminosity(TSL2561_VISIBLE); 
-//  _value_int = _tsl->getLuminosity(TSL2561_FULLSPECTRUM); 
-//  _value_int = _tsl->getLuminosity(TSL2561_INFRARED); 
+   switch (_tsl_spectrum) {
+    case 0:
+      _value_int = _tsl->getLuminosity(TSL2561_VISIBLE); 
+      break; 
+    case 1:
+      _value_int = _tsl->getLuminosity(TSL2561_FULLSPECTRUM); 
+      break; 
+    case 2:
+      _value_int = _tsl->getLuminosity(TSL2561_INFRARED); 
+      break; 
+    case 3:
+      // request the full light level
+      uint32_t lum = _tsl->getFullLuminosity(); 
+      uint16_t ir, full;
+      ir = lum >> 16;
+//      _ir = ir;
+      full = lum & 0xFFFF;
+//      _full = full;
+      _value_int = _tsl->calculateLux(full, ir);
+      break; 
+  }
   #if DEBUG == 1
     Serial.print(F("TSL I="));
     Serial.print(_child_id);
+    if (_tsl_spectrum < 3) {
     Serial.print(F(" L="));
     Serial.println(_value_int);
-  #endif
-
-#if defined TSL2561_FULL_LUM
-    // request the full light level
-//  uint32_t lum = _tsl->getFullLuminosity(); 
-//  uint16_t ir, full;
-//  ir = lum >> 16;
-//  full = lum & 0xFFFF;
-//  _value_int = _tsl->getFullLuminosity(); 
-  #if DEBUG == 1
-    Serial.print(F("TLS I="));
-    Serial.print(_child_id);
-    Serial.print(F(" IR="));
-    Serial.println(ir);
-    Serial.print(F(" FULL="));
-    Serial.println(full);
-    Serial.print(F(" VISIBLE="));
-    Serial.println(full-ir);
+    }
+    if (_tsl_spectrum == 3) {
+//    Serial.print(F(" IR="));
+//    Serial.println(_ir);
+//    Serial.print(F(" FULL="));
+//    Serial.println(_full);
+//    Serial.print(F(" VISIBLE="));
+//    Serial.println(_full-_ir);
     Serial.print(F(" LUX="));
-    Serial.println(_tsl->calculateLux(full, ir));
+    Serial.println(_value_int);
+    }
   #endif
-#endif
-
 }
 
 // what do to as the main task when receiving a message
@@ -2176,22 +2236,25 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   #endif
   #if MODULE_TSL2561 == 1
     else if (sensor_type == SENSOR_TSL2561) {
+      TSL2561* tsl;
+      int tsl_address;
+      if (tsl_address == 0) {
+        tsl = new TSL2561(TSL2561_ADDR_FLOAT); 
+       // TSL2561 tsl(0X39); 
+      }
+      else if (tsl_address == 1) {
+      //  TSL2561* tsl = new TSL2561(TSL2561_ADDR_LOW); 
+       // TSL2561 tsl(0x29); 
+      }
+      else if (tsl_address == 2) {
+     //   TSL2561* tsl = new TSL2561(TSL2561_ADDR_HIGH); 
+      //  TSL2561 tsl(0x49); 
+      }
       int tsl_gain;
-      if (sensor_type == SENSOR_DHT11) tsl_gain = TSL2561_GAIN_16X;
-      else if (sensor_type == SENSOR_DHT21) tsl_gain = TSL2561_GAIN_0X;
       int tsl_timing;
-      if (sensor_type == SENSOR_DHT11) tsl_timing = TSL2561_INTEGRATIONTIME_13MS;
-      else if (sensor_type == SENSOR_DHT21) tsl_timing = TSL2561_INTEGRATIONTIME_101MS;
-      else if (sensor_type == SENSOR_DHT21) tsl_timing = TSL2561_INTEGRATIONTIME_402MS;
       int tsl_spectrum;
-      if (sensor_type == SENSOR_DHT11) tsl_spectrum = TSL2561_VISIBLE;
-      else if (sensor_type == SENSOR_DHT21) tsl_spectrum = TSL2561_FULLSPECTRUM;
-      else if (sensor_type == SENSOR_DHT21) tsl_spectrum = TSL2561_INFRARED;
-
-      //DHT* dht = new DHT(pin,dht_type);
-      // register temperature sensor
-      registerSensor(new SensorDHT(child_id,pin,dht,SensorDHT::TEMPERATURE,dht_type));
-      return registerSensor(new SensorTSL2561(child_id,tsl_gain,tsl_timing,tsl_spectrum));
+      // register light sensor
+      return registerSensor(new SensorTSL2561(child_id,tsl,tsl_address,tsl_gain,tsl_timing,tsl_spectrum));
     }
   #endif
   #if MODULE_MLX90614 == 1
