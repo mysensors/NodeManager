@@ -82,6 +82,23 @@
   #define BATTERY_SENSOR 1
 #endif
 
+// the child id used to allow remote configuration
+#ifndef CONFIGURATION_CHILD_ID
+  #define CONFIGURATION_CHILD_ID 200
+#endif
+// the child id used to report the battery voltage to the controller
+#ifndef BATTERY_CHILD_ID
+  #define BATTERY_CHILD_ID 201
+#endif
+// define the maximum number of sensors that can be managed
+#ifndef MAX_SENSORS
+  #define MAX_SENSORS 10
+#endif
+
+/***********************************
+   Default module settings
+*/
+
 // Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ, SENSOR_ACS712
 #ifndef MODULE_ANALOG_INPUT
   #define MODULE_ANALOG_INPUT 0
@@ -139,101 +156,89 @@
   #define MODULE_MCP9808 0
 #endif
 
-// the child id used to allow remote configuration
-#ifndef CONFIGURATION_CHILD_ID
-  #define CONFIGURATION_CHILD_ID 200
-#endif
-// the child id used to report the battery voltage to the controller
-#ifndef BATTERY_CHILD_ID
-  #define BATTERY_CHILD_ID 201
-#endif
-// define the maximum number of sensors that can be managed
-#ifndef MAX_SENSORS
-  #define MAX_SENSORS 10
-#endif
-
 /***********************************
-   Sensors types
+   Supported Sensors
 */
-#if MODULE_ANALOG_INPUT == 1
-  // Generic analog sensor, return a pin's analog value or its percentage
-  #define SENSOR_ANALOG_INPUT 1
-  // LDR sensor, return the light level of an attached light resistor in percentage
-  #define SENSOR_LDR 2
-  // Thermistor sensor, return the temperature based on the attached thermistor
-  #define SENSOR_THERMISTOR 3
-  // MQ2 air quality sensor
-  #define SENSOR_MQ 19
-  // ML8511 UV sensor
-  #define SENSOR_ML8511 20
-  // Current sensor
-  #define SENSOR_ACS712 24
-  // rain gauge sensor
-  #define SENSOR_RAIN_GAUGE 26
-#endif
-#if MODULE_DIGITAL_INPUT == 1
-  // Generic digital sensor, return a pin's digital value
-  #define SENSOR_DIGITAL_INPUT 4
-#endif
-#if MODULE_DIGITAL_OUTPUT == 1
-  // Generic digital output sensor, allows setting the digital output of a pin to the requested value
-  #define SENSOR_DIGITAL_OUTPUT 5
-  // Relay sensor, allows activating the relay
-  #define SENSOR_RELAY 6
-  // Latching Relay sensor, allows activating the relay with a pulse
-  #define SENSOR_LATCHING_RELAY 7
-#endif
-#if MODULE_DHT == 1
-  // DHT11/DHT22 sensors, return temperature/humidity based on the attached DHT sensor
-  #define SENSOR_DHT11 8
-  #define SENSOR_DHT22 9
-#endif
-#if MODULE_SHT21 == 1
-  // SHT21 sensor, return temperature/humidity based on the attached SHT21 sensor
-  #define SENSOR_SHT21 10
-  #define SENSOR_HTU21D 15
-#endif
-#if MODULE_SWITCH == 1
-  // Generic switch, wake up the board when a pin changes status
-  #define SENSOR_SWITCH 11
-  // Door sensor, wake up the board and report when an attached magnetic sensor has been opened/closed
-  #define SENSOR_DOOR 12
-  // Motion sensor, wake up the board and report when an attached PIR has triggered
-  #define SENSOR_MOTION 13
-#endif
-#if MODULE_DS18B20 == 1
-  // DS18B20 sensor, return the temperature based on the attached sensor
-  #define SENSOR_DS18B20 14
-#endif
-#if MODULE_BH1750 == 1
-  // BH1750 sensor, return light in lux
-  #define SENSOR_BH1750 16
-#endif
-#if MODULE_MLX90614 == 1
-  // MLX90614 sensor, contactless temperature sensor
-  #define SENSOR_MLX90614 17
-#endif
-#if MODULE_BME280 == 1
-  // MLX90614 sensor, contactless temperature sensor
-  #define SENSOR_BME280 18
-#endif
-#if MODULE_SONOFF == 1
-  // Sonoff wireless smart switch
-  #define SENSOR_SONOFF 21
-#endif
-#if MODULE_BMP085 == 1
-  // BMP085/BMP180 sensor, return temperature and pressure
-  #define SENSOR_BMP085 22
-#endif
-#if MODULE_HCSR04 == 1
-  // HC-SR04 sensor, return the distance between the sensor and an object
-  #define SENSOR_HCSR04 23
-#endif
-#if MODULE_MCP9808 == 1
-  // MCP9808 sensor, precision temperature sensor
-  #define SENSOR_MCP9808 25
-#endif
-// last Id: 26
+enum supported_sensors {
+  #if MODULE_ANALOG_INPUT == 1
+    // Generic analog sensor, return a pin's analog value or its percentage
+    SENSOR_ANALOG_INPUT,
+    // LDR sensor, return the light level of an attached light resistor in percentage
+    SENSOR_LDR,
+    // Thermistor sensor, return the temperature based on the attached thermistor
+    SENSOR_THERMISTOR,
+    // MQ2 air quality sensor
+    SENSOR_MQ,
+    // ML8511 UV sensor
+    SENSOR_ML8511,
+    // Current sensor
+    SENSOR_ACS712,
+    // rain gauge sensor
+    SENSOR_RAIN_GAUGE,
+  #endif
+  #if MODULE_DIGITAL_INPUT == 1
+    // Generic digital sensor, return a pin's digital value
+    SENSOR_DIGITAL_INPUT,
+  #endif
+  #if MODULE_DIGITAL_OUTPUT == 1
+    // Generic digital output sensor, allows setting the digital output of a pin to the requested value
+    SENSOR_DIGITAL_OUTPUT,
+    // Relay sensor, allows activating the relay
+    SENSOR_RELAY,
+    // Latching Relay sensor, allows activating the relay with a pulse
+    SENSOR_LATCHING_RELAY,
+  #endif
+  #if MODULE_DHT == 1
+    // DHT11/DHT22 sensors, return temperature/humidity based on the attached DHT sensor
+    SENSOR_DHT11,
+    SENSOR_DHT22,
+  #endif
+  #if MODULE_SHT21 == 1
+    // SHT21 sensor, return temperature/humidity based on the attached SHT21 sensor
+    SENSOR_SHT21,
+    SENSOR_HTU21D,
+  #endif
+  #if MODULE_SWITCH == 1
+    // Generic switch, wake up the board when a pin changes status
+    SENSOR_SWITCH,
+    // Door sensor, wake up the board and report when an attached magnetic sensor has been opened/closed
+    SENSOR_DOOR,
+    // Motion sensor, wake up the board and report when an attached PIR has triggered
+    SENSOR_MOTION,
+  #endif
+  #if MODULE_DS18B20 == 1
+    // DS18B20 sensor, return the temperature based on the attached sensor
+    SENSOR_DS18B20,
+  #endif
+  #if MODULE_BH1750 == 1
+    // BH1750 sensor, return light in lux
+    SENSOR_BH1750,
+  #endif
+  #if MODULE_MLX90614 == 1
+    // MLX90614 sensor, contactless temperature sensor
+    SENSOR_MLX90614,
+  #endif
+  #if MODULE_BME280 == 1
+    // MLX90614 sensor, contactless temperature sensor
+    SENSOR_BME280,
+  #endif
+  #if MODULE_SONOFF == 1
+    // Sonoff wireless smart switch
+    SENSOR_SONOFF,
+  #endif
+  #if MODULE_BMP085 == 1
+    // BMP085/BMP180 sensor, return temperature and pressure
+    SENSOR_BMP085,
+  #endif
+  #if MODULE_HCSR04 == 1
+    // HC-SR04 sensor, return the distance between the sensor and an object
+    SENSOR_HCSR04,
+  #endif
+  #if MODULE_MCP9808 == 1
+    // MCP9808 sensor, precision temperature sensor
+    SENSOR_MCP9808,
+  #endif
+};
 /***********************************
   Libraries
 */
