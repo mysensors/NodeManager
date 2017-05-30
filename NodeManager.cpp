@@ -688,6 +688,21 @@ SensorRain::SensorRain(int child_id, int pin): SensorAnalogInput(child_id, pin) 
   setRangeMin(100);
 }
 
+/*
+   SensorSoilMoisture
+*/
+
+// contructor
+SensorSoilMoisture::SensorSoilMoisture(int child_id, int pin): SensorAnalogInput(child_id, pin) {
+  // set presentation and type and reverse
+  setPresentation(S_MOISTURE);
+  setType(V_LEVEL);
+  setReference(DEFAULT);
+  setOutputPercentage(true);
+  setReverse(true);
+  setRangeMin(100);
+}
+
 
 /*
  * SensorMQ
@@ -1950,6 +1965,8 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     else if (sensor_type == SENSOR_ML8511) return registerSensor(new SensorML8511(child_id, pin));
     else if (sensor_type == SENSOR_ACS712) return registerSensor(new SensorACS712(child_id, pin));
     else if (sensor_type == SENSOR_RAIN_GAUGE) return registerSensor(new SensorRainGauge(child_id, pin));
+    else if (sensor_type == SENSOR_RAIN) return registerSensor(new SensorRain(child_id, pin));
+    else if (sensor_type == SENSOR_SOIL_MOISTURE) return registerSensor(new SensorSoilMoisture(child_id, pin));
   #endif
   #if MODULE_DIGITAL_INPUT == 1
     else if (sensor_type == SENSOR_DIGITAL_INPUT) return registerSensor(new SensorDigitalInput(child_id, pin));

@@ -399,7 +399,7 @@ The following methods are available for all the sensors:
 
 Each sensor class can expose additional methods.
 
-#### SensorAnalogInput / SensorLDR
+#### SensorAnalogInput / SensorLDR / SensorRain / SensorSoilMoisture
 ~~~c
     // the analog reference to use (default: not set, can be either INTERNAL or DEFAULT)
     void setReference(int value);

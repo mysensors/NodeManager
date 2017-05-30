@@ -34,7 +34,7 @@ void before() {
    * Register below your sensors
   */
   
-  nodeManager.registerSensor(SENSOR_RAIN,A1);
+  
   
   /*
    * Register above your sensors

@@ -616,6 +616,14 @@ class SensorRain: public SensorAnalogInput {
 };
 
 /*
+   SensorSoilMoisture
+*/
+class SensorSoilMoisture: public SensorAnalogInput {
+  public:
+    SensorSoilMoisture(int child_id, int pin);
+};
+
+/*
    SensorDigitalInput: read the digital input of the configured pin
 */
 class SensorDigitalInput: public Sensor {
