@@ -466,7 +466,7 @@ void SensorThermistor::onLoop() {
   temperature += 1.0 / (_nominal_temperature + 273.15); // + (1/To)
   temperature = 1.0 / temperature;                 // Invert
   temperature -= 273.15;                         // convert to C
-  if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
+  temperature = _node_manager->celsiusToFahrenheit(temperature);
   #if DEBUG == 1
     Serial.print(F("THER I="));
     Serial.print(_child_id);
@@ -474,8 +474,6 @@ void SensorThermistor::onLoop() {
     Serial.print(adc);
     Serial.print(F(" T="));
     Serial.print(temperature);
-    Serial.print(F(" M="));
-    Serial.println(getControllerConfig().isMetric);
   #endif
   // store the value
   _value_float = temperature;
@@ -1038,7 +1036,7 @@ void SensorDHT::onLoop() {
     // read the temperature
     float temperature = _dht->readTemperature();
     // convert it
-    if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
+    temperature = _node_manager->celsiusToFahrenheit(temperature);
     #if DEBUG == 1
       Serial.print(F("DHT I="));
       Serial.print(_child_id);
@@ -1109,7 +1107,7 @@ void SensorSHT21::onLoop() {
     // read the temperature
     float temperature = SHT2x.GetTemperature();
     // convert it
-    if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
+    temperature = _node_manager->celsiusToFahrenheit(temperature);
     #if DEBUG == 1
       Serial.print(F("SHT I="));
       Serial.print(_child_id);
@@ -1272,7 +1270,7 @@ void SensorDs18b20::onLoop() {
   // read the temperature
   float temperature = _sensors->getTempCByIndex(_index);
   // convert it
-  if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
+  temperature = _node_manager->celsiusToFahrenheit(temperature);
   #if DEBUG == 1
     Serial.print(F("DS18B20 I="));
     Serial.print(_child_id);
@@ -1376,7 +1374,7 @@ void SensorMLX90614::onSetup() {
 void SensorMLX90614::onLoop() {
   float temperature = _sensor_type == SensorMLX90614::TEMPERATURE_OBJECT ? _mlx->readAmbientTempC() : _mlx->readObjectTempC();
   // convert it
-  if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
+  temperature = _node_manager->celsiusToFahrenheit(temperature);
   #if DEBUG == 1
     Serial.print(F("MLX I="));
     Serial.print(_child_id);
@@ -1573,7 +1571,7 @@ void SensorBME280::onLoop() {
     // read the temperature
     float temperature = _bme->readTemperature();
     // convert it
-    if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
+    temperature = _node_manager->celsiusToFahrenheit(temperature);
     #if DEBUG == 1
       Serial.print(F("BME I="));
       Serial.print(_child_id);
@@ -1637,7 +1635,7 @@ void SensorBMP085::onLoop() {
     // read the temperature
     float temperature = _bmp->readTemperature();
     // convert it
-    if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
+    temperature = _node_manager->celsiusToFahrenheit(temperature);
     #if DEBUG == 1
       Serial.print(F("BMP I="));
       Serial.print(_child_id);
@@ -1807,7 +1805,7 @@ void SensorHCSR04::onSetup() {
 
 // what to do during loop
 void SensorHCSR04::onLoop() {
-  int distance = getControllerConfig().isMetric ? _sonar->ping_cm() : _sonar->ping_in();
+  int distance = _node_manager->getIsMetric() ? _sonar->ping_cm() : _sonar->ping_in();
   #if DEBUG == 1
     Serial.print(F("HC I="));
     Serial.print(_child_id);
@@ -1847,7 +1845,7 @@ void SensorMCP9808::onSetup() {
 void SensorMCP9808::onLoop() {
   float temperature = _mcp->readTempC();
   // convert it
-  if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
+  temperature = _node_manager->celsiusToFahrenheit(temperature);
   #if DEBUG == 1
     Serial.print(F("MCP I="));
     Serial.print(_child_id);
@@ -1950,6 +1948,22 @@ void NodeManager::setSleepBetweenSend(int value) {
 }
 void NodeManager::setAck(bool value) {
     _ack = value;
+}
+void NodeManager::setGetControllerConfig(bool value) {
+  _get_controller_config = value;
+}
+void NodeManager::setIsMetric(bool value) {
+  _is_metric = value;
+}
+bool NodeManager::getIsMetric() {
+  return _is_metric;
+}
+
+// Convert a temperature from celsius to fahrenheit depending on how isMetric is set
+float NodeManager::celsiusToFahrenheit(float temperature) {
+  if (_is_metric) return temperature;
+  // convert the temperature from C to F
+  return temperature * 1.8 + 32;
 }
 
 // register a sensor to this manager
@@ -2283,11 +2297,13 @@ void NodeManager::presentation() {
 
 // setup NodeManager
 void NodeManager::setup() {
+  // retrieve and store isMetric from the controller
+  if (_get_controller_config) _is_metric = getControllerConfig().isMetric;
   #if DEBUG == 1
     Serial.print(F("MY I="));
     Serial.print(getNodeId());
     Serial.print(F(" M="));
-    Serial.println(getControllerConfig().isMetric);
+    Serial.println(_is_metric);
   #endif
   #if SERVICE_MESSAGES == 1
     _send(_msg.set("STARTED"));

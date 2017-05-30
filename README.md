@@ -256,6 +256,13 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
     void setAck(bool value);
     // request and return the current timestamp from the controller
     long getTimestamp();
+    // Request the controller's configuration on startup (default: true)
+    void setGetControllerConfig(bool value);
+    // Manually set isMetric setting
+    void setIsMetric(bool value);
+    bool getIsMetric();
+    // Convert a temperature from celsius to fahrenheit depending on how isMetric is set
+    float celsiusToFahrenheit(float temperature);
 ~~~
 
 For example
