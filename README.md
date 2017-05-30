@@ -128,6 +128,9 @@ Since NodeManager has to communicate with the MySensors gateway on your behalf, 
 Those NodeManager's directives in the `config.h` file control which module/library/functionality will be made available to your sketch. Enable (e.g. set to 1) only what you need to ensure enough space is left to your custom code.
 
 ~~~c
+// if enabled, enable debug messages on serial port
+#define DEBUG 1
+
 // if enabled, enable the capability to power on sensors with the arduino's pins to save battery while sleeping
 #define POWER_MANAGER 1
 // if enabled, will load the battery manager library to allow the battery level to be reported automatically or on demand
@@ -137,15 +140,12 @@ Those NodeManager's directives in the `config.h` file control which module/libra
 // if enabled, persist the configuration settings on EEPROM
 #define PERSIST 0
 
-// if enabled, enable debug messages on serial port
-#define DEBUG 1
-
 // if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle and STARTED when starting/rebooting
-#define SERVICE_MESSAGES 1
+#define SERVICE_MESSAGES 0
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
 #define BATTERY_SENSOR 1
 
-// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN_GAUGE
+// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN_GAUGE, SENSOR_RAIN, SENSOR_SOIL_MOISTURE
 #define MODULE_ANALOG_INPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
 #define MODULE_DIGITAL_INPUT 1
@@ -297,6 +297,8 @@ SENSOR_HCSR04 | HC-SR04 sensor, return the distance between the sensor and an ob
 SENSOR_ACS712 | ACS712 sensor, measure the current going through the attached module
 SENSOR_MCP9808 | MCP9808 sensor, measure the temperature through the attached module
 SENSOR_RAIN_GAUGE | Rain gauge sensor
+SENSOR_RAIN | Rain sensor, return the percentage of rain from an attached analog sensor
+SENSOR_SOIL_MOISTURE | Soil moisture sensor, return the percentage of moisture from an attached analog sensor
 
 To register a sensor simply call the NodeManager instance with the sensory type and the pin the sensor is conncted to. For example:
 ~~~c

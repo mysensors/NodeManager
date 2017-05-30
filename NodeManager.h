@@ -175,6 +175,10 @@ enum supported_sensors {
     SENSOR_ACS712,
     // rain gauge sensor
     SENSOR_RAIN_GAUGE,
+    // Rain sensor, return the percentage of rain from an attached analog sensor
+    SENSOR_RAIN,
+    // Soil moisture sensor, return the percentage of moisture from an attached analog sensor
+    SENSOR_SOIL_MOISTURE,
   #endif
   #if MODULE_DIGITAL_INPUT == 1
     // Generic digital sensor, return a pin's digital value
