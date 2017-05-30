@@ -257,6 +257,7 @@ enum supported_sensors {
 
 // include MySensors libraries
 #include <core/MySensorsCore.h>
+#include <core/MyCapabilities.h>
 
 // include third party libraries
 #if MODULE_DHT == 1

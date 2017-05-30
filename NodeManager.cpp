@@ -2176,9 +2176,27 @@ bool NodeManager::renameSensor(int old_child_id, int new_child_id) {
 
 // setup NodeManager
 void NodeManager::before() {
+  // print out the version
   #if DEBUG == 1
     Serial.print(F("NodeManager v"));
     Serial.println(VERSION);
+  #endif
+  // print out MySensors' library capabilities
+  #if DEBUG == 1
+    Serial.print(F("LIB R="));
+    Serial.print(MY_CAP_RADIO);
+    #ifdef MY_CAP_ENCR
+      Serial.print(F(" E="));
+      Serial.print(MY_CAP_ENCR);
+    #endif
+    Serial.print(F(" T="));
+    Serial.print(MY_CAP_TYPE);
+    Serial.print(F(" A="));
+    Serial.print(MY_CAP_ARCH);
+    Serial.print(F(" S="));
+    Serial.print(MY_CAP_SIGN);
+    Serial.print(F(" B="));
+    Serial.println(MY_CAP_RXBUF);
   #endif
   // setup the sleep interrupt pin
   if (_sleep_interrupt_pin > -1) {
