@@ -87,6 +87,27 @@ void PowerManager::powerOff() {
   digitalWrite(_vcc_pin, LOW);
 }
 
+/******************************************
+    Timer
+*/
+
+Timer::Timer(NodeManager* node_manager, long interval, int unit) {
+  _node_manager = node_manager;
+  _interval = interval;
+  _unit = unit;
+}
+
+void Timer::update() {
+  if (_unit == Timer::UNIT_MILLIS) {
+    
+  }
+  else if (_unit == Timer::UNIT_CYCLES) {
+    _elapsed++;
+  }
+  else if (_unit == Timer::UNIT_MINUTES) {
+    _elapsed++;
+  }
+}
 
 /******************************************
     Sensors
@@ -1905,11 +1926,20 @@ void NodeManager::setSleepMode(int value) {
 void NodeManager::setMode(int value) {
   setSleepMode(value);
 }
+int NodeManager::getMode() {
+  return _sleep_mode;
+}
 void NodeManager::setSleepTime(int value) {
   _sleep_time = value;
 }
+int NodeManager::getSleepTime() {
+  return _sleep_time;
+}
 void NodeManager::setSleepUnit(int value) {
   _sleep_unit = value;
+}
+int NodeManager::getSleepUnit() {
+  return _sleep_unit;
 }
 void NodeManager::setSleep(int value1, int value2, int value3) {
   _sleep_mode = value1;

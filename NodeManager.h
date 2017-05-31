@@ -324,7 +324,24 @@ class PowerManager {
     long _wait = 0;
 };
 
+/*
+   Timer
+*/
 
+class Timer {
+  public:
+    Timer(NodeManager* node_manager, long interval, int unit);
+    void update();
+    void clear();
+  private:
+    NodeManager* _node_manager;
+    long _interval = 0;
+    int _unit = 0;
+    long _elapsed = 0;
+    const static int UNIT_MILLIS = 0;
+    const static int UNIT_CYCLES = 1;
+    const static int UNIT_MINUTES = 2;
+};
 /***************************************
    Sensor: generic sensor class
 */
@@ -591,9 +608,9 @@ class SensorACS712: public Sensor {
 class SensorRainGauge: public Sensor {
   public:
     SensorRainGauge(NodeManager* node_manager, int child_id, int pin);
-    // set how frequently to report back to the controller in minutes. After reporting the measure is resetted (default: 60);
+    // set how frequently to report back to the controller in minutes. After reporting the measure is resetted (default: 60)
     void setReportInterval(int value);
-    // set how many mm of rain to count for each tip (default: 0.11);
+    // set how many mm of rain to count for each tip (default: 0.11)
     void setSingleTip(float value);
     // define what to do at each stage of the sketch
     void onBefore();
@@ -1019,10 +1036,13 @@ class NodeManager {
     // define the way the node should behave. It can be IDLE (stay awake withtout executing each sensors' loop), SLEEP (go to sleep for the configured interval), WAIT (wait for the configured interval), ALWAYS_ON (stay awake and execute each sensors' loop)
     void setSleepMode(int value);
     void setMode(int value);
+    int getMode();
     // define for how long the board will sleep (default: 0)
     void setSleepTime(int value);
+    int getSleepTime();
     // define the unit of SLEEP_TIME. It can be SECONDS, MINUTES, HOURS or DAYS (default: MINUTES)
     void setSleepUnit(int value);
+    int getSleepUnit();
     // configure the node's behavior, parameters are mode, time and unit
     void setSleep(int value1, int value2, int value3);
     // if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
