@@ -204,6 +204,8 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
       void setBatteryMax(float value);
       // after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: 10)
       void setBatteryReportCycles(int value);
+      // after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 0)
+      void setBatteryReportMinutes(int value);
       // if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
       void setBatteryInternalVcc(bool value);
       // if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)

@@ -343,7 +343,7 @@ class Timer {
     // Returns true if the time is over
     bool isOver();
     // Reset the timer and start over
-    void reset();
+    void restart();
     // Return the current elapsed time
     long getElapsed();
    private:
@@ -1037,6 +1037,8 @@ class NodeManager {
       void setBatteryMax(float value);
       // after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: 10)
       void setBatteryReportCycles(int value);
+      // after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 0)
+      void setBatteryReportMinutes(int value);
       // if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
       void setBatteryInternalVcc(bool value);
       // if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
@@ -1109,12 +1111,11 @@ class NodeManager {
     #if BATTERY_MANAGER == 1
       float _battery_min = 2.6;
       float _battery_max = 3.3;
-      int _battery_report_cycles = 10;
+      Timer _battery_report_timer = Timer(this);
       bool _battery_report_with_interrupt = true;
       bool _battery_internal_vcc = true;
       int _battery_pin = -1;
       float _battery_volts_per_bit = 0.003363075;
-      int _cycles = 0;
       float _getVcc();
     #endif
     #if POWER_MANAGER == 1

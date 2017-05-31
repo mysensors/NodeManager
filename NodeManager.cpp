@@ -97,6 +97,12 @@ Timer::Timer(NodeManager* node_manager) {
 
 // start the timer
 void Timer::start(long interval, int unit) {
+  // reset the timer
+  _elapsed = 0;
+  _use_millis = false;
+  _start_from = 0;
+  _sleep_time = 0;
+  // save the settings
   _interval = interval;
   _unit = unit;
   if (_unit == MINUTES) {
@@ -146,8 +152,8 @@ bool Timer::isOver() {
   return false;
 }
 
-// reset the timer
-void Timer::reset() {
+// restart the timer
+void Timer::restart() {
   // reset elapsed
   _elapsed = 0;
   // if using millis, keep track of the now timestamp
@@ -1954,7 +1960,10 @@ void NodeManager::setRetries(int value) {
     _battery_max = value;
   }
   void NodeManager::setBatteryReportCycles(int value) {
-    _battery_report_cycles = value;
+    _battery_report_timer.start(value,CYCLES);
+  }
+  void NodeManager::setBatteryReportMinutes(int value) {
+    _battery_report_timer.start(value,MINUTES);
   }
   void NodeManager::setBatteryInternalVcc(bool value) {
     _battery_internal_vcc = value;
@@ -2737,12 +2746,13 @@ void NodeManager::_sleep() {
   #endif
   #if BATTERY_MANAGER == 1
     // keep track of the number of sleeping cycles (ignoring if woke up by an interrupt)
-    if (interrupt == -1 || _battery_report_with_interrupt) _cycles++;
+    if (interrupt == -1 || _battery_report_with_interrupt) _battery_report_timer.update();
     // battery has to be reported after the configured number of sleep cycles
-    if (_battery_report_cycles == _cycles) {
+    if (_battery_report_timer.isOver()) {
       // time to report the battery level again
       _process("BATTERY");
-      _cycles = 0;
+      // restart the timer
+      _battery_report_timer.restart();
     }
   #endif
 }
