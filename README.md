@@ -202,8 +202,10 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
       void setBatteryMin(float value);
       // the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
       void setBatteryMax(float value);
-      // after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: 10)
+      // after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: -)
       void setBatteryReportCycles(int value);
+      // after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60)
+      void setBatteryReportMinutes(int value);
       // if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
       void setBatteryInternalVcc(bool value);
       // if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
@@ -263,6 +265,8 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
     bool getIsMetric();
     // Convert a temperature from celsius to fahrenheit depending on how isMetric is set
     float celsiusToFahrenheit(float temperature);
+    // return true if sleep or wait is configured and hence this is a sleeping node
+    bool isSleepingNode();
 ~~~
 
 For example
@@ -371,9 +375,12 @@ The following methods are available for all the sensors:
     // If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
     void setSamplesInterval(int value);
     // if true will report the measure only if different then the previous one (default: false)
-    void setTackLastValue(bool value);
+    void setTrackLastValue(bool value);
     // if track last value is enabled, force to send an update after the configured number of cycles (default: -1)
     void setForceUpdate(int value);
+    void setForceUpdateCycles(int value);
+    // if track last value is enabled, force to send an update after the configured number of minutes (default: -1)
+    void setForceUpdateMinutes(int value);
     // the value type of this sensor (default: TYPE_INTEGER)
     void setValueType(int value);
 	int getValueType();
@@ -398,6 +405,10 @@ The following methods are available for all the sensors:
     int getValueInt();
     float getValueFloat();
     char* getValueString();
+    // After how many cycles the sensor will report back its measure (default: 1 cycle)
+    void setReportIntervalCycles(int value);
+    // After how many minutes the sensor will report back its measure (default: 1 cycle)
+    void setReportIntervalMinutes(int value);
 ~~~
 
 #### Sensor's specific configuration
@@ -468,6 +479,14 @@ Each sensor class can expose additional methods.
     void setOnValue(int value);
     // when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
     void setLegacyMode(bool value);
+    // automatically turn the output off after the given number of minutes
+    void setSafeguard(int value);
+    // if true the input value becomes a duration in minutes after which the output will be automatically turned off (default: false)
+    void setInputIsElapsed(bool value);
+    // manually switch the output to the provided value
+    void set(int value);
+    // get the current state
+    int getState();
 ~~~
 
 *  SensorSwitch / SensorDoor / SensorMotion

@@ -24,6 +24,7 @@
 #define MINUTES 1
 #define HOURS 2
 #define DAYS 3
+#define CYCLES 4
 
 // define value type
 #define TYPE_INTEGER 0
@@ -314,9 +315,13 @@ class PowerManager {
     PowerManager() {};
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
     void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
+    // turns the power pins on
     void powerOn();
+    // turns the power pins on
     void powerOff();
+    // returns the Vcc voltge
     float getVcc();
+    // turns true if power pins are configured
     bool isConfigured();
   private:
     int _vcc_pin = -1;
@@ -324,7 +329,47 @@ class PowerManager {
     long _wait = 0;
 };
 
+/*
+   Timer
+*/
 
+class Timer {
+  public:
+    Timer(NodeManager* node_manager);
+    // start the timer which will be over when interval passes by. Unit can be either CYCLES or MINUTES
+    void start(long target, int unit);
+    void start();
+    // stop the timer
+    void stop();
+    // set the timer configuration but do not start it
+    void set(long target, int unit);
+    // update the timer. To be called at every cycle
+    void update();
+    // returns true if the time is over
+    bool isOver();
+    // return true if the timer is running
+    bool isRunning();
+    // returns true if the timer has been configured
+    bool isConfigured();
+    // reset the timer and start over
+    void restart();
+    // return the current elapsed time
+    float getElapsed();
+    // return the configured unit
+    int getUnit();
+    // return the configured target
+    int getTarget();
+   private:
+    NodeManager* _node_manager;
+    long _target = 0;
+    int _unit = 0;
+    float _elapsed = 0;
+    bool _use_millis = false;
+    long _last_millis = 0;
+    float _sleep_time = 0;
+    bool _is_running = false;
+    bool _is_configured = false;
+};
 /***************************************
    Sensor: generic sensor class
 */
@@ -353,10 +398,13 @@ class Sensor {
     void setSamples(int value);
     // If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
     void setSamplesInterval(int value);
-    // if true will report the measure only if different then the previous one (default: false)
-    void setTackLastValue(bool value);
+    // if true will report the measure only if different than the previous one (default: false)
+    void setTrackLastValue(bool value);
     // if track last value is enabled, force to send an update after the configured number of cycles (default: -1)
     void setForceUpdate(int value);
+    void setForceUpdateCycles(int value);
+    // if track last value is enabled, force to send an update after the configured number of minutes (default: -1)
+    void setForceUpdateMinutes(int value);
     // the value type of this sensor (default: TYPE_INTEGER)
     void setValueType(int value);
     int getValueType();
@@ -381,6 +429,10 @@ class Sensor {
     int getValueInt();
     float getValueFloat();
     char* getValueString();
+    // After how many cycles the sensor will report back its measure (default: 1 cycle)
+    void setReportIntervalCycles(int value);
+    // After how many minutes the sensor will report back its measure (default: 1 cycle)
+    void setReportIntervalMinutes(int value);
     // define what to do at each stage of the sketch
     virtual void before();
     virtual void presentation();
@@ -406,8 +458,6 @@ class Sensor {
     int _samples = 1;
     int _samples_interval = 0;
     bool _track_last_value = false;
-    int _cycles = 0;
-    int _force_update = -1;
     int _value_type = TYPE_INTEGER;
     int _float_precision = 2;
     int _value_int = -1;
@@ -421,7 +471,11 @@ class Sensor {
       PowerManager _powerManager;
       bool _auto_power_pins = true;
     #endif
+    Timer* _report_timer;
+    Timer* _force_update_timer;
     void _send(MyMessage & msg);
+    bool _isReceive(const MyMessage & message);
+    bool _isWorthSending(bool comparison);
 };
 
 /*
@@ -591,9 +645,9 @@ class SensorACS712: public Sensor {
 class SensorRainGauge: public Sensor {
   public:
     SensorRainGauge(NodeManager* node_manager, int child_id, int pin);
-    // set how frequently to report back to the controller in minutes. After reporting the measure is resetted (default: 60);
+    // set how frequently to report back to the controller in minutes. After reporting the measure is resetted (default: 60)
     void setReportInterval(int value);
-    // set how many mm of rain to count for each tip (default: 0.11);
+    // set how many mm of rain to count for each tip (default: 0.11)
     void setSingleTip(float value);
     // define what to do at each stage of the sketch
     void onBefore();
@@ -607,7 +661,7 @@ class SensorRainGauge: public Sensor {
   protected:
     int _report_interval = 60;
     float _single_tip = 0.11;
-    long _last_report = 0;
+    Timer* _timer;
 };
 
 /*
@@ -653,6 +707,14 @@ class SensorDigitalOutput: public Sensor {
     void setOnValue(int value);
     // when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
     void setLegacyMode(bool value);
+    // automatically turn the output off after the given number of minutes
+    void setSafeguard(int value);
+    // if true the input value becomes a duration in minutes after which the output will be automatically turned off (default: false)
+    void setInputIsElapsed(bool value);
+    // manually switch the output to the provided value
+    void set(int value);
+    // get the current state
+    int getState();
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
@@ -664,6 +726,8 @@ class SensorDigitalOutput: public Sensor {
     int _state = 0;
     int _pulse_width = 0;
     bool _legacy_mode = false;
+    bool _input_is_elapsed = false;
+    Timer* _safeguard_timer;
 };
 
 
@@ -674,7 +738,7 @@ class SensorRelay: public SensorDigitalOutput {
   public:
     SensorRelay(NodeManager* node_manager, int child_id, int pin);
     // define what to do at each stage of the sketch
-    void onLoop();
+    //void onLoop();
 };
 
 /*
@@ -1005,8 +1069,10 @@ class NodeManager {
       void setBatteryMin(float value);
       // the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
       void setBatteryMax(float value);
-      // after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: 10)
+      // after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: -)
       void setBatteryReportCycles(int value);
+      // after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60)
+      void setBatteryReportMinutes(int value);
       // if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
       void setBatteryInternalVcc(bool value);
       // if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
@@ -1019,10 +1085,13 @@ class NodeManager {
     // define the way the node should behave. It can be IDLE (stay awake withtout executing each sensors' loop), SLEEP (go to sleep for the configured interval), WAIT (wait for the configured interval), ALWAYS_ON (stay awake and execute each sensors' loop)
     void setSleepMode(int value);
     void setMode(int value);
+    int getMode();
     // define for how long the board will sleep (default: 0)
     void setSleepTime(int value);
+    int getSleepTime();
     // define the unit of SLEEP_TIME. It can be SECONDS, MINUTES, HOURS or DAYS (default: MINUTES)
     void setSleepUnit(int value);
+    int getSleepUnit();
     // configure the node's behavior, parameters are mode, time and unit
     void setSleep(int value1, int value2, int value3);
     // if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
@@ -1063,6 +1132,8 @@ class NodeManager {
     bool getIsMetric();
     // Convert a temperature from celsius to fahrenheit depending on how isMetric is set
     float celsiusToFahrenheit(float temperature);
+    // return true if sleep or wait is configured and hence this is a sleeping node
+    bool isSleepingNode();
     // hook into the main sketch functions
     void before();
     void presentation();
@@ -1074,12 +1145,11 @@ class NodeManager {
     #if BATTERY_MANAGER == 1
       float _battery_min = 2.6;
       float _battery_max = 3.3;
-      int _battery_report_cycles = 10;
+      Timer _battery_report_timer = Timer(this);
       bool _battery_report_with_interrupt = true;
       bool _battery_internal_vcc = true;
       int _battery_pin = -1;
       float _battery_volts_per_bit = 0.003363075;
-      int _cycles = 0;
       float _getVcc();
     #endif
     #if POWER_MANAGER == 1
