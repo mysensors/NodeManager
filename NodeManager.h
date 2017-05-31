@@ -352,7 +352,7 @@ class Timer {
     int _unit = 0;
     long _elapsed = 0;
     bool _use_millis = false;
-    long _start_from = 0;
+    long _last_millis = 0;
     int _sleep_time = 0;
 };
 /***************************************
@@ -637,7 +637,7 @@ class SensorRainGauge: public Sensor {
   protected:
     int _report_interval = 60;
     float _single_tip = 0.11;
-    long _last_report = 0;
+    Timer* _timer;
 };
 
 /*

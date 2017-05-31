@@ -100,7 +100,7 @@ void Timer::start(long interval, int unit) {
   // reset the timer
   _elapsed = 0;
   _use_millis = false;
-  _start_from = 0;
+  _last_millis = 0;
   _sleep_time = 0;
   // save the settings
   _interval = interval;
@@ -131,8 +131,12 @@ void Timer::update() {
   }
   else if (_unit == MINUTES) {
     // if using millis(), calculate the elapsed minutes, otherwise add a sleep interval
-    if (_use_millis) _elapsed = (millis() - _start_from )/1000/60;
-    else _elapsed += _sleep_time;
+    if (_use_millis) {
+      _elapsed = (millis() - _last_millis)/1000/60;
+    }
+    else {
+      _elapsed += _sleep_time;
+    }
   }
   #if DEBUG == 1
     Serial.print(F("T E="));
@@ -148,7 +152,10 @@ bool Timer::isOver() {
     Serial.print(F(" I="));
     Serial.println(_interval);
   #endif
+  // time has elapsed
   if (_elapsed >= _interval) return true;
+  // millis has started over
+  if (_elapsed < 0 ) return true;
   return false;
 }
 
@@ -157,7 +164,7 @@ void Timer::restart() {
   // reset elapsed
   _elapsed = 0;
   // if using millis, keep track of the now timestamp
-  if (_use_millis) _start_from = millis();
+  if (_use_millis) _last_millis = millis();
 }
 
 // return elapsed minutes so far
@@ -674,7 +681,8 @@ SensorRainGauge::SensorRainGauge(NodeManager* node_manager, int child_id, int pi
   setPresentation(S_RAIN);
   setType(V_RAIN);
   setValueType(TYPE_FLOAT);
-
+  // create the timer
+  _timer = new Timer(node_manager);
 }
 
 // initialize static variables
@@ -695,6 +703,8 @@ void SensorRainGauge::onBefore() {
   pinMode(_pin, INPUT_PULLUP);
   // attach to the pin's interrupt and execute the routine on falling
   attachInterrupt(digitalPinToInterrupt(_pin), _onTipped, FALLING);
+  // start the timer
+  _timer->start(_report_interval,MINUTES);
 }
 
 // what to do during setup
@@ -719,24 +729,19 @@ void SensorRainGauge::_onTipped() {
 void SensorRainGauge::onLoop() {
   // avoid reporting the same value multiple times
   _value_float = -1;
-  long now = millis();
-  // time elapsed since the last report
-  long elapsed = now - _last_report;
-  // minimum time interval between reports
-  long min_interval = ((long)_report_interval*1000)*60;
-  // time to report or millis() reset
-  if ( (elapsed > min_interval) || (now < _last_report)) {
+  _timer->update();
+  // time to report 
+  if (_timer->isOver()) {
     // report the total amount of rain for the last period
-    _value_float = _count*_single_tip;
+    _value_float = _count * _single_tip;
     #if DEBUG == 1
       Serial.print(F("RAIN I="));
       Serial.print(_child_id);
       Serial.print(F(" T="));
       Serial.println(_value_float);
     #endif
-    // reset the counters
-    _count = 0;
-    _last_report = now;
+    // reset the timer
+    _timer->restart();
   }
 }
 
@@ -744,7 +749,7 @@ void SensorRainGauge::onLoop() {
 void SensorRainGauge::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) {
     // report the total amount of rain for the last period
-    _value_float = _count*_single_tip;    
+    _value_float = _count * _single_tip;    
   }
 }
 
@@ -2350,6 +2355,8 @@ void NodeManager::before() {
   #if BATTERY_MANAGER == 1 && !defined(MY_GATEWAY_ESP8266)
     // set analogReference to internal if measuring the battery through a pin
     if (! _battery_internal_vcc && _battery_pin > -1) analogReference(INTERNAL);
+    // report battery every 10 cycles
+    _battery_report_timer.start(10,CYCLES);
   #endif
   // setup individual sensors
   for (int i = 0; i < MAX_SENSORS; i++) {

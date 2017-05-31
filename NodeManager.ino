@@ -33,8 +33,7 @@ void before() {
   /*
    * Register below your sensors
   */
-  Timer* timer = new Timer(&nodeManager);
-  timer->start(10,MINUTES);
+  nodeManager.registerSensor(SENSOR_RAIN_GAUGE,3);
   
   
   /*
