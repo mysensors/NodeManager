@@ -386,10 +386,13 @@ class Sensor {
     void setSamples(int value);
     // If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
     void setSamplesInterval(int value);
-    // if true will report the measure only if different then the previous one (default: false)
-    void setTackLastValue(bool value);
+    // if true will report the measure only if different than the previous one (default: false)
+    void setTrackLastValue(bool value);
     // if track last value is enabled, force to send an update after the configured number of cycles (default: -1)
     void setForceUpdate(int value);
+    void setForceUpdateCycles(int value);
+    // if track last value is enabled, force to send an update after the configured number of minutes (default: -1)
+    void setForceUpdateMinutes(int value);
     // the value type of this sensor (default: TYPE_INTEGER)
     void setValueType(int value);
     int getValueType();
@@ -443,8 +446,6 @@ class Sensor {
     int _samples = 1;
     int _samples_interval = 0;
     bool _track_last_value = false;
-    int _cycles = 0;
-    int _force_update = -1;
     int _value_type = TYPE_INTEGER;
     int _float_precision = 2;
     int _value_int = -1;
@@ -459,8 +460,10 @@ class Sensor {
       bool _auto_power_pins = true;
     #endif
     Timer* _report_timer;
+    Timer* _force_update_timer;
     void _send(MyMessage & msg);
     bool _isReceive(const MyMessage & message);
+    bool _isWorthSending(bool comparison);
 };
 
 /*

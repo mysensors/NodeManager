@@ -375,9 +375,12 @@ The following methods are available for all the sensors:
     // If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
     void setSamplesInterval(int value);
     // if true will report the measure only if different then the previous one (default: false)
-    void setTackLastValue(bool value);
+    void setTrackLastValue(bool value);
     // if track last value is enabled, force to send an update after the configured number of cycles (default: -1)
     void setForceUpdate(int value);
+    void setForceUpdateCycles(int value);
+    // if track last value is enabled, force to send an update after the configured number of minutes (default: -1)
+    void setForceUpdateMinutes(int value);
     // the value type of this sensor (default: TYPE_INTEGER)
     void setValueType(int value);
 	int getValueType();

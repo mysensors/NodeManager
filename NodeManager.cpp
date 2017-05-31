@@ -124,6 +124,7 @@ void Timer::start(long interval, int unit) {
 
 // update the timer at every cycle
 void Timer::update() {
+  if (! isRunning()) return;
   if (_unit == CYCLES) {
     // if not a sleeping node, counting the cycles do not make sense
     if (_node_manager->isSleepingNode()) return;
@@ -147,6 +148,7 @@ void Timer::update() {
 
 // return true if the time is over
 bool Timer::isOver() {
+  if (! isRunning()) return false;
   #if DEBUG == 1
     Serial.print(F("T E="));
     Serial.print(_elapsed);
@@ -167,6 +169,7 @@ bool Timer::isRunning() {
 
 // restart the timer
 void Timer::restart() {
+  if (! isRunning()) return;
   // reset elapsed
   _elapsed = 0;
   // if using millis, keep track of the now timestamp
@@ -191,6 +194,7 @@ Sensor::Sensor(NodeManager* node_manager, int child_id, int pin) {
   _pin = pin;
   _msg = MyMessage(_child_id, _type);
   _report_timer = new Timer(_node_manager);
+  _force_update_timer = new Timer(_node_manager);
 }
 
 // setter/getter
@@ -234,11 +238,17 @@ void Sensor::setSamples(int value) {
 void Sensor::setSamplesInterval(int value) {
   _samples_interval = value;
 }
-void Sensor::setTackLastValue(bool value) {
+void Sensor::setTrackLastValue(bool value) {
   _track_last_value = value;
 }
 void Sensor::setForceUpdate(int value) {
-  _force_update = value;
+  setForceUpdateCycles(value);
+}
+void Sensor::setForceUpdateCycles(int value) {
+  _force_update_timer->start(value,CYCLES);
+}
+void Sensor::setForceUpdateMinutes(int value) {
+  _force_update_timer->start(value,MINUTES);
 }
 void Sensor::setValueType(int value) {
   _value_type = value;
@@ -318,8 +328,16 @@ void Sensor::setup() {
 // call the sensor-specific implementation of loop
 void Sensor::loop(const MyMessage & message) {
   if (_pin == -1) return;
-  // if it is not the time yet to report a new measure, just return
-  if (! _isReceive(message) && _report_timer->isRunning() && ! _report_timer->isOver()) return;
+  // update the timers if within a loop cycle
+  if (! _isReceive(message)) {
+    if (_report_timer->isRunning()) {
+      // update the timer
+      _report_timer->update();
+      // if it is not the time yet to report a new measure, just return
+      if (! _report_timer->isOver()) return;
+    }
+    if (_force_update_timer->isRunning()) _force_update_timer->update();
+  }
   #if POWER_MANAGER == 1
     // turn the sensor on
     if (_auto_power_pins) powerOn();
@@ -327,7 +345,6 @@ void Sensor::loop(const MyMessage & message) {
   // for numeric sensor requiring multiple samples, keep track of the total
   float total = 0;
   // keep track of the number of cycles since the last update
-  if (_force_update > 0) _cycles++;
   // collect multiple samples if needed
   for (int i = 0; i < _samples; i++) {
     // call the sensor-specific implementation of the main task which will store the result in the _value variable
@@ -345,13 +362,12 @@ void Sensor::loop(const MyMessage & message) {
     // wait between samples
     if (_samples_interval > 0) wait(_samples_interval);
   }
-  // process the result and send a response back. 
+  // process the result and send a response back
   if (_value_type == TYPE_INTEGER && total > -1) {
     // if the value is an integer, calculate the average value of the samples
     int avg = (int) (total / _samples);
     // if track last value is disabled or if enabled and the current value is different then the old value, send it back
-    if (! _track_last_value || (_track_last_value && avg != _last_value_int) || (_track_last_value && _force_update > 0 && _cycles > _force_update)) {
-      _cycles = 0;
+    if (_isReceive(message) || _isWorthSending(avg != _last_value_int))  {
       _last_value_int = avg;
       _send(_msg.set(avg));
     }
@@ -360,9 +376,8 @@ void Sensor::loop(const MyMessage & message) {
   else if (_value_type == TYPE_FLOAT && total > -1) {
     // calculate the average value of the samples
     float avg = total / _samples;
-    // if track last value is disabled or if enabled and the current value is different then the old value, send it back
-    if (! _track_last_value || (_track_last_value && avg != _last_value_float) || (_track_last_value && _cycles >= _force_update)) {
-      _cycles = 0;
+    // report the value back
+    if (_isReceive(message) || _isWorthSending(avg != _last_value_float))  {
       _last_value_float = avg;
       _send(_msg.set(avg, _float_precision));
     }
@@ -370,8 +385,7 @@ void Sensor::loop(const MyMessage & message) {
   // process a string value
   else if (_value_type == TYPE_STRING) {
     // if track last value is disabled or if enabled and the current value is different then the old value, send it back
-    if (! _track_last_value || (_track_last_value && strcmp(_value_string, _last_value_string) != 0) || (_track_last_value && _cycles >= _force_update)) {
-      _cycles = 0;
+    if (_isReceive(message) || _isWorthSending(strcmp(_value_string, _last_value_string) != 0))  {
       _last_value_string = _value_string;
       _send(_msg.set(_value_string));
     }
@@ -423,6 +437,22 @@ bool Sensor::_isReceive(const MyMessage & message) {
   if (message.sender == 0 && message.sensor == 0 && message.getCommand() == 0 && message.type == 0) return false;
   return true;
 }
+
+// determine if a value is worth sending back to the controller
+bool Sensor::_isWorthSending(bool comparison) {
+  // track last value is disabled
+  if (! _track_last_value) return true;
+  // track value is enabled and the current value is different then the old value
+  if (_track_last_value && comparison) return true;
+  // track value is enabled and the timer is over
+  if (_track_last_value && _force_update_timer->isRunning() && _force_update_timer->isOver()) {
+    // restart the timer
+    _force_update_timer->restart();
+    return true;
+  }
+  return false;
+}
+
 
 /*
    SensorAnalogInput
