@@ -96,29 +96,34 @@ Timer::Timer(NodeManager* node_manager) {
 }
 
 // start the timer
-void Timer::start(long interval, int unit) {
-  set(interval,unit);
+void Timer::start(long target, int unit) {
+  set(target,unit);
   start();
 }
 void Timer::start() {
   if (_is_configured) _is_running = true;
 }
 
+// stop the timer
+void Timer::stop() {
+  _is_running = false;
+}
+
 // setup the timer
-void Timer::set(long interval, int unit) {
+void Timer::set(long target, int unit) {
   // reset the timer
   _elapsed = 0;
   _use_millis = false;
   _last_millis = 0;
   _sleep_time = 0;
   // save the settings
-  _interval = interval;
+  _target = target;
   _unit = unit;
   if (_unit == MINUTES) {
     if (_node_manager->isSleepingNode()) {
       // this is a sleeping node and millis() is not reliable so calculate how long a sleep/wait cycle would last
       int sleep_unit = _node_manager->getSleepUnit();
-      _sleep_time = _node_manager->getSleepTime();
+      _sleep_time = (float)_node_manager->getSleepTime();
       if (sleep_unit == SECONDS) _sleep_time = _sleep_time/60;
       else if (sleep_unit == HOURS) _sleep_time = _sleep_time*60;
       else if (sleep_unit == DAYS) _sleep_time = _sleep_time*1440;
@@ -136,36 +141,26 @@ void Timer::update() {
   if (! isRunning()) return;
   if (_unit == CYCLES) {
     // if not a sleeping node, counting the cycles do not make sense
-    if (_node_manager->isSleepingNode()) return;
+    if (! _node_manager->isSleepingNode()) return;
     // just increase the cycle counter
     _elapsed++;
   }
   else if (_unit == MINUTES) {
     // if using millis(), calculate the elapsed minutes, otherwise add a sleep interval
     if (_use_millis) {
-      _elapsed = (millis() - _last_millis)/1000/60;
+      _elapsed = (float)(millis() - _last_millis)/1000/60;
     }
     else {
       _elapsed += _sleep_time;
     }
   }
-  #if DEBUG == 1
-    Serial.print(F("T E="));
-    Serial.println(_elapsed);
-  #endif
 }
 
 // return true if the time is over
 bool Timer::isOver() {
   if (! isRunning()) return false;
-  #if DEBUG == 1
-    Serial.print(F("T E="));
-    Serial.print(_elapsed);
-    Serial.print(F(" I="));
-    Serial.println(_interval);
-  #endif
   // time has elapsed
-  if (_elapsed >= _interval) return true;
+  if (_elapsed >= _target) return true;
   // millis has started over
   if (_elapsed < 0 ) return true;
   return false;
@@ -191,9 +186,15 @@ void Timer::restart() {
 }
 
 // return elapsed minutes so far
-long Timer::getElapsed() {
+float Timer::getElapsed() {
   return _elapsed;
 }
+
+// return the configured unit
+int Timer::getUnit() {
+  return _unit;
+}
+
 /******************************************
     Sensors
 */
@@ -1079,18 +1080,27 @@ void SensorDigitalOutput::setLegacyMode(bool value) {
 void SensorDigitalOutput::setSafeguard(int value) {
   _safeguard_timer->set(value,MINUTES);
 }
+int SensorDigitalOutput::getState() {
+  return _state;
+}
 void SensorDigitalOutput::setInputIsElapsed(bool value) {
   _input_is_elapsed = value;
 }
 
 // main task
 void SensorDigitalOutput::onLoop() {
+    // set the value to -1 so to avoid reporting to the gateway during loop
+    _value_int = -1;
+    _last_value_int = -1;
   // if a safeguard is set, check if it is time for it
   if (_safeguard_timer->isRunning()) {
     // update the timer
     _safeguard_timer->update();
-    // if the time is over, turn the output off
-    if (_safeguard_timer->isOver()) set(LOW);
+    // if the time is over, turn the output off and stop the timer
+    if (_safeguard_timer->isOver()) { 
+      set(LOW);
+      _safeguard_timer->stop();
+    }
   }
 }
 
@@ -1110,13 +1120,13 @@ void SensorDigitalOutput::onReceive(const MyMessage & message) {
 // write the value to the output
 void SensorDigitalOutput::set(int value) {
   if (_input_is_elapsed && value != LOW) {
-    // if the input is an elapsed time, unless the value is LOW, the output will be always on
-    value = HIGH;
     // configure and start the timer
     _safeguard_timer->start(value,MINUTES);
+    // if the input is an elapsed time, unless the value is LOW, the output will be always on
+    value = HIGH;
   } else {
     // if turning the output on and a safeguard timer is configured, start it
-    if (value == HIGH && _safeguard_timer->isConfigured()) _safeguard_timer->start();
+    if (value == HIGH && _safeguard_timer->isConfigured() && ! _safeguard_timer->isRunning()) _safeguard_timer->start();
   }
   #if DEBUG == 1
     Serial.print(F("DOUT I="));
@@ -1157,14 +1167,14 @@ SensorRelay::SensorRelay(NodeManager* node_manager, int child_id, int pin): Sens
   setPresentation(S_BINARY);
   setType(V_STATUS);
 }
-
+/*
 // define what to do during loop
 void SensorRelay::onLoop() {
     // set the value to -1 so to avoid reporting to the gateway during loop
     _value_int = -1;
     _last_value_int = -1;
 }
-
+*/
 /*
    SensorLatchingRelay
 */
@@ -2064,10 +2074,10 @@ void NodeManager::setRetries(int value) {
     _battery_max = value;
   }
   void NodeManager::setBatteryReportCycles(int value) {
-    _battery_report_timer.start(value,CYCLES);
+    _battery_report_timer.set(value,CYCLES);
   }
   void NodeManager::setBatteryReportMinutes(int value) {
-    _battery_report_timer.start(value,MINUTES);
+    _battery_report_timer.set(value,MINUTES);
   }
   void NodeManager::setBatteryInternalVcc(bool value) {
     _battery_internal_vcc = value;
@@ -2454,8 +2464,9 @@ void NodeManager::before() {
   #if BATTERY_MANAGER == 1 && !defined(MY_GATEWAY_ESP8266)
     // set analogReference to internal if measuring the battery through a pin
     if (! _battery_internal_vcc && _battery_pin > -1) analogReference(INTERNAL);
-    // report battery every 10 cycles
-    _battery_report_timer.start(10,CYCLES);
+    // if not configured report battery every 10 cycles
+    if (! _battery_report_timer.isConfigured()) _battery_report_timer.set(60,MINUTES);
+    _battery_report_timer.start();
   #endif
   // setup individual sensors
   for (int i = 0; i < MAX_SENSORS; i++) {
@@ -2523,25 +2534,39 @@ void NodeManager::loop() {
   if (_sleep_mode == IDLE) return;
   // if sleep time is not set, do nothing
   if ((_sleep_mode == SLEEP || _sleep_mode == WAIT) &&  _sleep_time == 0) return;
-    #if POWER_MANAGER == 1
-      // turn on the pin powering all the sensors
-      if (_auto_power_pins) powerOn();
-    #endif
-    // run loop for all the registered sensors
-    for (int i = 0; i < MAX_SENSORS; i++) {
-      // skip not configured sensors
-      if (_sensors[i] == 0) continue;
-      // if waking up from an interrupt skip all the sensor without that interrupt configured
-      if (_last_interrupt_pin != -1 && _sensors[i]->getInterruptPin() != _last_interrupt_pin) continue;
-      // call each sensor's loop()
-      _sensors[i]->loop(empty);
+  #if BATTERY_MANAGER == 1
+    // update the timer for battery report
+    if (_battery_report_timer.getUnit() == MINUTES) _battery_report_timer.update();
+    if (_battery_report_timer.getUnit() == CYCLES && (_last_interrupt_pin == -1 || _battery_report_with_interrupt)) _battery_report_timer.update();
+    // keep track of the number of sleeping cycles (ignoring if )
+    if (_last_interrupt_pin == -1 || _battery_report_with_interrupt) 
+    // if it is time to report the battery level
+    if (_battery_report_timer.isOver()) {
+      // time to report the battery level again
+      _process("BATTERY");
+      // restart the timer
+      _battery_report_timer.restart();
     }
-    #if POWER_MANAGER == 1
-      // turn off the pin powering all the sensors
-      if (_auto_power_pins) powerOff();
-    #endif
-    // continue/start sleeping as requested
-    if (_sleep_mode == SLEEP || _sleep_mode == WAIT) _sleep();
+  #endif
+  #if POWER_MANAGER == 1
+    // turn on the pin powering all the sensors
+    if (_auto_power_pins) powerOn();
+  #endif
+  // run loop for all the registered sensors
+  for (int i = 0; i < MAX_SENSORS; i++) {
+    // skip not configured sensors
+    if (_sensors[i] == 0) continue;
+    // if waking up from an interrupt skip all the sensor without that interrupt configured
+    if (_last_interrupt_pin != -1 && _sensors[i]->getInterruptPin() != _last_interrupt_pin) continue;
+    // call each sensor's loop()
+    _sensors[i]->loop(empty);
+  }
+  #if POWER_MANAGER == 1
+    // turn off the pin powering all the sensors
+    if (_auto_power_pins) powerOff();
+  #endif
+  // continue/start sleeping as requested
+  if (_sleep_mode == SLEEP || _sleep_mode == WAIT) _sleep();
 }
 
 // dispacth inbound messages
@@ -2849,17 +2874,6 @@ void NodeManager::_sleep() {
   #if SERVICE_MESSAGES == 1
     // notify the controller I am awake
     _send(_msg.set("AWAKE"));
-  #endif
-  #if BATTERY_MANAGER == 1
-    // keep track of the number of sleeping cycles (ignoring if woke up by an interrupt)
-    if (interrupt == -1 || _battery_report_with_interrupt) _battery_report_timer.update();
-    // battery has to be reported after the configured number of sleep cycles
-    if (_battery_report_timer.isOver()) {
-      // time to report the battery level again
-      _process("BATTERY");
-      // restart the timer
-      _battery_report_timer.restart();
-    }
   #endif
 }
 

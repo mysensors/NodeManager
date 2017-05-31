@@ -202,9 +202,9 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
       void setBatteryMin(float value);
       // the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
       void setBatteryMax(float value);
-      // after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: 10)
+      // after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: -)
       void setBatteryReportCycles(int value);
-      // after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 0)
+      // after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60)
       void setBatteryReportMinutes(int value);
       // if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
       void setBatteryInternalVcc(bool value);
@@ -481,6 +481,12 @@ Each sensor class can expose additional methods.
     void setLegacyMode(bool value);
     // automatically turn the output off after the given number of minutes
     void setSafeguard(int value);
+    // if true the input value becomes a duration in minutes after which the output will be automatically turned off (default: false)
+    void setInputIsElapsed(bool value);
+    // manually switch the output to the provided value
+    void set(int value);
+    // get the current state
+    int getState();
 ~~~
 
 *  SensorSwitch / SensorDoor / SensorMotion

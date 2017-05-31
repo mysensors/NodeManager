@@ -33,7 +33,8 @@ void before() {
   /*
    * Register below your sensors
   */
-
+  
+  
   
   
   /*
@@ -58,7 +59,6 @@ void setup() {
 void loop() {
   // call NodeManager loop routine
   nodeManager.loop();
-
 }
 
 // receive

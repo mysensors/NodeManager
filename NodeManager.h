@@ -336,31 +336,37 @@ class PowerManager {
 class Timer {
   public:
     Timer(NodeManager* node_manager);
-    // Start the timer which will be over when interval passes by. Unit can be either CYCLES or MINUTES
-    void start(long interval, int unit);
+    // start the timer which will be over when interval passes by. Unit can be either CYCLES or MINUTES
+    void start(long target, int unit);
     void start();
+    // stop the timer
+    void stop();
     // set the timer configuration but do not start it
-    void set(long interval, int unit);
-    // Update the timer. To be called at every cycle
+    void set(long target, int unit);
+    // update the timer. To be called at every cycle
     void update();
-    // Returns true if the time is over
+    // returns true if the time is over
     bool isOver();
-    // Returns true if the timer is running
+    // return true if the timer is running
     bool isRunning();
-    // Returns true if the timer has been configured
+    // returns true if the timer has been configured
     bool isConfigured();
-    // Reset the timer and start over
+    // reset the timer and start over
     void restart();
-    // Return the current elapsed time
-    long getElapsed();
+    // return the current elapsed time
+    float getElapsed();
+    // return the configured unit
+    int getUnit();
+    // return the configured target
+    int getTarget();
    private:
     NodeManager* _node_manager;
-    long _interval = 0;
+    long _target = 0;
     int _unit = 0;
-    long _elapsed = 0;
+    float _elapsed = 0;
     bool _use_millis = false;
     long _last_millis = 0;
-    int _sleep_time = 0;
+    float _sleep_time = 0;
     bool _is_running = false;
     bool _is_configured = false;
 };
@@ -707,6 +713,8 @@ class SensorDigitalOutput: public Sensor {
     void setInputIsElapsed(bool value);
     // manually switch the output to the provided value
     void set(int value);
+    // get the current state
+    int getState();
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
@@ -730,7 +738,7 @@ class SensorRelay: public SensorDigitalOutput {
   public:
     SensorRelay(NodeManager* node_manager, int child_id, int pin);
     // define what to do at each stage of the sketch
-    void onLoop();
+    //void onLoop();
 };
 
 /*
@@ -1061,9 +1069,9 @@ class NodeManager {
       void setBatteryMin(float value);
       // the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
       void setBatteryMax(float value);
-      // after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: 10)
+      // after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: -)
       void setBatteryReportCycles(int value);
-      // after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 0)
+      // after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60)
       void setBatteryReportMinutes(int value);
       // if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
       void setBatteryInternalVcc(bool value);
