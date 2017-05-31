@@ -1096,11 +1096,8 @@ void SensorDigitalOutput::onLoop() {
   if (_safeguard_timer->isRunning()) {
     // update the timer
     _safeguard_timer->update();
-    // if the time is over, turn the output off and stop the timer
-    if (_safeguard_timer->isOver()) { 
-      set(LOW);
-      _safeguard_timer->stop();
-    }
+    // if the time is over, turn the output off
+    if (_safeguard_timer->isOver()) set(LOW);
   }
 }
 
@@ -1119,11 +1116,16 @@ void SensorDigitalOutput::onReceive(const MyMessage & message) {
 
 // write the value to the output
 void SensorDigitalOutput::set(int value) {
-  if (_input_is_elapsed && value != LOW) {
-    // configure and start the timer
-    _safeguard_timer->start(value,MINUTES);
-    // if the input is an elapsed time, unless the value is LOW, the output will be always on
-    value = HIGH;
+  if (_input_is_elapsed) {
+    if (value == LOW) {
+      // stop the timer
+      _safeguard_timer->stop();
+    } else {
+      // configure and start the timer
+      _safeguard_timer->start(value,MINUTES);
+      // if the input is an elapsed time, unless the value is LOW, the output will be always on
+      value = HIGH;
+    }
   } else {
     // if turning the output on and a safeguard timer is configured, start it
     if (value == HIGH && _safeguard_timer->isConfigured() && ! _safeguard_timer->isRunning()) _safeguard_timer->start();
