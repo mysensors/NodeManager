@@ -314,9 +314,13 @@ class PowerManager {
     PowerManager() {};
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
     void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
+    // turns the power pins on
     void powerOn();
+    // turns the power pins on
     void powerOff();
+    // returns the Vcc voltge
     float getVcc();
+    // turns true if power pins are configured
     bool isConfigured();
   private:
     int _vcc_pin = -1;
@@ -330,12 +334,17 @@ class PowerManager {
 
 class Timer {
   public:
+    // Configure and start the timer which will be over when interval passes by. Unit can be either Timer::UNIT_CYCLES or Timer::UNIT_MINUTES
     Timer(NodeManager* node_manager, long interval, int unit);
+    // Update the timer. To be called at every cycle
     void update();
+    // Returns true if the time is over
     bool isOver();
+    // Reset the timer and start over
     void reset();
+    // Return the current elapsed time
     long getElapsed();
-    const static int UNIT_MILLIS = 0;
+    // constants
     const static int UNIT_CYCLES = 1;
     const static int UNIT_MINUTES = 2;
   private:

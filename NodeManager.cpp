@@ -96,8 +96,12 @@ Timer::Timer(NodeManager* node_manager, long interval, int unit) {
   _interval = interval;
   _unit = unit;
   if (_unit == UNIT_MINUTES) {
-    if (_node_manager->getMode() != SLEEP && _node_manager->getMode() != WAIT) _use_millis = true;
+    if (_node_manager->getMode() != SLEEP && _node_manager->getMode() != WAIT) {
+      // this is not a sleeping node, use millis() to keep track of the elapsed time
+      _use_millis = true;
+    }
     else {
+      // this is a sleeping node and millis() is not reliable so calculate how long a sleep/wait cycle would last
       int sleep_unit = _node_manager->getSleepUnit();
       _sleep_time = _node_manager->getSleepTime();
       if (sleep_unit == SECONDS) _sleep_time = _sleep_time/60;
@@ -107,11 +111,14 @@ Timer::Timer(NodeManager* node_manager, long interval, int unit) {
   }
 }
 
+// update the timer at every cycle
 void Timer::update() {
   if (_unit == Timer::UNIT_CYCLES) {
+    // just increase the cycle counter
     _elapsed++;
   }
   else if (_unit == Timer::UNIT_MINUTES) {
+    // if using millis(), calculate the elapsed minutes, otherwise add a sleep interval
     if (_use_millis) _elapsed = (millis() - _start_from )/1000/60;
     else _elapsed += _sleep_time;
   }
@@ -121,16 +128,27 @@ void Timer::update() {
   #endif
 }
 
+// return tru if the time is over
 bool Timer::isOver() {
+  #if DEBUG == 1
+    Serial.print(F("T E="));
+    Serial.print(_elapsed);
+    Serial.print(F(" I="));
+    Serial.println(_interval);
+  #endif
   if (_elapsed >= _interval) return true;
   return false;
 }
 
+// reset the timer
 void Timer::reset() {
+  // reset elapsed
   _elapsed = 0;
-  _start_from = millis();
+  // if using millis, keep track of the now timestamp
+  if (_use_millis) _start_from = millis();
 }
 
+// return elapsed minutes so far
 long Timer::getElapsed() {
   return _elapsed;
 }
