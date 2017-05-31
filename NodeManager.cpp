@@ -1079,6 +1079,9 @@ void SensorDigitalOutput::setLegacyMode(bool value) {
 void SensorDigitalOutput::setSafeguard(int value) {
   _safeguard_timer->set(value,MINUTES);
 }
+void SensorDigitalOutput::setInputIsElapsed(bool value) {
+  _input_is_elapsed = value;
+}
 
 // main task
 void SensorDigitalOutput::onLoop() {
@@ -1087,7 +1090,7 @@ void SensorDigitalOutput::onLoop() {
     // update the timer
     _safeguard_timer->update();
     // if the time is over, turn the output off
-    if (_safeguard_timer->isOver()) _switch(LOW);
+    if (_safeguard_timer->isOver()) set(LOW);
   }
 }
 
@@ -1096,7 +1099,7 @@ void SensorDigitalOutput::onReceive(const MyMessage & message) {
   // by default handle a SET message but when legacy mode is set when a REQ message is expected instead
   if ( (message.getCommand() == C_SET && ! _legacy_mode) || (message.getCommand() == C_REQ && _legacy_mode)) {
     // switch the output
-    _switch(message.getInt());
+    set(message.getInt());
   }
   if (message.getCommand() == C_REQ && ! _legacy_mode) {
     // return the current status
@@ -1105,8 +1108,16 @@ void SensorDigitalOutput::onReceive(const MyMessage & message) {
 }
 
 // write the value to the output
-void SensorDigitalOutput::_switch(int value) {
-  if (value != 0 && value != 1) return;
+void SensorDigitalOutput::set(int value) {
+  if (_input_is_elapsed && value != LOW) {
+    // if the input is an elapsed time, unless the value is LOW, the output will be always on
+    value = HIGH;
+    // configure and start the timer
+    _safeguard_timer->start(value,MINUTES);
+  } else {
+    // if turning the output on and a safeguard timer is configured, start it
+    if (value == HIGH && _safeguard_timer->isConfigured()) _safeguard_timer->start();
+  }
   #if DEBUG == 1
     Serial.print(F("DOUT I="));
     Serial.print(_child_id);
@@ -1133,8 +1144,6 @@ void SensorDigitalOutput::_switch(int value) {
   // store the current value so it will be sent to the controller
   _state = value;
   _value_int = value;
-  // if turning the output on and a safeguard timer is configured, start it
-  if (value == HIGH && _safeguard_timer->isConfigured()) _safeguard_timer->start();
 }
 
 
@@ -1153,6 +1162,7 @@ SensorRelay::SensorRelay(NodeManager* node_manager, int child_id, int pin): Sens
 void SensorRelay::onLoop() {
     // set the value to -1 so to avoid reporting to the gateway during loop
     _value_int = -1;
+    _last_value_int = -1;
 }
 
 /*

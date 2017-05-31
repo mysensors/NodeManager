@@ -703,6 +703,10 @@ class SensorDigitalOutput: public Sensor {
     void setLegacyMode(bool value);
     // automatically turn the output off after the given number of minutes
     void setSafeguard(int value);
+    // if true the input value becomes a duration in minutes after which the output will be automatically turned off (default: false)
+    void setInputIsElapsed(bool value);
+    // manually switch the output to the provided value
+    void set(int value);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
@@ -714,8 +718,8 @@ class SensorDigitalOutput: public Sensor {
     int _state = 0;
     int _pulse_width = 0;
     bool _legacy_mode = false;
+    bool _input_is_elapsed = false;
     Timer* _safeguard_timer;
-    void _switch(int value);
 };
 
 

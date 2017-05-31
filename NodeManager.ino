@@ -33,7 +33,7 @@ void before() {
   /*
    * Register below your sensors
   */
-  nodeManager.registerSensor(SENSOR_RELAY,3);
+
   
   
   /*
