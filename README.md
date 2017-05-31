@@ -402,6 +402,10 @@ The following methods are available for all the sensors:
     int getValueInt();
     float getValueFloat();
     char* getValueString();
+    // After how many cycles the sensor will report back its measure (default: 1 cycle)
+    void setReportIntervalCycles(int value);
+    // After how many minutes the sensor will report back its measure (default: 1 cycle)
+    void setReportIntervalMinutes(int value);
 ~~~
 
 #### Sensor's specific configuration

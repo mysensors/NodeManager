@@ -342,6 +342,8 @@ class Timer {
     void update();
     // Returns true if the time is over
     bool isOver();
+    // Returns true if the timer is running
+    bool isRunning();
     // Reset the timer and start over
     void restart();
     // Return the current elapsed time
@@ -354,6 +356,7 @@ class Timer {
     bool _use_millis = false;
     long _last_millis = 0;
     int _sleep_time = 0;
+    bool _is_running = false;
 };
 /***************************************
    Sensor: generic sensor class
@@ -411,6 +414,10 @@ class Sensor {
     int getValueInt();
     float getValueFloat();
     char* getValueString();
+    // After how many cycles the sensor will report back its measure (default: 1 cycle)
+    void setReportIntervalCycles(int value);
+    // After how many minutes the sensor will report back its measure (default: 1 cycle)
+    void setReportIntervalMinutes(int value);
     // define what to do at each stage of the sketch
     virtual void before();
     virtual void presentation();
@@ -451,7 +458,9 @@ class Sensor {
       PowerManager _powerManager;
       bool _auto_power_pins = true;
     #endif
+    Timer* _report_timer;
     void _send(MyMessage & msg);
+    bool _isReceive(const MyMessage & message);
 };
 
 /*

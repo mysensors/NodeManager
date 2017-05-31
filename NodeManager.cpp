@@ -119,6 +119,7 @@ void Timer::start(long interval, int unit) {
       _use_millis = true;
     }
   }
+  _is_running = true;
 }
 
 // update the timer at every cycle
@@ -144,7 +145,7 @@ void Timer::update() {
   #endif
 }
 
-// return tru if the time is over
+// return true if the time is over
 bool Timer::isOver() {
   #if DEBUG == 1
     Serial.print(F("T E="));
@@ -157,6 +158,11 @@ bool Timer::isOver() {
   // millis has started over
   if (_elapsed < 0 ) return true;
   return false;
+}
+
+// return true if the time is over
+bool Timer::isRunning() {
+  return _is_running;
 }
 
 // restart the timer
@@ -184,6 +190,7 @@ Sensor::Sensor(NodeManager* node_manager, int child_id, int pin) {
   _child_id = child_id;
   _pin = pin;
   _msg = MyMessage(_child_id, _type);
+  _report_timer = new Timer(_node_manager);
 }
 
 // setter/getter
@@ -275,6 +282,16 @@ char* Sensor::getValueString() {
   return _last_value_string;
 }
 
+// After how many cycles the sensor will report back its measure (default: 1 cycle)
+void Sensor::setReportIntervalCycles(int value) {
+  _report_timer->start(value,CYCLES);
+}
+
+// After how many minutes the sensor will report back its measure (default: 1 cycle)
+void Sensor::setReportIntervalMinutes(int value) {
+  _report_timer->start(value,MINUTES);
+}
+
 // present the sensor to the gateway and controller
 void Sensor::presentation() {
   #if DEBUG == 1
@@ -301,6 +318,8 @@ void Sensor::setup() {
 // call the sensor-specific implementation of loop
 void Sensor::loop(const MyMessage & message) {
   if (_pin == -1) return;
+  // if it is not the time yet to report a new measure, just return
+  if (! _isReceive(message) && _report_timer->isRunning() && ! _report_timer->isOver()) return;
   #if POWER_MANAGER == 1
     // turn the sensor on
     if (_auto_power_pins) powerOn();
@@ -312,13 +331,13 @@ void Sensor::loop(const MyMessage & message) {
   // collect multiple samples if needed
   for (int i = 0; i < _samples; i++) {
     // call the sensor-specific implementation of the main task which will store the result in the _value variable
-    if (message.sender == 0 && message.sensor == 0 && message.getCommand() == 0 && message.type == 0) {
-      // empty message, we'be been called from loop()
-      onLoop();
-    }
-    else {
+    if (_isReceive(message)) {
       // we've been called from receive(), pass the message along
       onReceive(message);
+    }
+    else {
+      // we'be been called from loop()
+      onLoop();
     }
     // for integers and floats, keep track of the total
     if (_value_type == TYPE_INTEGER) total += (float)_value_int;
@@ -361,6 +380,8 @@ void Sensor::loop(const MyMessage & message) {
   #if POWER_MANAGER == 1
     if (_auto_power_pins) powerOff();
   #endif
+  // restart the report timer if over
+  if (! _isReceive(message) && _report_timer->isRunning() && _report_timer->isOver()) _report_timer->restart();
 }
 
 // receive a message from the radio network
@@ -395,6 +416,12 @@ void Sensor::_send(MyMessage & message) {
     #endif
     send(message,_ack);
   }
+}
+
+// return true if the message is coming from the radio network
+bool Sensor::_isReceive(const MyMessage & message) {
+  if (message.sender == 0 && message.sensor == 0 && message.getCommand() == 0 && message.type == 0) return false;
+  return true;
 }
 
 /*
