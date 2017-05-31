@@ -301,7 +301,7 @@ enum supported_sensors {
   #include "Adafruit_MCP9808.h"
 #endif
 
-/**************************************
+/*******************************************************************
    Classes
 */
 class NodeManager;
@@ -370,6 +370,28 @@ class Timer {
     bool _is_running = false;
     bool _is_configured = false;
 };
+
+/*
+   Message
+*/
+
+class Message {
+  public:
+    Message(const char* string);
+    // return the parsed function
+    int getFunction();
+    // return the value as an int
+    int getValueInt();
+    // return the value as a float
+    float getValueFloat();
+    // return the value as a string
+    char* getValueString();
+   private:
+    NodeManager* _node_manager;
+    int _function;
+    char* _value;
+};
+
 /***************************************
    Sensor: generic sensor class
 */
@@ -737,8 +759,6 @@ class SensorDigitalOutput: public Sensor {
 class SensorRelay: public SensorDigitalOutput {
   public:
     SensorRelay(NodeManager* node_manager, int child_id, int pin);
-    // define what to do at each stage of the sketch
-    //void onLoop();
 };
 
 /*

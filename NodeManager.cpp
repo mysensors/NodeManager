@@ -195,6 +195,43 @@ int Timer::getUnit() {
   return _unit;
 }
 
+
+/******************************************
+    Message
+*/
+
+Message::Message(const char* string) {
+  char str[10];
+  char* ptr;
+  strcpy(str,string);
+  // tokenize the string and split function from value
+  strtok_r(str,",",&ptr);
+  _function = atoi(str);
+  strcpy(_value,ptr);
+}
+
+// return the parsed function
+int Message::getFunction() {
+  return _function;
+}
+
+// return the value as an int
+int Message::getValueInt() {
+  return atoi(_value);
+  
+}
+
+// return the value as a float
+float Message::getValueFloat() {
+  return atof(_value);
+}
+
+// return the value as a string
+char* Message::getValueString() {
+  return _value;
+}
+
+
 /******************************************
     Sensors
 */
@@ -1169,14 +1206,7 @@ SensorRelay::SensorRelay(NodeManager* node_manager, int child_id, int pin): Sens
   setPresentation(S_BINARY);
   setType(V_STATUS);
 }
-/*
-// define what to do during loop
-void SensorRelay::onLoop() {
-    // set the value to -1 so to avoid reporting to the gateway during loop
-    _value_int = -1;
-    _last_value_int = -1;
-}
-*/
+
 /*
    SensorLatchingRelay
 */
