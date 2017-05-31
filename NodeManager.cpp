@@ -95,20 +95,45 @@ Timer::Timer(NodeManager* node_manager, long interval, int unit) {
   _node_manager = node_manager;
   _interval = interval;
   _unit = unit;
+  if (_unit == UNIT_MINUTES) {
+    if (_node_manager->getMode() != SLEEP && _node_manager->getMode() != WAIT) _use_millis = true;
+    else {
+      int sleep_unit = _node_manager->getSleepUnit();
+      _sleep_time = _node_manager->getSleepTime();
+      if (sleep_unit == SECONDS) _sleep_time = _sleep_time/60;
+      else if (sleep_unit == HOURS) _sleep_time = _sleep_time*60;
+      else if (sleep_unit == DAYS) _sleep_time = _sleep_time*1440;
+    }
+  }
 }
 
 void Timer::update() {
-  if (_unit == Timer::UNIT_MILLIS) {
-    
-  }
-  else if (_unit == Timer::UNIT_CYCLES) {
+  if (_unit == Timer::UNIT_CYCLES) {
     _elapsed++;
   }
   else if (_unit == Timer::UNIT_MINUTES) {
-    _elapsed++;
+    if (_use_millis) _elapsed = (millis() - _start_from )/1000/60;
+    else _elapsed += _sleep_time;
   }
+  #if DEBUG == 1
+    Serial.print(F("T E="));
+    Serial.println(_elapsed);
+  #endif
 }
 
+bool Timer::isOver() {
+  if (_elapsed >= _interval) return true;
+  return false;
+}
+
+void Timer::reset() {
+  _elapsed = 0;
+  _start_from = millis();
+}
+
+long Timer::getElapsed() {
+  return _elapsed;
+}
 /******************************************
     Sensors
 */

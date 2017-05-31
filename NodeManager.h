@@ -332,15 +332,20 @@ class Timer {
   public:
     Timer(NodeManager* node_manager, long interval, int unit);
     void update();
-    void clear();
+    bool isOver();
+    void reset();
+    long getElapsed();
+    const static int UNIT_MILLIS = 0;
+    const static int UNIT_CYCLES = 1;
+    const static int UNIT_MINUTES = 2;
   private:
     NodeManager* _node_manager;
     long _interval = 0;
     int _unit = 0;
     long _elapsed = 0;
-    const static int UNIT_MILLIS = 0;
-    const static int UNIT_CYCLES = 1;
-    const static int UNIT_MINUTES = 2;
+    bool _use_millis = false;
+    long _start_from = 0;
+    int _sleep_time = 0;
 };
 /***************************************
    Sensor: generic sensor class
