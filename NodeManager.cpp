@@ -97,6 +97,15 @@ Timer::Timer(NodeManager* node_manager) {
 
 // start the timer
 void Timer::start(long interval, int unit) {
+  set(interval,unit);
+  start();
+}
+void Timer::start() {
+  if (_is_configured) _is_running = true;
+}
+
+// setup the timer
+void Timer::set(long interval, int unit) {
   // reset the timer
   _elapsed = 0;
   _use_millis = false;
@@ -119,7 +128,7 @@ void Timer::start(long interval, int unit) {
       _use_millis = true;
     }
   }
-  _is_running = true;
+  _is_configured = true;
 }
 
 // update the timer at every cycle
@@ -162,9 +171,14 @@ bool Timer::isOver() {
   return false;
 }
 
-// return true if the time is over
+// return true if the timer is running
 bool Timer::isRunning() {
   return _is_running;
+}
+
+// return true if the time is configured
+bool Timer::isConfigured() {
+  return _is_configured;
 }
 
 // restart the timer
@@ -1031,6 +1045,7 @@ void SensorDigitalInput::onReceive(const MyMessage & message) {
 
 // contructor
 SensorDigitalOutput::SensorDigitalOutput(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id, pin) {
+  _safeguard_timer = new Timer(node_manager);
 }
 
 // what to do during before
@@ -1041,6 +1056,7 @@ void SensorDigitalOutput::onBefore() {
   digitalWrite(_pin, _state);
   // the initial value is now the current value
   _value_int = _initial_value;
+  // create the safeguard timer
 }
 
 // what to do during setup
@@ -1060,51 +1076,67 @@ void SensorDigitalOutput::setOnValue(int value) {
 void SensorDigitalOutput::setLegacyMode(bool value) {
   _legacy_mode = value;
 }
+void SensorDigitalOutput::setSafeguard(int value) {
+  _safeguard_timer->set(value,MINUTES);
+}
 
 // main task
 void SensorDigitalOutput::onLoop() {
-  // do nothing on loop
+  // if a safeguard is set, check if it is time for it
+  if (_safeguard_timer->isRunning()) {
+    // update the timer
+    _safeguard_timer->update();
+    // if the time is over, turn the output off
+    if (_safeguard_timer->isOver()) _switch(LOW);
+  }
 }
 
 // what to do as the main task when receiving a message
 void SensorDigitalOutput::onReceive(const MyMessage & message) {
   // by default handle a SET message but when legacy mode is set when a REQ message is expected instead
   if ( (message.getCommand() == C_SET && ! _legacy_mode) || (message.getCommand() == C_REQ && _legacy_mode)) {
-    // retrieve from the message the value to set
-    int value = message.getInt();
-    if (value != 0 && value != 1) return;
-    #if DEBUG == 1
-      Serial.print(F("DOUT I="));
-      Serial.print(_child_id);
-      Serial.print(F(" P="));
-      Serial.print(_pin);
-      Serial.print(F(" V="));
-      Serial.print(value);
-      Serial.print(F(" P="));
-      Serial.println(_pulse_width);
-    #endif
-    // reverse the value if needed
-    int value_to_write = value;
-    if (_on_value == LOW) {
-      if (value == HIGH) value_to_write = LOW;
-      if (value == LOW) value_to_write = HIGH;
-    }
-    // set the value
-    digitalWrite(_pin, value_to_write);
-    if (_pulse_width > 0) {
-      // if this is a pulse output, restore the value to the original value after the pulse
-      wait(_pulse_width);
-      digitalWrite(_pin, value_to_write == 0 ? HIGH: LOW);
-    }
-    // store the current value so it will be sent to the controller
-    _state = value;
-    _value_int = value;
+    // switch the output
+    _switch(message.getInt());
   }
   if (message.getCommand() == C_REQ && ! _legacy_mode) {
     // return the current status
     _value_int = _state;
   }
 }
+
+// write the value to the output
+void SensorDigitalOutput::_switch(int value) {
+  if (value != 0 && value != 1) return;
+  #if DEBUG == 1
+    Serial.print(F("DOUT I="));
+    Serial.print(_child_id);
+    Serial.print(F(" P="));
+    Serial.print(_pin);
+    Serial.print(F(" V="));
+    Serial.print(value);
+    Serial.print(F(" P="));
+    Serial.println(_pulse_width);
+  #endif
+  // reverse the value if needed
+  int value_to_write = value;
+  if (_on_value == LOW) {
+    if (value == HIGH) value_to_write = LOW;
+    if (value == LOW) value_to_write = HIGH;
+  }
+  // set the value
+  digitalWrite(_pin, value_to_write);
+  if (_pulse_width > 0) {
+    // if this is a pulse output, restore the value to the original value after the pulse
+    wait(_pulse_width);
+    digitalWrite(_pin, value_to_write == 0 ? HIGH: LOW);
+  }
+  // store the current value so it will be sent to the controller
+  _state = value;
+  _value_int = value;
+  // if turning the output on and a safeguard timer is configured, start it
+  if (value == HIGH && _safeguard_timer->isConfigured()) _safeguard_timer->start();
+}
+
 
 /*
    SensorRelay

@@ -338,12 +338,17 @@ class Timer {
     Timer(NodeManager* node_manager);
     // Start the timer which will be over when interval passes by. Unit can be either CYCLES or MINUTES
     void start(long interval, int unit);
+    void start();
+    // set the timer configuration but do not start it
+    void set(long interval, int unit);
     // Update the timer. To be called at every cycle
     void update();
     // Returns true if the time is over
     bool isOver();
     // Returns true if the timer is running
     bool isRunning();
+    // Returns true if the timer has been configured
+    bool isConfigured();
     // Reset the timer and start over
     void restart();
     // Return the current elapsed time
@@ -357,6 +362,7 @@ class Timer {
     long _last_millis = 0;
     int _sleep_time = 0;
     bool _is_running = false;
+    bool _is_configured = false;
 };
 /***************************************
    Sensor: generic sensor class
@@ -695,6 +701,8 @@ class SensorDigitalOutput: public Sensor {
     void setOnValue(int value);
     // when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
     void setLegacyMode(bool value);
+    // automatically turn the output off after the given number of minutes
+    void setSafeguard(int value);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
@@ -706,6 +714,8 @@ class SensorDigitalOutput: public Sensor {
     int _state = 0;
     int _pulse_width = 0;
     bool _legacy_mode = false;
+    Timer* _safeguard_timer;
+    void _switch(int value);
 };
 
 

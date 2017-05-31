@@ -479,6 +479,8 @@ Each sensor class can expose additional methods.
     void setOnValue(int value);
     // when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
     void setLegacyMode(bool value);
+    // automatically turn the output off after the given number of minutes
+    void setSafeguard(int value);
 ~~~
 
 *  SensorSwitch / SensorDoor / SensorMotion
