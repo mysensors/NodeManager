@@ -91,16 +91,16 @@ void PowerManager::powerOff() {
     Timer
 */
 
-Timer::Timer(NodeManager* node_manager, long interval, int unit) {
+Timer::Timer(NodeManager* node_manager) {
   _node_manager = node_manager;
+}
+
+// start the timer
+void Timer::start(long interval, int unit) {
   _interval = interval;
   _unit = unit;
-  if (_unit == UNIT_MINUTES) {
-    if (_node_manager->getMode() != SLEEP && _node_manager->getMode() != WAIT) {
-      // this is not a sleeping node, use millis() to keep track of the elapsed time
-      _use_millis = true;
-    }
-    else {
+  if (_unit == MINUTES) {
+    if (_node_manager->isSleepingNode()) {
       // this is a sleeping node and millis() is not reliable so calculate how long a sleep/wait cycle would last
       int sleep_unit = _node_manager->getSleepUnit();
       _sleep_time = _node_manager->getSleepTime();
@@ -108,16 +108,22 @@ Timer::Timer(NodeManager* node_manager, long interval, int unit) {
       else if (sleep_unit == HOURS) _sleep_time = _sleep_time*60;
       else if (sleep_unit == DAYS) _sleep_time = _sleep_time*1440;
     }
+    else {
+      // this is not a sleeping node, use millis() to keep track of the elapsed time
+      _use_millis = true;
+    }
   }
 }
 
 // update the timer at every cycle
 void Timer::update() {
-  if (_unit == Timer::UNIT_CYCLES) {
+  if (_unit == CYCLES) {
+    // if not a sleeping node, counting the cycles do not make sense
+    if (_node_manager->isSleepingNode()) return;
     // just increase the cycle counter
     _elapsed++;
   }
-  else if (_unit == Timer::UNIT_MINUTES) {
+  else if (_unit == MINUTES) {
     // if using millis(), calculate the elapsed minutes, otherwise add a sleep interval
     if (_use_millis) _elapsed = (millis() - _start_from )/1000/60;
     else _elapsed += _sleep_time;
@@ -2037,6 +2043,12 @@ float NodeManager::celsiusToFahrenheit(float temperature) {
   if (_is_metric) return temperature;
   // convert the temperature from C to F
   return temperature * 1.8 + 32;
+}
+
+// return true if sleep or wait is configured and hence this is a sleeping node
+bool NodeManager::isSleepingNode() {
+  if (_sleep_mode == SLEEP || _sleep_mode == WAIT) return true;
+  return false;
 }
 
 // register a sensor to this manager

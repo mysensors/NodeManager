@@ -33,7 +33,8 @@ void before() {
   /*
    * Register below your sensors
   */
-  Timer* timer = new Timer(&nodeManager,10,Timer::UNIT_MINUTES);
+  Timer* timer = new Timer(&nodeManager);
+  timer->start(10,MINUTES);
   
   
   /*

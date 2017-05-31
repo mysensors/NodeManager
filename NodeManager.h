@@ -24,6 +24,7 @@
 #define MINUTES 1
 #define HOURS 2
 #define DAYS 3
+#define CYCLES 4
 
 // define value type
 #define TYPE_INTEGER 0
@@ -334,8 +335,9 @@ class PowerManager {
 
 class Timer {
   public:
-    // Configure and start the timer which will be over when interval passes by. Unit can be either Timer::UNIT_CYCLES or Timer::UNIT_MINUTES
-    Timer(NodeManager* node_manager, long interval, int unit);
+    Timer(NodeManager* node_manager);
+    // Start the timer which will be over when interval passes by. Unit can be either CYCLES or MINUTES
+    void start(long interval, int unit);
     // Update the timer. To be called at every cycle
     void update();
     // Returns true if the time is over
@@ -344,10 +346,7 @@ class Timer {
     void reset();
     // Return the current elapsed time
     long getElapsed();
-    // constants
-    const static int UNIT_CYCLES = 1;
-    const static int UNIT_MINUTES = 2;
-  private:
+   private:
     NodeManager* _node_manager;
     long _interval = 0;
     int _unit = 0;
@@ -1097,6 +1096,8 @@ class NodeManager {
     bool getIsMetric();
     // Convert a temperature from celsius to fahrenheit depending on how isMetric is set
     float celsiusToFahrenheit(float temperature);
+    // return true if sleep or wait is configured and hence this is a sleeping node
+    bool isSleepingNode();
     // hook into the main sketch functions
     void before();
     void presentation();

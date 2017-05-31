@@ -263,6 +263,8 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
     bool getIsMetric();
     // Convert a temperature from celsius to fahrenheit depending on how isMetric is set
     float celsiusToFahrenheit(float temperature);
+    // return true if sleep or wait is configured and hence this is a sleeping node
+    bool isSleepingNode();
 ~~~
 
 For example
