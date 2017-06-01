@@ -35,13 +35,20 @@
 #define INTERRUPT_PIN_1 3
 #define INTERRUPT_PIN_2 2
 
+// define configuration settings that can be saved and loaded from the EEPROM
+#define SAVE_SLEEP_MODE 0
+#define SAVE_SLEEP_TIME 1
+#define SAVE_SLEEP_UNIT 2
+
 // define eeprom addresses
-#define EEPROM_LAST_ID 4
 #define EEPROM_SLEEP_SAVED 0
 #define EEPROM_SLEEP_MODE 1
 #define EEPROM_SLEEP_TIME_MAJOR 2
 #define EEPROM_SLEEP_TIME_MINOR 3
 #define EEPROM_SLEEP_UNIT 4
+#define EEPROM_USER_START 100
+
+// define requests
 
 /************************************
  * Include user defined configuration settings
@@ -100,7 +107,7 @@
    Default module settings
 */
 
-// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ, SENSOR_ACS712
+// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_ACS712
 #ifndef MODULE_ANALOG_INPUT
   #define MODULE_ANALOG_INPUT 0
 #endif
@@ -156,6 +163,10 @@
 #ifndef MODULE_MCP9808
   #define MODULE_MCP9808 0
 #endif
+// Enable this module to use one of the following sensors: SENSOR_MQ
+#ifndef MODULE_MQ
+  #define MODULE_MQ 0
+#endif
 
 /***********************************
    Supported Sensors
@@ -168,8 +179,6 @@ enum supported_sensors {
     SENSOR_LDR,
     // Thermistor sensor, return the temperature based on the attached thermistor
     SENSOR_THERMISTOR,
-    // MQ2 air quality sensor
-    SENSOR_MQ,
     // ML8511 UV sensor
     SENSOR_ML8511,
     // Current sensor
@@ -243,6 +252,10 @@ enum supported_sensors {
     // MCP9808 sensor, precision temperature sensor
     SENSOR_MCP9808,
   #endif
+  #if MODULE_MQ == 1
+    // MQ2 air quality sensor
+    SENSOR_MQ,
+  #endif
 };
 /***********************************
   Libraries
@@ -301,7 +314,7 @@ enum supported_sensors {
   #include "Adafruit_MCP9808.h"
 #endif
 
-/**************************************
+/*******************************************************************
    Classes
 */
 class NodeManager;
@@ -370,46 +383,68 @@ class Timer {
     bool _is_running = false;
     bool _is_configured = false;
 };
+
+/*
+   Request
+*/
+
+class Request {
+  public:
+    Request(const char* string);
+    // return the parsed function
+    int getFunction();
+    // return the value as an int
+    int getValueInt();
+    // return the value as a float
+    float getValueFloat();
+    // return the value as a string
+    char* getValueString();
+   private:
+    NodeManager* _node_manager;
+    int _function;
+    char* _value;
+};
+
 /***************************************
    Sensor: generic sensor class
 */
 class Sensor {
   public:
     Sensor(NodeManager* node_manager, int child_id, int pin);
-    // where the sensor is attached to (default: not set)
+    // [1] where the sensor is attached to (default: not set)
     void setPin(int value);
     int getPin();
-    // child_id of this sensor (default: not set)
+    // [2] child_id of this sensor (default: not set)
     void setChildId(int value);
     int getChildId();
     // presentation of this sensor (default: S_CUSTOM)
     void setPresentation(int value);
     int getPresentation();
-    // type of this sensor (default: V_CUSTOM)
+    // [3] type of this sensor (default: V_CUSTOM)
     void setType(int value);
     int getType();
-    // description of the sensor (default: '')
+    // [4] description of the sensor (default: '')
     void setDescription(char *value);
     // set this to true if you want destination node to send ack back to this node (default: false)
     void setAck(bool value);
     // when queried, send the message multiple times (default: 1)
     void setRetries(int value);
-    // For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)
+    // [5] For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)
     void setSamples(int value);
-    // If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
+    // [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
     void setSamplesInterval(int value);
-    // if true will report the measure only if different than the previous one (default: false)
+    // [7] if true will report the measure only if different than the previous one (default: false)
     void setTrackLastValue(bool value);
-    // if track last value is enabled, force to send an update after the configured number of cycles (default: -1)
+    // [8] if track last value is enabled, force to send an update after the configured number of cycles (default: -1)
     void setForceUpdate(int value);
     void setForceUpdateCycles(int value);
-    // if track last value is enabled, force to send an update after the configured number of minutes (default: -1)
+    // [9] if track last value is enabled, force to send an update after the configured number of minutes (default: -1)
     void setForceUpdateMinutes(int value);
-    // the value type of this sensor (default: TYPE_INTEGER)
+    // [10] the value type of this sensor (default: TYPE_INTEGER)
     void setValueType(int value);
     int getValueType();
-    // for float values, set the float precision (default: 2)
-    void setFloatPrecision(int value);
+    // [11] for float values, set the float precision (default: 2)
+    void  setFloatPrecision(int value);
     // optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
     // set the interrupt pin the sensor is attached to so its loop() will be executed only upon that interrupt (default: -1)
@@ -418,21 +453,23 @@ class Sensor {
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
       void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
-      // if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
+      // [12] if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
       void setAutoPowerPins(bool value);
-      // manually turn the power on
+      // [13] manually turn the power on
       void powerOn();
-      // manually turn the power off
+      // [14] manually turn the power off
       void powerOff();
     #endif
     // get the latest recorded value from the sensor
     int getValueInt();
     float getValueFloat();
     char* getValueString();
-    // After how many cycles the sensor will report back its measure (default: 1 cycle)
+    // [15] After how many cycles the sensor will report back its measure (default: 1 cycle)
     void setReportIntervalCycles(int value);
-    // After how many minutes the sensor will report back its measure (default: 1 cycle)
+    // [16] After how many minutes the sensor will report back its measure (default: 1 cycle)
     void setReportIntervalMinutes(int value);
+    // process a remote request
+    void process(Request & request);
     // define what to do at each stage of the sketch
     virtual void before();
     virtual void presentation();
@@ -444,8 +481,10 @@ class Sensor {
     virtual void onSetup() = 0;
     virtual void onLoop() = 0;
     virtual void onReceive(const MyMessage & message) = 0;
+    virtual void onProcess(Request & request) = 0;
   protected:
     MyMessage _msg;
+    MyMessage _msg_service;
     NodeManager* _node_manager;
     int _sleep_between_send = 0;
     int _pin = -1;
@@ -478,27 +517,29 @@ class Sensor {
     bool _isWorthSending(bool comparison);
 };
 
+#if MODULE_ANALOG_INPUT == 1
 /*
    SensorAnalogInput: read the analog input of a configured pin
 */
 class SensorAnalogInput: public Sensor {
   public:
     SensorAnalogInput(NodeManager* node_manager, int child_id, int pin);
-    // the analog reference to use (default: not set, can be either INTERNAL or DEFAULT)
+    // [101] the analog reference to use (default: not set, can be either INTERNAL or DEFAULT)
     void setReference(int value);
-    // reverse the value or the percentage (e.g. 70% -> 30%) (default: false)
+    // [102] reverse the value or the percentage (e.g. 70% -> 30%) (default: false)
     void setReverse(bool value);
-    // when true returns the value as a percentage (default: true)
+    // [103] when true returns the value as a percentage (default: true)
     void setOutputPercentage(bool value);
-    // minimum value for calculating the percentage (default: 0)
+    // [104] minimum value for calculating the percentage (default: 0)
     void setRangeMin(int value);
-    // maximum value for calculating the percentage (default: 1024)
+    // [105] maximum value for calculating the percentage (default: 1024)
     void setRangeMax(int value);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
   protected:
     int _reference = -1;
     bool _reverse = false;
@@ -523,82 +564,28 @@ class SensorLDR: public SensorAnalogInput {
 class SensorThermistor: public Sensor {
   public:
     SensorThermistor(NodeManager* node_manager, int child_id, int pin);
-    // resistance at 25 degrees C (default: 10000)
+    // [101] resistance at 25 degrees C (default: 10000)
     void setNominalResistor(long value);
-    // temperature for nominal resistance (default: 25)
+    // [102] temperature for nominal resistance (default: 25)
     void setNominalTemperature(int value);
-    // The beta coefficient of the thermistor (default: 3950)
+    // [103] The beta coefficient of the thermistor (default: 3950)
     void setBCoefficient(int value);
-    // the value of the resistor in series with the thermistor (default: 10000)
+    // [104] the value of the resistor in series with the thermistor (default: 10000)
     void setSeriesResistor(long value);
-    // set a temperature offset
+    // [105] set a temperature offset
     void setOffset(float value);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
   protected:
     long _nominal_resistor = 10000;
     int _nominal_temperature = 25;
     int _b_coefficient = 3950;
     long _series_resistor = 10000;
     float _offset = 0;
-};
-
-/*
-    SensorMQ
- */
-class SensorMQ: public Sensor {
-  public:
-    SensorMQ(NodeManager* node_manager, int child_id, int pin);
-    // define the target gas whose ppm has to be returned. 0: LPG, 1: CO, 2: Smoke (default: 1);
-    void setTargetGas(int value);
-    // define the load resistance on the board, in kilo ohms (default: 1);
-    void setRlValue(float value);
-    // define the Ro resistance on the board (default: 10000);
-    void setRoValue(float value);
-    // Sensor resistance in clean air (default: 9.83);
-    void setCleanAirFactor(float value);
-    // define how many samples you are going to take in the calibration phase (default: 50);
-    void setCalibrationSampleTimes(int value);
-    // define the time interal(in milisecond) between each samples in the cablibration phase (default: 500);
-    void setCalibrationSampleInterval(int value);
-    // define how many samples you are going to take in normal operation (default: 50);
-    void setReadSampleTimes(int value);
-    // define the time interal(in milisecond) between each samples in the normal operations (default: 5);
-    void setReadSampleInterval(int value);
-    // set the LPGCurve array (default: {2.3,0.21,-0.47})
-    void setLPGCurve(float *value);
-    // set the COCurve array (default: {2.3,0.72,-0.34})
-    void setCOCurve(float *value);
-    // set the SmokeCurve array (default: {2.3,0.53,-0.44})
-    void setSmokeCurve(float *value);
-    // define what to do at each stage of the sketch
-    void onBefore();
-    void onSetup();
-    void onLoop();
-    void onReceive(const MyMessage & message);
-  protected:
-    float _rl_value = 1.0;
-    float _ro_clean_air_factor = 9.83;
-    int _calibration_sample_times = 50;
-    int _calibration_sample_interval = 500;
-    int _read_sample_interval = 50;
-    int _read_sample_times = 5;
-    float _ro = 10000.0;
-    float _LPGCurve[3] = {2.3,0.21,-0.47};
-    float _COCurve[3] = {2.3,0.72,-0.34};
-    float _SmokeCurve[3] = {2.3,0.53,-0.44};
-    float _MQResistanceCalculation(int raw_adc);
-    float _MQCalibration();
-    float _MQRead();
-    int _MQGetGasPercentage(float rs_ro_ratio, int gas_id);
-    int  _MQGetPercentage(float rs_ro_ratio, float *pcurve);
-    int _gas_lpg = 0;
-    int _gas_co = 1;
-    int _gas_smoke = 2;
-    int _target_gas = _gas_co;
 };
 
 /*
@@ -613,6 +600,7 @@ class SensorML8511: public Sensor {
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
   protected:
     float _mapfloat(float x, float in_min, float in_max, float out_min, float out_max);
 };
@@ -624,15 +612,16 @@ class SensorML8511: public Sensor {
 class SensorACS712: public Sensor {
   public:
     SensorACS712(NodeManager* node_manager, int child_id, int pin);
-    // set how many mV are equivalent to 1 Amp. The value depends on the module (100 for 20A Module, 66 for 30A Module) (default: 185);
+    // [101] set how many mV are equivalent to 1 Amp. The value depends on the module (100 for 20A Module, 66 for 30A Module) (default: 185);
     void setmVPerAmp(int value);
-    // set ACS offset (default: 2500);
+    // [102] set ACS offset (default: 2500);
     void setOffset(int value);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
   protected:
     int _ACS_offset = 2500;
     int _mv_per_amp = 185;
@@ -645,15 +634,16 @@ class SensorACS712: public Sensor {
 class SensorRainGauge: public Sensor {
   public:
     SensorRainGauge(NodeManager* node_manager, int child_id, int pin);
-    // set how frequently to report back to the controller in minutes. After reporting the measure is resetted (default: 60)
+    // [101] set how frequently to report back to the controller in minutes. After reporting the measure is resetted (default: 60)
     void setReportInterval(int value);
-    // set how many mm of rain to count for each tip (default: 0.11)
+    // [102] set how many mm of rain to count for each tip (default: 0.11)
     void setSingleTip(float value);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
   public:
     static void _onTipped();
     static long _last_tip;
@@ -679,7 +669,10 @@ class SensorSoilMoisture: public SensorAnalogInput {
   public:
     SensorSoilMoisture(NodeManager* node_manager, int child_id, int pin);
 };
+#endif
 
+
+#if MODULE_DIGITAL_INPUT == 1
 /*
    SensorDigitalInput: read the digital input of the configured pin
 */
@@ -691,25 +684,28 @@ class SensorDigitalInput: public Sensor {
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
 };
+#endif
 
+#if MODULE_DIGITAL_OUTPUT == 1
 /*
    SensorDigitalOutput: control a digital output of the configured pin
 */
 class SensorDigitalOutput: public Sensor {
   public:
     SensorDigitalOutput(NodeManager* node_manager, int child_id, int pin);
-    // set how to initialize the output (default: LOW)
+    // [101] set how to initialize the output (default: LOW)
     void setInitialValue(int value);
-    // if greater than 0, send a pulse of the given duration in ms and then restore the output back to the original value (default: 0)
+    // [102] if greater than 0, send a pulse of the given duration in ms and then restore the output back to the original value (default: 0)
     void setPulseWidth(int value);
-    // define which value to set to the output when set to on (default: HIGH)
+    // [103] define which value to set to the output when set to on (default: HIGH)
     void setOnValue(int value);
-    // when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
+    // [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
     void setLegacyMode(bool value);
-    // automatically turn the output off after the given number of minutes
+    // [105] automatically turn the output off after the given number of minutes
     void setSafeguard(int value);
-    // if true the input value becomes a duration in minutes after which the output will be automatically turned off (default: false)
+    // [106] if true the input value becomes a duration in minutes after which the output will be automatically turned off (default: false)
     void setInputIsElapsed(bool value);
     // manually switch the output to the provided value
     void set(int value);
@@ -720,6 +716,7 @@ class SensorDigitalOutput: public Sensor {
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
   protected:
     int _initial_value = LOW;
     int _on_value = HIGH;
@@ -737,8 +734,6 @@ class SensorDigitalOutput: public Sensor {
 class SensorRelay: public SensorDigitalOutput {
   public:
     SensorRelay(NodeManager* node_manager, int child_id, int pin);
-    // define what to do at each stage of the sketch
-    //void onLoop();
 };
 
 /*
@@ -748,6 +743,7 @@ class SensorLatchingRelay: public SensorRelay {
   public:
     SensorLatchingRelay(NodeManager* node_manager, int child_id, int pin);
 };
+#endif
 
 /*
    SensorDHT
@@ -761,6 +757,7 @@ class SensorDHT: public Sensor {
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
     // constants
     const static int TEMPERATURE = 0;
     const static int HUMIDITY = 1;
@@ -784,6 +781,7 @@ class SensorSHT21: public Sensor {
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
     // constants
     const static int TEMPERATURE = 0;
     const static int HUMIDITY = 1;
@@ -805,17 +803,18 @@ class SensorHTU21D: public SensorSHT21 {
 /*
  * SensorSwitch
  */
+#if MODULE_SWITCH == 1
 class SensorSwitch: public Sensor {
   public:
     SensorSwitch(NodeManager* node_manager, int child_id, int pin);
-    // set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
+    // [101] set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
     void setMode(int value);
     int getMode();
-    // milliseconds to wait before reading the input (default: 0)
+    // [102] milliseconds to wait before reading the input (default: 0)
     void setDebounce(int value);
-    // time to wait in milliseconds after a change is detected to allow the signal to be restored to its normal value (default: 0)
+    // [103] time to wait in milliseconds after a change is detected to allow the signal to be restored to its normal value (default: 0)
     void setTriggerTime(int value);
-    // Set initial value on the interrupt pin (default: HIGH)
+    // [104] Set initial value on the interrupt pin (default: HIGH)
     void setInitial(int value);
     int getInitial();
     // define what to do at each stage of the sketch
@@ -823,6 +822,7 @@ class SensorSwitch: public Sensor {
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
   protected:
     int _debounce = 0;
     int _trigger_time = 0;
@@ -845,7 +845,7 @@ class SensorMotion: public SensorSwitch {
   public:
     SensorMotion(NodeManager* node_manager, int child_id, int pin);
 };
-
+#endif
 /*
    SensorDs18b20
 */
@@ -853,19 +853,20 @@ class SensorMotion: public SensorSwitch {
 class SensorDs18b20: public Sensor {
   public:
     SensorDs18b20(NodeManager* node_manager, int child_id, int pin, DallasTemperature* sensors, int index);
-    // return the sensors' device address
-    DeviceAddress* getDeviceAddress();
     // returns the sensor's resolution in bits
     int getResolution();
-    // set the sensor's resolution in bits
+    // [101] set the sensor's resolution in bits
     void setResolution(int value);
-    // sleep while DS18B20 calculates temperature (default: false)
+    // [102] sleep while DS18B20 calculates temperature (default: false)
     void setSleepDuringConversion(bool value);
+    // return the sensors' device address
+    DeviceAddress* getDeviceAddress();
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
   protected:
     float _offset = 0;
     int _index;
@@ -887,6 +888,7 @@ class SensorBH1750: public Sensor {
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
   protected:
     BH1750* _lightSensor;
 };
@@ -904,6 +906,7 @@ class SensorMLX90614: public Sensor {
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
     // constants
     const static int TEMPERATURE_AMBIENT = 0;
     const static int TEMPERATURE_OBJECT = 1;
@@ -922,13 +925,14 @@ class SensorMLX90614: public Sensor {
 class SensorBosch: public Sensor {
   public:
     SensorBosch(NodeManager* node_manager, int child_id, int sensor_type);
-    // define how many pressure samples to keep track of for calculating the forecast (default: 5)
+    // [101] define how many pressure samples to keep track of for calculating the forecast (default: 5)
     void setForecastSamplesCount(int value);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
     // constants
     const static int TEMPERATURE = 0;
     const static int HUMIDITY = 1;
@@ -983,17 +987,18 @@ class SensorBMP085: public SensorBosch {
 class SensorHCSR04: public Sensor {
   public:
     SensorHCSR04(NodeManager* node_manager, int child_id, int pin);
-    // Arduino pin tied to trigger pin on the ultrasonic sensor (default: the pin set while registering the sensor)
+    // [101] Arduino pin tied to trigger pin on the ultrasonic sensor (default: the pin set while registering the sensor)
     void setTriggerPin(int value);
-    // Arduino pin tied to echo pin on the ultrasonic sensor (default: the pin set while registering the sensor)
+    // [102] Arduino pin tied to echo pin on the ultrasonic sensor (default: the pin set while registering the sensor)
     void setEchoPin(int value);
-    // Maximum distance we want to ping for (in centimeters) (default: 300)
+    // [103] Maximum distance we want to ping for (in centimeters) (default: 300)
     void setMaxDistance(int value);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
   protected:
     int _trigger_pin;
     int _echo_pin;
@@ -1009,17 +1014,18 @@ class SensorHCSR04: public Sensor {
 class SensorSonoff: public Sensor {
   public:
     SensorSonoff(NodeManager* node_manager, int child_id);
-    // set the button's pin (default: 0)
+    // [101] set the button's pin (default: 0)
     void setButtonPin(int value);
-    // set the relay's pin (default: 12)
+    // [102] set the relay's pin (default: 12)
     void setRelayPin(int value);
-    // set the led's pin (default: 13)
+    // [103] set the led's pin (default: 13)
     void setLedPin(int value);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
   protected:
     Bounce _debouncer = Bounce();
     int _button_pin = 0;
@@ -1048,11 +1054,69 @@ class SensorMCP9808: public Sensor {
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
   protected:
     Adafruit_MCP9808* _mcp;
 };
 #endif
 
+/*
+    SensorMQ
+ */
+ #if MODULE_MQ == 1
+class SensorMQ: public Sensor {
+  public:
+    SensorMQ(NodeManager* node_manager, int child_id, int pin);
+    // [101] define the target gas whose ppm has to be returned. 0: LPG, 1: CO, 2: Smoke (default: 1);
+    void setTargetGas(int value);
+    // [102] define the load resistance on the board, in kilo ohms (default: 1);
+    void setRlValue(float value);
+    // [103] define the Ro resistance on the board (default: 10000);
+    void setRoValue(float value);
+    // [104] Sensor resistance in clean air (default: 9.83);
+    void setCleanAirFactor(float value);
+    // [105] define how many samples you are going to take in the calibration phase (default: 50);
+    void setCalibrationSampleTimes(int value);
+    // [106] define the time interal(in milisecond) between each samples in the cablibration phase (default: 500);
+    void setCalibrationSampleInterval(int value);
+    // [107] define how many samples you are going to take in normal operation (default: 50);
+    void setReadSampleTimes(int value);
+    // [108] define the time interal(in milisecond) between each samples in the normal operations (default: 5);
+    void setReadSampleInterval(int value);
+    // set the LPGCurve array (default: {2.3,0.21,-0.47})
+    void setLPGCurve(float *value);
+    // set the COCurve array (default: {2.3,0.72,-0.34})
+    void setCOCurve(float *value);
+    // set the SmokeCurve array (default: {2.3,0.53,-0.44})
+    void setSmokeCurve(float *value);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
+  protected:
+    float _rl_value = 1.0;
+    float _ro_clean_air_factor = 9.83;
+    int _calibration_sample_times = 50;
+    int _calibration_sample_interval = 500;
+    int _read_sample_interval = 50;
+    int _read_sample_times = 5;
+    float _ro = 10000.0;
+    float _LPGCurve[3] = {2.3,0.21,-0.47};
+    float _COCurve[3] = {2.3,0.72,-0.34};
+    float _SmokeCurve[3] = {2.3,0.53,-0.44};
+    float _MQResistanceCalculation(int raw_adc);
+    float _MQCalibration();
+    float _MQRead();
+    int _MQGetGasPercentage(float rs_ro_ratio, int gas_id);
+    int  _MQGetPercentage(float rs_ro_ratio, float *pcurve);
+    int _gas_lpg = 0;
+    int _gas_co = 1;
+    int _gas_smoke = 2;
+    int _target_gas = _gas_co;
+};
+#endif
 
 /***************************************
    NodeManager: manages all the aspects of the node
@@ -1060,51 +1124,51 @@ class SensorMCP9808: public Sensor {
 class NodeManager {
   public:
     NodeManager();
-    // the pin to connect to the RST pin to reboot the board (default: 4)
-    void setRebootPin(int value);
-    // send the same service message multiple times (default: 1)
+    // [10] send the same service message multiple times (default: 1)
     void setRetries(int value);
     #if BATTERY_MANAGER == 1
-      // the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
+      // [11] the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
       void setBatteryMin(float value);
-      // the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
+      // [12] the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
       void setBatteryMax(float value);
-      // after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: -)
+      // [13] after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: -)
       void setBatteryReportCycles(int value);
-      // after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60)
+      // [14] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60)
       void setBatteryReportMinutes(int value);
-      // if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
+      // [15] if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
       void setBatteryInternalVcc(bool value);
-      // if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
+      // [16] if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
       void setBatteryPin(int value);
-      // if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
+      // [17] if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
       void setBatteryVoltsPerBit(float value);
-      // If true, wake up by an interrupt counts as a valid cycle for battery reports otherwise only uninterrupted sleep cycles would contribute (default: true)
+      // [18] If true, wake up by an interrupt counts as a valid cycle for battery reports otherwise only uninterrupted sleep cycles would contribute (default: true)
       void setBatteryReportWithInterrupt(bool value);
+      // [2] Send a battery level report to the controller
+      void batteryReport();
     #endif
-    // define the way the node should behave. It can be IDLE (stay awake withtout executing each sensors' loop), SLEEP (go to sleep for the configured interval), WAIT (wait for the configured interval), ALWAYS_ON (stay awake and execute each sensors' loop)
+    // [3] define the way the node should behave. It can be (0) IDLE (stay awake withtout executing each sensors' loop), (1) SLEEP (go to sleep for the configured interval), (2) WAIT (wait for the configured interval), (3) ALWAYS_ON (stay awake and execute each sensors' loop)
     void setSleepMode(int value);
     void setMode(int value);
     int getMode();
-    // define for how long the board will sleep (default: 0)
+    // [4] define for how long the board will sleep (default: 0)
     void setSleepTime(int value);
     int getSleepTime();
-    // define the unit of SLEEP_TIME. It can be SECONDS, MINUTES, HOURS or DAYS (default: MINUTES)
+    // [5] define the unit of SLEEP_TIME. It can be SECONDS, MINUTES, HOURS or DAYS (default: MINUTES)
     void setSleepUnit(int value);
     int getSleepUnit();
     // configure the node's behavior, parameters are mode, time and unit
     void setSleep(int value1, int value2, int value3);
-    // if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
+    // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
     void setSleepInterruptPin(int value);
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
     void setInterrupt(int pin, int mode, int pull = -1);
-    // optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
+    // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
     // register a built-in sensor
     int registerSensor(int sensor_type, int pin = -1, int child_id = -1);
     // register a custom sensor
     int registerSensor(Sensor* sensor);
-    // un-register a sensor
+    // [26] un-register a sensor
     void unRegisterSensor(int sensor_index);
     // return a sensor by its index
     Sensor* get(int sensor_index);
@@ -1114,26 +1178,42 @@ class NodeManager {
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
       void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
-      // if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
+      // [23] if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
       void setAutoPowerPins(bool value);
-      // manually turn the power on
+      // [24] manually turn the power on
       void powerOn();
-      // manually turn the power off
+      // [25] manually turn the power off
       void powerOff();
     #endif
-    // set this to true if you want destination node to send ack back to this node (default: false)
+    // [21] set this to true if you want destination node to send ack back to this node (default: false)
     void setAck(bool value);
     // request and return the current timestamp from the controller
     long getTimestamp();
     // Request the controller's configuration on startup (default: true)
     void setGetControllerConfig(bool value);
-    // Manually set isMetric setting
+    // [22] Manually set isMetric setting
     void setIsMetric(bool value);
     bool getIsMetric();
     // Convert a temperature from celsius to fahrenheit depending on how isMetric is set
     float celsiusToFahrenheit(float temperature);
     // return true if sleep or wait is configured and hence this is a sleeping node
     bool isSleepingNode();
+    // [1] Send a hello message back to the controller
+    void hello();
+    // [6] reboot the board
+    void reboot();
+    // [8] send NodeManager's the version back to the controller
+    void version();
+    // [7] clear the EEPROM
+    void clearEeprom();
+    // [9] wake up the board
+    void wakeup();
+    // process a remote request
+    void process(Request & request);
+    // return the value stored at the requested index from the EEPROM
+    int loadFromMemory(int index);
+    // [27] save the given index of the EEPROM the provided value
+    void saveToMemory(int index, int value);
     // hook into the main sketch functions
     void before();
     void presentation();
@@ -1173,13 +1253,14 @@ class NodeManager {
     long _timestamp = -1;
     Sensor* _sensors[MAX_SENSORS] = {0};
     bool _ack = false;
-    void _process(const char * message);
     void _sleep();
     void _present(int child_id, int type);
     int _getAvailableChildId();
     int _getInterruptInitialValue(int mode);
     bool _get_controller_config = true;
     int _is_metric = 1;
+    void _loadConfig();
+    void _saveConfig(int what);
 };
 
 #endif

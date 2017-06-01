@@ -33,10 +33,14 @@ void before() {
   /*
    * Register below your sensors
   */
+  int n = nodeManager.registerSensor(SENSOR_THERMISTOR,A1);
+  Sensor* sensor = nodeManager.get(n);
+  Serial.println(sizeof(Sensor));
+  Serial.println(sizeof(SensorThermistor));
+  Serial.println(sizeof(NodeManager));
+  Serial.println(sizeof(Timer));
   
-  
-  
-  
+
   /*
    * Register above your sensors
   */
