@@ -281,6 +281,10 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
     void wakeup();
     // process a remote request
     void process(const char * message);
+    // return the value stored at the requested index from the EEPROM
+    int loadFromMemory(int index);
+    // save the given index of the EEPROM the provided value
+    void saveToMemory(int index, int value);
 ~~~
 
 For example

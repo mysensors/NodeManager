@@ -478,7 +478,7 @@ void Sensor::receive(const MyMessage &message) {
   loop(message);
 }
 
-// process a request message
+// process a remote configuration request message
 void Sensor::process(Request & request) {
   int function = request.getFunction();
   switch(function) {
@@ -552,7 +552,7 @@ bool Sensor::_isWorthSending(bool comparison) {
   return false;
 }
 
-
+#if MODULE_ANALOG_INPUT == 1
 /*
    SensorAnalogInput
 */
@@ -992,168 +992,9 @@ SensorSoilMoisture::SensorSoilMoisture(NodeManager* node_manager, int child_id, 
   setRangeMin(100);
 }
 
+#endif
 
-/*
- * SensorMQ
- */
-SensorMQ::SensorMQ(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id,pin) {
-  setPresentation(S_AIR_QUALITY);
-  setType(V_LEVEL);
-}
-
-//setter/getter
-void SensorMQ::setRlValue(float value) {
-  _rl_value = value;
-}
-void SensorMQ::setRoValue(float value) {
-  _ro = value;
-}
-void SensorMQ::setCleanAirFactor(float value) {
-  _ro_clean_air_factor = value;
-}
-void SensorMQ::setCalibrationSampleTimes(int value) {
-  _calibration_sample_times = value;
-}
-void SensorMQ::setCalibrationSampleInterval(int value){
-  _calibration_sample_interval = value;
-}
-void SensorMQ::setReadSampleTimes(int value) {
-  _read_sample_times = value;
-}
-void SensorMQ::setReadSampleInterval(int value) {
-  _read_sample_interval = value;
-}
-void SensorMQ::setLPGCurve(float *value) {
-  _LPGCurve[0] = value[0];
-  _LPGCurve[2] = value[1];
-  _LPGCurve[2] = value[2];
-}
-void SensorMQ::setCOCurve(float *value) {
-  _COCurve[0] = value[0];
-  _COCurve[2] = value[1];
-  _COCurve[2] = value[2];
-}
-void SensorMQ::setSmokeCurve(float *value) {
-  _SmokeCurve[0] = value[0];
-  _SmokeCurve[2] = value[1];
-  _SmokeCurve[2] = value[2];
-}
-
-// what to do during before
-void SensorMQ::onBefore() {
-  // prepare the pin for input
-  pinMode(_pin, INPUT);
-}
-
-// what to do during setup
-void SensorMQ::onSetup() {
-  _ro = _MQCalibration();
-}
-
-// what to do during loop
-void SensorMQ::onLoop() {
-  if (_pin == -1) return;
-  // calculate rs/ro
-  float mq = _MQRead()/_ro;
-  // calculate the ppm
-  float lpg = _MQGetGasPercentage(mq,_gas_lpg);
-  float co = _MQGetGasPercentage(mq,_gas_co);
-  float smoke = _MQGetGasPercentage(mq,_gas_smoke);
-  // assign to the value the requested gas
-  uint16_t value;
-  if (_target_gas == _gas_lpg) value = lpg;
-  if (_target_gas == _gas_co) value = co;
-  if (_target_gas == _gas_smoke) value = smoke;
-  #if DEBUG == 1
-    Serial.print(F("MQ I="));
-    Serial.print(_child_id);
-    Serial.print(F(" V="));
-    Serial.print(value);
-    Serial.print(F(" LPG="));
-    Serial.print(lpg);
-    Serial.print(F(" CO="));
-    Serial.print(co);
-    Serial.print(F(" SMOKE="));
-    Serial.println(smoke);
-  #endif
-  // store the value
-  _value_int = (int16_t)ceil(value);
-}
-
-// what to do as the main task when receiving a message
-void SensorMQ::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
-}
-
-// what to do when receiving a remote message
-void SensorMQ::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 1: setTargetGas(request.getValueInt()); break;
-    case 2: setRlValue(request.getValueFloat()); break;
-    case 3: setRoValue(request.getValueFloat()); break;
-    case 4: setCleanAirFactor(request.getValueFloat()); break;
-    case 5: setCalibrationSampleTimes(request.getValueInt()); break;
-    case 6: setCalibrationSampleInterval(request.getValueInt()); break;
-    case 7: setReadSampleTimes(request.getValueInt()); break;
-    case 8: setReadSampleInterval(request.getValueInt()); break;
-    default: return;
-  }
-  _send(_msg.set(function));
-}
-
-// returns the calculated sensor resistance
-float SensorMQ::_MQResistanceCalculation(int raw_adc) {
-  return ( ((float)_rl_value*(1023-raw_adc)/raw_adc));
-}
-
-//  This function assumes that the sensor is in clean air
-float SensorMQ::_MQCalibration() {
-  int i;
-  float val=0;
-  //take multiple samples
-  for (i=0; i< _calibration_sample_times; i++) {  
-    val += _MQResistanceCalculation(analogRead(_pin));
-    wait(_calibration_sample_interval);
-  }
-  //calculate the average value
-  val = val/_calibration_sample_times;                   
-  //divided by RO_CLEAN_AIR_FACTOR yields the Ro
-  val = val/_ro_clean_air_factor;
-  //according to the chart in the datasheet
-  return val;
-}
-
-// This function use MQResistanceCalculation to caculate the sensor resistenc (Rs).
-float SensorMQ::_MQRead() {
-  int i;
-  float rs=0;
-  for (i=0; i<_read_sample_times; i++) {
-    rs += _MQResistanceCalculation(analogRead(_pin));
-    wait(_read_sample_interval);
-  }
-  rs = rs/_read_sample_times;
-  return rs;
-}
-
-// This function passes different curves to the MQGetPercentage function which calculates the ppm (parts per million) of the target gas.
-int SensorMQ::_MQGetGasPercentage(float rs_ro_ratio, int gas_id) {
-  if ( gas_id == _gas_lpg ) {
-    return _MQGetPercentage(rs_ro_ratio,_LPGCurve);
-  } else if ( gas_id == _gas_co) {
-    return _MQGetPercentage(rs_ro_ratio,_COCurve);
-  } else if ( gas_id == _gas_smoke) {
-    return _MQGetPercentage(rs_ro_ratio,_SmokeCurve);
-  }
-  return 0;
-}
-
-// returns ppm of the target gas
-int SensorMQ::_MQGetPercentage(float rs_ro_ratio, float *pcurve) {
-  return (pow(10,( ((log10(rs_ro_ratio)-pcurve[1])/pcurve[2]) + pcurve[0])));
-}
-
-
+#if MODULE_DIGITAL_INPUT == 1
 /*
    SensorDigitalInput
 */
@@ -1196,13 +1037,13 @@ void SensorDigitalInput::onReceive(const MyMessage & message) {
 // what to do when receiving a remote message
 void SensorDigitalInput::onProcess(Request & request) {
 }
+#endif
 
-
+#if MODULE_DIGITAL_OUTPUT == 1
 /*
    SensorDigitalOutput
 */
 
-// contructor
 SensorDigitalOutput::SensorDigitalOutput(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id, pin) {
   _safeguard_timer = new Timer(node_manager);
 }
@@ -1353,6 +1194,7 @@ SensorLatchingRelay::SensorLatchingRelay(NodeManager* node_manager, int child_id
   setPulseWidth(50);
 }
 
+#endif
 /*
    SensorDHT
 */
@@ -1514,6 +1356,7 @@ SensorHTU21D::SensorHTU21D(NodeManager* node_manager, int child_id, int pin): Se
 }
 #endif 
 
+#if MODULE_SWITCH == 1
 /*
  * SensorSwitch
  */
@@ -1611,6 +1454,7 @@ SensorMotion::SensorMotion(NodeManager* node_manager, int child_id, int pin): Se
   // set initial value to LOW
   setInitial(LOW);
 }
+#endif
 
 /*
    SensorDs18b20
@@ -2297,6 +2141,169 @@ void SensorMCP9808::onProcess(Request & request) {
 }
 #endif
 
+
+/*
+ * SensorMQ
+ */
+#if MODULE_MQ == 1
+SensorMQ::SensorMQ(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id,pin) {
+  setPresentation(S_AIR_QUALITY);
+  setType(V_LEVEL);
+}
+
+//setter/getter
+void SensorMQ::setRlValue(float value) {
+  _rl_value = value;
+}
+void SensorMQ::setRoValue(float value) {
+  _ro = value;
+}
+void SensorMQ::setCleanAirFactor(float value) {
+  _ro_clean_air_factor = value;
+}
+void SensorMQ::setCalibrationSampleTimes(int value) {
+  _calibration_sample_times = value;
+}
+void SensorMQ::setCalibrationSampleInterval(int value){
+  _calibration_sample_interval = value;
+}
+void SensorMQ::setReadSampleTimes(int value) {
+  _read_sample_times = value;
+}
+void SensorMQ::setReadSampleInterval(int value) {
+  _read_sample_interval = value;
+}
+void SensorMQ::setLPGCurve(float *value) {
+  _LPGCurve[0] = value[0];
+  _LPGCurve[2] = value[1];
+  _LPGCurve[2] = value[2];
+}
+void SensorMQ::setCOCurve(float *value) {
+  _COCurve[0] = value[0];
+  _COCurve[2] = value[1];
+  _COCurve[2] = value[2];
+}
+void SensorMQ::setSmokeCurve(float *value) {
+  _SmokeCurve[0] = value[0];
+  _SmokeCurve[2] = value[1];
+  _SmokeCurve[2] = value[2];
+}
+
+// what to do during before
+void SensorMQ::onBefore() {
+  // prepare the pin for input
+  pinMode(_pin, INPUT);
+}
+
+// what to do during setup
+void SensorMQ::onSetup() {
+  _ro = _MQCalibration();
+}
+
+// what to do during loop
+void SensorMQ::onLoop() {
+  if (_pin == -1) return;
+  // calculate rs/ro
+  float mq = _MQRead()/_ro;
+  // calculate the ppm
+  float lpg = _MQGetGasPercentage(mq,_gas_lpg);
+  float co = _MQGetGasPercentage(mq,_gas_co);
+  float smoke = _MQGetGasPercentage(mq,_gas_smoke);
+  // assign to the value the requested gas
+  uint16_t value;
+  if (_target_gas == _gas_lpg) value = lpg;
+  if (_target_gas == _gas_co) value = co;
+  if (_target_gas == _gas_smoke) value = smoke;
+  #if DEBUG == 1
+    Serial.print(F("MQ I="));
+    Serial.print(_child_id);
+    Serial.print(F(" V="));
+    Serial.print(value);
+    Serial.print(F(" LPG="));
+    Serial.print(lpg);
+    Serial.print(F(" CO="));
+    Serial.print(co);
+    Serial.print(F(" SMOKE="));
+    Serial.println(smoke);
+  #endif
+  // store the value
+  _value_int = (int16_t)ceil(value);
+}
+
+// what to do as the main task when receiving a message
+void SensorMQ::onReceive(const MyMessage & message) {
+  if (message.getCommand() == C_REQ) onLoop();
+}
+
+// what to do when receiving a remote message
+void SensorMQ::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 1: setTargetGas(request.getValueInt()); break;
+    case 2: setRlValue(request.getValueFloat()); break;
+    case 3: setRoValue(request.getValueFloat()); break;
+    case 4: setCleanAirFactor(request.getValueFloat()); break;
+    case 5: setCalibrationSampleTimes(request.getValueInt()); break;
+    case 6: setCalibrationSampleInterval(request.getValueInt()); break;
+    case 7: setReadSampleTimes(request.getValueInt()); break;
+    case 8: setReadSampleInterval(request.getValueInt()); break;
+    default: return;
+  }
+  _send(_msg.set(function));
+}
+
+// returns the calculated sensor resistance
+float SensorMQ::_MQResistanceCalculation(int raw_adc) {
+  return ( ((float)_rl_value*(1023-raw_adc)/raw_adc));
+}
+
+//  This function assumes that the sensor is in clean air
+float SensorMQ::_MQCalibration() {
+  int i;
+  float val=0;
+  //take multiple samples
+  for (i=0; i< _calibration_sample_times; i++) {  
+    val += _MQResistanceCalculation(analogRead(_pin));
+    wait(_calibration_sample_interval);
+  }
+  //calculate the average value
+  val = val/_calibration_sample_times;                   
+  //divided by RO_CLEAN_AIR_FACTOR yields the Ro
+  val = val/_ro_clean_air_factor;
+  //according to the chart in the datasheet
+  return val;
+}
+
+// This function use MQResistanceCalculation to caculate the sensor resistenc (Rs).
+float SensorMQ::_MQRead() {
+  int i;
+  float rs=0;
+  for (i=0; i<_read_sample_times; i++) {
+    rs += _MQResistanceCalculation(analogRead(_pin));
+    wait(_read_sample_interval);
+  }
+  rs = rs/_read_sample_times;
+  return rs;
+}
+
+// This function passes different curves to the MQGetPercentage function which calculates the ppm (parts per million) of the target gas.
+int SensorMQ::_MQGetGasPercentage(float rs_ro_ratio, int gas_id) {
+  if ( gas_id == _gas_lpg ) {
+    return _MQGetPercentage(rs_ro_ratio,_LPGCurve);
+  } else if ( gas_id == _gas_co) {
+    return _MQGetPercentage(rs_ro_ratio,_COCurve);
+  } else if ( gas_id == _gas_smoke) {
+    return _MQGetPercentage(rs_ro_ratio,_SmokeCurve);
+  }
+  return 0;
+}
+
+// returns ppm of the target gas
+int SensorMQ::_MQGetPercentage(float rs_ro_ratio, float *pcurve) {
+  return (pow(10,( ((log10(rs_ro_ratio)-pcurve[1])/pcurve[2]) + pcurve[0])));
+}
+#endif
+
 /*******************************************
    NodeManager
 */
@@ -2429,7 +2436,6 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     else if (sensor_type == SENSOR_ANALOG_INPUT) return registerSensor(new SensorAnalogInput(this,child_id, pin));
     else if (sensor_type == SENSOR_LDR) return registerSensor(new SensorLDR(this,child_id, pin));
     else if (sensor_type == SENSOR_THERMISTOR) return registerSensor(new SensorThermistor(this,child_id, pin));
-    else if (sensor_type == SENSOR_MQ) return registerSensor(new SensorMQ(this,child_id, pin));
     else if (sensor_type == SENSOR_ML8511) return registerSensor(new SensorML8511(this,child_id, pin));
     else if (sensor_type == SENSOR_ACS712) return registerSensor(new SensorACS712(this,child_id, pin));
     else if (sensor_type == SENSOR_RAIN_GAUGE) return registerSensor(new SensorRainGauge(this,child_id, pin));
@@ -2582,6 +2588,11 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
       registerSensor(new SensorMCP9808(this,child_id,mcp));
     }
   #endif
+  #if MODULE_MQ == 1
+    else if (sensor_type == SENSOR_MQ) {
+      return registerSensor(new SensorMQ(this,child_id, pin));
+    }
+  #endif
   else {
     #if DEBUG == 1
       Serial.print(F("INVALID "));
@@ -2685,7 +2696,7 @@ void NodeManager::before() {
     Serial.print(F("INT2 M="));
     Serial.println(_interrupt_2_mode);
   #endif
-  #if REMOTE_CONFIGURATION == 1 && PERSIST == 1
+  #if PERSIST == 1
     // restore the configuration saved in the eeprom
     _loadConfig();
   #endif
@@ -2910,6 +2921,7 @@ void NodeManager::process(Request & request) {
       case 25: powerOff(); break;
     #endif
     case 26: unRegisterSensor(request.getValueInt()); break;
+    case 27: saveToMemory(0,request.getValueInt()); break;
     default: return; 
   }
   _send(_msg.set(function));
@@ -2969,7 +2981,7 @@ void NodeManager::clearEeprom() {
   #if DEBUG == 1
     Serial.println(F("CLEAR"));
   #endif
-  for (int i = 0; i <= EEPROM_LAST_ID; i++) saveState(i, 0xFF);
+  for (uint16_t i=0; i<EEPROM_LOCAL_CONFIG_ADDRESS; i++) saveState(i, 0xFF);
 }
 
 // wake up the board
@@ -2978,6 +2990,16 @@ void NodeManager::wakeup() {
     Serial.println(F("WAKEUP"));
   #endif
   _sleep_mode = IDLE;
+}
+
+// return the value stored at the requested index from the EEPROM
+int NodeManager::loadFromMemory(int index) {
+  return loadState(index+EEPROM_USER_START);
+}
+
+// save the given index of the EEPROM the provided value
+void NodeManager::saveToMemory(int index, int value) {
+  saveState(index+EEPROM_USER_START, value);
 }
 
 // send a message to the network
