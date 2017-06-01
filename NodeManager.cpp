@@ -463,9 +463,46 @@ void Sensor::loop(const MyMessage & message) {
 // receive a message from the radio network
 void Sensor::receive(const MyMessage &message) {
   // return if not for this sensor
-  if (message.sensor != _child_id || message.type != _type) return;
+  if (message.sensor != _child_id) return;
+  // check if it is a request for the API
+  if (message.getCommand() == C_REQ && message.type == V_CUSTOM) {
+    // parse the request
+    Request request = Request(message.getString());
+    // if it is for a sensor-generic function, call process(), otherwise the sensor-specific onProcess();
+    if (request.getFunction() < 100) process(request);
+    else onProcess(request);
+  }
+  // return if the type is not correct
+  if (message.type != _type) return;
   // a request would make the sensor executing its main task passing along the message
   loop(message);
+}
+
+// process a request message
+void Sensor::process(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 1: setPin(request.getValueInt()); break;
+    case 2: setChildId(request.getValueInt()); break;
+    case 3: setType(request.getValueInt()); break;
+    case 4: setDescription(request.getValueString()); break;
+    case 5: setSamples(request.getValueInt()); break;
+    case 6: setSamplesInterval(request.getValueInt()); break;
+    case 7: setTrackLastValue(request.getValueInt()); break;
+    case 8: setForceUpdateCycles(request.getValueInt()); break;
+    case 9: setForceUpdateMinutes(request.getValueInt()); break;
+    case 10: setValueType(request.getValueInt()); break;
+    case 11: setFloatPrecision(request.getValueInt()); break;
+    #if POWER_MANAGER == 1
+      case 12: setAutoPowerPins(request.getValueInt()); break;
+      case 13: powerOn(); break;
+      case 14: powerOff(); break;
+    #endif
+    case 15: setReportIntervalCycles(request.getValueInt()); break;
+    case 16: setReportIntervalMinutes(request.getValueInt()); break;
+    default: return;
+  }
+  _send(_msg.set(function));
 }
 
 // send a message to the network
@@ -573,6 +610,20 @@ void SensorAnalogInput::onLoop() {
 // what to do during loop
 void SensorAnalogInput::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
+}
+
+// what to do when receiving a remote message
+void SensorAnalogInput::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 101: setReference(request.getValueInt()); break;
+    case 102: setReverse(request.getValueInt()); break;
+    case 103: setOutputPercentage(request.getValueInt()); break;
+    case 104: setRangeMin(request.getValueInt()); break;
+    case 105: setRangeMax(request.getValueInt()); break;
+    default: return;
+  }
+  _send(_msg.set(function));
 }
 
 // read the analog input
@@ -686,6 +737,19 @@ void SensorThermistor::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
 
+// what to do when receiving a remote message
+void SensorThermistor::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 101: setNominalResistor((long)request.getValueInt()); break;
+    case 102: setNominalTemperature(request.getValueInt()); break;
+    case 103: setBCoefficient(request.getValueInt()); break;
+    case 104: setSeriesResistor((long)request.getValueString()); break;
+    case 105: setOffset(request.getValueFloat()); break;
+    default: return;
+  }
+  _send(_msg.set(function));
+}
 
 /*
    SensorML8511
@@ -733,6 +797,10 @@ void SensorML8511::onLoop() {
 // what to do as the main task when receiving a message
 void SensorML8511::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
+}
+
+// what to do when receiving a remote message
+void SensorML8511::onProcess(Request & request) {
 }
 
 // The Arduino Map function but for floats
@@ -788,6 +856,17 @@ void SensorACS712::onLoop() {
 // what to do as the main task when receiving a message
 void SensorACS712::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
+}
+
+// what to do when receiving a remote message
+void SensorACS712::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 100: setmVPerAmp(request.getValueInt()); break;
+    case 102: setOffset(request.getValueInt()); break;
+    default: return;
+  }
+  _send(_msg.set(function));
 }
 
 /*
@@ -870,6 +949,17 @@ void SensorRainGauge::onReceive(const MyMessage & message) {
     // report the total amount of rain for the last period
     _value_float = _count * _single_tip;    
   }
+}
+
+// what to do when receiving a remote message
+void SensorRainGauge::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 101: setReportInterval(request.getValueInt()); break;
+    case 102: setSingleTip(request.getValueFloat()); break;
+    default: return;
+  }
+  _send(_msg.set(function));
 }
 
 /*
@@ -995,6 +1085,23 @@ void SensorMQ::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
 
+// what to do when receiving a remote message
+void SensorMQ::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 1: setTargetGas(request.getValueInt()); break;
+    case 2: setRlValue(request.getValueFloat()); break;
+    case 3: setRoValue(request.getValueFloat()); break;
+    case 4: setCleanAirFactor(request.getValueFloat()); break;
+    case 5: setCalibrationSampleTimes(request.getValueInt()); break;
+    case 6: setCalibrationSampleInterval(request.getValueInt()); break;
+    case 7: setReadSampleTimes(request.getValueInt()); break;
+    case 8: setReadSampleInterval(request.getValueInt()); break;
+    default: return;
+  }
+  _send(_msg.set(function));
+}
+
 // returns the calculated sensor resistance
 float SensorMQ::_MQResistanceCalculation(int raw_adc) {
   return ( ((float)_rl_value*(1023-raw_adc)/raw_adc));
@@ -1086,6 +1193,10 @@ void SensorDigitalInput::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
 
+// what to do when receiving a remote message
+void SensorDigitalInput::onProcess(Request & request) {
+}
+
 
 /*
    SensorDigitalOutput
@@ -1159,6 +1270,21 @@ void SensorDigitalOutput::onReceive(const MyMessage & message) {
     // return the current status
     _value_int = _state;
   }
+}
+
+// what to do when receiving a remote message
+void SensorDigitalOutput::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 101: setInitialValue(request.getValueInt()); break;
+    case 102: setPulseWidth(request.getValueInt()); break;
+    case 103: setOnValue(request.getValueInt()); break;
+    case 104: setLegacyMode(request.getValueInt()); break;
+    case 105: setSafeguard(request.getValueInt()); break;
+    case 106: setInputIsElapsed(request.getValueInt()); break;
+    default: return;
+  }
+  _send(_msg.set(function));
 }
 
 // write the value to the output
@@ -1298,6 +1424,10 @@ void SensorDHT::onLoop() {
 void SensorDHT::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
+
+// what to do when receiving a remote message
+void SensorDHT::onProcess(Request & request) {
+}
 #endif
 
 /*
@@ -1368,6 +1498,10 @@ void SensorSHT21::onLoop() {
 // what to do as the main task when receiving a message
 void SensorSHT21::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
+}
+
+// what to do when receiving a remote message
+void SensorSHT21::onProcess(Request & request) {
 }
 #endif
 
@@ -1447,6 +1581,19 @@ void SensorSwitch::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
 
+// what to do when receiving a remote message
+void SensorSwitch::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 101: setMode(request.getValueInt()); break;
+    case 102: setDebounce(request.getValueInt()); break;
+    case 103: setTriggerTime(request.getValueInt()); break;
+    case 104: setInitial(request.getValueInt()); break;
+    default: return;
+  }
+  _send(_msg.set(function));
+}
+
 /*
  * SensorDoor
  */
@@ -1518,6 +1665,17 @@ void SensorDs18b20::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
 
+// what to do when receiving a remote message
+void SensorDs18b20::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 101: setResolution(request.getValueInt()); break;
+    case 102: setSleepDuringConversion(request.getValueInt()); break;
+    default: return;
+  }
+  _send(_msg.set(function));
+}
+
 // function to print a device address
 DeviceAddress* SensorDs18b20::getDeviceAddress() {
   return &_device_address;
@@ -1576,6 +1734,10 @@ void SensorBH1750::onLoop() {
 void SensorBH1750::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
+
+// what to do when receiving a remote message
+void SensorBH1750::onProcess(Request & request) {
+}
 #endif
 
 /*
@@ -1619,6 +1781,10 @@ void SensorMLX90614::onLoop() {
 // what to do as the main task when receiving a message
 void SensorMLX90614::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
+}
+
+// what to do when receiving a remote message
+void SensorMLX90614::onProcess(Request & request) {
 }
 #endif
 
@@ -1680,7 +1846,17 @@ void SensorBosch::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
 
+// what to do when receiving a remote message
+void SensorBosch::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 101: setForecastSamplesCount(request.getValueInt()); break;
+    default: return;
+  }
+  _send(_msg.set(function));
+}
 
+// calculate and send the forecast back
 void SensorBosch::_forecast(float pressure) {
   if (isnan(pressure)) return;
   // Calculate the average of the last n minutes.
@@ -1900,6 +2076,69 @@ void SensorBMP085::onLoop() {
 }
 #endif
 
+/*
+   SensorHCSR04
+*/
+#if MODULE_HCSR04 == 1
+// contructor
+SensorHCSR04::SensorHCSR04(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
+  // set presentation and type
+  setPresentation(S_DISTANCE);
+  setType(V_DISTANCE);
+  _trigger_pin = pin;
+  _echo_pin = pin;
+}
+
+// what to do during before
+void SensorHCSR04::onBefore() {
+  // initialize the library
+  _sonar = new NewPing(_trigger_pin,_echo_pin,_max_distance);
+}
+
+// setter/getter
+void SensorHCSR04::setTriggerPin(int value) {
+  _trigger_pin = value;
+}
+void SensorHCSR04::setEchoPin(int value) {
+  _echo_pin = value;
+}
+void SensorHCSR04::setMaxDistance(int value) {
+  _max_distance = value;
+}
+
+// what to do during setup
+void SensorHCSR04::onSetup() {
+}
+
+// what to do during loop
+void SensorHCSR04::onLoop() {
+  int distance = _node_manager->getIsMetric() ? _sonar->ping_cm() : _sonar->ping_in();
+  #if DEBUG == 1
+    Serial.print(F("HC I="));
+    Serial.print(_child_id);
+    Serial.print(F(" D="));
+    Serial.println(distance);
+  #endif
+  _value_int = distance;
+}
+
+// what to do as the main task when receiving a message
+void SensorHCSR04::onReceive(const MyMessage & message) {
+  if (message.getCommand() == C_REQ) onLoop();
+}
+
+// what to do when receiving a remote message
+void SensorHCSR04::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 101: setTriggerPin(request.getValueInt()); break;
+    case 102: setEchoPin(request.getValueInt()); break;
+    case 103: setMaxDistance(request.getValueInt()); break;
+    default: return;
+  }
+  _send(_msg.set(function));
+}
+#endif
 
 /*
    SensorSonoff
@@ -1971,6 +2210,18 @@ void SensorSonoff::onReceive(const MyMessage & message) {
   }
 }
 
+// what to do when receiving a remote message
+void SensorSonoff::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 101: setButtonPin(request.getValueInt()); break;
+    case 102: setRelayPin(request.getValueInt()); break;
+    case 103: setLedPin(request.getValueInt()); break;
+    default: return;
+  }
+  _send(_msg.set(function));
+}
+
 // toggle the state
 void SensorSonoff::_toggle() {
   // toggle the state
@@ -2000,58 +2251,6 @@ void SensorSonoff::_blink() {
 }
 #endif
 
-
-/*
-   SensorHCSR04
-*/
-#if MODULE_HCSR04 == 1
-// contructor
-SensorHCSR04::SensorHCSR04(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
-  // set presentation and type
-  setPresentation(S_DISTANCE);
-  setType(V_DISTANCE);
-  _trigger_pin = pin;
-  _echo_pin = pin;
-}
-
-// what to do during before
-void SensorHCSR04::onBefore() {
-  // initialize the library
-  _sonar = new NewPing(_trigger_pin,_echo_pin,_max_distance);
-}
-
-// setter/getter
-void SensorHCSR04::setTriggerPin(int value) {
-  _trigger_pin = value;
-}
-void SensorHCSR04::setEchoPin(int value) {
-  _echo_pin = value;
-}
-void SensorHCSR04::setMaxDistance(int value) {
-  _max_distance = value;
-}
-
-// what to do during setup
-void SensorHCSR04::onSetup() {
-}
-
-// what to do during loop
-void SensorHCSR04::onLoop() {
-  int distance = _node_manager->getIsMetric() ? _sonar->ping_cm() : _sonar->ping_in();
-  #if DEBUG == 1
-    Serial.print(F("HC I="));
-    Serial.print(_child_id);
-    Serial.print(F(" D="));
-    Serial.println(distance);
-  #endif
-  _value_int = distance;
-}
-
-// what to do as the main task when receiving a message
-void SensorHCSR04::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
-}
-#endif
 
 /*
    SensorMCP9808
@@ -2091,6 +2290,10 @@ void SensorMCP9808::onLoop() {
 // what to do as the main task when receiving a message
 void SensorMCP9808::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
+}
+
+// what to do when receiving a remote message
+void SensorMCP9808::onProcess(Request & request) {
 }
 #endif
 
@@ -2610,7 +2813,10 @@ void NodeManager::receive(const MyMessage &message) {
   #endif
   // process incoming service messages
   if (message.sensor == CONFIGURATION_CHILD_ID && message.getCommand() == C_REQ && message.type == V_CUSTOM) {
-    process(message.getString());
+    // parse the request
+    Request request = Request(message.getString());
+    // process the request
+    process(request);
   }
   // dispatch the message to the registered sensor
   else if (_sensors[message.sensor] != 0) {
@@ -2653,9 +2859,8 @@ void NodeManager::receiveTime(unsigned long ts) {
   #endif
 }
 
-// process a service message
-void NodeManager::process(const char * message) {
-  Request request = Request(message);
+// process a request message
+void NodeManager::process(Request & request) {
   int function = request.getFunction();
   switch(function) {
     case 1: hello(); break;
@@ -2707,7 +2912,7 @@ void NodeManager::process(const char * message) {
     case 26: unRegisterSensor(request.getValueInt()); break;
     default: return; 
   }
-  _send(_msg.set(message));
+  _send(_msg.set(function));
 }
 
 
