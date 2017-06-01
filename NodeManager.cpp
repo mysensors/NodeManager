@@ -195,53 +195,6 @@ int Timer::getUnit() {
   return _unit;
 }
 
-
-/******************************************
-    Request
-*/
-
-Request::Request(const char* string) {
-  char str[10];
-  char* ptr;
-  strcpy(str,string);
-  // tokenize the string and split function from value
-  strtok_r(str,",",&ptr);
-  _function = atoi(str);
-  strcpy(_value,ptr);
-  #if DEBUG == 1
-    Serial.print(F("REQ F="));
-    Serial.print(getFunction());
-    Serial.print(F(" I="));
-    Serial.print(getValueInt());
-    Serial.print(F(" F="));
-    Serial.print(getValueFloat());
-    Serial.print(F(" S="));
-    Serial.println(getValueString());
-  #endif
-}
-
-// return the parsed function
-int Request::getFunction() {
-  return _function;
-}
-
-// return the value as an int
-int Request::getValueInt() {
-  return atoi(_value);
-  
-}
-
-// return the value as a float
-float Request::getValueFloat() {
-  return atof(_value);
-}
-
-// return the value as a string
-char* Request::getValueString() {
-  return _value;
-}
-
-
 /******************************************
     Sensors
 */
@@ -255,7 +208,6 @@ Sensor::Sensor(NodeManager* node_manager, int child_id, int pin) {
   _child_id = child_id;
   _pin = pin;
   _msg = MyMessage(_child_id, _type);
-  _msg_service = MyMessage(_child_id, V_CUSTOM);
   _report_timer = new Timer(_node_manager);
   _force_update_timer = new Timer(_node_manager);
 }
@@ -464,48 +416,9 @@ void Sensor::loop(const MyMessage & message) {
 // receive a message from the radio network
 void Sensor::receive(const MyMessage &message) {
   // return if not for this sensor
-  if (message.sensor != _child_id) return;
-  // check if it is a request for the API
-  if (message.getCommand() == C_REQ && message.type == V_CUSTOM) {
-    #if REMOTE_CONFIGURATION == 1
-      // parse the request
-      Request request = Request(message.getString());
-      // if it is for a sensor-generic function, call process(), otherwise the sensor-specific onProcess();
-      if (request.getFunction() < 100) process(request);
-      else onProcess(request);
-    #endif
-  }
-  // return if the type is not correct
-  if (message.type != _type) return;
+  if (message.sensor != _child_id || message.type != _type) return;
   // a request would make the sensor executing its main task passing along the message
   loop(message);
-}
-
-// process a remote configuration request message
-void Sensor::process(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 1: setPin(request.getValueInt()); break;
-    case 2: setChildId(request.getValueInt()); break;
-    case 3: setType(request.getValueInt()); break;
-    case 4: setDescription(request.getValueString()); break;
-    case 5: setSamples(request.getValueInt()); break;
-    case 6: setSamplesInterval(request.getValueInt()); break;
-    case 7: setTrackLastValue(request.getValueInt()); break;
-    case 8: setForceUpdateCycles(request.getValueInt()); break;
-    case 9: setForceUpdateMinutes(request.getValueInt()); break;
-    case 10: setValueType(request.getValueInt()); break;
-    case 11: setFloatPrecision(request.getValueInt()); break;
-    #if POWER_MANAGER == 1
-      case 12: setAutoPowerPins(request.getValueInt()); break;
-      case 13: powerOn(); break;
-      case 14: powerOff(); break;
-    #endif
-    case 15: setReportIntervalCycles(request.getValueInt()); break;
-    case 16: setReportIntervalMinutes(request.getValueInt()); break;
-    default: return;
-  }
-  _send(_msg_service.set(function));
 }
 
 // send a message to the network
@@ -555,7 +468,7 @@ bool Sensor::_isWorthSending(bool comparison) {
   return false;
 }
 
-#if MODULE_ANALOG_INPUT == 1
+
 /*
    SensorAnalogInput
 */
@@ -613,20 +526,6 @@ void SensorAnalogInput::onLoop() {
 // what to do during loop
 void SensorAnalogInput::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
-}
-
-// what to do when receiving a remote message
-void SensorAnalogInput::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setReference(request.getValueInt()); break;
-    case 102: setReverse(request.getValueInt()); break;
-    case 103: setOutputPercentage(request.getValueInt()); break;
-    case 104: setRangeMin(request.getValueInt()); break;
-    case 105: setRangeMax(request.getValueInt()); break;
-    default: return;
-  }
-  _send(_msg_service.set(function));
 }
 
 // read the analog input
@@ -740,19 +639,6 @@ void SensorThermistor::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
 
-// what to do when receiving a remote message
-void SensorThermistor::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setNominalResistor((long)request.getValueInt()); break;
-    case 102: setNominalTemperature(request.getValueInt()); break;
-    case 103: setBCoefficient(request.getValueInt()); break;
-    case 104: setSeriesResistor((long)request.getValueString()); break;
-    case 105: setOffset(request.getValueFloat()); break;
-    default: return;
-  }
-  _send(_msg_service.set(function));
-}
 
 /*
    SensorML8511
@@ -800,10 +686,6 @@ void SensorML8511::onLoop() {
 // what to do as the main task when receiving a message
 void SensorML8511::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
-}
-
-// what to do when receiving a remote message
-void SensorML8511::onProcess(Request & request) {
 }
 
 // The Arduino Map function but for floats
@@ -859,17 +741,6 @@ void SensorACS712::onLoop() {
 // what to do as the main task when receiving a message
 void SensorACS712::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
-}
-
-// what to do when receiving a remote message
-void SensorACS712::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 100: setmVPerAmp(request.getValueInt()); break;
-    case 102: setOffset(request.getValueInt()); break;
-    default: return;
-  }
-  _send(_msg_service.set(function));
 }
 
 /*
@@ -954,17 +825,6 @@ void SensorRainGauge::onReceive(const MyMessage & message) {
   }
 }
 
-// what to do when receiving a remote message
-void SensorRainGauge::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setReportInterval(request.getValueInt()); break;
-    case 102: setSingleTip(request.getValueFloat()); break;
-    default: return;
-  }
-  _send(_msg_service.set(function));
-}
-
 /*
    SensorRain
 */
@@ -995,9 +855,151 @@ SensorSoilMoisture::SensorSoilMoisture(NodeManager* node_manager, int child_id, 
   setRangeMin(100);
 }
 
-#endif
 
-#if MODULE_DIGITAL_INPUT == 1
+/*
+ * SensorMQ
+ */
+SensorMQ::SensorMQ(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id,pin) {
+  setPresentation(S_AIR_QUALITY);
+  setType(V_LEVEL);
+}
+
+//setter/getter
+void SensorMQ::setRlValue(float value) {
+  _rl_value = value;
+}
+void SensorMQ::setRoValue(float value) {
+  _ro = value;
+}
+void SensorMQ::setCleanAirFactor(float value) {
+  _ro_clean_air_factor = value;
+}
+void SensorMQ::setCalibrationSampleTimes(int value) {
+  _calibration_sample_times = value;
+}
+void SensorMQ::setCalibrationSampleInterval(int value){
+  _calibration_sample_interval = value;
+}
+void SensorMQ::setReadSampleTimes(int value) {
+  _read_sample_times = value;
+}
+void SensorMQ::setReadSampleInterval(int value) {
+  _read_sample_interval = value;
+}
+void SensorMQ::setLPGCurve(float *value) {
+  _LPGCurve[0] = value[0];
+  _LPGCurve[2] = value[1];
+  _LPGCurve[2] = value[2];
+}
+void SensorMQ::setCOCurve(float *value) {
+  _COCurve[0] = value[0];
+  _COCurve[2] = value[1];
+  _COCurve[2] = value[2];
+}
+void SensorMQ::setSmokeCurve(float *value) {
+  _SmokeCurve[0] = value[0];
+  _SmokeCurve[2] = value[1];
+  _SmokeCurve[2] = value[2];
+}
+
+// what to do during before
+void SensorMQ::onBefore() {
+  // prepare the pin for input
+  pinMode(_pin, INPUT);
+}
+
+// what to do during setup
+void SensorMQ::onSetup() {
+  _ro = _MQCalibration();
+}
+
+// what to do during loop
+void SensorMQ::onLoop() {
+  if (_pin == -1) return;
+  // calculate rs/ro
+  float mq = _MQRead()/_ro;
+  // calculate the ppm
+  float lpg = _MQGetGasPercentage(mq,_gas_lpg);
+  float co = _MQGetGasPercentage(mq,_gas_co);
+  float smoke = _MQGetGasPercentage(mq,_gas_smoke);
+  // assign to the value the requested gas
+  uint16_t value;
+  if (_target_gas == _gas_lpg) value = lpg;
+  if (_target_gas == _gas_co) value = co;
+  if (_target_gas == _gas_smoke) value = smoke;
+  #if DEBUG == 1
+    Serial.print(F("MQ I="));
+    Serial.print(_child_id);
+    Serial.print(F(" V="));
+    Serial.print(value);
+    Serial.print(F(" LPG="));
+    Serial.print(lpg);
+    Serial.print(F(" CO="));
+    Serial.print(co);
+    Serial.print(F(" SMOKE="));
+    Serial.println(smoke);
+  #endif
+  // store the value
+  _value_int = (int16_t)ceil(value);
+}
+
+// what to do as the main task when receiving a message
+void SensorMQ::onReceive(const MyMessage & message) {
+  if (message.getCommand() == C_REQ) onLoop();
+}
+
+// returns the calculated sensor resistance
+float SensorMQ::_MQResistanceCalculation(int raw_adc) {
+  return ( ((float)_rl_value*(1023-raw_adc)/raw_adc));
+}
+
+//  This function assumes that the sensor is in clean air
+float SensorMQ::_MQCalibration() {
+  int i;
+  float val=0;
+  //take multiple samples
+  for (i=0; i< _calibration_sample_times; i++) {  
+    val += _MQResistanceCalculation(analogRead(_pin));
+    wait(_calibration_sample_interval);
+  }
+  //calculate the average value
+  val = val/_calibration_sample_times;                   
+  //divided by RO_CLEAN_AIR_FACTOR yields the Ro
+  val = val/_ro_clean_air_factor;
+  //according to the chart in the datasheet
+  return val;
+}
+
+// This function use MQResistanceCalculation to caculate the sensor resistenc (Rs).
+float SensorMQ::_MQRead() {
+  int i;
+  float rs=0;
+  for (i=0; i<_read_sample_times; i++) {
+    rs += _MQResistanceCalculation(analogRead(_pin));
+    wait(_read_sample_interval);
+  }
+  rs = rs/_read_sample_times;
+  return rs;
+}
+
+// This function passes different curves to the MQGetPercentage function which calculates the ppm (parts per million) of the target gas.
+int SensorMQ::_MQGetGasPercentage(float rs_ro_ratio, int gas_id) {
+  if ( gas_id == _gas_lpg ) {
+    return _MQGetPercentage(rs_ro_ratio,_LPGCurve);
+  } else if ( gas_id == _gas_co) {
+    return _MQGetPercentage(rs_ro_ratio,_COCurve);
+  } else if ( gas_id == _gas_smoke) {
+    return _MQGetPercentage(rs_ro_ratio,_SmokeCurve);
+  }
+  return 0;
+}
+
+// returns ppm of the target gas
+int SensorMQ::_MQGetPercentage(float rs_ro_ratio, float *pcurve) {
+  return (pow(10,( ((log10(rs_ro_ratio)-pcurve[1])/pcurve[2]) + pcurve[0])));
+}
+
+
 /*
    SensorDigitalInput
 */
@@ -1037,16 +1039,12 @@ void SensorDigitalInput::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
 
-// what to do when receiving a remote message
-void SensorDigitalInput::onProcess(Request & request) {
-}
-#endif
 
-#if MODULE_DIGITAL_OUTPUT == 1
 /*
    SensorDigitalOutput
 */
 
+// contructor
 SensorDigitalOutput::SensorDigitalOutput(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id, pin) {
   _safeguard_timer = new Timer(node_manager);
 }
@@ -1116,21 +1114,6 @@ void SensorDigitalOutput::onReceive(const MyMessage & message) {
   }
 }
 
-// what to do when receiving a remote message
-void SensorDigitalOutput::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setInitialValue(request.getValueInt()); break;
-    case 102: setPulseWidth(request.getValueInt()); break;
-    case 103: setOnValue(request.getValueInt()); break;
-    case 104: setLegacyMode(request.getValueInt()); break;
-    case 105: setSafeguard(request.getValueInt()); break;
-    case 106: setInputIsElapsed(request.getValueInt()); break;
-    default: return;
-  }
-  _send(_msg_service.set(function));
-}
-
 // write the value to the output
 void SensorDigitalOutput::set(int value) {
   if (_input_is_elapsed) {
@@ -1186,7 +1169,14 @@ SensorRelay::SensorRelay(NodeManager* node_manager, int child_id, int pin): Sens
   setPresentation(S_BINARY);
   setType(V_STATUS);
 }
-
+/*
+// define what to do during loop
+void SensorRelay::onLoop() {
+    // set the value to -1 so to avoid reporting to the gateway during loop
+    _value_int = -1;
+    _last_value_int = -1;
+}
+*/
 /*
    SensorLatchingRelay
 */
@@ -1197,7 +1187,6 @@ SensorLatchingRelay::SensorLatchingRelay(NodeManager* node_manager, int child_id
   setPulseWidth(50);
 }
 
-#endif
 /*
    SensorDHT
 */
@@ -1268,10 +1257,6 @@ void SensorDHT::onLoop() {
 // what to do as the main task when receiving a message
 void SensorDHT::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
-}
-
-// what to do when receiving a remote message
-void SensorDHT::onProcess(Request & request) {
 }
 #endif
 
@@ -1344,10 +1329,6 @@ void SensorSHT21::onLoop() {
 void SensorSHT21::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
-
-// what to do when receiving a remote message
-void SensorSHT21::onProcess(Request & request) {
-}
 #endif
 
 /*
@@ -1359,7 +1340,6 @@ SensorHTU21D::SensorHTU21D(NodeManager* node_manager, int child_id, int pin): Se
 }
 #endif 
 
-#if MODULE_SWITCH == 1
 /*
  * SensorSwitch
  */
@@ -1427,19 +1407,6 @@ void SensorSwitch::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
 
-// what to do when receiving a remote message
-void SensorSwitch::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setMode(request.getValueInt()); break;
-    case 102: setDebounce(request.getValueInt()); break;
-    case 103: setTriggerTime(request.getValueInt()); break;
-    case 104: setInitial(request.getValueInt()); break;
-    default: return;
-  }
-  _send(_msg_service.set(function));
-}
-
 /*
  * SensorDoor
  */
@@ -1457,7 +1424,6 @@ SensorMotion::SensorMotion(NodeManager* node_manager, int child_id, int pin): Se
   // set initial value to LOW
   setInitial(LOW);
 }
-#endif
 
 /*
    SensorDs18b20
@@ -1510,17 +1476,6 @@ void SensorDs18b20::onLoop() {
 // what to do as the main task when receiving a message
 void SensorDs18b20::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
-}
-
-// what to do when receiving a remote message
-void SensorDs18b20::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setResolution(request.getValueInt()); break;
-    case 102: setSleepDuringConversion(request.getValueInt()); break;
-    default: return;
-  }
-  _send(_msg_service.set(function));
 }
 
 // function to print a device address
@@ -1581,10 +1536,6 @@ void SensorBH1750::onLoop() {
 void SensorBH1750::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
-
-// what to do when receiving a remote message
-void SensorBH1750::onProcess(Request & request) {
-}
 #endif
 
 /*
@@ -1628,10 +1579,6 @@ void SensorMLX90614::onLoop() {
 // what to do as the main task when receiving a message
 void SensorMLX90614::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
-}
-
-// what to do when receiving a remote message
-void SensorMLX90614::onProcess(Request & request) {
 }
 #endif
 
@@ -1693,17 +1640,7 @@ void SensorBosch::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
 }
 
-// what to do when receiving a remote message
-void SensorBosch::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setForecastSamplesCount(request.getValueInt()); break;
-    default: return;
-  }
-  _send(_msg_service.set(function));
-}
 
-// calculate and send the forecast back
 void SensorBosch::_forecast(float pressure) {
   if (isnan(pressure)) return;
   // Calculate the average of the last n minutes.
@@ -1923,69 +1860,6 @@ void SensorBMP085::onLoop() {
 }
 #endif
 
-/*
-   SensorHCSR04
-*/
-#if MODULE_HCSR04 == 1
-// contructor
-SensorHCSR04::SensorHCSR04(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
-  // set presentation and type
-  setPresentation(S_DISTANCE);
-  setType(V_DISTANCE);
-  _trigger_pin = pin;
-  _echo_pin = pin;
-}
-
-// what to do during before
-void SensorHCSR04::onBefore() {
-  // initialize the library
-  _sonar = new NewPing(_trigger_pin,_echo_pin,_max_distance);
-}
-
-// setter/getter
-void SensorHCSR04::setTriggerPin(int value) {
-  _trigger_pin = value;
-}
-void SensorHCSR04::setEchoPin(int value) {
-  _echo_pin = value;
-}
-void SensorHCSR04::setMaxDistance(int value) {
-  _max_distance = value;
-}
-
-// what to do during setup
-void SensorHCSR04::onSetup() {
-}
-
-// what to do during loop
-void SensorHCSR04::onLoop() {
-  int distance = _node_manager->getIsMetric() ? _sonar->ping_cm() : _sonar->ping_in();
-  #if DEBUG == 1
-    Serial.print(F("HC I="));
-    Serial.print(_child_id);
-    Serial.print(F(" D="));
-    Serial.println(distance);
-  #endif
-  _value_int = distance;
-}
-
-// what to do as the main task when receiving a message
-void SensorHCSR04::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
-}
-
-// what to do when receiving a remote message
-void SensorHCSR04::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setTriggerPin(request.getValueInt()); break;
-    case 102: setEchoPin(request.getValueInt()); break;
-    case 103: setMaxDistance(request.getValueInt()); break;
-    default: return;
-  }
-  _send(_msg_service.set(function));
-}
-#endif
 
 /*
    SensorSonoff
@@ -2057,18 +1931,6 @@ void SensorSonoff::onReceive(const MyMessage & message) {
   }
 }
 
-// what to do when receiving a remote message
-void SensorSonoff::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setButtonPin(request.getValueInt()); break;
-    case 102: setRelayPin(request.getValueInt()); break;
-    case 103: setLedPin(request.getValueInt()); break;
-    default: return;
-  }
-  _send(_msg_service.set(function));
-}
-
 // toggle the state
 void SensorSonoff::_toggle() {
   // toggle the state
@@ -2098,6 +1960,58 @@ void SensorSonoff::_blink() {
 }
 #endif
 
+
+/*
+   SensorHCSR04
+*/
+#if MODULE_HCSR04 == 1
+// contructor
+SensorHCSR04::SensorHCSR04(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
+  // set presentation and type
+  setPresentation(S_DISTANCE);
+  setType(V_DISTANCE);
+  _trigger_pin = pin;
+  _echo_pin = pin;
+}
+
+// what to do during before
+void SensorHCSR04::onBefore() {
+  // initialize the library
+  _sonar = new NewPing(_trigger_pin,_echo_pin,_max_distance);
+}
+
+// setter/getter
+void SensorHCSR04::setTriggerPin(int value) {
+  _trigger_pin = value;
+}
+void SensorHCSR04::setEchoPin(int value) {
+  _echo_pin = value;
+}
+void SensorHCSR04::setMaxDistance(int value) {
+  _max_distance = value;
+}
+
+// what to do during setup
+void SensorHCSR04::onSetup() {
+}
+
+// what to do during loop
+void SensorHCSR04::onLoop() {
+  int distance = _node_manager->getIsMetric() ? _sonar->ping_cm() : _sonar->ping_in();
+  #if DEBUG == 1
+    Serial.print(F("HC I="));
+    Serial.print(_child_id);
+    Serial.print(F(" D="));
+    Serial.println(distance);
+  #endif
+  _value_int = distance;
+}
+
+// what to do as the main task when receiving a message
+void SensorHCSR04::onReceive(const MyMessage & message) {
+  if (message.getCommand() == C_REQ) onLoop();
+}
+#endif
 
 /*
    SensorMCP9808
@@ -2137,173 +2051,6 @@ void SensorMCP9808::onLoop() {
 // what to do as the main task when receiving a message
 void SensorMCP9808::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) onLoop();
-}
-
-// what to do when receiving a remote message
-void SensorMCP9808::onProcess(Request & request) {
-}
-#endif
-
-
-/*
- * SensorMQ
- */
-#if MODULE_MQ == 1
-SensorMQ::SensorMQ(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id,pin) {
-  setPresentation(S_AIR_QUALITY);
-  setType(V_LEVEL);
-}
-
-//setter/getter
-void SensorMQ::setRlValue(float value) {
-  _rl_value = value;
-}
-void SensorMQ::setRoValue(float value) {
-  _ro = value;
-}
-void SensorMQ::setCleanAirFactor(float value) {
-  _ro_clean_air_factor = value;
-}
-void SensorMQ::setCalibrationSampleTimes(int value) {
-  _calibration_sample_times = value;
-}
-void SensorMQ::setCalibrationSampleInterval(int value){
-  _calibration_sample_interval = value;
-}
-void SensorMQ::setReadSampleTimes(int value) {
-  _read_sample_times = value;
-}
-void SensorMQ::setReadSampleInterval(int value) {
-  _read_sample_interval = value;
-}
-void SensorMQ::setLPGCurve(float *value) {
-  _LPGCurve[0] = value[0];
-  _LPGCurve[2] = value[1];
-  _LPGCurve[2] = value[2];
-}
-void SensorMQ::setCOCurve(float *value) {
-  _COCurve[0] = value[0];
-  _COCurve[2] = value[1];
-  _COCurve[2] = value[2];
-}
-void SensorMQ::setSmokeCurve(float *value) {
-  _SmokeCurve[0] = value[0];
-  _SmokeCurve[2] = value[1];
-  _SmokeCurve[2] = value[2];
-}
-
-// what to do during before
-void SensorMQ::onBefore() {
-  // prepare the pin for input
-  pinMode(_pin, INPUT);
-}
-
-// what to do during setup
-void SensorMQ::onSetup() {
-  _ro = _MQCalibration();
-}
-
-// what to do during loop
-void SensorMQ::onLoop() {
-  if (_pin == -1) return;
-  // calculate rs/ro
-  float mq = _MQRead()/_ro;
-  // calculate the ppm
-  float lpg = _MQGetGasPercentage(mq,_gas_lpg);
-  float co = _MQGetGasPercentage(mq,_gas_co);
-  float smoke = _MQGetGasPercentage(mq,_gas_smoke);
-  // assign to the value the requested gas
-  uint16_t value;
-  if (_target_gas == _gas_lpg) value = lpg;
-  if (_target_gas == _gas_co) value = co;
-  if (_target_gas == _gas_smoke) value = smoke;
-  #if DEBUG == 1
-    Serial.print(F("MQ I="));
-    Serial.print(_child_id);
-    Serial.print(F(" V="));
-    Serial.print(value);
-    Serial.print(F(" LPG="));
-    Serial.print(lpg);
-    Serial.print(F(" CO="));
-    Serial.print(co);
-    Serial.print(F(" SMOKE="));
-    Serial.println(smoke);
-  #endif
-  // store the value
-  _value_int = (int16_t)ceil(value);
-}
-
-// what to do as the main task when receiving a message
-void SensorMQ::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
-}
-
-// what to do when receiving a remote message
-void SensorMQ::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 1: setTargetGas(request.getValueInt()); break;
-    case 2: setRlValue(request.getValueFloat()); break;
-    case 3: setRoValue(request.getValueFloat()); break;
-    case 4: setCleanAirFactor(request.getValueFloat()); break;
-    case 5: setCalibrationSampleTimes(request.getValueInt()); break;
-    case 6: setCalibrationSampleInterval(request.getValueInt()); break;
-    case 7: setReadSampleTimes(request.getValueInt()); break;
-    case 8: setReadSampleInterval(request.getValueInt()); break;
-    default: return;
-  }
-  _send(_msg_service.set(function));
-}
-
-// returns the calculated sensor resistance
-float SensorMQ::_MQResistanceCalculation(int raw_adc) {
-  return ( ((float)_rl_value*(1023-raw_adc)/raw_adc));
-}
-
-//  This function assumes that the sensor is in clean air
-float SensorMQ::_MQCalibration() {
-  int i;
-  float val=0;
-  //take multiple samples
-  for (i=0; i< _calibration_sample_times; i++) {  
-    val += _MQResistanceCalculation(analogRead(_pin));
-    wait(_calibration_sample_interval);
-  }
-  //calculate the average value
-  val = val/_calibration_sample_times;                   
-  //divided by RO_CLEAN_AIR_FACTOR yields the Ro
-  val = val/_ro_clean_air_factor;
-  //according to the chart in the datasheet
-  return val;
-}
-
-// This function use MQResistanceCalculation to caculate the sensor resistenc (Rs).
-float SensorMQ::_MQRead() {
-  int i;
-  float rs=0;
-  for (i=0; i<_read_sample_times; i++) {
-    rs += _MQResistanceCalculation(analogRead(_pin));
-    wait(_read_sample_interval);
-  }
-  rs = rs/_read_sample_times;
-  return rs;
-}
-
-// This function passes different curves to the MQGetPercentage function which calculates the ppm (parts per million) of the target gas.
-int SensorMQ::_MQGetGasPercentage(float rs_ro_ratio, int gas_id) {
-  if ( gas_id == _gas_lpg ) {
-    return _MQGetPercentage(rs_ro_ratio,_LPGCurve);
-  } else if ( gas_id == _gas_co) {
-    return _MQGetPercentage(rs_ro_ratio,_COCurve);
-  } else if ( gas_id == _gas_smoke) {
-    return _MQGetPercentage(rs_ro_ratio,_SmokeCurve);
-  }
-  return 0;
-}
-
-// returns ppm of the target gas
-int SensorMQ::_MQGetPercentage(float rs_ro_ratio, float *pcurve) {
-  return (pow(10,( ((log10(rs_ro_ratio)-pcurve[1])/pcurve[2]) + pcurve[0])));
 }
 #endif
 
@@ -2369,9 +2116,9 @@ int NodeManager::getSleepUnit() {
   return _sleep_unit;
 }
 void NodeManager::setSleep(int value1, int value2, int value3) {
-  setMode(value1);
-  setSleepTime(value2);
-  setSleepUnit(value3);
+  _sleep_mode = value1;
+  _sleep_time = value2;
+  _sleep_unit = value3;
 }
 void NodeManager::setSleepInterruptPin(int value) {
   _sleep_interrupt_pin = value;
@@ -2439,6 +2186,7 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     else if (sensor_type == SENSOR_ANALOG_INPUT) return registerSensor(new SensorAnalogInput(this,child_id, pin));
     else if (sensor_type == SENSOR_LDR) return registerSensor(new SensorLDR(this,child_id, pin));
     else if (sensor_type == SENSOR_THERMISTOR) return registerSensor(new SensorThermistor(this,child_id, pin));
+    else if (sensor_type == SENSOR_MQ) return registerSensor(new SensorMQ(this,child_id, pin));
     else if (sensor_type == SENSOR_ML8511) return registerSensor(new SensorML8511(this,child_id, pin));
     else if (sensor_type == SENSOR_ACS712) return registerSensor(new SensorACS712(this,child_id, pin));
     else if (sensor_type == SENSOR_RAIN_GAUGE) return registerSensor(new SensorRainGauge(this,child_id, pin));
@@ -2591,11 +2339,6 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
       registerSensor(new SensorMCP9808(this,child_id,mcp));
     }
   #endif
-  #if MODULE_MQ == 1
-    else if (sensor_type == SENSOR_MQ) {
-      return registerSensor(new SensorMQ(this,child_id, pin));
-    }
-  #endif
   else {
     #if DEBUG == 1
       Serial.print(F("INVALID "));
@@ -2699,9 +2442,26 @@ void NodeManager::before() {
     Serial.print(F("INT2 M="));
     Serial.println(_interrupt_2_mode);
   #endif
-  #if PERSIST == 1
-    // restore the configuration saved in the eeprom
-    _loadConfig();
+  #if REMOTE_CONFIGURATION == 1 && PERSIST == 1
+    // restore sleep configuration from eeprom
+    if (loadState(EEPROM_SLEEP_SAVED) == 1) {
+      // sleep settings found in the eeprom, restore them
+      _sleep_mode = loadState(EEPROM_SLEEP_MODE);
+      _sleep_time = loadState(EEPROM_SLEEP_TIME_MINOR);
+      int major = loadState(EEPROM_SLEEP_TIME_MAJOR);
+      if (major == 1) _sleep_time =  _sleep_time + 250;
+      else if (major == 2) _sleep_time =  _sleep_time + 250 * 2;
+      else if (major == 3) _sleep_time =  _sleep_time + 250 * 3;
+      _sleep_unit = loadState(EEPROM_SLEEP_UNIT);
+      #if DEBUG == 1
+        Serial.print(F("LOADSLP M="));
+        Serial.print(_sleep_mode);
+        Serial.print(F(" T="));
+        Serial.print(_sleep_time);
+        Serial.print(F(" U="));
+        Serial.println(_sleep_unit);
+      #endif
+    }
   #endif
   #if BATTERY_MANAGER == 1 && !defined(MY_GATEWAY_ESP8266)
     // set analogReference to internal if measuring the battery through a pin
@@ -2732,7 +2492,7 @@ void NodeManager::presentation() {
     // present the battery service
     _present(BATTERY_CHILD_ID, S_MULTIMETER);
     // report battery level
-    batteryReport();
+    _process("BATTERY");
   #endif
   // present each sensor
   for (int i = 0; i < MAX_SENSORS; i++) {
@@ -2785,7 +2545,7 @@ void NodeManager::loop() {
     // if it is time to report the battery level
     if (_battery_report_timer.isOver()) {
       // time to report the battery level again
-      batteryReport();
+      _process("BATTERY");
       // restart the timer
       _battery_report_timer.restart();
     }
@@ -2825,14 +2585,9 @@ void NodeManager::receive(const MyMessage &message) {
     Serial.print(F(" P="));
     Serial.println(message.getString());
   #endif
-  // process incoming configuration message
+  // process incoming service messages
   if (message.sensor == CONFIGURATION_CHILD_ID && message.getCommand() == C_REQ && message.type == V_CUSTOM) {
-    #if REMOTE_CONFIGURATION == 1
-      // parse the request
-      Request request = Request(message.getString());
-      // process the request
-      process(request);
-    #endif
+    _process(message.getString());
   }
   // dispatch the message to the registered sensor
   else if (_sensors[message.sensor] != 0) {
@@ -2875,140 +2630,6 @@ void NodeManager::receiveTime(unsigned long ts) {
   #endif
 }
 
-// process a request message
-void NodeManager::process(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 1: hello(); break;
-    #if BATTERY_MANAGER == 1
-      case 2: batteryReport(); return;
-      case 11: setBatteryMin(request.getValueFloat()); break;
-      case 12: setBatteryMax(request.getValueFloat()); break;
-      case 13: setBatteryReportCycles(request.getValueInt()); break;
-      case 14: setBatteryReportMinutes(request.getValueInt()); break;
-      case 15: setBatteryInternalVcc(request.getValueInt()); break;
-      case 16: setBatteryPin(request.getValueInt()); break;
-      case 17: setBatteryVoltsPerBit(request.getValueFloat()); break;
-      case 18: setBatteryReportWithInterrupt(request.getValueInt()); break;
-    #endif
-    case 3:
-      setSleepMode(request.getValueInt());
-      #if PERSIST == 1
-        _saveConfig(SAVE_SLEEP_MODE);
-      #endif
-      break;
-    case 4:
-      setSleepTime(request.getValueInt());
-      #if PERSIST == 1
-        _saveConfig(SAVE_SLEEP_TIME);
-      #endif
-      break;
-    case 5:
-      setSleepUnit(request.getValueInt());
-      #if PERSIST == 1
-        _saveConfig(SAVE_SLEEP_UNIT);
-      #endif
-      break;
-    #ifndef MY_GATEWAY_ESP8266
-      case 6: reboot(); return;
-    #endif
-    case 7: clearEeprom(); break;
-    case 8: version(); return;
-    case 9: wakeup(); break;
-    case 10: setRetries(request.getValueInt()); break;
-    case 19: setSleepInterruptPin(request.getValueInt()); break;
-    case 20: setSleepBetweenSend(request.getValueInt()); break;
-    case 21: setAck(request.getValueInt()); break;
-    case 22: setIsMetric(request.getValueInt()); break;
-    #if POWER_MANAGER == 1
-      case 23: setAutoPowerPins(request.getValueInt()); break;
-      case 24: powerOn(); break;
-      case 25: powerOff(); break;
-    #endif
-    case 26: unRegisterSensor(request.getValueInt()); break;
-    case 27: saveToMemory(0,request.getValueInt()); break;
-    default: return; 
-  }
-  _send(_msg.set(function));
-}
-
-
-// Send a hello message back to the controller
-void NodeManager::hello() {
-  // do nothing, the request will be echoed back
-}
-
-#if BATTERY_MANAGER == 1
-// Send a battery level report to the controller
-void NodeManager::batteryReport() {
-  // measure the board vcc
-  float volt = 0;
-  if (_battery_internal_vcc || _battery_pin == -1) volt = getVcc();
-  else volt = analogRead(_battery_pin) * _battery_volts_per_bit;
-  // calculate the percentage
-  int percentage = ((volt - _battery_min) / (_battery_max - _battery_min)) * 100;
-  if (percentage > 100) percentage = 100;
-  if (percentage < 0) percentage = 0;
-  #if DEBUG == 1
-    Serial.print(F("BATT V="));
-    Serial.print(volt);
-    Serial.print(F(" P="));
-    Serial.println(percentage);
-  #endif
-  #if BATTERY_SENSOR == 1
-    // report battery voltage
-    MyMessage battery_msg(BATTERY_CHILD_ID, V_VOLTAGE);
-    _send(battery_msg.set(volt, 2));
-  #endif
-  // report battery level percentage
-  sendBatteryLevel(percentage,_ack);
-}
-#endif
-
-// reboot the board
-void NodeManager::reboot() {
-  #if DEBUG == 1
-    Serial.println(F("REBOOT"));
-  #endif
-  // Software reboot with watchdog timer. Enter Watchdog Configuration mode:
-  WDTCSR |= (1<<WDCE) | (1<<WDE);
-  // Reset enable
-  WDTCSR= (1<<WDE);
-  // Infinite loop until watchdog reset after 16 ms
-  while(true){}
-}
-
-// send NodeManager's the version back to the controller
-void NodeManager::version() {
-  _send(_msg.set(VERSION));
-}
-
-// clear the EEPROM
-void NodeManager::clearEeprom() {
-  #if DEBUG == 1
-    Serial.println(F("CLEAR"));
-  #endif
-  for (uint16_t i=0; i<EEPROM_LOCAL_CONFIG_ADDRESS; i++) saveState(i, 0xFF);
-}
-
-// wake up the board
-void NodeManager::wakeup() {
-  #if DEBUG == 1
-    Serial.println(F("WAKEUP"));
-  #endif
-  _sleep_mode = IDLE;
-}
-
-// return the value stored at the requested index from the EEPROM
-int NodeManager::loadFromMemory(int index) {
-  return loadState(index+EEPROM_USER_START);
-}
-
-// save the given index of the EEPROM the provided value
-void NodeManager::saveToMemory(int index, int value) {
-  saveState(index+EEPROM_USER_START, value);
-}
-
 // send a message to the network
 void NodeManager::_send(MyMessage & message) {
   // send the message, multiple times if requested
@@ -3032,6 +2653,158 @@ void NodeManager::_send(MyMessage & message) {
       Serial.println(message.getFloat());
     #endif
     send(message,_ack);
+  }
+}
+
+// process a service message
+void NodeManager::_process(const char * message) {
+  // HELLO: hello request
+  if (strcmp(message, "HELLO") == 0) {
+    _send(_msg.set(message));
+  }
+  #if BATTERY_MANAGER == 1
+    // BATTERY: return the battery level
+    else if (strcmp(message, "BATTERY") == 0) {
+      // measure the board vcc
+      float volt = 0;
+      if (_battery_internal_vcc || _battery_pin == -1) volt = getVcc();
+      else volt = analogRead(_battery_pin) * _battery_volts_per_bit;
+      // calculate the percentage
+      int percentage = ((volt - _battery_min) / (_battery_max - _battery_min)) * 100;
+      if (percentage > 100) percentage = 100;
+      if (percentage < 0) percentage = 0;
+      #if DEBUG == 1
+        Serial.print(F("BATT V="));
+        Serial.print(volt);
+        Serial.print(F(" P="));
+        Serial.println(percentage);
+      #endif
+      #if BATTERY_SENSOR == 1
+        // report battery voltage
+        MyMessage battery_msg(BATTERY_CHILD_ID, V_VOLTAGE);
+        _send(battery_msg.set(volt, 2));
+      #endif
+      // report battery level percentage
+      sendBatteryLevel(percentage,_ack);
+    }
+  #endif
+  #ifndef MY_GATEWAY_ESP8266
+    // REBOOT: reboot the board
+    else if (strcmp(message, "REBOOT") == 0) {
+      #if DEBUG == 1
+        Serial.println(F("REBOOT"));
+      #endif
+      // set the reboot pin connected to RST to low so to reboot the board
+      _send(_msg.set(message));
+      // Software reboot with watchdog timer. Enter Watchdog Configuration mode:
+      WDTCSR |= (1<<WDCE) | (1<<WDE);
+      // Reset enable
+      WDTCSR= (1<<WDE);
+      // Infinite loop until watchdog reset after 16 ms
+      while(true){}
+    }
+  #endif
+  // CLEAR: clear the user's eeprom
+  else if (strcmp(message, "CLEAR") == 0) {
+    #if DEBUG == 1
+      Serial.println(F("CLEAR"));
+    #endif
+    for (int i = 0; i <= EEPROM_LAST_ID; i++) saveState(i, 0xFF);
+    _send(_msg.set(message));
+  }
+  // VERSION: send back the extension's version
+  else if (strcmp(message, "VERSION") == 0) {
+    _send(_msg.set(VERSION));
+  }
+  #if REMOTE_CONFIGURATION == 1
+    // IDxxx: change the node id to the provided one. E.g. ID025: change the node id to 25. Requires a reboot/restart
+    else if (strlen(message) == 5 && strncmp("ID", message, strlen("ID")) == 0) {
+      // extract the node id
+      char s[4];
+      s[0] = message[2];
+      s[1] = message[3];
+      s[2] = message[4];
+      s[3] = '\0';
+      int node_id = atoi(s);
+      #if DEBUG == 1
+        Serial.print(F("MY I="));
+        Serial.println(node_id);
+      #endif
+      #ifndef MY_GATEWAY_ESP8266
+        // Save static ID to eeprom
+        //hwWriteConfig(EEPROM_NODE_ID_ADDRESS, (uint8_t)node_id);
+      #endif
+      // reboot the board
+      _process("REBOOT");
+    }
+    // MODEx: change the way the node behaves. 0: stay awake withtout executing each sensors' loop(), 1: go to sleep for the configured interval, 2: wait for the configured interval, 3: stay awake and execute each sensors' loop() (e.g. MODE1)
+    else if (strlen(message) == 5 && strncmp("MODE", message, strlen("MODE")) == 0) {
+      // extract mode
+      char s[2];
+      s[0] = message[4];
+      s[1] = '\0';
+      _sleep_mode = atoi(s);
+      #if DEBUG == 1
+        Serial.print(F("SLEEP M="));
+        Serial.println(_sleep_mode);
+      #endif
+      #if PERSIST == 1
+        // save it to the eeprom
+        saveState(EEPROM_SLEEP_SAVED, 1);
+        saveState(EEPROM_SLEEP_MODE, _sleep_mode);
+      #endif
+      _send(_msg.set(message));
+    }
+    // INTVLnnnX: set and save the wait/sleep interval to nnn where X is S=Seconds, M=mins, H=Hours, D=Days. E.g. INTVL010M would be 10 minutes
+    else if (strlen(message) == 9 && strncmp("INTVL", message, strlen("INTVL")) == 0) {
+      // parse and set the sleep interval
+      int offset = 5;
+      // extract the unit (S=secs, M=mins, H=hours, D=Days)
+      char unit[2];
+      sprintf(unit, "%c", message[3 + offset]);
+      unit[1] = '\0';
+      if (strcmp(unit, "S") == 0) _sleep_unit = SECONDS;
+      else if (strcmp(unit, "M") == 0) _sleep_unit = MINUTES;
+      else if (strcmp(unit, "H") == 0) _sleep_unit = HOURS;
+      else if (strcmp(unit, "D") == 0) _sleep_unit = DAYS;
+      else return;
+      // extract the requested time
+      char s[4];
+      s[0] = message[0 + offset];
+      s[1] = message[1 + offset];
+      s[2] = message[2 + offset];
+      s[3] = '\0';
+      _sleep_time = atoi(s);
+      #if DEBUG == 1
+        Serial.print(F("SLEEP T="));
+        Serial.print(_sleep_time);
+        Serial.print(F(" U="));
+        Serial.println(_sleep_unit);
+      #endif
+      #if PERSIST == 1
+        // save it to eeprom
+        saveState(EEPROM_SLEEP_UNIT, _sleep_unit);
+        // encode sleep time
+        int major = 0;
+        if (_sleep_time > 750) major = 3;
+        else if (_sleep_time > 500) major = 2;
+        else if (_sleep_time > 250) major = 1;
+        int minor = _sleep_time - 250 * major;
+        saveState(EEPROM_SLEEP_SAVED, 1);
+        saveState(EEPROM_SLEEP_TIME_MINOR, minor);
+        saveState(EEPROM_SLEEP_TIME_MAJOR, major);
+      #endif
+      // interval set, reply back with the same message to acknowledge.
+      _send(_msg.set(message));
+    }
+  #endif
+  // WAKEUP: when received after a sleeping cycle or during wait, abort the cycle and stay awake
+  else if (strcmp(message, "WAKEUP") == 0) {
+    #if DEBUG == 1
+      Serial.println(F("WAKEUP"));
+    #endif
+    _send(_msg.set(message));
+    _sleep_mode = IDLE;
   }
 }
 
@@ -3135,46 +2908,4 @@ int NodeManager::_getInterruptInitialValue(int mode) {
   return -1;
 }
 
-// load the configuration stored in the eeprom
-void NodeManager::_loadConfig() {
-  if (loadState(EEPROM_SLEEP_SAVED) == 1) {
-    // sleep settings found in the eeprom, restore them
-    _sleep_mode = loadState(EEPROM_SLEEP_MODE);
-    _sleep_time = loadState(EEPROM_SLEEP_TIME_MINOR);
-    int major = loadState(EEPROM_SLEEP_TIME_MAJOR);
-    if (major == 1) _sleep_time =  _sleep_time + 250;
-    else if (major == 2) _sleep_time =  _sleep_time + 250 * 2;
-    else if (major == 3) _sleep_time =  _sleep_time + 250 * 3;
-    _sleep_unit = loadState(EEPROM_SLEEP_UNIT);
-    #if DEBUG == 1
-      Serial.print(F("LOADSLP M="));
-      Serial.print(_sleep_mode);
-      Serial.print(F(" T="));
-      Serial.print(_sleep_time);
-      Serial.print(F(" U="));
-      Serial.println(_sleep_unit);
-    #endif
-  }
-}
 
-// save the configuration in the eeprom
-void NodeManager::_saveConfig(int what) {
-  if (what == SAVE_SLEEP_MODE) {
-    saveState(EEPROM_SLEEP_SAVED, 1);
-    saveState(EEPROM_SLEEP_MODE, _sleep_mode);
-  }
-  else if (what == SAVE_SLEEP_TIME) {
-    // encode sleep time
-    int major = 0;
-    if (_sleep_time > 750) major = 3;
-    else if (_sleep_time > 500) major = 2;
-    else if (_sleep_time > 250) major = 1;
-    int minor = _sleep_time - 250 * major;
-    saveState(EEPROM_SLEEP_SAVED, 1);
-    saveState(EEPROM_SLEEP_TIME_MINOR, minor);
-    saveState(EEPROM_SLEEP_TIME_MAJOR, major);
-  }
-  else if (what == SAVE_SLEEP_UNIT) {
-    saveState(EEPROM_SLEEP_UNIT, _sleep_unit);
-  }
-}
