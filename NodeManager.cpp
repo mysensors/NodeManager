@@ -197,10 +197,10 @@ int Timer::getUnit() {
 
 
 /******************************************
-    Message
+    Request
 */
 
-Message::Message(const char* string) {
+Request::Request(const char* string) {
   char str[10];
   char* ptr;
   strcpy(str,string);
@@ -208,26 +208,36 @@ Message::Message(const char* string) {
   strtok_r(str,",",&ptr);
   _function = atoi(str);
   strcpy(_value,ptr);
+  #if DEBUG == 1
+    Serial.print(F("REQ F="));
+    Serial.print(getFunction());
+    Serial.print(F(" I="));
+    Serial.print(getValueInt());
+    Serial.print(F(" F="));
+    Serial.print(getValueFloat());
+    Serial.print(F(" S="));
+    Serial.println(getValueString());
+  #endif
 }
 
 // return the parsed function
-int Message::getFunction() {
+int Request::getFunction() {
   return _function;
 }
 
 // return the value as an int
-int Message::getValueInt() {
+int Request::getValueInt() {
   return atoi(_value);
   
 }
 
 // return the value as a float
-float Message::getValueFloat() {
+float Request::getValueFloat() {
   return atof(_value);
 }
 
 // return the value as a string
-char* Message::getValueString() {
+char* Request::getValueString() {
   return _value;
 }
 
@@ -2146,9 +2156,9 @@ int NodeManager::getSleepUnit() {
   return _sleep_unit;
 }
 void NodeManager::setSleep(int value1, int value2, int value3) {
-  _sleep_mode = value1;
-  _sleep_time = value2;
-  _sleep_unit = value3;
+  setMode(value1);
+  setSleepTime(value2);
+  setSleepUnit(value3);
 }
 void NodeManager::setSleepInterruptPin(int value) {
   _sleep_interrupt_pin = value;
@@ -2473,25 +2483,8 @@ void NodeManager::before() {
     Serial.println(_interrupt_2_mode);
   #endif
   #if REMOTE_CONFIGURATION == 1 && PERSIST == 1
-    // restore sleep configuration from eeprom
-    if (loadState(EEPROM_SLEEP_SAVED) == 1) {
-      // sleep settings found in the eeprom, restore them
-      _sleep_mode = loadState(EEPROM_SLEEP_MODE);
-      _sleep_time = loadState(EEPROM_SLEEP_TIME_MINOR);
-      int major = loadState(EEPROM_SLEEP_TIME_MAJOR);
-      if (major == 1) _sleep_time =  _sleep_time + 250;
-      else if (major == 2) _sleep_time =  _sleep_time + 250 * 2;
-      else if (major == 3) _sleep_time =  _sleep_time + 250 * 3;
-      _sleep_unit = loadState(EEPROM_SLEEP_UNIT);
-      #if DEBUG == 1
-        Serial.print(F("LOADSLP M="));
-        Serial.print(_sleep_mode);
-        Serial.print(F(" T="));
-        Serial.print(_sleep_time);
-        Serial.print(F(" U="));
-        Serial.println(_sleep_unit);
-      #endif
-    }
+    // restore the configuration saved in the eeprom
+    _loadConfig();
   #endif
   #if BATTERY_MANAGER == 1 && !defined(MY_GATEWAY_ESP8266)
     // set analogReference to internal if measuring the battery through a pin
@@ -2522,7 +2515,7 @@ void NodeManager::presentation() {
     // present the battery service
     _present(BATTERY_CHILD_ID, S_MULTIMETER);
     // report battery level
-    _process("BATTERY");
+    batteryReport();
   #endif
   // present each sensor
   for (int i = 0; i < MAX_SENSORS; i++) {
@@ -2575,7 +2568,7 @@ void NodeManager::loop() {
     // if it is time to report the battery level
     if (_battery_report_timer.isOver()) {
       // time to report the battery level again
-      _process("BATTERY");
+      batteryReport();
       // restart the timer
       _battery_report_timer.restart();
     }
@@ -2617,7 +2610,7 @@ void NodeManager::receive(const MyMessage &message) {
   #endif
   // process incoming service messages
   if (message.sensor == CONFIGURATION_CHILD_ID && message.getCommand() == C_REQ && message.type == V_CUSTOM) {
-    _process(message.getString());
+    process(message.getString());
   }
   // dispatch the message to the registered sensor
   else if (_sensors[message.sensor] != 0) {
@@ -2660,6 +2653,128 @@ void NodeManager::receiveTime(unsigned long ts) {
   #endif
 }
 
+// process a service message
+void NodeManager::process(const char * message) {
+  Request request = Request(message);
+  int function = request.getFunction();
+  switch(function) {
+    case 1: hello(); break;
+    #if BATTERY_MANAGER == 1
+      case 2: batteryReport(); return;
+      case 11: setBatteryMin(request.getValueFloat()); break;
+      case 12: setBatteryMax(request.getValueFloat()); break;
+      case 13: setBatteryReportCycles(request.getValueInt()); break;
+      case 14: setBatteryReportMinutes(request.getValueInt()); break;
+      case 15: setBatteryInternalVcc(request.getValueInt()); break;
+      case 16: setBatteryPin(request.getValueInt()); break;
+      case 17: setBatteryVoltsPerBit(request.getValueFloat()); break;
+      case 18: setBatteryReportWithInterrupt(request.getValueInt()); break;
+    #endif
+    case 3:
+      setSleepMode(request.getValueInt());
+      #if PERSIST == 1
+        _saveConfig(SAVE_SLEEP_MODE);
+      #endif
+      break;
+    case 4:
+      setSleepTime(request.getValueInt());
+      #if PERSIST == 1
+        _saveConfig(SAVE_SLEEP_TIME);
+      #endif
+      break;
+    case 5:
+      setSleepUnit(request.getValueInt());
+      #if PERSIST == 1
+        _saveConfig(SAVE_SLEEP_UNIT);
+      #endif
+      break;
+    #ifndef MY_GATEWAY_ESP8266
+      case 6: reboot(); return;
+    #endif
+    case 7: clearEeprom(); break;
+    case 8: version(); return;
+    case 9: wakeup(); break;
+    case 10: setRetries(request.getValueInt()); break;
+    case 19: setSleepInterruptPin(request.getValueInt()); break;
+    case 20: setSleepBetweenSend(request.getValueInt()); break;
+    case 21: setAck(request.getValueInt()); break;
+    case 22: setIsMetric(request.getValueInt()); break;
+    #if POWER_MANAGER == 1
+      case 23: setAutoPowerPins(request.getValueInt()); break;
+      case 24: powerOn(); break;
+      case 25: powerOff(); break;
+    #endif
+    case 26: unRegisterSensor(request.getValueInt()); break;
+    default: return; 
+  }
+  _send(_msg.set(message));
+}
+
+
+// Send a hello message back to the controller
+void NodeManager::hello() {
+  // do nothing, the request will be echoed back
+}
+
+// Send a battery level report to the controller
+void NodeManager::batteryReport() {
+  // measure the board vcc
+  float volt = 0;
+  if (_battery_internal_vcc || _battery_pin == -1) volt = getVcc();
+  else volt = analogRead(_battery_pin) * _battery_volts_per_bit;
+  // calculate the percentage
+  int percentage = ((volt - _battery_min) / (_battery_max - _battery_min)) * 100;
+  if (percentage > 100) percentage = 100;
+  if (percentage < 0) percentage = 0;
+  #if DEBUG == 1
+    Serial.print(F("BATT V="));
+    Serial.print(volt);
+    Serial.print(F(" P="));
+    Serial.println(percentage);
+  #endif
+  #if BATTERY_SENSOR == 1
+    // report battery voltage
+    MyMessage battery_msg(BATTERY_CHILD_ID, V_VOLTAGE);
+    _send(battery_msg.set(volt, 2));
+  #endif
+  // report battery level percentage
+  sendBatteryLevel(percentage,_ack);
+}
+
+// reboot the board
+void NodeManager::reboot() {
+  #if DEBUG == 1
+    Serial.println(F("REBOOT"));
+  #endif
+  // Software reboot with watchdog timer. Enter Watchdog Configuration mode:
+  WDTCSR |= (1<<WDCE) | (1<<WDE);
+  // Reset enable
+  WDTCSR= (1<<WDE);
+  // Infinite loop until watchdog reset after 16 ms
+  while(true){}
+}
+
+// send NodeManager's the version back to the controller
+void NodeManager::version() {
+  _send(_msg.set(VERSION));
+}
+
+// clear the EEPROM
+void NodeManager::clearEeprom() {
+  #if DEBUG == 1
+    Serial.println(F("CLEAR"));
+  #endif
+  for (int i = 0; i <= EEPROM_LAST_ID; i++) saveState(i, 0xFF);
+}
+
+// wake up the board
+void NodeManager::wakeup() {
+  #if DEBUG == 1
+    Serial.println(F("WAKEUP"));
+  #endif
+  _sleep_mode = IDLE;
+}
+
 // send a message to the network
 void NodeManager::_send(MyMessage & message) {
   // send the message, multiple times if requested
@@ -2683,158 +2798,6 @@ void NodeManager::_send(MyMessage & message) {
       Serial.println(message.getFloat());
     #endif
     send(message,_ack);
-  }
-}
-
-// process a service message
-void NodeManager::_process(const char * message) {
-  // HELLO: hello request
-  if (strcmp(message, "HELLO") == 0) {
-    _send(_msg.set(message));
-  }
-  #if BATTERY_MANAGER == 1
-    // BATTERY: return the battery level
-    else if (strcmp(message, "BATTERY") == 0) {
-      // measure the board vcc
-      float volt = 0;
-      if (_battery_internal_vcc || _battery_pin == -1) volt = getVcc();
-      else volt = analogRead(_battery_pin) * _battery_volts_per_bit;
-      // calculate the percentage
-      int percentage = ((volt - _battery_min) / (_battery_max - _battery_min)) * 100;
-      if (percentage > 100) percentage = 100;
-      if (percentage < 0) percentage = 0;
-      #if DEBUG == 1
-        Serial.print(F("BATT V="));
-        Serial.print(volt);
-        Serial.print(F(" P="));
-        Serial.println(percentage);
-      #endif
-      #if BATTERY_SENSOR == 1
-        // report battery voltage
-        MyMessage battery_msg(BATTERY_CHILD_ID, V_VOLTAGE);
-        _send(battery_msg.set(volt, 2));
-      #endif
-      // report battery level percentage
-      sendBatteryLevel(percentage,_ack);
-    }
-  #endif
-  #ifndef MY_GATEWAY_ESP8266
-    // REBOOT: reboot the board
-    else if (strcmp(message, "REBOOT") == 0) {
-      #if DEBUG == 1
-        Serial.println(F("REBOOT"));
-      #endif
-      // set the reboot pin connected to RST to low so to reboot the board
-      _send(_msg.set(message));
-      // Software reboot with watchdog timer. Enter Watchdog Configuration mode:
-      WDTCSR |= (1<<WDCE) | (1<<WDE);
-      // Reset enable
-      WDTCSR= (1<<WDE);
-      // Infinite loop until watchdog reset after 16 ms
-      while(true){}
-    }
-  #endif
-  // CLEAR: clear the user's eeprom
-  else if (strcmp(message, "CLEAR") == 0) {
-    #if DEBUG == 1
-      Serial.println(F("CLEAR"));
-    #endif
-    for (int i = 0; i <= EEPROM_LAST_ID; i++) saveState(i, 0xFF);
-    _send(_msg.set(message));
-  }
-  // VERSION: send back the extension's version
-  else if (strcmp(message, "VERSION") == 0) {
-    _send(_msg.set(VERSION));
-  }
-  #if REMOTE_CONFIGURATION == 1
-    // IDxxx: change the node id to the provided one. E.g. ID025: change the node id to 25. Requires a reboot/restart
-    else if (strlen(message) == 5 && strncmp("ID", message, strlen("ID")) == 0) {
-      // extract the node id
-      char s[4];
-      s[0] = message[2];
-      s[1] = message[3];
-      s[2] = message[4];
-      s[3] = '\0';
-      int node_id = atoi(s);
-      #if DEBUG == 1
-        Serial.print(F("MY I="));
-        Serial.println(node_id);
-      #endif
-      #ifndef MY_GATEWAY_ESP8266
-        // Save static ID to eeprom
-        //hwWriteConfig(EEPROM_NODE_ID_ADDRESS, (uint8_t)node_id);
-      #endif
-      // reboot the board
-      _process("REBOOT");
-    }
-    // MODEx: change the way the node behaves. 0: stay awake withtout executing each sensors' loop(), 1: go to sleep for the configured interval, 2: wait for the configured interval, 3: stay awake and execute each sensors' loop() (e.g. MODE1)
-    else if (strlen(message) == 5 && strncmp("MODE", message, strlen("MODE")) == 0) {
-      // extract mode
-      char s[2];
-      s[0] = message[4];
-      s[1] = '\0';
-      _sleep_mode = atoi(s);
-      #if DEBUG == 1
-        Serial.print(F("SLEEP M="));
-        Serial.println(_sleep_mode);
-      #endif
-      #if PERSIST == 1
-        // save it to the eeprom
-        saveState(EEPROM_SLEEP_SAVED, 1);
-        saveState(EEPROM_SLEEP_MODE, _sleep_mode);
-      #endif
-      _send(_msg.set(message));
-    }
-    // INTVLnnnX: set and save the wait/sleep interval to nnn where X is S=Seconds, M=mins, H=Hours, D=Days. E.g. INTVL010M would be 10 minutes
-    else if (strlen(message) == 9 && strncmp("INTVL", message, strlen("INTVL")) == 0) {
-      // parse and set the sleep interval
-      int offset = 5;
-      // extract the unit (S=secs, M=mins, H=hours, D=Days)
-      char unit[2];
-      sprintf(unit, "%c", message[3 + offset]);
-      unit[1] = '\0';
-      if (strcmp(unit, "S") == 0) _sleep_unit = SECONDS;
-      else if (strcmp(unit, "M") == 0) _sleep_unit = MINUTES;
-      else if (strcmp(unit, "H") == 0) _sleep_unit = HOURS;
-      else if (strcmp(unit, "D") == 0) _sleep_unit = DAYS;
-      else return;
-      // extract the requested time
-      char s[4];
-      s[0] = message[0 + offset];
-      s[1] = message[1 + offset];
-      s[2] = message[2 + offset];
-      s[3] = '\0';
-      _sleep_time = atoi(s);
-      #if DEBUG == 1
-        Serial.print(F("SLEEP T="));
-        Serial.print(_sleep_time);
-        Serial.print(F(" U="));
-        Serial.println(_sleep_unit);
-      #endif
-      #if PERSIST == 1
-        // save it to eeprom
-        saveState(EEPROM_SLEEP_UNIT, _sleep_unit);
-        // encode sleep time
-        int major = 0;
-        if (_sleep_time > 750) major = 3;
-        else if (_sleep_time > 500) major = 2;
-        else if (_sleep_time > 250) major = 1;
-        int minor = _sleep_time - 250 * major;
-        saveState(EEPROM_SLEEP_SAVED, 1);
-        saveState(EEPROM_SLEEP_TIME_MINOR, minor);
-        saveState(EEPROM_SLEEP_TIME_MAJOR, major);
-      #endif
-      // interval set, reply back with the same message to acknowledge.
-      _send(_msg.set(message));
-    }
-  #endif
-  // WAKEUP: when received after a sleeping cycle or during wait, abort the cycle and stay awake
-  else if (strcmp(message, "WAKEUP") == 0) {
-    #if DEBUG == 1
-      Serial.println(F("WAKEUP"));
-    #endif
-    _send(_msg.set(message));
-    _sleep_mode = IDLE;
   }
 }
 
@@ -2938,4 +2901,46 @@ int NodeManager::_getInterruptInitialValue(int mode) {
   return -1;
 }
 
+// load the configuration stored in the eeprom
+void NodeManager::_loadConfig() {
+  if (loadState(EEPROM_SLEEP_SAVED) == 1) {
+    // sleep settings found in the eeprom, restore them
+    _sleep_mode = loadState(EEPROM_SLEEP_MODE);
+    _sleep_time = loadState(EEPROM_SLEEP_TIME_MINOR);
+    int major = loadState(EEPROM_SLEEP_TIME_MAJOR);
+    if (major == 1) _sleep_time =  _sleep_time + 250;
+    else if (major == 2) _sleep_time =  _sleep_time + 250 * 2;
+    else if (major == 3) _sleep_time =  _sleep_time + 250 * 3;
+    _sleep_unit = loadState(EEPROM_SLEEP_UNIT);
+    #if DEBUG == 1
+      Serial.print(F("LOADSLP M="));
+      Serial.print(_sleep_mode);
+      Serial.print(F(" T="));
+      Serial.print(_sleep_time);
+      Serial.print(F(" U="));
+      Serial.println(_sleep_unit);
+    #endif
+  }
+}
 
+// save the configuration in the eeprom
+void NodeManager::_saveConfig(int what) {
+  if (what == SAVE_SLEEP_MODE) {
+    saveState(EEPROM_SLEEP_SAVED, 1);
+    saveState(EEPROM_SLEEP_MODE, _sleep_mode);
+  }
+  else if (what == SAVE_SLEEP_TIME) {
+    // encode sleep time
+    int major = 0;
+    if (_sleep_time > 750) major = 3;
+    else if (_sleep_time > 500) major = 2;
+    else if (_sleep_time > 250) major = 1;
+    int minor = _sleep_time - 250 * major;
+    saveState(EEPROM_SLEEP_SAVED, 1);
+    saveState(EEPROM_SLEEP_TIME_MINOR, minor);
+    saveState(EEPROM_SLEEP_TIME_MAJOR, major);
+  }
+  else if (what == SAVE_SLEEP_UNIT) {
+    saveState(EEPROM_SLEEP_UNIT, _sleep_unit);
+  }
+}

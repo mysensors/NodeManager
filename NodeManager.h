@@ -35,6 +35,11 @@
 #define INTERRUPT_PIN_1 3
 #define INTERRUPT_PIN_2 2
 
+// define configuration settings that can be saved and loaded from the EEPROM
+#define SAVE_SLEEP_MODE 0
+#define SAVE_SLEEP_TIME 1
+#define SAVE_SLEEP_UNIT 2
+
 // define eeprom addresses
 #define EEPROM_LAST_ID 4
 #define EEPROM_SLEEP_SAVED 0
@@ -42,6 +47,8 @@
 #define EEPROM_SLEEP_TIME_MAJOR 2
 #define EEPROM_SLEEP_TIME_MINOR 3
 #define EEPROM_SLEEP_UNIT 4
+
+// define requests
 
 /************************************
  * Include user defined configuration settings
@@ -372,12 +379,12 @@ class Timer {
 };
 
 /*
-   Message
+   Request
 */
 
-class Message {
+class Request {
   public:
-    Message(const char* string);
+    Request(const char* string);
     // return the parsed function
     int getFunction();
     // return the value as an int
@@ -1080,51 +1087,49 @@ class SensorMCP9808: public Sensor {
 class NodeManager {
   public:
     NodeManager();
-    // the pin to connect to the RST pin to reboot the board (default: 4)
-    void setRebootPin(int value);
-    // send the same service message multiple times (default: 1)
+    // [10] send the same service message multiple times (default: 1)
     void setRetries(int value);
     #if BATTERY_MANAGER == 1
-      // the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
+      // [11] the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
       void setBatteryMin(float value);
-      // the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
+      // [12] the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
       void setBatteryMax(float value);
-      // after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: -)
+      // [13] after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: -)
       void setBatteryReportCycles(int value);
-      // after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60)
+      // [14] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60)
       void setBatteryReportMinutes(int value);
-      // if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
+      // [15] if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
       void setBatteryInternalVcc(bool value);
-      // if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
+      // [16] if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
       void setBatteryPin(int value);
-      // if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
+      // [17] if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
       void setBatteryVoltsPerBit(float value);
-      // If true, wake up by an interrupt counts as a valid cycle for battery reports otherwise only uninterrupted sleep cycles would contribute (default: true)
+      // [18] If true, wake up by an interrupt counts as a valid cycle for battery reports otherwise only uninterrupted sleep cycles would contribute (default: true)
       void setBatteryReportWithInterrupt(bool value);
     #endif
-    // define the way the node should behave. It can be IDLE (stay awake withtout executing each sensors' loop), SLEEP (go to sleep for the configured interval), WAIT (wait for the configured interval), ALWAYS_ON (stay awake and execute each sensors' loop)
+    // [3] define the way the node should behave. It can be IDLE (stay awake withtout executing each sensors' loop), SLEEP (go to sleep for the configured interval), WAIT (wait for the configured interval), ALWAYS_ON (stay awake and execute each sensors' loop)
     void setSleepMode(int value);
     void setMode(int value);
     int getMode();
-    // define for how long the board will sleep (default: 0)
+    // [4] define for how long the board will sleep (default: 0)
     void setSleepTime(int value);
     int getSleepTime();
-    // define the unit of SLEEP_TIME. It can be SECONDS, MINUTES, HOURS or DAYS (default: MINUTES)
+    // [5] define the unit of SLEEP_TIME. It can be SECONDS, MINUTES, HOURS or DAYS (default: MINUTES)
     void setSleepUnit(int value);
     int getSleepUnit();
     // configure the node's behavior, parameters are mode, time and unit
     void setSleep(int value1, int value2, int value3);
-    // if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
+    // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
     void setSleepInterruptPin(int value);
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
     void setInterrupt(int pin, int mode, int pull = -1);
-    // optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
+    // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
     // register a built-in sensor
     int registerSensor(int sensor_type, int pin = -1, int child_id = -1);
     // register a custom sensor
     int registerSensor(Sensor* sensor);
-    // un-register a sensor
+    // [26] un-register a sensor
     void unRegisterSensor(int sensor_index);
     // return a sensor by its index
     Sensor* get(int sensor_index);
@@ -1134,26 +1139,40 @@ class NodeManager {
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
       void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
-      // if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
+      // [23] if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
       void setAutoPowerPins(bool value);
-      // manually turn the power on
+      // [24] manually turn the power on
       void powerOn();
-      // manually turn the power off
+      // [25] manually turn the power off
       void powerOff();
     #endif
-    // set this to true if you want destination node to send ack back to this node (default: false)
+    // [21] set this to true if you want destination node to send ack back to this node (default: false)
     void setAck(bool value);
     // request and return the current timestamp from the controller
     long getTimestamp();
     // Request the controller's configuration on startup (default: true)
     void setGetControllerConfig(bool value);
-    // Manually set isMetric setting
+    // [22] Manually set isMetric setting
     void setIsMetric(bool value);
     bool getIsMetric();
     // Convert a temperature from celsius to fahrenheit depending on how isMetric is set
     float celsiusToFahrenheit(float temperature);
     // return true if sleep or wait is configured and hence this is a sleeping node
     bool isSleepingNode();
+    // [1] Send a hello message back to the controller
+    void hello();
+    // [2] Send a battery level report to the controller
+    void batteryReport();
+    // [6] reboot the board
+    void reboot();
+    // [8] send NodeManager's the version back to the controller
+    void version();
+    // [7] clear the EEPROM
+    void clearEeprom();
+    // [9] wake up the board
+    void wakeup();
+    // process a remote request
+    void process(const char * message);
     // hook into the main sketch functions
     void before();
     void presentation();
@@ -1193,13 +1212,14 @@ class NodeManager {
     long _timestamp = -1;
     Sensor* _sensors[MAX_SENSORS] = {0};
     bool _ack = false;
-    void _process(const char * message);
     void _sleep();
     void _present(int child_id, int type);
     int _getAvailableChildId();
     int _getInterruptInitialValue(int mode);
     bool _get_controller_config = true;
     int _is_metric = 1;
+    void _loadConfig();
+    void _saveConfig(int what);
 };
 
 #endif
