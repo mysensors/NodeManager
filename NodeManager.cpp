@@ -255,6 +255,7 @@ Sensor::Sensor(NodeManager* node_manager, int child_id, int pin) {
   _child_id = child_id;
   _pin = pin;
   _msg = MyMessage(_child_id, _type);
+  _msg_service = MyMessage(_child_id, V_CUSTOM);
   _report_timer = new Timer(_node_manager);
   _force_update_timer = new Timer(_node_manager);
 }
@@ -466,11 +467,13 @@ void Sensor::receive(const MyMessage &message) {
   if (message.sensor != _child_id) return;
   // check if it is a request for the API
   if (message.getCommand() == C_REQ && message.type == V_CUSTOM) {
-    // parse the request
-    Request request = Request(message.getString());
-    // if it is for a sensor-generic function, call process(), otherwise the sensor-specific onProcess();
-    if (request.getFunction() < 100) process(request);
-    else onProcess(request);
+    #if REMOTE_CONFIGURATION == 1
+      // parse the request
+      Request request = Request(message.getString());
+      // if it is for a sensor-generic function, call process(), otherwise the sensor-specific onProcess();
+      if (request.getFunction() < 100) process(request);
+      else onProcess(request);
+    #endif
   }
   // return if the type is not correct
   if (message.type != _type) return;
@@ -502,7 +505,7 @@ void Sensor::process(Request & request) {
     case 16: setReportIntervalMinutes(request.getValueInt()); break;
     default: return;
   }
-  _send(_msg.set(function));
+  _send(_msg_service.set(function));
 }
 
 // send a message to the network
@@ -623,7 +626,7 @@ void SensorAnalogInput::onProcess(Request & request) {
     case 105: setRangeMax(request.getValueInt()); break;
     default: return;
   }
-  _send(_msg.set(function));
+  _send(_msg_service.set(function));
 }
 
 // read the analog input
@@ -748,7 +751,7 @@ void SensorThermistor::onProcess(Request & request) {
     case 105: setOffset(request.getValueFloat()); break;
     default: return;
   }
-  _send(_msg.set(function));
+  _send(_msg_service.set(function));
 }
 
 /*
@@ -866,7 +869,7 @@ void SensorACS712::onProcess(Request & request) {
     case 102: setOffset(request.getValueInt()); break;
     default: return;
   }
-  _send(_msg.set(function));
+  _send(_msg_service.set(function));
 }
 
 /*
@@ -959,7 +962,7 @@ void SensorRainGauge::onProcess(Request & request) {
     case 102: setSingleTip(request.getValueFloat()); break;
     default: return;
   }
-  _send(_msg.set(function));
+  _send(_msg_service.set(function));
 }
 
 /*
@@ -1125,7 +1128,7 @@ void SensorDigitalOutput::onProcess(Request & request) {
     case 106: setInputIsElapsed(request.getValueInt()); break;
     default: return;
   }
-  _send(_msg.set(function));
+  _send(_msg_service.set(function));
 }
 
 // write the value to the output
@@ -1434,7 +1437,7 @@ void SensorSwitch::onProcess(Request & request) {
     case 104: setInitial(request.getValueInt()); break;
     default: return;
   }
-  _send(_msg.set(function));
+  _send(_msg_service.set(function));
 }
 
 /*
@@ -1517,7 +1520,7 @@ void SensorDs18b20::onProcess(Request & request) {
     case 102: setSleepDuringConversion(request.getValueInt()); break;
     default: return;
   }
-  _send(_msg.set(function));
+  _send(_msg_service.set(function));
 }
 
 // function to print a device address
@@ -1697,7 +1700,7 @@ void SensorBosch::onProcess(Request & request) {
     case 101: setForecastSamplesCount(request.getValueInt()); break;
     default: return;
   }
-  _send(_msg.set(function));
+  _send(_msg_service.set(function));
 }
 
 // calculate and send the forecast back
@@ -1980,7 +1983,7 @@ void SensorHCSR04::onProcess(Request & request) {
     case 103: setMaxDistance(request.getValueInt()); break;
     default: return;
   }
-  _send(_msg.set(function));
+  _send(_msg_service.set(function));
 }
 #endif
 
@@ -2063,7 +2066,7 @@ void SensorSonoff::onProcess(Request & request) {
     case 103: setLedPin(request.getValueInt()); break;
     default: return;
   }
-  _send(_msg.set(function));
+  _send(_msg_service.set(function));
 }
 
 // toggle the state
@@ -2249,7 +2252,7 @@ void SensorMQ::onProcess(Request & request) {
     case 8: setReadSampleInterval(request.getValueInt()); break;
     default: return;
   }
-  _send(_msg.set(function));
+  _send(_msg_service.set(function));
 }
 
 // returns the calculated sensor resistance
@@ -2822,12 +2825,14 @@ void NodeManager::receive(const MyMessage &message) {
     Serial.print(F(" P="));
     Serial.println(message.getString());
   #endif
-  // process incoming service messages
+  // process incoming configuration message
   if (message.sensor == CONFIGURATION_CHILD_ID && message.getCommand() == C_REQ && message.type == V_CUSTOM) {
-    // parse the request
-    Request request = Request(message.getString());
-    // process the request
-    process(request);
+    #if REMOTE_CONFIGURATION == 1
+      // parse the request
+      Request request = Request(message.getString());
+      // process the request
+      process(request);
+    #endif
   }
   // dispatch the message to the registered sensor
   else if (_sensors[message.sensor] != 0) {
@@ -2933,6 +2938,7 @@ void NodeManager::hello() {
   // do nothing, the request will be echoed back
 }
 
+#if BATTERY_MANAGER == 1
 // Send a battery level report to the controller
 void NodeManager::batteryReport() {
   // measure the board vcc
@@ -2957,6 +2963,7 @@ void NodeManager::batteryReport() {
   // report battery level percentage
   sendBatteryLevel(percentage,_ack);
 }
+#endif
 
 // reboot the board
 void NodeManager::reboot() {

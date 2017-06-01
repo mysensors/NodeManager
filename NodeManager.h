@@ -484,6 +484,7 @@ class Sensor {
     virtual void onProcess(Request & request) = 0;
   protected:
     MyMessage _msg;
+    MyMessage _msg_service;
     NodeManager* _node_manager;
     int _sleep_between_send = 0;
     int _pin = -1;
@@ -1142,6 +1143,8 @@ class NodeManager {
       void setBatteryVoltsPerBit(float value);
       // [18] If true, wake up by an interrupt counts as a valid cycle for battery reports otherwise only uninterrupted sleep cycles would contribute (default: true)
       void setBatteryReportWithInterrupt(bool value);
+      // [2] Send a battery level report to the controller
+      void batteryReport();
     #endif
     // [3] define the way the node should behave. It can be (0) IDLE (stay awake withtout executing each sensors' loop), (1) SLEEP (go to sleep for the configured interval), (2) WAIT (wait for the configured interval), (3) ALWAYS_ON (stay awake and execute each sensors' loop)
     void setSleepMode(int value);
@@ -1197,8 +1200,6 @@ class NodeManager {
     bool isSleepingNode();
     // [1] Send a hello message back to the controller
     void hello();
-    // [2] Send a battery level report to the controller
-    void batteryReport();
     // [6] reboot the board
     void reboot();
     // [8] send NodeManager's the version back to the controller
