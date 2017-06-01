@@ -215,7 +215,7 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
       // [18] If true, wake up by an interrupt counts as a valid cycle for battery reports otherwise only uninterrupted sleep cycles would contribute (default: true)
       void setBatteryReportWithInterrupt(bool value);
     #endif
-    // [3] define the way the node should behave. It can be IDLE (stay awake withtout executing each sensors' loop), SLEEP (go to sleep for the configured interval), WAIT (wait for the configured interval), ALWAYS_ON (stay awake and execute each sensors' loop)
+    // [3] define the way the node should behave. It can be (0) IDLE (stay awake withtout executing each sensors' loop), (1) SLEEP (go to sleep for the configured interval), (2) WAIT (wait for the configured interval), (3) ALWAYS_ON (stay awake and execute each sensors' loop)
     void setSleepMode(int value);
     void setMode(int value);
     int getMode();
@@ -345,6 +345,8 @@ If you want to create a custom sensor and register it with NodeManager so it can
     void onLoop();
     // define what to do during receive() when the sensor receives a message
     void onReceive(const MyMessage & message);
+	// define what to do when receiving a remote configuration message
+	void onProcess(Request & request);
 ~~~
 
 You can then instantiate your newly created class and register with NodeManager:
@@ -366,40 +368,40 @@ To do so, use `nodeManager.getSensor(child_id)` which will return a pointer to t
 
 The following methods are available for all the sensors:
 ~~~c
-    // where the sensor is attached to (default: not set)
+    // [1] where the sensor is attached to (default: not set)
     void setPin(int value);
-	int getPin();
-    // child_id of this sensor (default: not set)
+    int getPin();
+    // [2] child_id of this sensor (default: not set)
     void setChildId(int value);
-	int getChildId();
+    int getChildId();
     // presentation of this sensor (default: S_CUSTOM)
     void setPresentation(int value);
-	int getPresentation();
-    // type of this sensor (default: V_CUSTOM)
+    int getPresentation();
+    // [3] type of this sensor (default: V_CUSTOM)
     void setType(int value);
-	int getType();
-    // description of the sensor (default: '')
+    int getType();
+    // [4] description of the sensor (default: '')
     void setDescription(char *value);
     // set this to true if you want destination node to send ack back to this node (default: false)
     void setAck(bool value);
     // when queried, send the message multiple times (default: 1)
     void setRetries(int value);
-    // For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)
+    // [5] For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)
     void setSamples(int value);
-    // If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
+    // [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
     void setSamplesInterval(int value);
-    // if true will report the measure only if different then the previous one (default: false)
+    // [7] if true will report the measure only if different than the previous one (default: false)
     void setTrackLastValue(bool value);
-    // if track last value is enabled, force to send an update after the configured number of cycles (default: -1)
+    // [8] if track last value is enabled, force to send an update after the configured number of cycles (default: -1)
     void setForceUpdate(int value);
     void setForceUpdateCycles(int value);
-    // if track last value is enabled, force to send an update after the configured number of minutes (default: -1)
+    // [9] if track last value is enabled, force to send an update after the configured number of minutes (default: -1)
     void setForceUpdateMinutes(int value);
-    // the value type of this sensor (default: TYPE_INTEGER)
+    // [10] the value type of this sensor (default: TYPE_INTEGER)
     void setValueType(int value);
-	int getValueType();
-	// for float values, set the float precision (default: 2)
-    void setFloatPrecision(int value);
+    int getValueType();
+    // [11] for float values, set the float precision (default: 2)
+    void  setFloatPrecision(int value);
     // optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
     // set the interrupt pin the sensor is attached to so its loop() will be executed only upon that interrupt (default: -1)
@@ -407,22 +409,24 @@ The following methods are available for all the sensors:
     int getInterruptPin();
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-      void setPowerPins(int ground_pin, int vcc_pin, long wait = 0);
-      // if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
+      void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
+      // [12] if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
       void setAutoPowerPins(bool value);
-      // manually turn the power on
+      // [13] manually turn the power on
       void powerOn();
-      // manually turn the power off
+      // [14] manually turn the power off
       void powerOff();
     #endif
     // get the latest recorded value from the sensor
     int getValueInt();
     float getValueFloat();
     char* getValueString();
-    // After how many cycles the sensor will report back its measure (default: 1 cycle)
+    // [15] After how many cycles the sensor will report back its measure (default: 1 cycle)
     void setReportIntervalCycles(int value);
-    // After how many minutes the sensor will report back its measure (default: 1 cycle)
+    // [16] After how many minutes the sensor will report back its measure (default: 1 cycle)
     void setReportIntervalMinutes(int value);
+    // process a remote request
+    void process(Request & request);
 ~~~
 
 #### Sensor's specific configuration
@@ -431,49 +435,49 @@ Each sensor class can expose additional methods.
 
 * SensorAnalogInput / SensorLDR / SensorRain / SensorSoilMoisture
 ~~~c
-    // the analog reference to use (default: not set, can be either INTERNAL or DEFAULT)
+    // [101] the analog reference to use (default: not set, can be either INTERNAL or DEFAULT)
     void setReference(int value);
-    // reverse the value or the percentage (e.g. 70% -> 30%) (default: false)
+    // [102] reverse the value or the percentage (e.g. 70% -> 30%) (default: false)
     void setReverse(bool value);
-    // when true returns the value as a percentage (default: true)
+    // [103] when true returns the value as a percentage (default: true)
     void setOutputPercentage(bool value);
-    // minimum value for calculating the percentage (default: 0)
+    // [104] minimum value for calculating the percentage (default: 0)
     void setRangeMin(int value);
-    // maximum value for calculating the percentage (default: 1024)
+    // [105] maximum value for calculating the percentage (default: 1024)
     void setRangeMax(int value);
 ~~~
 
 * SensorThermistor
 ~~~c
-    // resistance at 25 degrees C (default: 10000)
+    // [101] resistance at 25 degrees C (default: 10000)
     void setNominalResistor(long value);
-    // temperature for nominal resistance (default: 25)
+    // [102] temperature for nominal resistance (default: 25)
     void setNominalTemperature(int value);
-    // The beta coefficient of the thermistor (default: 3950)
+    // [103] The beta coefficient of the thermistor (default: 3950)
     void setBCoefficient(int value);
-    // the value of the resistor in series with the thermistor (default: 10000)
+    // [104] the value of the resistor in series with the thermistor (default: 10000)
     void setSeriesResistor(long value);
-    // set a temperature offset
+    // [105] set a temperature offset
     void setOffset(float value);
 ~~~
 
 * SensorMQ
 ~~~c
-    // define the target gas whose ppm has to be returned. 0: LPG, 1: CO, 2: Smoke (default: 1);
+    // [101] define the target gas whose ppm has to be returned. 0: LPG, 1: CO, 2: Smoke (default: 1);
     void setTargetGas(int value);
-    // define the load resistance on the board, in kilo ohms (default: 1);
+    // [102] define the load resistance on the board, in kilo ohms (default: 1);
     void setRlValue(float value);
-    // define the Ro resistance on the board (default: 10000);
+    // [103] define the Ro resistance on the board (default: 10000);
     void setRoValue(float value);
-    // Sensor resistance in clean air (default: 9.83);
+    // [104] Sensor resistance in clean air (default: 9.83);
     void setCleanAirFactor(float value);
-    // define how many samples you are going to take in the calibration phase (default: 50);
+    // [105] define how many samples you are going to take in the calibration phase (default: 50);
     void setCalibrationSampleTimes(int value);
-    // define the time interal(in milisecond) between each samples in the cablibration phase (default: 500);
+    // [106] define the time interal(in milisecond) between each samples in the cablibration phase (default: 500);
     void setCalibrationSampleInterval(int value);
-    // define how many samples you are going to take in normal operation (default: 50);
+    // [107] define how many samples you are going to take in normal operation (default: 50);
     void setReadSampleTimes(int value);
-    // define the time interal(in milisecond) between each samples in the normal operations (default: 5);
+    // [108] define the time interal(in milisecond) between each samples in the normal operations (default: 5);
     void setReadSampleInterval(int value);
     // set the LPGCurve array (default: {2.3,0.21,-0.47})
     void setLPGCurve(float *value);
@@ -483,19 +487,35 @@ Each sensor class can expose additional methods.
     void setSmokeCurve(float *value);
 ~~~
 
+* SensorACS712
+~~~c
+    // [101] set how many mV are equivalent to 1 Amp. The value depends on the module (100 for 20A Module, 66 for 30A Module) (default: 185);
+    void setmVPerAmp(int value);
+    // [102] set ACS offset (default: 2500);
+    void setOffset(int value);
+~~~
+
+* SensorRainGauge
+~~~c
+    // [101] set how frequently to report back to the controller in minutes. After reporting the measure is resetted (default: 60)
+    void setReportInterval(int value);
+    // [102] set how many mm of rain to count for each tip (default: 0.11)
+    void setSingleTip(float value);
+~~~
+
 * SensorDigitalOutput / SensorRelay / SensorLatchingRelay
 ~~~c
-    // set how to initialize the output (default: LOW)
+    // [101] set how to initialize the output (default: LOW)
     void setInitialValue(int value);
-    // if greater than 0, send a pulse of the given duration in ms and then restore the output back to the original value (default: 0)
+    // [102] if greater than 0, send a pulse of the given duration in ms and then restore the output back to the original value (default: 0)
     void setPulseWidth(int value);
-    // define which value to set to the output when set to on (default: HIGH)
+    // [103] define which value to set to the output when set to on (default: HIGH)
     void setOnValue(int value);
-    // when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
+    // [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
     void setLegacyMode(bool value);
-    // automatically turn the output off after the given number of minutes
+    // [105] automatically turn the output off after the given number of minutes
     void setSafeguard(int value);
-    // if true the input value becomes a duration in minutes after which the output will be automatically turned off (default: false)
+    // [106] if true the input value becomes a duration in minutes after which the output will be automatically turned off (default: false)
     void setInputIsElapsed(bool value);
     // manually switch the output to the provided value
     void set(int value);
@@ -505,74 +525,54 @@ Each sensor class can expose additional methods.
 
 *  SensorSwitch / SensorDoor / SensorMotion
 ~~~c
-    // set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
+    // [101] set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
     void setMode(int value);
-    // milliseconds to wait before reading the input (default: 0)
+    int getMode();
+    // [102] milliseconds to wait before reading the input (default: 0)
     void setDebounce(int value);
-    // time to wait in milliseconds after a change is detected to allow the signal to be restored to its normal value (default: 0)
+    // [103] time to wait in milliseconds after a change is detected to allow the signal to be restored to its normal value (default: 0)
     void setTriggerTime(int value);
-    // Set initial value on the interrupt pin (default: HIGH)
+    // [104] Set initial value on the interrupt pin (default: HIGH)
     void setInitial(int value);
+    int getInitial();
 ~~~
 
 *  SensorDs18b20**
 ~~~c
-    // return the sensors' device address
-    DeviceAddress* getDeviceAddress();
     // returns the sensor's resolution in bits
     int getResolution();
-    // set the sensor's resolution in bits
+    // [101] set the sensor's resolution in bits
     void setResolution(int value);
-    // sleep while DS18B20 calculates temperature (default: false)
+    // [102] sleep while DS18B20 calculates temperature (default: false)
     void setSleepDuringConversion(bool value);
+    // return the sensors' device address
+    DeviceAddress* getDeviceAddress();
 ~~~
 
-*  SensorBME280
+*  SensorBME280 / SensorBMP085
 ~~~c
-    // define how many pressure samples to keep track of for calculating the forecast (default: 5)
-    void setForecastSamplesCount(int value);
-~~~
-
-*  SensorSonoff
-~~~c
-    // set the button's pin (default: 0)
-    void setButtonPin(int value);
-    // set the relay's pin (default: 12)
-    void setRelayPin(int value);
-    // set the led's pin (default: 13)
-    void setLedPin(int value);
-~~~
-
-* SensorBMP085
-~~~c
-    // define how many pressure samples to keep track of for calculating the forecast (default: 5)
+    // [101] define how many pressure samples to keep track of for calculating the forecast (default: 5)
     void setForecastSamplesCount(int value);
 ~~~
 
 * SensorHCSR04
 ~~~c
-    // Arduino pin tied to trigger pin on the ultrasonic sensor (default: the pin set while registering the sensor)
+    // [101] Arduino pin tied to trigger pin on the ultrasonic sensor (default: the pin set while registering the sensor)
     void setTriggerPin(int value);
-    // Arduino pin tied to echo pin on the ultrasonic sensor (default: the pin set while registering the sensor)
+    // [102] Arduino pin tied to echo pin on the ultrasonic sensor (default: the pin set while registering the sensor)
     void setEchoPin(int value);
-    // Maximum distance we want to ping for (in centimeters) (default: 300)
+    // [103] Maximum distance we want to ping for (in centimeters) (default: 300)
     void setMaxDistance(int value);
 ~~~
 
-* SensorACS712
+*  SensorSonoff
 ~~~c
-    // set how many mV are equivalent to 1 Amp. The value depends on the module (100 for 20A Module, 66 for 30A Module) (default: 185);
-    void setmVPerAmp(int value);
-    // set ACS offset (default: 2500);
-    void setOffset(int value);
-~~~
-
-* SensorRainGauge
-~~~c
-    // set how frequently to report back to the controller in minutes. After reporting the measure is resetted (default: 60);
-    void setReportInterval(int value);
-    // set how many mm of rain to count for each tip (default: 0.11);
-    void setSingleTip(float value);
+    // [101] set the button's pin (default: 0)
+    void setButtonPin(int value);
+    // [102] set the relay's pin (default: 12)
+    void setRelayPin(int value);
+    // [103] set the led's pin (default: 13)
+    void setLedPin(int value);
 ~~~
 
 ### Upload your sketch
@@ -584,51 +584,65 @@ When `DEBUG` is enabled, detailed information is available through the serial po
 
 ### Communicate with NodeManager and its sensors
 
-You can interact with each registered sensor asking to execute their main tasks by sending to the child id a `REQ` command. For example to request the temperature to node_id 254 and child_id 1:
+You can interact with each registered sensor by asking to execute their main tasks by sending to the child id a `REQ` command (or a `SET` for output sensors like relays). For example to request the temperature to node_id 254 and child_id 1:
 
 `254;1;2;0;0;`
 
 To activate a relay connected to the same node, child_id 100:
 
-`254;100;2;0;2;1`
+`254;100;1;0;2;1`
 
 No need to implement anything on your side since for built-in sensor types this is handled automatically. 
-Once the node will be sleeping, it will report automatically each measure at the end of every sleep cycle.
+Once the node will be sleeping, it will report automatically each measure at the end of every sleep cycle, unless configured otherwise.
 
-NodeManager exposes a configuration service by default on child_id 200 so you can interact with it by sending `V_CUSTOM` type of messages and commands within the payload. For each `REQ` message, the node will respond with a `SET` message.
-The following custom commands are available:
+NodeManager exposes also a configuration service by default on child_id 200 so you can interact with it by sending `V_CUSTOM` type of messages and commands within the payload. For each `REQ` message, the node will respond with a `SET` message if successful. 
+Almost all the functions made available through the API can be called remotely. To do so, the payload must be in the format `<function_id>[,<value_to_set>]` where function_id is the number between square brackets you can find in the description just above each function and, if the function takes and argument, this can be passed along in value_to_set. 
+For example, to request a battery report, find the function you need to call remotely within the documentation:
+~~~c
+    // [2] Send a battery level report to the controller
+    void batteryReport();
+~~~
+In this case the function_id will be 2. To request a battery report to the node_id 100, send the following message:
+`<node_id>;<configuration_child_id>;<req>;0;<V_CUSTOM>;<function_id>`
+`100;200;2;0;48;2`
 
-NodeManager command  | Description
- ------------- | -------------
-BATTERY | Report the battery level back to the gateway/controller
-HELLO | Hello request
-REBOOT | Reboot the board
-CLEAR | Wipe from the EEPROM NodeManager's settings
-VERSION | Respond with NodeManager's version
-IDxxx |  Change the node id to the provided one. E.g. ID025: change the node id to 25. Requires a reboot to take effect
-INTVLnnnX | Set the wait/sleep interval to nnn where X is S=Seconds, M=mins, H=Hours, D=Days. E.g. INTVL010M would be 10 minutes
-MODEx | change the way the node behaves. 0: stay awake withtout executing each sensors' loop(), 1: go to sleep for the configured interval, 2: wait for the configured interval, 3: stay awake and execute each sensors' loop()
-AWAKE | When received after a sleeping cycle or during wait, abort the cycle and stay awake
-
-For example, to request the battery level to node id 254:
-
-`254;200;2;0;48;BATTERY`
-
-To set the sleeping cycle to 1 hour:
-
-`254;200;2;0;48;INTVL001H`
+The change the sleep time from e.g. 10 minutes as set in the sketch to 5 minutes:
+~~~c
+    // [4] define for how long the board will sleep (default: 0)
+    void setSleepTime(int value);
+~~~
+`<node_id>;<configuration_child_id>;<req>;0;<V_CUSTOM>;<function_id>,<value>`
+`100;200;2;0;48;4,5`
 
 To ask the node to start sleeping (and waking up based on the previously configured interval):
+~~~c
+    // [3] define the way the node should behave. It can be (0) IDLE (stay awake withtout executing each sensors' loop), (1) SLEEP (go to sleep for the configured interval), (2) WAIT (wait for the configured interval), (3) ALWAYS_ON (stay awake and execute each sensors' loop)
+    void setSleepMode(int value);
+~~~
+`100;200;2;0;48;3,1`
 
-`254;200;2;0;48;MODE1`
+To wake up a node previously configured as sleeping, send the following just it wakes up next:
+~~~c
+    // [9] wake up the board
+    void wakeup();
+~~~
+`100;200;2;0;48;9`
 
-To wake up a node previously configured with `MODE1`, send the following just after reporting `AWAKE`:
+The same protocol can be used to execute remotely also sensor-specific functions. In this case the message has to be sent to the sensor's child_id, with a V_CUSTOM type of message. For example if you want to collect and average 10 samples for child_id 1:
+~~~c
+    // [5] For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)
+    void setSamples(int value);
+~~~
+`100;1;2;0;48;5,10`
 
-`254;200;2;0;48;WAKEUP`
+If you want to decrease the temperature offset of a thermistor sensor to -2:
+~~~c
+    // [105] set a temperature offset
+    void setOffset(float value);
+~~~
+`100;1;2;0;48;105,-2`
 
-In addition, NodeManager will report with custom messages every time the board is going to sleep (`SLEEPING`) or it is awake (`AWAKE`).
-
-If `PERSIST` is enabled, the settings provided with `INTVLnnnX` and `MODEx` are saved to the EEPROM to be persistent even after rebooting the board.
+Please note that anything set remotely will NOT persist a reboot apart from those provided to setSleepMode(), setSleepTime() and setSleepUnit() which are saved to the EEPROM (provided `PERSIST` is enabled).
 
 ## Understanding NodeManager: how it works
 

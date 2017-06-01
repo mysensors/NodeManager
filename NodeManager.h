@@ -894,14 +894,14 @@ class SensorMotion: public SensorSwitch {
 class SensorDs18b20: public Sensor {
   public:
     SensorDs18b20(NodeManager* node_manager, int child_id, int pin, DallasTemperature* sensors, int index);
-    // return the sensors' device address
-    DeviceAddress* getDeviceAddress();
     // returns the sensor's resolution in bits
     int getResolution();
     // [101] set the sensor's resolution in bits
     void setResolution(int value);
     // [102] sleep while DS18B20 calculates temperature (default: false)
     void setSleepDuringConversion(bool value);
+    // return the sensors' device address
+    DeviceAddress* getDeviceAddress();
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
@@ -1128,7 +1128,7 @@ class NodeManager {
       // [18] If true, wake up by an interrupt counts as a valid cycle for battery reports otherwise only uninterrupted sleep cycles would contribute (default: true)
       void setBatteryReportWithInterrupt(bool value);
     #endif
-    // [3] define the way the node should behave. It can be IDLE (stay awake withtout executing each sensors' loop), SLEEP (go to sleep for the configured interval), WAIT (wait for the configured interval), ALWAYS_ON (stay awake and execute each sensors' loop)
+    // [3] define the way the node should behave. It can be (0) IDLE (stay awake withtout executing each sensors' loop), (1) SLEEP (go to sleep for the configured interval), (2) WAIT (wait for the configured interval), (3) ALWAYS_ON (stay awake and execute each sensors' loop)
     void setSleepMode(int value);
     void setMode(int value);
     int getMode();
