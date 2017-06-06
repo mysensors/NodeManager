@@ -289,12 +289,6 @@ int Sensor::getType() {
 void Sensor::setDescription(char* value) {
   _description = value;
 }
-void Sensor::setAck(bool value) {
-  _ack = value;
-}
-void Sensor::setRetries(int value) {
-  _retries = value;
-}
 void Sensor::setSamples(int value) {
   _samples = value;
 }
@@ -336,12 +330,6 @@ void Sensor::setFloatPrecision(int value) {
       _powerManager.powerOff();
     }
 #endif
-void Sensor::setSleepBetweenSend(int value) {
-  _sleep_between_send = value;
-}
-void Sensor::setInterruptPin(int value) {
-  _interrupt_pin = value;
-}
 int Sensor::getInterruptPin() {
   return _interrupt_pin;
 }
@@ -373,7 +361,7 @@ void Sensor::presentation() {
     Serial.print(F(" T="));
     Serial.println(_presentation);
   #endif
-  present(_child_id, _presentation,_description,_ack);
+  present(_child_id, _presentation,_description,_node_manager->getAck());
 }
 
 // call the sensor-specific implementation of before
@@ -511,9 +499,9 @@ void Sensor::process(Request & request) {
 // send a message to the network
 void Sensor::_send(MyMessage & message) {
   // send the message, multiple times if requested
-  for (int i = 0; i < _retries; i++) {
+  for (int i = 0; i < _node_manager->getRetries(); i++) {
     // if configured, sleep beetween each send
-    if (_sleep_between_send > 0) sleep(_sleep_between_send);
+    if (_node_manager->getSleepBetweenSend() > 0) sleep(_node_manager->getSleepBetweenSend());
     #if DEBUG == 1
       Serial.print(F("SEND D="));
       Serial.print(message.destination);
@@ -530,7 +518,7 @@ void Sensor::_send(MyMessage & message) {
       Serial.print(F(" F="));
       Serial.println(message.getFloat());
     #endif
-    send(message,_ack);
+    send(message,_node_manager->getAck());
   }
 }
 
@@ -1371,9 +1359,6 @@ SensorSwitch::SensorSwitch(NodeManager* node_manager, int child_id, int pin): Se
 void SensorSwitch::setMode(int value) {
   _mode = value;
 }
-int SensorSwitch::getMode() {
-  return _mode;
-}
 void SensorSwitch::setDebounce(int value) {
   _debounce = value;
 }
@@ -1383,15 +1368,15 @@ void SensorSwitch::setTriggerTime(int value) {
 void SensorSwitch::setInitial(int value) {
   _initial = value;
 }
-int SensorSwitch::getInitial() {
-  return _initial;
-}
 
 // what to do during before
 void SensorSwitch::onBefore() {
   // initialize the value
   if (_mode == RISING) _value_int = LOW;
   else if (_mode == FALLING) _value_int = HIGH;
+  // set the interrupt pin so it will be called only when waking up from that interrupt
+  _interrupt_pin = _pin;
+  _node_manager->setInterrupt(_pin,_mode,_initial);
 }
 
 // what to do during setup
@@ -2321,6 +2306,9 @@ NodeManager::NodeManager() {
 void NodeManager::setRetries(int value) {
   _retries = value;
 }
+int NodeManager::getRetries() {
+  return _retries;
+}
 #if BATTERY_MANAGER == 1
   void NodeManager::setBatteryMin(float value) {
     _battery_min = value;
@@ -2403,8 +2391,14 @@ void NodeManager::setInterrupt(int pin, int mode, int pull) {
 void NodeManager::setSleepBetweenSend(int value) {
   _sleep_between_send = value;
 }
+int NodeManager::getSleepBetweenSend() {
+  return _sleep_between_send;
+}
 void NodeManager::setAck(bool value) {
     _ack = value;
+}
+bool NodeManager::getAck() {
+    return _ack;
 }
 void NodeManager::setGetControllerConfig(bool value) {
   _get_controller_config = value;
@@ -2485,15 +2479,9 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
       // ensure an interrupt pin is provided
       if (pin != INTERRUPT_PIN_1 && pin != INTERRUPT_PIN_2) return -1;
       // register the sensor
-      int index = 0;
-      if (sensor_type == SENSOR_SWITCH) index = registerSensor(new SensorSwitch(this,child_id, pin));
-      else if (sensor_type == SENSOR_DOOR) index = registerSensor(new SensorDoor(this,child_id, pin));
-      else if (sensor_type == SENSOR_MOTION) index = registerSensor(new SensorMotion(this,child_id, pin));
-      // set an interrupt on the pin and set the initial value
-      SensorSwitch* sensor = (SensorSwitch*)getSensor(index);
-      sensor->setInterruptPin(pin);
-      setInterrupt(pin,sensor->getMode(),sensor->getInitial());
-      return index;
+      if (sensor_type == SENSOR_SWITCH) return registerSensor(new SensorSwitch(this,child_id, pin));
+      else if (sensor_type == SENSOR_DOOR) return registerSensor(new SensorDoor(this,child_id, pin));
+      else if (sensor_type == SENSOR_MOTION) return registerSensor(new SensorMotion(this,child_id, pin));
     }
   #endif
   #if MODULE_DS18B20 == 1
