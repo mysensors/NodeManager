@@ -332,10 +332,6 @@ class PowerManager {
     void powerOn();
     // turns the power pins on
     void powerOff();
-    // returns the Vcc voltge
-    float getVcc();
-    // turns true if power pins are configured
-    bool isConfigured();
   private:
     int _vcc_pin = -1;
     int _ground_pin = -1;
@@ -1205,6 +1201,8 @@ class NodeManager {
     int loadFromMemory(int index);
     // [27] save the given index of the EEPROM the provided value
     void saveToMemory(int index, int value);
+    // return vcc in V
+    float getVcc();
     // hook into the main sketch functions
     void before();
     void presentation();
@@ -1221,7 +1219,6 @@ class NodeManager {
       bool _battery_internal_vcc = true;
       int _battery_pin = -1;
       float _battery_volts_per_bit = 0.003363075;
-      float _getVcc();
     #endif
     #if POWER_MANAGER == 1
       // to optionally controller power pins

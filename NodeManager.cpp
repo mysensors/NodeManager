@@ -5,36 +5,6 @@
 #include "NodeManager.h"
 
 /***************************************
-   Global functions
-*/
-
-// return vcc in V
-float getVcc() {
-  #ifndef MY_GATEWAY_ESP8266
-    // Measure Vcc against 1.1V Vref
-    #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-      ADMUX = (_BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
-    #elif defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
-      ADMUX = (_BV(MUX5) | _BV(MUX0));
-    #elif defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
-      ADMUX = (_BV(MUX3) | _BV(MUX2));
-    #else
-      ADMUX = (_BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
-    #endif
-    // Vref settle
-    wait(70);
-    // Do conversion
-    ADCSRA |= _BV(ADSC);
-    while (bit_is_set(ADCSRA, ADSC)) {};
-    // return Vcc in mV
-    return (float)((1125300UL) / ADC) / 1000;
-  #else
-    return (float)0;
-  #endif
-}
-
-
-/***************************************
    PowerManager
 */
 
@@ -46,26 +16,26 @@ void PowerManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
     Serial.print(F(" V="));
     Serial.println(vcc_pin);
   #endif
-  // configure the vcc pin as output and initialize to high (power on)
-  _vcc_pin = vcc_pin;
-  pinMode(_vcc_pin, OUTPUT);
-  digitalWrite(_vcc_pin, HIGH);
-  // configure the ground pin as output and initialize to low
-  _ground_pin = ground_pin;
-  pinMode(_ground_pin, OUTPUT);
-  digitalWrite(_ground_pin, LOW);
+  if (_ground_pin > 0) {
+    // configure the ground pin as output and initialize to low
+    _ground_pin = ground_pin;
+    pinMode(_ground_pin, OUTPUT);
+    digitalWrite(_ground_pin, LOW);
+  }
+  if (_vcc_pin > 0) {
+    // configure the vcc pin as output and initialize to high (power on)
+    _vcc_pin = vcc_pin;
+    pinMode(_vcc_pin, OUTPUT);
+    digitalWrite(_vcc_pin, HIGH);
+  }
+  // save wait time
   _wait = wait_time;
 }
 
-// return true if power pins have been configured
-bool PowerManager::isConfigured() {
-  if (_vcc_pin != -1 && _ground_pin != -1) return true;
-  return false;
-}
 
 // turn on the sensor by activating its power pins
 void PowerManager::powerOn() {
-  if (! isConfigured()) return;
+  if (_vcc_pin == -1) return;
   #if DEBUG == 1
     Serial.print(F("ON P="));
     Serial.println(_vcc_pin);
@@ -78,7 +48,7 @@ void PowerManager::powerOn() {
 
 // turn off the sensor
 void PowerManager::powerOff() {
-  if (! isConfigured()) return;
+  if (_vcc_pin == -1) return;
   #if DEBUG == 1
     Serial.print(F("OFF P="));
     Serial.println(_vcc_pin);
@@ -768,7 +738,7 @@ void SensorML8511::onSetup() {
 void SensorML8511::onLoop() {
   // read the voltage 
   int uvLevel = analogRead(_pin);
-  int refLevel = getVcc()*1024/3.3;
+  int refLevel = _node_manager->getVcc()*1024/3.3;
   //Use the 3.3V power pin as a reference to get a very accurate output value from sensor
   float outputVoltage = 3.3 / refLevel * uvLevel;
   //Convert the voltage to a UV intensity level
@@ -2995,6 +2965,31 @@ int NodeManager::loadFromMemory(int index) {
 // save the given index of the EEPROM the provided value
 void NodeManager::saveToMemory(int index, int value) {
   saveState(index+EEPROM_USER_START, value);
+}
+
+// return vcc in V
+float NodeManager::getVcc() {
+  #ifndef MY_GATEWAY_ESP8266
+    // Measure Vcc against 1.1V Vref
+    #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+      ADMUX = (_BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
+    #elif defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
+      ADMUX = (_BV(MUX5) | _BV(MUX0));
+    #elif defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
+      ADMUX = (_BV(MUX3) | _BV(MUX2));
+    #else
+      ADMUX = (_BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
+    #endif
+    // Vref settle
+    wait(70);
+    // Do conversion
+    ADCSRA |= _BV(ADSC);
+    while (bit_is_set(ADCSRA, ADSC)) {};
+    // return Vcc in mV
+    return (float)((1125300UL) / ADC) / 1000;
+  #else
+    return (float)0;
+  #endif
 }
 
 // send a message to the network
