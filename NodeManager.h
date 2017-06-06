@@ -332,10 +332,6 @@ class PowerManager {
     void powerOn();
     // turns the power pins on
     void powerOff();
-    // returns the Vcc voltage
-    float getVcc();
-    // turns true if power pins are configured
-    bool isConfigured();
   private:
     int _vcc_pin = -1;
     int _ground_pin = -1;

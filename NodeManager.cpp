@@ -16,26 +16,26 @@ void PowerManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
     Serial.print(F(" V="));
     Serial.println(vcc_pin);
   #endif
-  // configure the vcc pin as output and initialize to high (power on)
-  _vcc_pin = vcc_pin;
-  pinMode(_vcc_pin, OUTPUT);
-  digitalWrite(_vcc_pin, HIGH);
-  // configure the ground pin as output and initialize to low
-  _ground_pin = ground_pin;
-  pinMode(_ground_pin, OUTPUT);
-  digitalWrite(_ground_pin, LOW);
+  if (_ground_pin > 0) {
+    // configure the ground pin as output and initialize to low
+    _ground_pin = ground_pin;
+    pinMode(_ground_pin, OUTPUT);
+    digitalWrite(_ground_pin, LOW);
+  }
+  if (_vcc_pin > 0) {
+    // configure the vcc pin as output and initialize to high (power on)
+    _vcc_pin = vcc_pin;
+    pinMode(_vcc_pin, OUTPUT);
+    digitalWrite(_vcc_pin, HIGH);
+  }
+  // save wait time
   _wait = wait_time;
 }
 
-// return true if power pins have been configured
-bool PowerManager::isConfigured() {
-  if (_vcc_pin != -1 && _ground_pin != -1) return true;
-  return false;
-}
 
 // turn on the sensor by activating its power pins
 void PowerManager::powerOn() {
-  if (! isConfigured()) return;
+  if (_vcc_pin == -1) return;
   #if DEBUG == 1
     Serial.print(F("ON P="));
     Serial.println(_vcc_pin);
@@ -48,7 +48,7 @@ void PowerManager::powerOn() {
 
 // turn off the sensor
 void PowerManager::powerOff() {
-  if (! isConfigured()) return;
+  if (_vcc_pin == -1) return;
   #if DEBUG == 1
     Serial.print(F("OFF P="));
     Serial.println(_vcc_pin);
