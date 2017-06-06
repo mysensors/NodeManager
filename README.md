@@ -290,6 +290,8 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
     int loadFromMemory(int index);
     // [27] save the given index of the EEPROM the provided value
     void saveToMemory(int index, int value);
+    // return vcc in V
+    float getVcc();
 ~~~
 
 For example
