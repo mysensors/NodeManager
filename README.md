@@ -199,6 +199,7 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
 ~~~c
     // [10] send the same service message multiple times (default: 1)
     void setRetries(int value);
+    int getRetries();
     #if BATTERY_MANAGER == 1
       // [11] the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
       void setBatteryMin(float value);
@@ -216,6 +217,8 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
       void setBatteryVoltsPerBit(float value);
       // [18] If true, wake up by an interrupt counts as a valid cycle for battery reports otherwise only uninterrupted sleep cycles would contribute (default: true)
       void setBatteryReportWithInterrupt(bool value);
+      // [2] Send a battery level report to the controller
+      void batteryReport();
     #endif
     // [3] define the way the node should behave. It can be (0) IDLE (stay awake withtout executing each sensors' loop), (1) SLEEP (go to sleep for the configured interval), (2) WAIT (wait for the configured interval), (3) ALWAYS_ON (stay awake and execute each sensors' loop)
     void setSleepMode(int value);
@@ -235,6 +238,7 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
     void setInterrupt(int pin, int mode, int pull = -1);
     // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
+    int getSleepBetweenSend();
     // register a built-in sensor
     int registerSensor(int sensor_type, int pin = -1, int child_id = -1);
     // register a custom sensor
@@ -258,6 +262,7 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
     #endif
     // [21] set this to true if you want destination node to send ack back to this node (default: false)
     void setAck(bool value);
+    bool getAck();
     // request and return the current timestamp from the controller
     long getTimestamp();
     // Request the controller's configuration on startup (default: true)
@@ -271,8 +276,6 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
     bool isSleepingNode();
     // [1] Send a hello message back to the controller
     void hello();
-    // [2] Send a battery level report to the controller
-    void batteryReport();
     // [6] reboot the board
     void reboot();
     // [8] send NodeManager's the version back to the controller
@@ -282,10 +285,10 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
     // [9] wake up the board
     void wakeup();
     // process a remote request
-    void process(const char * message);
+    void process(Request & request);
     // return the value stored at the requested index from the EEPROM
     int loadFromMemory(int index);
-    // save the given index of the EEPROM the provided value
+    // [27] save the given index of the EEPROM the provided value
     void saveToMemory(int index, int value);
 ~~~
 
@@ -388,10 +391,6 @@ The following methods are available for all the sensors:
     int getType();
     // [4] description of the sensor (default: '')
     void setDescription(char *value);
-    // set this to true if you want destination node to send ack back to this node (default: false)
-    void setAck(bool value);
-    // when queried, send the message multiple times (default: 1)
-    void setRetries(int value);
     // [5] For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)
     void setSamples(int value);
     // [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
@@ -408,11 +407,6 @@ The following methods are available for all the sensors:
     int getValueType();
     // [11] for float values, set the float precision (default: 2)
     void  setFloatPrecision(int value);
-    // optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
-    void setSleepBetweenSend(int value);
-    // set the interrupt pin the sensor is attached to so its loop() will be executed only upon that interrupt (default: -1)
-    void setInterruptPin(int value);
-    int getInterruptPin();
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
       void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
@@ -433,6 +427,8 @@ The following methods are available for all the sensors:
     void setReportIntervalMinutes(int value);
     // process a remote request
     void process(Request & request);
+    // return the pin the interrupt is attached to
+    int getInterruptPin();
 ~~~
 
 #### Sensor's specific configuration
@@ -533,17 +529,15 @@ Each sensor class can expose additional methods.
 ~~~c
     // [101] set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
     void setMode(int value);
-    int getMode();
     // [102] milliseconds to wait before reading the input (default: 0)
     void setDebounce(int value);
     // [103] time to wait in milliseconds after a change is detected to allow the signal to be restored to its normal value (default: 0)
     void setTriggerTime(int value);
     // [104] Set initial value on the interrupt pin (default: HIGH)
     void setInitial(int value);
-    int getInitial();
 ~~~
 
-*  SensorDs18b20**
+*  SensorDs18b20
 ~~~c
     // returns the sensor's resolution in bits
     int getResolution();

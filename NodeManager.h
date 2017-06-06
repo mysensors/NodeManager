@@ -425,10 +425,6 @@ class Sensor {
     int getType();
     // [4] description of the sensor (default: '')
     void setDescription(char *value);
-    // set this to true if you want destination node to send ack back to this node (default: false)
-    void setAck(bool value);
-    // when queried, send the message multiple times (default: 1)
-    void setRetries(int value);
     // [5] For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)
     void setSamples(int value);
     // [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
@@ -445,11 +441,6 @@ class Sensor {
     int getValueType();
     // [11] for float values, set the float precision (default: 2)
     void  setFloatPrecision(int value);
-    // optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
-    void setSleepBetweenSend(int value);
-    // set the interrupt pin the sensor is attached to so its loop() will be executed only upon that interrupt (default: -1)
-    void setInterruptPin(int value);
-    int getInterruptPin();
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
       void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
@@ -470,6 +461,8 @@ class Sensor {
     void setReportIntervalMinutes(int value);
     // process a remote request
     void process(Request & request);
+    // return the pin the interrupt is attached to
+    int getInterruptPin();
     // define what to do at each stage of the sketch
     virtual void before();
     virtual void presentation();
@@ -486,14 +479,11 @@ class Sensor {
     MyMessage _msg;
     MyMessage _msg_service;
     NodeManager* _node_manager;
-    int _sleep_between_send = 0;
     int _pin = -1;
     int _child_id;
     int _presentation = S_CUSTOM;
     int _type = V_CUSTOM;
     char* _description = "";
-    bool _ack = false;
-    int _retries = 1;
     int _samples = 1;
     int _samples_interval = 0;
     bool _track_last_value = false;
@@ -809,14 +799,12 @@ class SensorSwitch: public Sensor {
     SensorSwitch(NodeManager* node_manager, int child_id, int pin);
     // [101] set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
     void setMode(int value);
-    int getMode();
     // [102] milliseconds to wait before reading the input (default: 0)
     void setDebounce(int value);
     // [103] time to wait in milliseconds after a change is detected to allow the signal to be restored to its normal value (default: 0)
     void setTriggerTime(int value);
     // [104] Set initial value on the interrupt pin (default: HIGH)
     void setInitial(int value);
-    int getInitial();
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
@@ -1126,6 +1114,7 @@ class NodeManager {
     NodeManager();
     // [10] send the same service message multiple times (default: 1)
     void setRetries(int value);
+    int getRetries();
     #if BATTERY_MANAGER == 1
       // [11] the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
       void setBatteryMin(float value);
@@ -1164,6 +1153,7 @@ class NodeManager {
     void setInterrupt(int pin, int mode, int pull = -1);
     // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
+    int getSleepBetweenSend();
     // register a built-in sensor
     int registerSensor(int sensor_type, int pin = -1, int child_id = -1);
     // register a custom sensor
@@ -1187,6 +1177,7 @@ class NodeManager {
     #endif
     // [21] set this to true if you want destination node to send ack back to this node (default: false)
     void setAck(bool value);
+    bool getAck();
     // request and return the current timestamp from the controller
     long getTimestamp();
     // Request the controller's configuration on startup (default: true)
