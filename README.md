@@ -507,12 +507,8 @@ Each sensor class can expose additional methods.
     void setSingleTip(float value);
 ~~~
 
-* SensorDigitalOutput / SensorRelay / SensorLatchingRelay
+* SensorDigitalOutput / SensorRelay
 ~~~c
-    // [101] set how to initialize the output (default: LOW)
-    void setInitialValue(int value);
-    // [102] if greater than 0, send a pulse of the given duration in ms and then restore the output back to the original value (default: 0)
-    void setPulseWidth(int value);
     // [103] define which value to set to the output when set to on (default: HIGH)
     void setOnValue(int value);
     // [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
@@ -521,10 +517,22 @@ Each sensor class can expose additional methods.
     void setSafeguard(int value);
     // [106] if true the input value becomes a duration in minutes after which the output will be automatically turned off (default: false)
     void setInputIsElapsed(bool value);
+    // [107] optionally wait for the given number of milliseconds after changing the status (default: 0)
+    void setWaitAfterSet(int value);
     // manually switch the output to the provided value
-    void set(int value);
+    void setStatus(int value);
     // get the current state
-    int getState();
+    int getStatus();
+~~~
+
+* SensorLatchingRelay (in addition to those available for SensorDigitalOutput / SensorRelay)
+~~~c
+    // [201] set the duration of the pulse to send in ms to activate the relay (default: 50)
+    void setPulseWidth(int value);
+    // [202] set the pin which turns the relay off (default: the pin provided while registering the sensor)
+    void setPinOff(int value);
+    // [203] set the pin which turns the relay on (default: the pin provided while registering the sensor + 1)
+    void setPinOn(int value);
 ~~~
 
 *  SensorSwitch / SensorDoor / SensorMotion

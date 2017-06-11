@@ -693,6 +693,8 @@ class SensorDigitalOutput: public Sensor {
     void setSafeguard(int value);
     // [106] if true the input value becomes a duration in minutes after which the output will be automatically turned off (default: false)
     void setInputIsElapsed(bool value);
+    // [107] optionally wait for the given number of milliseconds after changing the status (default: 0)
+    void setWaitAfterSet(int value);
     // manually switch the output to the provided value
     void setStatus(int value);
     // get the current state
@@ -708,6 +710,7 @@ class SensorDigitalOutput: public Sensor {
     int _status = OFF;
     bool _legacy_mode = false;
     bool _input_is_elapsed = false;
+    int _wait_after_set = 0;
     Timer* _safeguard_timer;
     void _setupPin(int pin);
     void _setStatus(int value);

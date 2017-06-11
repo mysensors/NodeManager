@@ -1035,6 +1035,9 @@ int SensorDigitalOutput::getStatus() {
 void SensorDigitalOutput::setInputIsElapsed(bool value) {
   _input_is_elapsed = value;
 }
+void SensorDigitalOutput::setWaitAfterSet(int value) {
+  _wait_after_set = value;
+}
 
 // main task
 void SensorDigitalOutput::onLoop() {
@@ -1071,6 +1074,7 @@ void SensorDigitalOutput::onProcess(Request & request) {
     case 104: setLegacyMode(request.getValueInt()); break;
     case 105: setSafeguard(request.getValueInt()); break;
     case 106: setInputIsElapsed(request.getValueInt()); break;
+    case 107: setWaitAfterSet(request.getValueInt()); break;
     default: return;
   }
   _send(_msg_service.set(function));
@@ -1096,6 +1100,8 @@ void SensorDigitalOutput::setStatus(int value) {
     if (value == ON && _safeguard_timer->isConfigured() && ! _safeguard_timer->isRunning()) _safeguard_timer->start();
   }
   _setStatus(value);
+  // wait if needed for relay drawing a lot of current
+  if (_wait_after_set > 0) wait(_wait_after_set);
   // store the new status so it will be sent to the controller
   _status = value;
   _value_int = value;
