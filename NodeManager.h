@@ -685,10 +685,6 @@ class SensorDigitalInput: public Sensor {
 class SensorDigitalOutput: public Sensor {
   public:
     SensorDigitalOutput(NodeManager* node_manager, int child_id, int pin);
-    // [101] set how to initialize the output (default: LOW)
-    void setInitialValue(int value);
-    // [102] if greater than 0, send a pulse of the given duration in ms and then restore the output back to the original value (default: 0)
-    void setPulseWidth(int value);
     // [103] define which value to set to the output when set to on (default: HIGH)
     void setOnValue(int value);
     // [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
@@ -708,10 +704,8 @@ class SensorDigitalOutput: public Sensor {
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
   protected:
-    int _initial_value = LOW;
     int _on_value = HIGH;
     int _status = OFF;
-    int _pulse_width = 0;
     bool _legacy_mode = false;
     bool _input_is_elapsed = false;
     Timer* _safeguard_timer;
@@ -735,6 +729,8 @@ class SensorRelay: public SensorDigitalOutput {
 class SensorLatchingRelay: public SensorRelay {
   public:
     SensorLatchingRelay(NodeManager* node_manager, int child_id, int pin);
+    // send a pulse of the given duration in ms and then restore the output back to the original value (default: 50)
+    void setPulseWidth(int value);
     // set the pin which turns the relay off (default: the pin provided while registering the sensor)
     void setPinOff(int value);
     // set the pin which turns the relay on (default: the pin provided while registering the sensor + 1)
@@ -744,6 +740,7 @@ class SensorLatchingRelay: public SensorRelay {
   protected:
     int _pin_on;
     int _pin_off;
+    int _pulse_width = 50;
     void _setStatus(int value);
     void _onProcess(Request & request);
 };

@@ -1020,12 +1020,6 @@ void SensorDigitalOutput::onSetup() {
 }
 
 // setter/getter
-void SensorDigitalOutput::setInitialValue(int value) {
-  _initial_value = value;
-}
-void SensorDigitalOutput::setPulseWidth(int value) {
-  _pulse_width = value;
-}
 void SensorDigitalOutput::setOnValue(int value) {
   _on_value = value;
 }
@@ -1073,8 +1067,6 @@ void SensorDigitalOutput::onReceive(const MyMessage & message) {
 void SensorDigitalOutput::onProcess(Request & request) {
   int function = request.getFunction();
   switch(function) {
-    case 101: setInitialValue(request.getValueInt()); break;
-    case 102: setPulseWidth(request.getValueInt()); break;
     case 103: setOnValue(request.getValueInt()); break;
     case 104: setLegacyMode(request.getValueInt()); break;
     case 105: setSafeguard(request.getValueInt()); break;
@@ -1113,22 +1105,18 @@ void SensorDigitalOutput::setStatus(int value) {
 void SensorDigitalOutput::_setupPin(int pin) {
   // set the pin as output and initialize it accordingly
   pinMode(pin, OUTPUT);
-  _status = _initial_value == LOW ? OFF : ON;
+  // setup the pin in a off status
+  _status = ! _on_value;
   digitalWrite(pin, _status);
   // the initial value is now the current value
-  _value_int = _initial_value;
+  _value_int = _status;
 }
 
 // switch to the requested status
 void SensorDigitalOutput::_setStatus(int value) {
   int value_to_write = _getValueToWrite(value);
-  // set the value
+  // set the value to the pin
   digitalWrite(_pin, value_to_write);
-  if (_pulse_width > 0) {
-    // if this is a pulse output, restore the value to the original value after the pulse
-    wait(_pulse_width);
-    digitalWrite(_pin, value_to_write == LOW ? HIGH: LOW);
-  }
   #if DEBUG == 1
     Serial.print(F("DOUT I="));
     Serial.print(_child_id);
@@ -1136,8 +1124,6 @@ void SensorDigitalOutput::_setStatus(int value) {
     Serial.print(_pin);
     Serial.print(F(" V="));
     Serial.print(value_to_write);
-    Serial.print(F(" P="));
-    Serial.println(_pulse_width);
   #endif
 }
 
@@ -1174,11 +1160,12 @@ SensorLatchingRelay::SensorLatchingRelay(NodeManager* node_manager, int child_id
   setPinOff(pin);
   // set the "on" pin to the provided pin + 1
   setPinOn(pin+1);
-  // set the duration of the pulse
-  setPulseWidth(50);
 }
 
 // setter/getter
+void SensorLatchingRelay::setPulseWidth(int value) {
+  _pulse_width = value;
+}
 void SensorLatchingRelay::setPinOn(int value) {
   _pin_on = value;
 }
@@ -1195,16 +1182,15 @@ void SensorLatchingRelay::onBefore() {
 // switch to the requested status
 void SensorLatchingRelay::_setStatus(int value) {
   int value_to_write = _getValueToWrite(value);
+  // select the right pin to send the pulse to
   int pin = value == OFF ? _pin_off : _pin_on;
   // set the value
   digitalWrite(pin, value_to_write);
-  if (_pulse_width > 0) {
-    // if this is a pulse output, restore the value to the original value after the pulse
-    wait(_pulse_width);
-    digitalWrite(pin, value_to_write == LOW ? HIGH: LOW);
-  }
+  // wait for the given time before restoring the value to the original value after the pulse
+  wait(_pulse_width);
+  digitalWrite(pin, ! value_to_write);
   #if DEBUG == 1
-    Serial.print(F("DOUT I="));
+    Serial.print(F("LAT I="));
     Serial.print(_child_id);
     Serial.print(F(" P="));
     Serial.print(pin);
