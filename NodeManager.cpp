@@ -1005,9 +1005,7 @@ void SensorDHT::onLoop() {
   // temperature sensor
   if (_sensor_type == SensorDHT::TEMPERATURE) {
     // read the temperature
-    float temperature = _dht->readTemperature();
-    // convert it
-    if (! getControllerConfig().isMetric) temperature = temperature * 1.8 + 32;
+    float temperature = _dht->readTemperature(!getControllerConfig().isMetric, true);
     #if DEBUG == 1
       Serial.print(F("DHT I="));
       Serial.print(_child_id);
