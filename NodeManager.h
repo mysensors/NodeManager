@@ -26,6 +26,10 @@
 #define DAYS 3
 #define CYCLES 4
 
+// define on/off
+#define OFF 0
+#define ON 1
+
 // define value type
 #define TYPE_INTEGER 0
 #define TYPE_FLOAT 1
@@ -694,9 +698,9 @@ class SensorDigitalOutput: public Sensor {
     // [106] if true the input value becomes a duration in minutes after which the output will be automatically turned off (default: false)
     void setInputIsElapsed(bool value);
     // manually switch the output to the provided value
-    void set(int value);
+    void setStatus(int value);
     // get the current state
-    int getState();
+    int getStatus();
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
@@ -706,11 +710,14 @@ class SensorDigitalOutput: public Sensor {
   protected:
     int _initial_value = LOW;
     int _on_value = HIGH;
-    int _state = 0;
+    int _status = OFF;
     int _pulse_width = 0;
     bool _legacy_mode = false;
     bool _input_is_elapsed = false;
     Timer* _safeguard_timer;
+    void _setupPin(int pin);
+    void _setStatus(int value);
+    int _getValueToWrite(int value);
 };
 
 
@@ -728,6 +735,17 @@ class SensorRelay: public SensorDigitalOutput {
 class SensorLatchingRelay: public SensorRelay {
   public:
     SensorLatchingRelay(NodeManager* node_manager, int child_id, int pin);
+    // set the pin which turns the relay off (default: the pin provided while registering the sensor)
+    void setPinOff(int value);
+    // set the pin which turns the relay on (default: the pin provided while registering the sensor + 1)
+    void setPinOn(int value);
+    // define what to do at each stage of the sketch
+    void onBefore();
+  protected:
+    int _pin_on;
+    int _pin_off;
+    void _setStatus(int value);
+    void _onProcess(Request & request);
 };
 #endif
 

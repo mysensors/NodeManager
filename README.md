@@ -258,7 +258,7 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
       // [24] manually turn the power on
       void powerOn();
       // [25] manually turn the power off
-      void powerOff();
+      void powerOff(); 
     #endif
     // [21] set this to true if you want destination node to send ack back to this node (default: false)
     void setAck(bool value);
