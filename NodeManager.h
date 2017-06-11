@@ -729,20 +729,20 @@ class SensorRelay: public SensorDigitalOutput {
 class SensorLatchingRelay: public SensorRelay {
   public:
     SensorLatchingRelay(NodeManager* node_manager, int child_id, int pin);
-    // send a pulse of the given duration in ms and then restore the output back to the original value (default: 50)
+    // [201] set the duration of the pulse to send in ms to activate the relay (default: 50)
     void setPulseWidth(int value);
-    // set the pin which turns the relay off (default: the pin provided while registering the sensor)
+    // [202] set the pin which turns the relay off (default: the pin provided while registering the sensor)
     void setPinOff(int value);
-    // set the pin which turns the relay on (default: the pin provided while registering the sensor + 1)
+    // [203] set the pin which turns the relay on (default: the pin provided while registering the sensor + 1)
     void setPinOn(int value);
     // define what to do at each stage of the sketch
     void onBefore();
+    void onProcess(Request & request);
   protected:
     int _pin_on;
     int _pin_off;
     int _pulse_width = 50;
     void _setStatus(int value);
-    void _onProcess(Request & request);
 };
 #endif
 

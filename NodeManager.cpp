@@ -1159,7 +1159,7 @@ SensorLatchingRelay::SensorLatchingRelay(NodeManager* node_manager, int child_id
   // set the "off" pin to the provided pin
   setPinOff(pin);
   // set the "on" pin to the provided pin + 1
-  setPinOn(pin+1);
+  setPinOn(pin + 1);
 }
 
 // setter/getter
@@ -1177,6 +1177,23 @@ void SensorLatchingRelay::setPinOff(int value) {
 void SensorLatchingRelay::onBefore() {
   _setupPin(_pin_on);
   _setupPin(_pin_off);
+}
+
+// what to do when receiving a remote message
+void SensorLatchingRelay::onProcess(Request & request) {
+  int function = request.getFunction();
+  if (function < 200) {
+    // if this is for SensorDigitalOutput call its onProcess()
+    SensorDigitalOutput::onProcess(request);
+    return;
+  }
+  switch(function) {
+    case 201: setPulseWidth(request.getValueInt()); break;
+    case 202: setPinOff(request.getValueInt()); break;
+    case 203: setPinOn(request.getValueInt()); break;
+    default: return;
+  }
+  _send(_msg_service.set(function));
 }
 
 // switch to the requested status
