@@ -2272,6 +2272,8 @@ NodeManager::NodeManager() {
   _msg = MyMessage(CONFIGURATION_CHILD_ID, V_CUSTOM);
 }
 
+int NodeManager::_last_interrupt_pin = -1;
+
 // setter/getter
 void NodeManager::setRetries(int value) {
   _retries = value;
@@ -2637,26 +2639,8 @@ void NodeManager::before() {
     Serial.print(F(" B="));
     Serial.println(MY_CAP_RXBUF);
   #endif
-  // setup the sleep interrupt pin
-  if (_sleep_interrupt_pin > -1) {
-    // set the interrupt when the pin is connected to ground
-    setInterrupt(_sleep_interrupt_pin,FALLING,HIGH);
-  }
   // setup the interrupt pins
-  if (_interrupt_1_mode != MODE_NOT_DEFINED) {
-    pinMode(INTERRUPT_PIN_1,INPUT);
-    if (_interrupt_1_pull > -1) digitalWrite(INTERRUPT_PIN_1,_interrupt_1_pull);
-  }
-  if (_interrupt_2_mode != MODE_NOT_DEFINED) {
-    pinMode(INTERRUPT_PIN_2, INPUT);
-    if (_interrupt_2_pull > -1) digitalWrite(INTERRUPT_PIN_2,_interrupt_2_pull);
-  }
-  #if DEBUG == 1
-    Serial.print(F("INT1 M="));
-    Serial.println(_interrupt_1_mode);
-    Serial.print(F("INT2 M="));
-    Serial.println(_interrupt_2_mode);
-  #endif
+  setupInterrupts();
   #if PERSIST == 1
     // restore the configuration saved in the eeprom
     _loadConfig();
@@ -2733,13 +2717,11 @@ void NodeManager::loop() {
   // if in idle mode, do nothing
   if (_sleep_mode == IDLE) return;
   // if sleep time is not set, do nothing
-  if ((_sleep_mode == SLEEP || _sleep_mode == WAIT) &&  _sleep_time == 0) return;
+  if (isSleepingNode() &&  _sleep_time == 0) return;
   #if BATTERY_MANAGER == 1
     // update the timer for battery report
     if (_battery_report_timer.getUnit() == MINUTES) _battery_report_timer.update();
     if (_battery_report_timer.getUnit() == CYCLES && (_last_interrupt_pin == -1 || _battery_report_with_interrupt)) _battery_report_timer.update();
-    // keep track of the number of sleeping cycles (ignoring if )
-    if (_last_interrupt_pin == -1 || _battery_report_with_interrupt) 
     // if it is time to report the battery level
     if (_battery_report_timer.isOver()) {
       // time to report the battery level again
@@ -2766,7 +2748,7 @@ void NodeManager::loop() {
     if (_auto_power_pins) powerOff();
   #endif
   // continue/start sleeping as requested
-  if (_sleep_mode == SLEEP || _sleep_mode == WAIT) _sleep();
+  if (isSleepingNode()) _sleep();
 }
 
 // dispacth inbound messages
@@ -2989,6 +2971,54 @@ float NodeManager::getVcc() {
     return (float)((1125300UL) / ADC) / 1000;
   #else
     return (float)0;
+  #endif
+}
+
+// setup the interrupt pins
+void NodeManager::setupInterrupts() {
+  // configure wakeup pin if needed
+  if (_sleep_interrupt_pin > -1) {
+    // set the interrupt when the pin is connected to ground
+    setInterrupt(_sleep_interrupt_pin,FALLING,HIGH);
+  }
+  // setup the interrupt pins
+  if (_interrupt_1_mode != MODE_NOT_DEFINED) {
+    pinMode(INTERRUPT_PIN_1,INPUT);
+    if (_interrupt_1_pull > -1) digitalWrite(INTERRUPT_PIN_1,_interrupt_1_pull);
+    // for non sleeping nodes, we need to handle the interrupt by ourselves  
+    if (_sleep_mode != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, _interrupt_1_mode);
+  }
+  if (_interrupt_2_mode != MODE_NOT_DEFINED) {
+    pinMode(INTERRUPT_PIN_2, INPUT);
+    if (_interrupt_2_pull > -1) digitalWrite(INTERRUPT_PIN_2,_interrupt_2_pull);
+    // for non sleeping nodes, we need to handle the interrupt by ourselves  
+    if (_sleep_mode != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, _interrupt_2_mode);
+  }
+  #if DEBUG == 1
+    Serial.print(F("INT P="));
+    Serial.print(INTERRUPT_PIN_1);
+    Serial.print(F(" M="));
+    Serial.println(_interrupt_1_mode);
+    Serial.print(F("INT P="));
+    Serial.print(INTERRUPT_PIN_2);
+    Serial.print(F(" M="));
+    Serial.println(_interrupt_2_mode);
+  #endif
+}
+
+// handle an interrupt
+void NodeManager::_onInterrupt_1() {
+  _last_interrupt_pin = INTERRUPT_PIN_1;
+  #if DEBUG == 1
+    Serial.print(F("INT P="));
+    Serial.println(INTERRUPT_PIN_1);
+  #endif
+}
+void NodeManager::_onInterrupt_2() {
+  _last_interrupt_pin = INTERRUPT_PIN_2;
+  #if DEBUG == 1
+    Serial.print(F("INT P="));
+    Serial.println(INTERRUPT_PIN_2);
   #endif
 }
 

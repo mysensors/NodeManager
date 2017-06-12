@@ -1203,6 +1203,8 @@ class NodeManager {
     void saveToMemory(int index, int value);
     // return vcc in V
     float getVcc();
+    // setup the configured interrupt pins
+    void setupInterrupts();
     // hook into the main sketch functions
     void before();
     void presentation();
@@ -1210,6 +1212,9 @@ class NodeManager {
     void loop();
     void receive(const MyMessage & msg);
     void receiveTime(unsigned long ts);
+    // handle interrupts
+    static void _onInterrupt_1();
+    static void _onInterrupt_2();
   private:
     #if BATTERY_MANAGER == 1
       float _battery_min = 2.6;
@@ -1237,7 +1242,7 @@ class NodeManager {
     int _interrupt_2_mode = MODE_NOT_DEFINED;
     int _interrupt_1_pull = -1;
     int _interrupt_2_pull = -1;
-    int _last_interrupt_pin = -1;
+    static int _last_interrupt_pin;
     long _timestamp = -1;
     Sensor* _sensors[MAX_SENSORS] = {0};
     bool _ack = false;
