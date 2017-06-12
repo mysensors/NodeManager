@@ -2339,7 +2339,7 @@ void NodeManager::setInterrupt(int pin, int mode, int pull) {
     _interrupt_1_mode = mode;
     _interrupt_1_pull = pull;
   }
-  if (pin == INTERRUPT_PIN_2) {
+  if (pin == INTERRUPT_PIN_2) { 
     _interrupt_2_mode = mode;
     _interrupt_2_pull = pull;
   }
