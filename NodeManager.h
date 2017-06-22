@@ -850,7 +850,6 @@ class SensorBH1750: public Sensor {
 #if MODULE_TSL2561 == 1
 class SensorTSL2561: public Sensor {
   public:
-   // SensorTSL2561(int child_id, TSL2561* tsl, int tsl_address, int tsl_gain, int tsl_timing, int tsl_spectrum);
     SensorTSL2561(int child_id, TSL2561* tsl);
     void setGain(int value);
     void setTiming(int value);
@@ -873,7 +872,7 @@ class SensorTSL2561: public Sensor {
     const static int FULL = 3;
   protected:
     TSL2561* _tsl;
-    int _tsl_address = TSL2561_ADDR_FLOAT;
+    int _tsl_address = TSL2561_ADDR_FLOAT; //Still not used
     int _tsl_gain = 1;
     int _tsl_timing = 0;
     int _tsl_spectrum = 0;

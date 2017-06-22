@@ -1409,15 +1409,10 @@ void SensorBH1750::onReceive(const MyMessage & message) {
 */
 #if MODULE_TSL2561 == 1
 // contructor
-//SensorTSL2561::SensorTSL2561(int child_id, TSL2561* tsl, int tsl_address, int tsl_gain, int tsl_timing, int tsl_spectrum): Sensor(child_id,A6) {
 SensorTSL2561::SensorTSL2561(int child_id, TSL2561* tsl): Sensor(child_id,A2) {
   setPresentation(S_LIGHT_LEVEL);
   setType(V_LEVEL);
   _tsl = tsl;
-//  _tsl_address = tsl_address;
-//  _tsl_gain = tsl_gain;
-//  _tsl_timing = tsl_timing;
-// _tsl_spectrum = tsl_spectrum;
 }
 
 void SensorTSL2561::setGain(int value) {
@@ -2219,25 +2214,11 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   #endif
   #if MODULE_TSL2561 == 1 
     else if (sensor_type == SENSOR_TSL2561) {
-     // TSL2561* tsl = new TSL2561(TSL2561_ADDR_FLOAT);
-      TSL2561* tsl = new TSL2561(0x39);
-/// First method, workout something similar to BoschSensor :
-//      if (! tsl->begin(SensorTSL2561::GetI2CAddress(0x39))) { 
-//        #if DEBUG == 1
-//          Serial.println(F("NO TSL"));
-//        #endif
-//        return -1;
-//      }
-// Second method :
-//      if (tsl_address = ADDR_FLOAT) TSL2561* tsl = new TSL2561(TSL2561_ADDR_FLOAT);
-//      else if (tsl_address = ADDR_LOW) TSL2561* tsl = new TSL2561(TSL2561_ADDR_LOW);
-//      else if (tsl_address = ADDR_HIGH) TSL2561* tsl = new TSL2561(TSL2561_ADDR_HIGH);
-//      int tsl_address;
-//      int tsl_gain;
-//      int tsl_timing;
-//      int tsl_spectrum;
+      TSL2561* tsl = new TSL2561(TSL2561_ADDR_FLOAT);
+//      if (tsl_address = ADDR_FLOAT) TSL2561* tsl = new TSL2561(TSL2561_ADDR_FLOAT); // TSL2561_ADDR_FLOAT = 0x39
+//      else if (tsl_address = ADDR_LOW) TSL2561* tsl = new TSL2561(TSL2561_ADDR_LOW); // TSL2561_ADDR_LOW = 0x29
+//      else if (tsl_address = ADDR_HIGH) TSL2561* tsl = new TSL2561(TSL2561_ADDR_HIGH); // TSL2561_ADDR_HIGH = 0x49
       // register light sensor
-     // return registerSensor(new SensorTSL2561(child_id,tsl,tsl_address, tsl_gain, tsl_timing, tsl_spectrum));
       return registerSensor(new SensorTSL2561(child_id,tsl));
     }
   #endif
