@@ -13,6 +13,7 @@
  */
 
 // General settings
+//#define MY_BAUD_RATE 9600
 #define MY_BAUD_RATE 115200
 //#define MY_DEBUG
 #define MY_NODE_ID 140
@@ -41,9 +42,9 @@
 //#define MY_SENSOR_NETWORK
 
 // Avoid battery drain if Gateway disconnected and the node sends more than MY_TRANSPORT_STATE_RETRIES times message.
-#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
-#define MY_PARENT_NODE_IS_STATIC
-#define MY_PARENT_NODE_ID 0
+//#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
+//#define MY_PARENT_NODE_IS_STATIC
+//#define MY_PARENT_NODE_ID 0
 
 //#define MY_TRANSPORT_WAIT_READY_MS (5*1000ul)
 //#define MY_TRANSPORT_TIMEOUT_EXT_FAILURE_STATE (15*60*1000ul)

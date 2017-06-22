@@ -7,7 +7,7 @@
 #include <Arduino.h>
 
 // define NodeManager version
-#define VERSION "1.5"
+#define VERSION "1.6-dev"
 
 /***********************************
    Constants
@@ -221,11 +221,7 @@
 #endif
 #if MODULE_TSL2561 == 1
   // TSL2561 sensor, return light in lux
-  #define SENSOR_TSL2561_ADDR_FLOAT 29
-    // TSL2561 sensor, return light in lux
-  #define SENSOR_TSL2561_ADDR_LOW 30
-    // TSL2561 sensor, return light in lux
-  #define SENSOR_TSL2561_ADDR_HIGH 31
+  #define SENSOR_TSL2561 29
 #endif
 #if MODULE_MLX90614 == 1
   // MLX90614 sensor, contactless temperature sensor
@@ -251,7 +247,7 @@
   // MCP9808 sensor, precision temperature sensor
   #define SENSOR_MCP9808 25
 #endif
-// last Id: 31
+// last Id: 29
 /***********************************
   Libraries
 */
@@ -712,7 +708,8 @@ class SensorDHT: public Sensor {
 #if MODULE_AM2320 == 1
 class SensorAM2320: public Sensor {
   public:
-    SensorAM2320(int child_id, int sensor_type);
+    //SensorAM2320(int child_id, int sensor_type);
+    SensorAM2320(int child_id, AM2320* th, int sensor_type);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
@@ -723,7 +720,6 @@ class SensorAM2320: public Sensor {
     const static int HUMIDITY = 1;
   protected:
     AM2320* _th;
-    float _offset = 0;
     int _sensor_type = 0;
 };
 #endif
@@ -854,7 +850,8 @@ class SensorBH1750: public Sensor {
 #if MODULE_TSL2561 == 1
 class SensorTSL2561: public Sensor {
   public:
-    SensorTSL2561(int child_id, TSL2561* tsl, int tsl_gain, int tsl_timing, int tsl_spectrum);
+   // SensorTSL2561(int child_id, TSL2561* tsl, int tsl_address, int tsl_gain, int tsl_timing, int tsl_spectrum);
+    SensorTSL2561(int child_id, TSL2561* tsl);
     void setGain(int value);
     void setTiming(int value);
     void setSpectrum(int value);
@@ -862,12 +859,24 @@ class SensorTSL2561: public Sensor {
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
+    const static int ADDR_FLOAT = 0;
+    const static int ADDR_LOW = 1;
+    const static int ADDR_HIGH = 2;
+    const static int GAIN_0X = 0;
+    const static int GAIN_16X = 1;
+    const static int INTEGRATIONTIME_13MS = 0;
+    const static int INTEGRATIONTIME_101MS = 1;
+    const static int INTEGRATIONTIME_402MS = 2;
+    const static int VISIBLE = 0;
+    const static int FULLSPECTRUM = 1;
+    const static int INFRARED = 2;
+    const static int FULL = 3;
   protected:
     TSL2561* _tsl;
     int _tsl_address = TSL2561_ADDR_FLOAT;
-    int _tsl_gain;
-    int _tsl_timing;
-    int _tsl_spectrum;
+    int _tsl_gain = 1;
+    int _tsl_timing = 0;
+    int _tsl_spectrum = 0;
 };
 #endif
 

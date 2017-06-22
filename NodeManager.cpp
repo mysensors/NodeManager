@@ -871,6 +871,8 @@ void SensorDigitalOutput::onBefore() {
   // set the pin as output and initialize it accordingly
   pinMode(_pin, OUTPUT);
   _state = _initial_value == LOW ? LOW : HIGH;
+  // could we save and load last known state EEPROM ?
+  // digitalWrite(pin, loadState(_child_id)?LOW : HIGH);
   digitalWrite(_pin, _state);
   // the initial value is now the current value
   _value_int = _initial_value;
@@ -878,6 +880,9 @@ void SensorDigitalOutput::onBefore() {
 
 // what to do during setup
 void SensorDigitalOutput::onSetup() {
+  // inform the controller about relay state
+  // send(_msg.set(loadState(_child_id)?LOW:HIGH));
+  _send(_msg.set(_initial_value));
 }
 
 // setter/getter
@@ -924,6 +929,7 @@ void SensorDigitalOutput::onReceive(const MyMessage & message) {
     }
     // set the value
     digitalWrite(_pin, value_to_write);
+    //saveState(_child_id, value_to_write);
     if (_pulse_width > 0) {
       // if this is a pulse output, restore the value to the original value after the pulse
       wait(_pulse_width);
@@ -1044,9 +1050,9 @@ void SensorDHT::onReceive(const MyMessage & message) {
 */
 #if MODULE_AM2320 == 1
 // contructor
-SensorAM2320::SensorAM2320(int child_id, int sensor_type): Sensor(child_id,A2) {
-  _th = new AM2320(); //another approach to try
-  //_th = th;
+//SensorAM2320::SensorAM2320(int child_id, int sensor_type): Sensor(child_id,A2) {
+SensorAM2320::SensorAM2320(int child_id, AM2320* th, int sensor_type): Sensor(child_id,A2) {
+  _th = th;
   // store the sensor type (0: temperature, 1: humidity)
   _sensor_type = sensor_type;
   if (_sensor_type == SensorAM2320::TEMPERATURE) {
@@ -1403,12 +1409,15 @@ void SensorBH1750::onReceive(const MyMessage & message) {
 */
 #if MODULE_TSL2561 == 1
 // contructor
-SensorTSL2561::SensorTSL2561(int child_id, TSL2561* tsl, int tsl_gain, int tsl_timing, int tsl_spectrum): Sensor(child_id,A5) {
+//SensorTSL2561::SensorTSL2561(int child_id, TSL2561* tsl, int tsl_address, int tsl_gain, int tsl_timing, int tsl_spectrum): Sensor(child_id,A6) {
+SensorTSL2561::SensorTSL2561(int child_id, TSL2561* tsl): Sensor(child_id,A2) {
   setPresentation(S_LIGHT_LEVEL);
   setType(V_LEVEL);
-  _tsl_gain = tsl_gain;
-  _tsl_timing = tsl_timing;
-  _tsl_spectrum = tsl_spectrum;
+  _tsl = tsl;
+//  _tsl_address = tsl_address;
+//  _tsl_gain = tsl_gain;
+//  _tsl_timing = tsl_timing;
+// _tsl_spectrum = tsl_spectrum;
 }
 
 void SensorTSL2561::setGain(int value) {
@@ -1425,34 +1434,34 @@ void SensorTSL2561::setSpectrum(int value) {
 
 // what do to during before
 void SensorTSL2561::onBefore() {
-   _tsl->begin();      
+  if (_tsl->begin()) {
+    switch (_tsl_gain) {
+      case 0:
+        _tsl->setGain(TSL2561_GAIN_0X);
+        break; 
+      case 1:
+        _tsl->setGain(TSL2561_GAIN_16X);
+        break;      
+    }
+    switch (_tsl_timing) {
+      case 0:
+        _tsl->setTiming(TSL2561_INTEGRATIONTIME_13MS);
+        break; 
+      case 1:
+        _tsl->setTiming(TSL2561_INTEGRATIONTIME_101MS); 
+        break; 
+      case 2:
+        _tsl->setTiming(TSL2561_INTEGRATIONTIME_402MS); 
+        break;
+    }
+  }
+  else {
+    Serial.println(F("TSL2561 offline"));
+  } 
 }
 
 // what do to during setup
 void SensorTSL2561::onSetup() {
-  // You can change the gain on the fly, to adapt to brighter/dimmer light situations     
-  switch (_tsl_gain) {
-    case 0:
-      _tsl->setGain(TSL2561_GAIN_0X); // set no gain (for bright situtations)
-      break; 
-    case 1:
-      _tsl->setGain(TSL2561_GAIN_16X); // set 16x gain (for dim situations)
-      break;      
-  }
-  // Changing the integration time gives you a longer time over which to sense light
-  // longer timelines are slower, but are good in very low light situtations!
-  //_tsl->setTiming(tsl_timing);  // shortest integration time (bright light)
-  switch (_tsl_timing) {
-    case 0:
-      _tsl->setTiming(TSL2561_INTEGRATIONTIME_13MS);  // shortest integration time (bright light)
-      break; 
-    case 1:
-      _tsl->setTiming(TSL2561_INTEGRATIONTIME_101MS);  // medium integration time (medium light)
-      break; 
-    case 2:
-      _tsl->setTiming(TSL2561_INTEGRATIONTIME_402MS);  // longest integration time (dim light)
-      break;
-  } 
 }
 
 // what do to during loop
@@ -1468,32 +1477,33 @@ void SensorTSL2561::onLoop() {
     case 2:
       _value_int = _tsl->getLuminosity(TSL2561_INFRARED); 
       break; 
+    /// The next one got to be discussed, it contains 3 values, so we create 4 _value_int ? We choose only one of them ?  
     case 3:
       // request the full light level
       uint32_t lum = _tsl->getFullLuminosity(); 
       uint16_t ir, full;
       ir = lum >> 16;
-//      _ir = ir;
       full = lum & 0xFFFF;
-//      _full = full;
       _value_int = _tsl->calculateLux(full, ir);
+  #if DEBUG == 1
+      Serial.print(F("TSL I="));
+      Serial.print(_child_id);
+      Serial.print(F(" LUX="));
+      Serial.print(_value_int);
+      Serial.print(F(" IR="));
+      Serial.print(ir);
+      Serial.print(F(" FULL="));
+      Serial.print(full);
+      Serial.print(F(" VIS="));
+      Serial.println(full-ir);
+   #endif
       break; 
   }
   #if DEBUG == 1
+  if (_tsl_spectrum < 3) {
     Serial.print(F("TSL I="));
     Serial.print(_child_id);
-    if (_tsl_spectrum < 3) {
     Serial.print(F(" L="));
-    Serial.println(_value_int);
-    }
-    if (_tsl_spectrum == 3) {
-//    Serial.print(F(" IR="));
-//    Serial.println(_ir);
-//    Serial.print(F(" FULL="));
-//    Serial.println(_full);
-//    Serial.print(F(" VISIBLE="));
-//    Serial.println(_full-_ir);
-    Serial.print(F(" LUX="));
     Serial.println(_value_int);
     }
   #endif
@@ -2149,9 +2159,9 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   #if MODULE_AM2320 == 1
     else if (sensor_type == SENSOR_AM2320) {
       AM2320* th = new AM2320();
-      registerSensor(new SensorAM2320(child_id,SensorAM2320::TEMPERATURE));
+      registerSensor(new SensorAM2320(child_id,th,SensorAM2320::TEMPERATURE));
       child_id = _getAvailableChildId();
-      return registerSensor(new SensorAM2320(child_id,SensorAM2320::HUMIDITY));
+      return registerSensor(new SensorAM2320(child_id,th,SensorAM2320::HUMIDITY));
     }
   #endif
   #if MODULE_SHT21 == 1
@@ -2208,17 +2218,27 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     }
   #endif
   #if MODULE_TSL2561 == 1 
-    else if (sensor_type == SENSOR_TSL2561_ADDR_FLOAT || sensor_type == SENSOR_TSL2561_ADDR_LOW || sensor_type == SENSOR_TSL2561_ADDR_HIGH) {
-      TSL2561* tsl;
-      // register sensor by his I2C address
-      if (sensor_type == SENSOR_TSL2561_ADDR_FLOAT) tsl = new TSL2561(TSL2561_ADDR_FLOAT); 
-      else if (sensor_type == SENSOR_TSL2561_ADDR_LOW) tsl = new TSL2561(TSL2561_ADDR_LOW); 
-      else if (sensor_type == SENSOR_TSL2561_ADDR_HIGH) tsl = new TSL2561(TSL2561_ADDR_HIGH); 
-      int tsl_gain;
-      int tsl_timing;
-      int tsl_spectrum;
+    else if (sensor_type == SENSOR_TSL2561) {
+     // TSL2561* tsl = new TSL2561(TSL2561_ADDR_FLOAT);
+      TSL2561* tsl = new TSL2561(0x39);
+/// First method, workout something similar to BoschSensor :
+//      if (! tsl->begin(SensorTSL2561::GetI2CAddress(0x39))) { 
+//        #if DEBUG == 1
+//          Serial.println(F("NO TSL"));
+//        #endif
+//        return -1;
+//      }
+// Second method :
+//      if (tsl_address = ADDR_FLOAT) TSL2561* tsl = new TSL2561(TSL2561_ADDR_FLOAT);
+//      else if (tsl_address = ADDR_LOW) TSL2561* tsl = new TSL2561(TSL2561_ADDR_LOW);
+//      else if (tsl_address = ADDR_HIGH) TSL2561* tsl = new TSL2561(TSL2561_ADDR_HIGH);
+//      int tsl_address;
+//      int tsl_gain;
+//      int tsl_timing;
+//      int tsl_spectrum;
       // register light sensor
-      return registerSensor(new SensorTSL2561(child_id,tsl,tsl_gain,tsl_timing,tsl_spectrum));
+     // return registerSensor(new SensorTSL2561(child_id,tsl,tsl_address, tsl_gain, tsl_timing, tsl_spectrum));
+      return registerSensor(new SensorTSL2561(child_id,tsl));
     }
   #endif
   #if MODULE_MLX90614 == 1
