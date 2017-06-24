@@ -757,7 +757,6 @@ Register a latching relay connecting to pin 6 (set) and pin 7 (unset):
 
 ~~~c
   nodeManager.registerSensor(SENSOR_LATCHING_RELAY,6);
-  nodeManager.registerSensor(SENSOR_LATCHING_RELAY,7);
 ~~~
 
 ## Example Sketches
@@ -928,7 +927,7 @@ void receiveTime(unsigned long ts) {
 
 *  Boiler Sensor
 
-The following sketch controls a latching relay connected to a boiler. A latching relay (requiring only a pulse to switch) has been chosen to minimize the power consumption required by a traditional relay to stay on. This relay has normally two pins, one for closing and the other for opening the controlled circuit, connected to pin 6 and 7 of the arduino board. This is why we have to register two sensors against NodeManager so to control the two funtions indipendently. Since using a SENSOR_LATCHING_RELAY type of sensor, NodeManager will take care of just sending out a single pulse only when a REQ command of type V_STATUS is sent to one or the other child id.
+The following sketch controls a latching relay connected to a boiler. A latching relay (requiring only a pulse to switch) has been chosen to minimize the power consumption required by a traditional relay to stay on. This relay has normally two pins, one for closing and the other for opening the controlled circuit, connected to pin 6 and 7 of the arduino board. Since using a SENSOR_LATCHING_RELAY type of sensor, NodeManager will automatically consider the provided pin as the ON pin and the one just after as the OFF pin and will take care of just sending out a single pulse only when a SET command of type V_STATUS is sent to the child id. The appropriate pin will be then used.
 
 In this example, the board also runs at 1Mhz so it can go down to 1.8V: by setting setBatteryMin() and setBatteryMax(), the battery percentage will be calculated and reported (by default, automatically every 10 sleeping cycles) based on these custom boundaries.
 
@@ -974,7 +973,6 @@ void before() {
   nodeManager.setBatteryMax(3.2);
   nodeManager.setSleep(SLEEP,5,MINUTES);
   nodeManager.registerSensor(SENSOR_LATCHING_RELAY,6);
-  nodeManager.registerSensor(SENSOR_LATCHING_RELAY,7);
 
   /*
    * Register above your sensors
