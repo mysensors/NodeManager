@@ -26,6 +26,10 @@
 #define DAYS 3
 #define CYCLES 4
 
+// define on/off
+#define OFF 0
+#define ON 1
+
 // define value type
 #define TYPE_INTEGER 0
 #define TYPE_FLOAT 1
@@ -681,10 +685,6 @@ class SensorDigitalInput: public Sensor {
 class SensorDigitalOutput: public Sensor {
   public:
     SensorDigitalOutput(NodeManager* node_manager, int child_id, int pin);
-    // [101] set how to initialize the output (default: LOW)
-    void setInitialValue(int value);
-    // [102] if greater than 0, send a pulse of the given duration in ms and then restore the output back to the original value (default: 0)
-    void setPulseWidth(int value);
     // [103] define which value to set to the output when set to on (default: HIGH)
     void setOnValue(int value);
     // [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
@@ -693,10 +693,12 @@ class SensorDigitalOutput: public Sensor {
     void setSafeguard(int value);
     // [106] if true the input value becomes a duration in minutes after which the output will be automatically turned off (default: false)
     void setInputIsElapsed(bool value);
+    // [107] optionally wait for the given number of milliseconds after changing the status (default: 0)
+    void setWaitAfterSet(int value);
     // manually switch the output to the provided value
-    void set(int value);
+    void setStatus(int value);
     // get the current state
-    int getState();
+    int getStatus();
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
@@ -704,13 +706,15 @@ class SensorDigitalOutput: public Sensor {
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
   protected:
-    int _initial_value = LOW;
     int _on_value = HIGH;
-    int _state = 0;
-    int _pulse_width = 0;
+    int _status = OFF;
     bool _legacy_mode = false;
     bool _input_is_elapsed = false;
+    int _wait_after_set = 0;
     Timer* _safeguard_timer;
+    void _setupPin(int pin);
+    virtual void _setStatus(int value);
+    int _getValueToWrite(int value);
 };
 
 
@@ -728,6 +732,20 @@ class SensorRelay: public SensorDigitalOutput {
 class SensorLatchingRelay: public SensorRelay {
   public:
     SensorLatchingRelay(NodeManager* node_manager, int child_id, int pin);
+    // [201] set the duration of the pulse to send in ms to activate the relay (default: 50)
+    void setPulseWidth(int value);
+    // [202] set the pin which turns the relay off (default: the pin provided while registering the sensor)
+    void setPinOff(int value);
+    // [203] set the pin which turns the relay on (default: the pin provided while registering the sensor + 1)
+    void setPinOn(int value);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onProcess(Request & request);
+  protected:
+    int _pin_on;
+    int _pin_off;
+    int _pulse_width = 50;
+    void _setStatus(int value);
 };
 #endif
 

@@ -258,7 +258,7 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
       // [24] manually turn the power on
       void powerOn();
       // [25] manually turn the power off
-      void powerOff();
+      void powerOff(); 
     #endif
     // [21] set this to true if you want destination node to send ack back to this node (default: false)
     void setAck(bool value);
@@ -507,12 +507,8 @@ Each sensor class can expose additional methods.
     void setSingleTip(float value);
 ~~~
 
-* SensorDigitalOutput / SensorRelay / SensorLatchingRelay
+* SensorDigitalOutput / SensorRelay
 ~~~c
-    // [101] set how to initialize the output (default: LOW)
-    void setInitialValue(int value);
-    // [102] if greater than 0, send a pulse of the given duration in ms and then restore the output back to the original value (default: 0)
-    void setPulseWidth(int value);
     // [103] define which value to set to the output when set to on (default: HIGH)
     void setOnValue(int value);
     // [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
@@ -521,10 +517,22 @@ Each sensor class can expose additional methods.
     void setSafeguard(int value);
     // [106] if true the input value becomes a duration in minutes after which the output will be automatically turned off (default: false)
     void setInputIsElapsed(bool value);
+    // [107] optionally wait for the given number of milliseconds after changing the status (default: 0)
+    void setWaitAfterSet(int value);
     // manually switch the output to the provided value
-    void set(int value);
+    void setStatus(int value);
     // get the current state
-    int getState();
+    int getStatus();
+~~~
+
+* SensorLatchingRelay (in addition to those available for SensorDigitalOutput / SensorRelay)
+~~~c
+    // [201] set the duration of the pulse to send in ms to activate the relay (default: 50)
+    void setPulseWidth(int value);
+    // [202] set the pin which turns the relay off (default: the pin provided while registering the sensor)
+    void setPinOff(int value);
+    // [203] set the pin which turns the relay on (default: the pin provided while registering the sensor + 1)
+    void setPinOn(int value);
 ~~~
 
 *  SensorSwitch / SensorDoor / SensorMotion
@@ -749,7 +757,6 @@ Register a latching relay connecting to pin 6 (set) and pin 7 (unset):
 
 ~~~c
   nodeManager.registerSensor(SENSOR_LATCHING_RELAY,6);
-  nodeManager.registerSensor(SENSOR_LATCHING_RELAY,7);
 ~~~
 
 ## Example Sketches
@@ -920,7 +927,7 @@ void receiveTime(unsigned long ts) {
 
 *  Boiler Sensor
 
-The following sketch controls a latching relay connected to a boiler. A latching relay (requiring only a pulse to switch) has been chosen to minimize the power consumption required by a traditional relay to stay on. This relay has normally two pins, one for closing and the other for opening the controlled circuit, connected to pin 6 and 7 of the arduino board. This is why we have to register two sensors against NodeManager so to control the two funtions indipendently. Since using a SENSOR_LATCHING_RELAY type of sensor, NodeManager will take care of just sending out a single pulse only when a REQ command of type V_STATUS is sent to one or the other child id.
+The following sketch controls a latching relay connected to a boiler. A latching relay (requiring only a pulse to switch) has been chosen to minimize the power consumption required by a traditional relay to stay on. This relay has normally two pins, one for closing and the other for opening the controlled circuit, connected to pin 6 and 7 of the arduino board. Since using a SENSOR_LATCHING_RELAY type of sensor, NodeManager will automatically consider the provided pin as the ON pin and the one just after as the OFF pin and will take care of just sending out a single pulse only when a SET command of type V_STATUS is sent to the child id. The appropriate pin will be then used.
 
 In this example, the board also runs at 1Mhz so it can go down to 1.8V: by setting setBatteryMin() and setBatteryMax(), the battery percentage will be calculated and reported (by default, automatically every 10 sleeping cycles) based on these custom boundaries.
 
@@ -966,7 +973,6 @@ void before() {
   nodeManager.setBatteryMax(3.2);
   nodeManager.setSleep(SLEEP,5,MINUTES);
   nodeManager.registerSensor(SENSOR_LATCHING_RELAY,6);
-  nodeManager.registerSensor(SENSOR_LATCHING_RELAY,7);
 
   /*
    * Register above your sensors

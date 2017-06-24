@@ -1000,6 +1000,7 @@ void SensorDigitalInput::onProcess(Request & request) {
 }
 #endif
 
+
 #if MODULE_DIGITAL_OUTPUT == 1
 /*
    SensorDigitalOutput
@@ -1011,13 +1012,7 @@ SensorDigitalOutput::SensorDigitalOutput(NodeManager* node_manager, int child_id
 
 // what to do during before
 void SensorDigitalOutput::onBefore() {
-  // set the pin as output and initialize it accordingly
-  pinMode(_pin, OUTPUT);
-  _state = _initial_value == LOW ? LOW : HIGH;
-  digitalWrite(_pin, _state);
-  // the initial value is now the current value
-  _value_int = _initial_value;
-  // create the safeguard timer
+  _setupPin(_pin);
 }
 
 // what to do during setup
@@ -1025,12 +1020,6 @@ void SensorDigitalOutput::onSetup() {
 }
 
 // setter/getter
-void SensorDigitalOutput::setInitialValue(int value) {
-  _initial_value = value;
-}
-void SensorDigitalOutput::setPulseWidth(int value) {
-  _pulse_width = value;
-}
 void SensorDigitalOutput::setOnValue(int value) {
   _on_value = value;
 }
@@ -1040,24 +1029,27 @@ void SensorDigitalOutput::setLegacyMode(bool value) {
 void SensorDigitalOutput::setSafeguard(int value) {
   _safeguard_timer->set(value,MINUTES);
 }
-int SensorDigitalOutput::getState() {
-  return _state;
+int SensorDigitalOutput::getStatus() {
+  return _status;
 }
 void SensorDigitalOutput::setInputIsElapsed(bool value) {
   _input_is_elapsed = value;
 }
+void SensorDigitalOutput::setWaitAfterSet(int value) {
+  _wait_after_set = value;
+}
 
 // main task
 void SensorDigitalOutput::onLoop() {
-    // set the value to -1 so to avoid reporting to the gateway during loop
-    _value_int = -1;
-    _last_value_int = -1;
+  // set the value to -1 so to avoid reporting to the gateway during loop
+  _value_int = -1;
+  _last_value_int = -1;
   // if a safeguard is set, check if it is time for it
   if (_safeguard_timer->isRunning()) {
     // update the timer
     _safeguard_timer->update();
     // if the time is over, turn the output off
-    if (_safeguard_timer->isOver()) set(LOW);
+    if (_safeguard_timer->isOver()) setStatus(OFF);
   }
 }
 
@@ -1066,11 +1058,11 @@ void SensorDigitalOutput::onReceive(const MyMessage & message) {
   // by default handle a SET message but when legacy mode is set when a REQ message is expected instead
   if ( (message.getCommand() == C_SET && ! _legacy_mode) || (message.getCommand() == C_REQ && _legacy_mode)) {
     // switch the output
-    set(message.getInt());
+    setStatus(message.getInt());
   }
   if (message.getCommand() == C_REQ && ! _legacy_mode) {
     // return the current status
-    _value_int = _state;
+    _value_int = _status;
   }
 }
 
@@ -1078,59 +1070,78 @@ void SensorDigitalOutput::onReceive(const MyMessage & message) {
 void SensorDigitalOutput::onProcess(Request & request) {
   int function = request.getFunction();
   switch(function) {
-    case 101: setInitialValue(request.getValueInt()); break;
-    case 102: setPulseWidth(request.getValueInt()); break;
     case 103: setOnValue(request.getValueInt()); break;
     case 104: setLegacyMode(request.getValueInt()); break;
     case 105: setSafeguard(request.getValueInt()); break;
     case 106: setInputIsElapsed(request.getValueInt()); break;
+    case 107: setWaitAfterSet(request.getValueInt()); break;
     default: return;
   }
   _send(_msg_service.set(function));
 }
 
 // write the value to the output
-void SensorDigitalOutput::set(int value) {
+void SensorDigitalOutput::setStatus(int value) {
+  // pre-process the input value
   if (_input_is_elapsed) {
-    if (value == LOW) {
-      // stop the timer
+    // the input provided is an elapsed time
+    if (value == OFF) {
+      // turning it off, no need for a safeguard anymore, stop the timer
       _safeguard_timer->stop();
-    } else {
+    } 
+    else if (value == ON) {
       // configure and start the timer
       _safeguard_timer->start(value,MINUTES);
-      // if the input is an elapsed time, unless the value is LOW, the output will be always on
-      value = HIGH;
+      // if the input is an elapsed time, unless the value is OFF, the output will be always ON
+      value = ON;
     }
   } else {
     // if turning the output on and a safeguard timer is configured, start it
-    if (value == HIGH && _safeguard_timer->isConfigured() && ! _safeguard_timer->isRunning()) _safeguard_timer->start();
+    if (value == ON && _safeguard_timer->isConfigured() && ! _safeguard_timer->isRunning()) _safeguard_timer->start();
   }
+  _setStatus(value);
+  // wait if needed for relay drawing a lot of current
+  if (_wait_after_set > 0) wait(_wait_after_set);
+  // store the new status so it will be sent to the controller
+  _status = value;
+  _value_int = value;
+}
+
+// setup the provided pin for output
+void SensorDigitalOutput::_setupPin(int pin) {
+  // set the pin as output and initialize it accordingly
+  pinMode(pin, OUTPUT);
+  // setup the pin in a off status
+  _status = ! _on_value;
+  digitalWrite(pin, _status);
+  // the initial value is now the current value
+  _value_int = _status;
+}
+
+// switch to the requested status
+void SensorDigitalOutput::_setStatus(int value) {
+  int value_to_write = _getValueToWrite(value);
+  // set the value to the pin
+  digitalWrite(_pin, value_to_write);
   #if DEBUG == 1
     Serial.print(F("DOUT I="));
     Serial.print(_child_id);
     Serial.print(F(" P="));
     Serial.print(_pin);
     Serial.print(F(" V="));
-    Serial.print(value);
-    Serial.print(F(" P="));
-    Serial.println(_pulse_width);
+    Serial.println(value_to_write);
   #endif
-  // reverse the value if needed
+}
+
+// reverse the value if needed based on the _on_value
+int SensorDigitalOutput::_getValueToWrite(int value) {
   int value_to_write = value;
   if (_on_value == LOW) {
-    if (value == HIGH) value_to_write = LOW;
-    if (value == LOW) value_to_write = HIGH;
+    // if the "on" value is LOW, reverse the value
+    if (value == ON) value_to_write = LOW;
+    if (value == OFF) value_to_write = HIGH;
   }
-  // set the value
-  digitalWrite(_pin, value_to_write);
-  if (_pulse_width > 0) {
-    // if this is a pulse output, restore the value to the original value after the pulse
-    wait(_pulse_width);
-    digitalWrite(_pin, value_to_write == 0 ? HIGH: LOW);
-  }
-  // store the current value so it will be sent to the controller
-  _state = value;
-  _value_int = value;
+  return value_to_write;
 }
 
 
@@ -1151,8 +1162,67 @@ SensorRelay::SensorRelay(NodeManager* node_manager, int child_id, int pin): Sens
 
 // contructor
 SensorLatchingRelay::SensorLatchingRelay(NodeManager* node_manager, int child_id, int pin): SensorRelay(node_manager, child_id, pin) {
-  // like a sensor with a default pulse set
-  setPulseWidth(50);
+  // set the "off" pin to the provided pin
+  setPinOff(pin);
+  // set the "on" pin to the provided pin + 1
+  setPinOn(pin + 1);
+}
+
+// setter/getter
+void SensorLatchingRelay::setPulseWidth(int value) {
+  _pulse_width = value;
+}
+void SensorLatchingRelay::setPinOn(int value) {
+  _pin_on = value;
+}
+void SensorLatchingRelay::setPinOff(int value) {
+  _pin_off = value;
+}
+
+// what to do during before
+void SensorLatchingRelay::onBefore() {
+  _setupPin(_pin_on);
+  _setupPin(_pin_off);
+}
+
+// what to do when receiving a remote message
+void SensorLatchingRelay::onProcess(Request & request) {
+  int function = request.getFunction();
+  if (function < 200) {
+    // if this is for SensorDigitalOutput call its onProcess()
+    SensorDigitalOutput::onProcess(request);
+    return;
+  }
+  switch(function) {
+    case 201: setPulseWidth(request.getValueInt()); break;
+    case 202: setPinOff(request.getValueInt()); break;
+    case 203: setPinOn(request.getValueInt()); break;
+    default: return;
+  }
+  _send(_msg_service.set(function));
+}
+
+// switch to the requested status
+void SensorLatchingRelay::_setStatus(int value) {
+  // select the right pin to send the pulse to
+  int pin = value == OFF ? _pin_off : _pin_on;
+  // set the value
+  digitalWrite(pin, _on_value);
+  // wait for the given time before restoring the value to the original value after the pulse
+  wait(_pulse_width);
+  digitalWrite(pin, ! _on_value);
+  #if DEBUG == 1
+    Serial.print(F("LAT I="));
+    Serial.print(_child_id);
+    Serial.print(F(" P="));
+    Serial.print(pin);
+    Serial.print(F(" S="));
+    Serial.print(value);
+    Serial.print(F(" V="));
+    Serial.print(_on_value);
+    Serial.print(F(" P="));
+    Serial.println(_pulse_width);
+  #endif
 }
 
 #endif
