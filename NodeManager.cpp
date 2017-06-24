@@ -1129,7 +1129,7 @@ void SensorDigitalOutput::_setStatus(int value) {
     Serial.print(F(" P="));
     Serial.print(_pin);
     Serial.print(F(" V="));
-    Serial.print(value_to_write);
+    Serial.println(value_to_write);
   #endif
 }
 
@@ -1204,21 +1204,22 @@ void SensorLatchingRelay::onProcess(Request & request) {
 
 // switch to the requested status
 void SensorLatchingRelay::_setStatus(int value) {
-  int value_to_write = _getValueToWrite(value);
   // select the right pin to send the pulse to
   int pin = value == OFF ? _pin_off : _pin_on;
   // set the value
-  digitalWrite(pin, value_to_write);
+  digitalWrite(pin, _on_value);
   // wait for the given time before restoring the value to the original value after the pulse
   wait(_pulse_width);
-  digitalWrite(pin, ! value_to_write);
+  digitalWrite(pin, ! _on_value);
   #if DEBUG == 1
     Serial.print(F("LAT I="));
     Serial.print(_child_id);
     Serial.print(F(" P="));
     Serial.print(pin);
+    Serial.print(F(" S="));
+    Serial.print(value);
     Serial.print(F(" V="));
-    Serial.print(value_to_write);
+    Serial.print(_on_value);
     Serial.print(F(" P="));
     Serial.println(_pulse_width);
   #endif

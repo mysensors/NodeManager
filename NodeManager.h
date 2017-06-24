@@ -713,7 +713,7 @@ class SensorDigitalOutput: public Sensor {
     int _wait_after_set = 0;
     Timer* _safeguard_timer;
     void _setupPin(int pin);
-    void _setStatus(int value);
+    virtual void _setStatus(int value);
     int _getValueToWrite(int value);
 };
 
