@@ -1146,8 +1146,8 @@ class NodeManager {
     // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
     void setSleepInterruptPin(int value);
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
-    void setInterrupt(int pin, int mode, int pull = -1);
-    // ignore two consecutive interrupts if happening within this timeframe in milliseconds (default: 100)
+    void setInterrupt(int pin, int mode, int initial = -1);
+    // [28] ignore two consecutive interrupts if happening within this timeframe in milliseconds (default: 100)
     void setInterruptMinDelta(long value);
     // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
@@ -1242,8 +1242,8 @@ class NodeManager {
     int _retries = 1;
     int _interrupt_1_mode = MODE_NOT_DEFINED;
     int _interrupt_2_mode = MODE_NOT_DEFINED;
-    int _interrupt_1_pull = -1;
-    int _interrupt_2_pull = -1;
+    int _interrupt_1_initial = -1;
+    int _interrupt_2_initial = -1;
     static int _last_interrupt_pin;
     static long _interrupt_min_delta;
     static long _last_interrupt_1;

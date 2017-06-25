@@ -2339,14 +2339,14 @@ void NodeManager::setSleep(int value1, int value2, int value3) {
 void NodeManager::setSleepInterruptPin(int value) {
   _sleep_interrupt_pin = value;
 }
-void NodeManager::setInterrupt(int pin, int mode, int pull) {
+void NodeManager::setInterrupt(int pin, int mode, int initial) {
   if (pin == INTERRUPT_PIN_1) {
     _interrupt_1_mode = mode;
-    _interrupt_1_pull = pull;
+    _interrupt_1_initial = initial;
   }
   if (pin == INTERRUPT_PIN_2) { 
     _interrupt_2_mode = mode;
-    _interrupt_2_pull = pull;
+    _interrupt_2_initial = initial;
   }
 }
 void NodeManager::setInterruptMinDelta(long value) {
@@ -2875,6 +2875,7 @@ void NodeManager::process(Request & request) {
     #endif
     case 26: unRegisterSensor(request.getValueInt()); break;
     case 27: saveToMemory(0,request.getValueInt()); break;
+    case 28: setInterruptMinDelta(request.getValueInt()); break;
     default: return; 
   }
   _send(_msg.set(function));
@@ -2992,13 +2993,13 @@ void NodeManager::setupInterrupts() {
   // setup the interrupt pins
   if (_interrupt_1_mode != MODE_NOT_DEFINED) {
     pinMode(INTERRUPT_PIN_1,INPUT);
-    if (_interrupt_1_pull > -1) digitalWrite(INTERRUPT_PIN_1,_interrupt_1_pull);
+    if (_interrupt_1_initial > -1) digitalWrite(INTERRUPT_PIN_1,_interrupt_1_initial);
     // for non sleeping nodes, we need to handle the interrupt by ourselves  
     if (_sleep_mode != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, _interrupt_1_mode);
   }
   if (_interrupt_2_mode != MODE_NOT_DEFINED) {
     pinMode(INTERRUPT_PIN_2, INPUT);
-    if (_interrupt_2_pull > -1) digitalWrite(INTERRUPT_PIN_2,_interrupt_2_pull);
+    if (_interrupt_2_initial > -1) digitalWrite(INTERRUPT_PIN_2,_interrupt_2_initial);
     // for non sleeping nodes, we need to handle the interrupt by ourselves  
     if (_sleep_mode != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, _interrupt_2_mode);
   }
