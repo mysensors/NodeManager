@@ -2273,6 +2273,9 @@ NodeManager::NodeManager() {
 }
 
 int NodeManager::_last_interrupt_pin = -1;
+long NodeManager::_last_interrupt_1 = millis();
+long NodeManager::_last_interrupt_2 = millis();
+long NodeManager::_interrupt_min_delta = 1000;
 
 // setter/getter
 void NodeManager::setRetries(int value) {
@@ -2639,8 +2642,6 @@ void NodeManager::before() {
     Serial.print(F(" B="));
     Serial.println(MY_CAP_RXBUF);
   #endif
-  // setup the interrupt pins
-  setupInterrupts();
   #if PERSIST == 1
     // restore the configuration saved in the eeprom
     _loadConfig();
@@ -2658,6 +2659,8 @@ void NodeManager::before() {
     // call each sensor's setup()
     _sensors[i]->before();
   }
+  // setup the interrupt pins
+  setupInterrupts();
 }
 
 // present NodeManager and its sensors
@@ -3008,18 +3011,26 @@ void NodeManager::setupInterrupts() {
 
 // handle an interrupt
 void NodeManager::_onInterrupt_1() {
-  _last_interrupt_pin = INTERRUPT_PIN_1;
-  #if DEBUG == 1
-    Serial.print(F("INT P="));
-    Serial.println(INTERRUPT_PIN_1);
-  #endif
+  long now = millis();
+  if ( (now - _last_interrupt_1 > _interrupt_min_delta) || (now < _last_interrupt_1) ) {
+    _last_interrupt_pin = INTERRUPT_PIN_1;
+    #if DEBUG == 1
+      Serial.print(F("INT P="));
+      Serial.println(INTERRUPT_PIN_1);
+    #endif
+    _last_interrupt_1 = now;
+  }
 }
 void NodeManager::_onInterrupt_2() {
-  _last_interrupt_pin = INTERRUPT_PIN_2;
-  #if DEBUG == 1
-    Serial.print(F("INT P="));
-    Serial.println(INTERRUPT_PIN_2);
-  #endif
+  long now = millis();
+  if ( (now - _last_interrupt_2 > _interrupt_min_delta) || (now < _last_interrupt_2) ) {
+    _last_interrupt_pin = INTERRUPT_PIN_2;
+    #if DEBUG == 1
+      Serial.print(F("INT P="));
+      Serial.println(INTERRUPT_PIN_2);
+    #endif
+    _last_interrupt_2 = now;
+  }
 }
 
 // send a message to the network

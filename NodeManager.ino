@@ -33,7 +33,12 @@ void before() {
   /*
    * Register below your sensors
   */
-
+      pinMode(4, OUTPUT);
+    digitalWrite(4, LOW);
+    pinMode(5, OUTPUT);
+    digitalWrite(5, HIGH);
+    nodeManager.registerSensor(SENSOR_MOTION,3);
+    nodeManager.setMode(ALWAYS_ON);
 
   /*
    * Register above your sensors
