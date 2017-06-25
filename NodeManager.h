@@ -1066,7 +1066,7 @@ class NodeManager {
     int _interrupt_2_pull = -1;
     int _last_interrupt_pin = -1;
     long _timestamp = -1;
-    Sensor* _sensors[MAX_SENSORS] = {0};
+    Sensor* _sensors[MAX_SENSORS+1] = {0};
     bool _ack = false;
     void _process(const char * message);
     void _sleep();
