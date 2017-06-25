@@ -2349,6 +2349,9 @@ void NodeManager::setInterrupt(int pin, int mode, int pull) {
     _interrupt_2_pull = pull;
   }
 }
+void NodeManager::setInterruptMinDelta(long value) {
+  _interrupt_min_delta = value;
+}
 #if POWER_MANAGER == 1
   void NodeManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
     _powerManager.setPowerPins(ground_pin, vcc_pin, wait_time);
