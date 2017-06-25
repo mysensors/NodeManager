@@ -2275,7 +2275,7 @@ NodeManager::NodeManager() {
 int NodeManager::_last_interrupt_pin = -1;
 long NodeManager::_last_interrupt_1 = millis();
 long NodeManager::_last_interrupt_2 = millis();
-long NodeManager::_interrupt_min_delta = 1000;
+long NodeManager::_interrupt_min_delta = 100;
 
 // setter/getter
 void NodeManager::setRetries(int value) {
@@ -2717,6 +2717,8 @@ void NodeManager::setup() {
 // run the main function for all the register sensors
 void NodeManager::loop() {
   MyMessage empty;
+  // reset the last interrupt pin
+  _last_interrupt_pin = -1;
   // if in idle mode, do nothing
   if (_sleep_mode == IDLE) return;
   // if sleep time is not set, do nothing
@@ -2739,11 +2741,11 @@ void NodeManager::loop() {
   #endif
   // run loop for all the registered sensors
   for (int i = 0; i < MAX_SENSORS; i++) {
-    // skip not configured sensors
+    // skip unconfigured sensors
     if (_sensors[i] == 0) continue;
-    // if waking up from an interrupt skip all the sensor without that interrupt configured
-    if (_last_interrupt_pin != -1 && _sensors[i]->getInterruptPin() != _last_interrupt_pin) continue;
-    // call each sensor's loop()
+    // if the sensor is associated with an interrupt and the last interrupt is different than the sensor's interrupt, skip it
+    if (_sensors[i]->getInterruptPin() != -1 && _last_interrupt_pin != _sensors[i]->getInterruptPin()) continue;
+    // call the sensor's loop()
     _sensors[i]->loop(empty);
   }
   #if POWER_MANAGER == 1
@@ -3061,8 +3063,6 @@ void NodeManager::_send(MyMessage & message) {
 
 // wrapper of smart sleep
 void NodeManager::_sleep() {
-  // reset the last interrupt pin
-  _last_interrupt_pin = -1;
   // calculate the seconds to sleep
   long sleep_sec = _sleep_time;
   if (_sleep_unit == MINUTES) sleep_sec = sleep_sec * 60;
