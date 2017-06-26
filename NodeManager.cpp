@@ -1373,7 +1373,7 @@ void SensorDs18b20::setSleepDuringConversion(bool value) {
 // contructor
 SensorBH1750::SensorBH1750(int child_id): Sensor(child_id,A4) {
   setPresentation(S_LIGHT_LEVEL);
-  setType(V_LIGHT_LEVEL);
+  setType(V_LEVEL);
   _lightSensor = new BH1750();
 }
 
@@ -1411,8 +1411,7 @@ void SensorBH1750::onReceive(const MyMessage & message) {
 // contructor
 SensorTSL2561::SensorTSL2561(int child_id, TSL2561* tsl): Sensor(child_id,A2) {
   setPresentation(S_LIGHT_LEVEL);
-  setType(V_LIGHT_LEVEL);
-//  setValueType(TYPE_FLOAT);
+  setType(V_LEVEL);
   _tsl = tsl;
 }
 
