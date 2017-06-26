@@ -85,7 +85,7 @@ void before() {
 //  
 //  int liquidLevel1 = nodeManager.registerSensor(SENSOR_SWITCH,2,1);
 //  SensorSwitch* liquidLevelSensor1 = ((SensorSwitch*)nodeManager.getSensor(liquidLevel1));
-//  liquidLevelSensor1->setPowerPins(5,4,1000);
+//  liquidLevelSensor1->setPowerPins(4,5,1000);
 //  int liquidLevel2 = nodeManager.registerSensor(SENSOR_SWITCH,3,2);
 //  SensorSwitch* liquidLevelSensor2 = ((SensorSwitch*)nodeManager.getSensor(liquidLevel2));
 //  liquidLevelSensor2->setPowerPins(7,6,1000);
