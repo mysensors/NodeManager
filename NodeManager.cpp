@@ -2332,6 +2332,108 @@ int SensorMQ::_MQGetPercentage(float rs_ro_ratio, float *pcurve) {
 }
 #endif
 
+
+
+/*
+   SensorMHZ19
+*/
+#if MODULE_MHZ19 == 1
+// contructor
+SensorMHZ19::SensorMHZ19(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
+  // set presentation, type and value type
+  setPresentation(S_AIR_QUALITY);
+  setType(V_LEVEL);
+  setRxTx(pin, pin+1);
+}
+
+void SensorMHZ19::setRxTx(int rxpin, int txpin) {
+  _rx_pin = rxpin;
+  _tx_pin = txpin;
+}
+
+
+// what to do during before
+void SensorMHZ19::onBefore() {
+}
+
+// what to do during setup
+void SensorMHZ19::onSetup() {
+  _ser = new SoftwareSerial(_rx_pin, _tx_pin);
+  _ser->begin(9600);
+  delay(2000);
+  while (_ser->read()!=-1) {};  // clear CO2 buffer.
+}
+
+// what to do during loop
+void SensorMHZ19::onLoop() {
+  // Read the ppm value
+  int co2ppm = readCO2(); // This is there the function gets called that talks to the Co2 sensor.
+  #if DEBUG == 1
+    Serial.print(F("CO2 I="));
+    Serial.print(_child_id);
+    Serial.print(F(" ppm="));
+    Serial.println(co2ppm);
+  #endif
+  // store the value
+  _value_int = co2ppm;
+}
+
+// Read out the CO2 data
+int SensorMHZ19::readCO2() {
+  while (_ser->read() != -1) {};  //clear serial buffer
+
+  unsigned char response[9]; // for answer
+  byte cmd[9] = {0xFF, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79};
+
+  // Command to ask for data.
+  _ser->write(cmd, 9); //request PPM CO2
+
+  // Then for 1 second listen for 9 bytes of data.
+  _ser->readBytes(response, 9);
+
+  #if DEBUG == 1
+  for (int i=0; i<9; i++) {
+    Serial.print(response[i], HEX);
+    Serial.print(F("-"));
+  }
+  Serial.println(F("END"));
+  #endif
+
+  if (response[0] != 0xFF) {
+    Serial.println(F("Wrong starting byte from co2 sensor! (should be FF)"));
+    return -1;
+  }
+
+  if (response[1] != 0x86) {
+    Serial.println(F("Wrong command from co2 sensor! (should be 86)"));
+    return -1;
+  }
+
+  int responseHigh = (int) response[2];
+  int responseLow = (int) response[3];
+  int ppm = (256 * responseHigh) + responseLow;
+  
+  return ppm;
+}
+
+
+// what to do as the main task when receiving a message
+void SensorMHZ19::onReceive(const MyMessage & message) {
+  if (message.getCommand() == C_REQ) onLoop();
+}
+
+// what to do when receiving a remote message
+void SensorMHZ19::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    default: return;
+  }
+  _send(_msg_service.set(function));
+}
+
+#endif
+
+
 /*******************************************
    NodeManager
 */
@@ -2622,6 +2724,11 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   #if MODULE_MQ == 1
     else if (sensor_type == SENSOR_MQ) {
       return registerSensor(new SensorMQ(this,child_id, pin));
+    }
+  #endif
+  #if MODULE_MHZ19 == 1
+    else if (sensor_type == SENSOR_MHZ19) {
+      return registerSensor(new SensorMHZ19(this, child_id, pin));
     }
   #endif
   else {
