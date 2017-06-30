@@ -2206,17 +2206,17 @@ void SensorMQ::setReadSampleInterval(int value) {
 }
 void SensorMQ::setLPGCurve(float *value) {
   _LPGCurve[0] = value[0];
-  _LPGCurve[2] = value[1];
+  _LPGCurve[1] = value[1];
   _LPGCurve[2] = value[2];
 }
 void SensorMQ::setCOCurve(float *value) {
   _COCurve[0] = value[0];
-  _COCurve[2] = value[1];
+  _COCurve[1] = value[1];
   _COCurve[2] = value[2];
 }
 void SensorMQ::setSmokeCurve(float *value) {
   _SmokeCurve[0] = value[0];
-  _SmokeCurve[2] = value[1];
+  _SmokeCurve[1] = value[1];
   _SmokeCurve[2] = value[2];
 }
 
