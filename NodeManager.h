@@ -1113,9 +1113,9 @@ class SensorMQ: public Sensor {
     float _MQRead();
     int _MQGetGasPercentage(float rs_ro_ratio, int gas_id);
     int  _MQGetPercentage(float rs_ro_ratio, float *pcurve);
-    int _gas_lpg = 0;
-    int _gas_co = 1;
-    int _gas_smoke = 2;
+    const static int _gas_lpg = 0;
+    const static int _gas_co = 1;
+    const static int _gas_smoke = 2;
     int _target_gas = _gas_co;
 };
 #endif

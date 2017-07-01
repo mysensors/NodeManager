@@ -2180,6 +2180,9 @@ SensorMQ::SensorMQ(NodeManager* node_manager, int child_id, int pin): Sensor(nod
 }
 
 //setter/getter
+void SensorMQ::setTargetGas(int value) {
+  _target_gas = value;
+}
 void SensorMQ::setRlValue(float value) {
   _rl_value = value;
 }
@@ -2468,7 +2471,7 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   // get a child_id if not provided by the user
   if (child_id < 0) child_id = _getAvailableChildId();
   // based on the given sensor type instantiate the appropriate class
-  if (sensor_type == 0) return -1;
+  if (sensor_type < 0) return -1;
   #if MODULE_ANALOG_INPUT == 1
     else if (sensor_type == SENSOR_ANALOG_INPUT) return registerSensor(new SensorAnalogInput(this,child_id, pin));
     else if (sensor_type == SENSOR_LDR) return registerSensor(new SensorLDR(this,child_id, pin));
