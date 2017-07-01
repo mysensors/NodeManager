@@ -2174,9 +2174,17 @@ void SensorMCP9808::onProcess(Request & request) {
  * SensorMQ
  */
 #if MODULE_MQ == 1
+
+static float SensorMQ::_default_LPGCurve[3] = {2.3,0.21,-0.47};
+static float SensorMQ::_default_COCurve[3] = {2.3,0.72,-0.34};
+static float SensorMQ::_default_SmokeCurve[3] = {2.3,0.53,-0.44};
+
 SensorMQ::SensorMQ(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id,pin) {
   setPresentation(S_AIR_QUALITY);
   setType(V_LEVEL);
+  _LPGCurve = SensorMQ::_default_LPGCurve;
+  _COCurve = SensorMQ::_default_COCurve;
+  _SmokeCurve = SensorMQ::_default_SmokeCurve;
 }
 
 //setter/getter
@@ -2205,19 +2213,13 @@ void SensorMQ::setReadSampleInterval(int value) {
   _read_sample_interval = value;
 }
 void SensorMQ::setLPGCurve(float *value) {
-  _LPGCurve[0] = value[0];
-  _LPGCurve[1] = value[1];
-  _LPGCurve[2] = value[2];
+  _LPGCurve = value;
 }
 void SensorMQ::setCOCurve(float *value) {
-  _COCurve[0] = value[0];
-  _COCurve[1] = value[1];
-  _COCurve[2] = value[2];
+  _COCurve = value;
 }
 void SensorMQ::setSmokeCurve(float *value) {
-  _SmokeCurve[0] = value[0];
-  _SmokeCurve[1] = value[1];
-  _SmokeCurve[2] = value[2];
+  _SmokeCurve = value;
 }
 
 // what to do during before

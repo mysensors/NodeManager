@@ -1105,9 +1105,12 @@ class SensorMQ: public Sensor {
     int _read_sample_interval = 50;
     int _read_sample_times = 5;
     float _ro = 10000.0;
-    float _LPGCurve[3] = {2.3,0.21,-0.47};
-    float _COCurve[3] = {2.3,0.72,-0.34};
-    float _SmokeCurve[3] = {2.3,0.53,-0.44};
+    static float _default_LPGCurve[3];
+    static float _default_COCurve[3];
+    static float _default_SmokeCurve[3];
+    float *_LPGCurve;
+    float *_COCurve;
+    float *_SmokeCurve;
     float _MQResistanceCalculation(int raw_adc);
     float _MQCalibration();
     float _MQRead();
