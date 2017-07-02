@@ -2795,8 +2795,11 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     else if (sensor_type == SENSOR_LATCHING_RELAY) return registerSensor(new SensorLatchingRelay(this,child_id, pin));
   #endif
   #if MODULE_DHT == 1
-    else if (sensor_type == SENSOR_DHT11 || sensor_type == SENSOR_DHT22) {
-      int dht_type = sensor_type == SENSOR_DHT11 ? DHT11 : DHT22;
+    else if (sensor_type == SENSOR_DHT11 || sensor_type == SENSOR_DHT22 || sensor_type == SENSOR_DHT21) {
+      int dht_type;
+      if (sensor_type == SENSOR_DHT11) dht_type = DHT11;
+      else if (sensor_type == SENSOR_DHT21) dht_type = DHT21;
+      else if (sensor_type == SENSOR_DHT22) dht_type = DHT22;
       DHT* dht = new DHT(pin,dht_type);
       // register temperature sensor
       registerSensor(new SensorDHT(this,child_id,pin,dht,SensorDHT::TEMPERATURE,dht_type));
