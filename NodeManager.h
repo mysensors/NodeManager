@@ -7,7 +7,7 @@
 #include <Arduino.h>
 
 // define NodeManager version
-#define VERSION "1.5"
+#define VERSION "1.5.1"
 
 /***********************************
    Constants
@@ -51,6 +51,10 @@
 /***********************************
    Default configuration settings
 */
+// if enabled, enable debug messages on serial port
+#ifndef DEBUG
+  #define DEBUG 1
+#endif
 
 // if enabled, enable the capability to power on sensors with the arduino's pins to save battery while sleeping
 #ifndef POWER_MANAGER
@@ -69,27 +73,13 @@
   #define PERSIST 0
 #endif
 
-// if enabled, enable debug messages on serial port
-#ifndef DEBUG
-  #define DEBUG 1
-#endif
-
 // if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle
 #ifndef SERVICE_MESSAGES
-  #define SERVICE_MESSAGES 1
+  #define SERVICE_MESSAGES 0
 #endif
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
 #ifndef BATTERY_SENSOR
   #define BATTERY_SENSOR 1
-#endif
-
-// the child id used to allow remote configuration
-#ifndef CONFIGURATION_CHILD_ID
-  #define CONFIGURATION_CHILD_ID 200
-#endif
-// the child id used to report the battery voltage to the controller
-#ifndef BATTERY_CHILD_ID
-  #define BATTERY_CHILD_ID 201
 #endif
 
 // Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ, SENSOR_ACS712
@@ -147,6 +137,19 @@
 // Enable this module to use one of the following sensors: SENSOR_MCP9808
 #ifndef MODULE_MCP9808
   #define MODULE_MCP9808 0
+#endif
+
+// the child id used to allow remote configuration
+#ifndef CONFIGURATION_CHILD_ID
+  #define CONFIGURATION_CHILD_ID 200
+#endif
+// the child id used to report the battery voltage to the controller
+#ifndef BATTERY_CHILD_ID
+  #define BATTERY_CHILD_ID 201
+#endif
+// define the maximum number of sensors that can be managed
+#ifndef MAX_SENSORS
+  #define MAX_SENSORS 10
 #endif
 
 /***********************************
@@ -1063,7 +1066,7 @@ class NodeManager {
     int _interrupt_2_pull = -1;
     int _last_interrupt_pin = -1;
     long _timestamp = -1;
-    Sensor* _sensors[255] = {0};
+    Sensor* _sensors[MAX_SENSORS+1] = {0};
     bool _ack = false;
     void _process(const char * message);
     void _sleep();

@@ -2093,6 +2093,7 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
 
 // attach a built-in or custom sensor to this manager
 int NodeManager::registerSensor(Sensor* sensor) {
+  if (sensor->getChildId() > MAX_SENSORS) return;
   #if DEBUG == 1
     Serial.print(F("REG I="));
     Serial.print(sensor->getChildId());
@@ -2115,12 +2116,14 @@ int NodeManager::registerSensor(Sensor* sensor) {
 
 // un-register a sensor to this manager
 void NodeManager::unRegisterSensor(int sensor_index) {
+  if (sensor_index > MAX_SENSORS) return;
   // unlink the pointer to this sensor
   _sensors[sensor_index] == 0;
 }
 
 // return a sensor given its index
 Sensor* NodeManager::get(int child_id) {
+  if (child_id > MAX_SENSORS) return 0;
   // return a pointer to the sensor from the given child_id
   return _sensors[child_id];
 }
@@ -2130,6 +2133,7 @@ Sensor* NodeManager::getSensor(int child_id) {
 
 // assign a different child id to a sensor'
 bool NodeManager::renameSensor(int old_child_id, int new_child_id) {
+  if (old_child_id > MAX_SENSORS || new_child_id > MAX_SENSORS) return;
   // ensure the old id exists and the new is available
   if (_sensors[old_child_id] == 0 || _sensors[new_child_id] != 0) return false;
   // assign the sensor to new id
@@ -2193,7 +2197,7 @@ void NodeManager::before() {
     if (! _battery_internal_vcc && _battery_pin > -1) analogReference(INTERNAL);
   #endif
   // setup individual sensors
-  for (int i = 0; i < 255; i++) {
+  for (int i = 1; i <= MAX_SENSORS; i++) {
     if (_sensors[i] == 0) continue;
     // call each sensor's setup()
     _sensors[i]->before();
@@ -2217,7 +2221,7 @@ void NodeManager::presentation() {
     _process("BATTERY");
   #endif
   // present each sensor
-  for (int i = 0; i < 255; i++) {
+  for (int i = 1; i <= MAX_SENSORS; i++) {
     if (_sensors[i] == 0) continue;
     // call each sensor's presentation()
     if (_sleep_between_send > 0) sleep(_sleep_between_send);
@@ -2242,7 +2246,7 @@ void NodeManager::setup() {
     _send(_msg.set("STARTED"));
   #endif
   // run setup for all the registered sensors
-  for (int i = 0; i < 255; i++) {
+  for (int i = 1; i <= MAX_SENSORS; i++) {
     if (_sensors[i] == 0) continue;
     // call each sensor's setup()
     _sensors[i]->setup();
@@ -2261,7 +2265,7 @@ void NodeManager::loop() {
       if (_auto_power_pins) powerOn();
     #endif
     // run loop for all the registered sensors
-    for (int i = 0; i < 255; i++) {
+    for (int i = 1; i <= MAX_SENSORS; i++) {
       // skip not configured sensors
       if (_sensors[i] == 0) continue;
       // if waking up from an interrupt skip all the sensor without that interrupt configured
@@ -2296,7 +2300,7 @@ void NodeManager::receive(const MyMessage &message) {
     _process(message.getString());
   }
   // dispatch the message to the registered sensor
-  else if (_sensors[message.sensor] != 0) {
+  else if (message.sensor <= MAX_SENSORS && _sensors[message.sensor] != 0) {
     #if POWER_MANAGER == 1
       // turn on the pin powering all the sensors
       if (_auto_power_pins) powerOn();
@@ -2609,12 +2613,13 @@ void NodeManager::_present(int child_id, int type) {
 
 // return the next available child_id
 int NodeManager::_getAvailableChildId() {
-  for (int i = 1; i < 255; i++) {
+  for (int i = 1; i <= MAX_SENSORS; i++) {
     if (i == CONFIGURATION_CHILD_ID) continue;
     if (i == BATTERY_CHILD_ID) continue;
     // empty place, return it
     if (_sensors[i] == 0) return i;
   }
+  return MAX_SENSORS;
 }
 
 // guess the initial value of a digital output based on the configured interrupt mode
