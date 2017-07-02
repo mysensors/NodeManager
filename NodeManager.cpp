@@ -2174,12 +2174,23 @@ void SensorMCP9808::onProcess(Request & request) {
  * SensorMQ
  */
 #if MODULE_MQ == 1
+
+static float SensorMQ::_default_LPGCurve[3] = {2.3,0.21,-0.47};
+static float SensorMQ::_default_COCurve[3] = {2.3,0.72,-0.34};
+static float SensorMQ::_default_SmokeCurve[3] = {2.3,0.53,-0.44};
+
 SensorMQ::SensorMQ(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id,pin) {
   setPresentation(S_AIR_QUALITY);
   setType(V_LEVEL);
+  _LPGCurve = SensorMQ::_default_LPGCurve;
+  _COCurve = SensorMQ::_default_COCurve;
+  _SmokeCurve = SensorMQ::_default_SmokeCurve;
 }
 
 //setter/getter
+void SensorMQ::setTargetGas(int value) {
+  _target_gas = value;
+}
 void SensorMQ::setRlValue(float value) {
   _rl_value = value;
 }
@@ -2202,19 +2213,13 @@ void SensorMQ::setReadSampleInterval(int value) {
   _read_sample_interval = value;
 }
 void SensorMQ::setLPGCurve(float *value) {
-  _LPGCurve[0] = value[0];
-  _LPGCurve[2] = value[1];
-  _LPGCurve[2] = value[2];
+  _LPGCurve = value;
 }
 void SensorMQ::setCOCurve(float *value) {
-  _COCurve[0] = value[0];
-  _COCurve[2] = value[1];
-  _COCurve[2] = value[2];
+  _COCurve = value;
 }
 void SensorMQ::setSmokeCurve(float *value) {
-  _SmokeCurve[0] = value[0];
-  _SmokeCurve[2] = value[1];
-  _SmokeCurve[2] = value[2];
+  _SmokeCurve = value;
 }
 
 // what to do during before
@@ -2570,7 +2575,7 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   // get a child_id if not provided by the user
   if (child_id < 0) child_id = _getAvailableChildId();
   // based on the given sensor type instantiate the appropriate class
-  if (sensor_type == 0) return -1;
+  if (sensor_type < 0) return -1;
   #if MODULE_ANALOG_INPUT == 1
     else if (sensor_type == SENSOR_ANALOG_INPUT) return registerSensor(new SensorAnalogInput(this,child_id, pin));
     else if (sensor_type == SENSOR_LDR) return registerSensor(new SensorLDR(this,child_id, pin));
