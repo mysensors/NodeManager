@@ -173,6 +173,8 @@ Those NodeManager's directives in the `config.h` file control which module/libra
 #define MODULE_MCP9808 0
 // Enable this module to use one of the following sensors: SENSOR_MQ
 #define MODULE_MQ 0
+// Enable this module to use one of the following sensors: SENSOR_MHZ19
+#define MODULE_MHZ19 0
 ~~~
 
 ### Installing the dependencies
@@ -333,6 +335,7 @@ SENSOR_MCP9808 | MCP9808 sensor, measure the temperature through the attached mo
 SENSOR_RAIN_GAUGE | Rain gauge sensor
 SENSOR_RAIN | Rain sensor, return the percentage of rain from an attached analog sensor
 SENSOR_SOIL_MOISTURE | Soil moisture sensor, return the percentage of moisture from an attached analog sensor
+SENSOR_MHZ19 | MH-Z19 CO2 sensor via UART (SoftwareSerial, default on pins 6(Rx) and 7(Tx)
 
 To register a sensor simply call the NodeManager instance with the sensory type and the pin the sensor is conncted to. For example:
 ~~~c
@@ -583,6 +586,12 @@ Each sensor class can expose additional methods.
     void setRelayPin(int value);
     // [103] set the led's pin (default: 13)
     void setLedPin(int value);
+~~~
+
+* SensorMHZ19
+~~~c
+    // set the RX and TX pins for the software serial port to talk to the sensor
+    void setRxTx(int rxpin, int txpin);
 ~~~
 
 ### Upload your sketch

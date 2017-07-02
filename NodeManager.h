@@ -171,6 +171,10 @@
 #ifndef MODULE_MQ
   #define MODULE_MQ 0
 #endif
+// Enable this module to use one of the following sensors: SENSOR_MHZ19
+#ifndef MODULE_MHZ19
+  #define MODULE_MHZ19 0
+#endif
 
 /***********************************
    Supported Sensors
@@ -260,6 +264,10 @@ enum supported_sensors {
     // MQ2 air quality sensor
     SENSOR_MQ,
   #endif
+  #if MODULE_MHZ19 == 1
+    // MH-Z19 CO2 sensor
+    SENSOR_MHZ19,
+  #endif
 };
 /***********************************
   Libraries
@@ -316,6 +324,9 @@ enum supported_sensors {
 #if MODULE_MCP9808 == 1
   #include <Wire.h>
   #include "Adafruit_MCP9808.h"
+#endif
+#if MODULE_MHZ19 == 1
+  #include <SoftwareSerial.h>
 #endif
 
 /*******************************************************************
@@ -1119,6 +1130,30 @@ class SensorMQ: public Sensor {
     int _target_gas = _gas_co;
 };
 #endif
+
+/*
+   SensorMHZ19
+*/
+#if MODULE_MHZ19 == 1
+class SensorMHZ19: public Sensor {
+  public:
+    SensorMHZ19(NodeManager* node_manager, int child_id, int pin);
+    // set the pins for RX and TX of the SoftwareSerial (default: Rx=6, Tx=7)
+    void setRxTx(int rxpin, int txpin);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
+    int readCO2();
+  protected:
+    SoftwareSerial* _ser;
+    int _tx_pin = 6;
+    int _rx_pin = 7;
+};
+#endif
+
 
 /***************************************
    NodeManager: manages all the aspects of the node

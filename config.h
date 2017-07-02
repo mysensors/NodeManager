@@ -132,5 +132,7 @@
 #define MODULE_MCP9808 0
 // Enable this module to use one of the following sensors: SENSOR_MQ
 #define MODULE_MQ 0
+// Enable this module to use one of the following sensors: SENSOR_MHZ19
+#define MODULE_MHZ19 0
 #endif
 
