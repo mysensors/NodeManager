@@ -127,7 +127,7 @@
 #ifndef MODULE_SHT21
   #define MODULE_SHT21 0
 #endif
-// Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
+// Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22, SENSOR_DHT21
 #ifndef MODULE_DHT
   #define MODULE_DHT 0
 #endif
@@ -175,6 +175,14 @@
 #ifndef MODULE_MHZ19
   #define MODULE_MHZ19 0
 #endif
+// Enable this module to use one of the following sensors: SENSOR_AM2320
+#ifndef MODULE_AM2320
+  #define MODULE_AM2320 0
+#endif
+// Enable this module to use one of the following sensors: SENSOR_TSL2561
+#ifndef MODULE_TSL2561
+  #define MODULE_TSL2561 0
+#endif
 
 /***********************************
    Supported Sensors
@@ -214,6 +222,7 @@ enum supported_sensors {
     // DHT11/DHT22 sensors, return temperature/humidity based on the attached DHT sensor
     SENSOR_DHT11,
     SENSOR_DHT22,
+    SENSOR_DHT21,
   #endif
   #if MODULE_SHT21 == 1
     // SHT21 sensor, return temperature/humidity based on the attached SHT21 sensor
@@ -267,6 +276,14 @@ enum supported_sensors {
   #if MODULE_MHZ19 == 1
     // MH-Z19 CO2 sensor
     SENSOR_MHZ19,
+  #endif
+  #if MODULE_TSL2561 == 1
+    // TSL2561 sensor, return light in lux
+    SENSOR_TSL2561,
+  #endif
+  #if MODULE_AM2320 == 1
+    // AM2320 sensors, return temperature/humidity based on the attached AM2320 sensor
+    SENSOR_AM2320,
   #endif
 };
 /***********************************
@@ -327,6 +344,14 @@ enum supported_sensors {
 #endif
 #if MODULE_MHZ19 == 1
   #include <SoftwareSerial.h>
+#endif
+#if MODULE_AM2320 == 1
+  #include <Wire.h>
+  #include <AM2320.h>
+#endif
+#if MODULE_TSL2561 == 1
+  #include <TSL2561.h>
+  #include <Wire.h>
 #endif
 
 /*******************************************************************
@@ -1157,6 +1182,69 @@ class SensorMHZ19: public Sensor {
 };
 #endif
 
+/*
+   SensorAM2320
+*/
+#if MODULE_AM2320 == 1
+class SensorAM2320: public Sensor {
+  public:
+    SensorAM2320(NodeManager* node_manager, int child_id, AM2320* th, int sensor_type);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
+    // constants
+    const static int TEMPERATURE = 0;
+    const static int HUMIDITY = 1;
+  protected:
+    AM2320* _th;
+    int _sensor_type = 0;
+};
+#endif
+
+/*
+   SensorTSL2561
+*/
+#if MODULE_TSL2561 == 1
+class SensorTSL2561: public Sensor {
+  public:
+    SensorTSL2561(NodeManager* node_manager, int child_id);
+    // [101] set the gain, possible values are SensorTSL2561::GAIN_0X (0), SensorTSL2561::GAIN_16X (1) (default 16x)
+    void setGain(int value);
+    // [102] set the timing, possible values are SensorTSL2561::INTEGRATIONTIME_13MS (0), SensorTSL2561::INTEGRATIONTIME_101MS (1), SensorTSL2561::INTEGRATIONTIME_402MS (2) (default: 13ms)
+    void setTiming(int value);
+    // [103] set the spectrum, possible values are SensorTSL2561::VISIBLE (0), SensorTSL2561::FULLSPECTRUM (1), SensorTSL2561::INFRARED (2), SensorTSL2561::FULL (3) (default: visible)
+    void setSpectrum(int value);
+    // [104] set the i2c address values are SensorTSL2561::ADDR_FLOAT, SensorTSL2561::ADDR_LOW, SensorTSL2561::ADDR_HIGH
+    void setAddress(int value);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
+    // constants
+    const static int ADDR_FLOAT = 0;
+    const static int ADDR_LOW = 1;
+    const static int ADDR_HIGH = 2;
+    const static int GAIN_0X = 0;
+    const static int GAIN_16X = 1;
+    const static int INTEGRATIONTIME_13MS = 0;
+    const static int INTEGRATIONTIME_101MS = 1;
+    const static int INTEGRATIONTIME_402MS = 2;
+    const static int VISIBLE = 0;
+    const static int FULLSPECTRUM = 1;
+    const static int INFRARED = 2;
+    const static int FULL = 3;
+  protected:
+    TSL2561* _tsl;
+    int _tsl_gain = 1;
+    int _tsl_timing = 0;
+    int _tsl_spectrum = 0;
+};
+#endif
 
 /***************************************
    NodeManager: manages all the aspects of the node

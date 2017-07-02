@@ -151,7 +151,7 @@ Those NodeManager's directives in the `config.h` file control which module/libra
 #define MODULE_DIGITAL_OUTPUT 1
 // Enable this module to use one of the following sensors: SENSOR_SHT21
 #define MODULE_SHT21 0
-// Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
+// Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22, SENSOR_DHT21
 #define MODULE_DHT 0
 // Enable this module to use one of the following sensors: SENSOR_SWITCH, SENSOR_DOOR, SENSOR_MOTION
 #define MODULE_SWITCH 0
@@ -175,6 +175,10 @@ Those NodeManager's directives in the `config.h` file control which module/libra
 #define MODULE_MQ 0
 // Enable this module to use one of the following sensors: SENSOR_MHZ19
 #define MODULE_MHZ19 0
+// Enable this module to use one of the following sensors: SENSOR_AM2320
+#define MODULE_AM2320 0
+// Enable this module to use one of the following sensors: SENSOR_TSL2561
+#define MODULE_TSL2561 0
 ~~~
 
 ### Installing the dependencies
@@ -193,6 +197,8 @@ MODULE_SONOFF | https://github.com/thomasfredericks/Bounce2
 MODULE_BMP085 | https://github.com/adafruit/Adafruit-BMP085-Library
 MODULE_HCSR04 | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/NewPing
 MODULE_MCP9808 | https://github.com/adafruit/Adafruit_MCP9808_Library
+MODULE_AM2320 | https://github.com/thakshak/AM2320
+MODULE_TSL2561 | https://github.com/adafruit/TSL2561-Arduino-Library
 
 ### Configure NodeManager
 
@@ -336,6 +342,8 @@ SENSOR_RAIN_GAUGE | Rain gauge sensor
 SENSOR_RAIN | Rain sensor, return the percentage of rain from an attached analog sensor
 SENSOR_SOIL_MOISTURE | Soil moisture sensor, return the percentage of moisture from an attached analog sensor
 SENSOR_MHZ19 | MH-Z19 CO2 sensor via UART (SoftwareSerial, default on pins 6(Rx) and 7(Tx)
+SENSOR_TSL2561 | TSL2561 sensor, return light in lux
+SENSOR_AM2320 | AM2320 sensors, return temperature/humidity based on the attached AM2320 sensor
 
 To register a sensor simply call the NodeManager instance with the sensory type and the pin the sensor is conncted to. For example:
 ~~~c
@@ -592,6 +600,18 @@ Each sensor class can expose additional methods.
 ~~~c
     // set the RX and TX pins for the software serial port to talk to the sensor
     void setRxTx(int rxpin, int txpin);
+~~~
+
+* SensorTSL2561
+~~~c
+    // [101] set the gain, possible values are SensorTSL2561::GAIN_0X (0), SensorTSL2561::GAIN_16X (1) (default 16x)
+    void setGain(int value);
+    // [102] set the timing, possible values are SensorTSL2561::INTEGRATIONTIME_13MS (0), SensorTSL2561::INTEGRATIONTIME_101MS (1), SensorTSL2561::INTEGRATIONTIME_402MS (2) (default: 13ms)
+    void setTiming(int value);
+    // [103] set the spectrum, possible values are SensorTSL2561::VISIBLE (0), SensorTSL2561::FULLSPECTRUM (1), SensorTSL2561::INFRARED (2), SensorTSL2561::FULL (3) (default: visible)
+    void setSpectrum(int value);
+    // [104] set the i2c address values are SensorTSL2561::ADDR_FLOAT, SensorTSL2561::ADDR_LOW, SensorTSL2561::ADDR_HIGH
+    void setAddress(int value);
 ~~~
 
 ### Upload your sketch
