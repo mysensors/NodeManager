@@ -130,6 +130,7 @@
 // if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle and STARTED when starting/rebooting
 #define SERVICE_MESSAGES 0
 
+
 // Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN_GAUGE
 #define MODULE_ANALOG_INPUT 0
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
@@ -162,4 +163,12 @@
 #define MODULE_HCSR04 0
 // Enable this module to use one of the following sensors: SENSOR_MCP9808
 #define MODULE_MCP9808 0
+// Enable this module to use one of the following sensors: SENSOR_MQ
+#define MODULE_MQ 0
+// Enable this module to use one of the following sensors: SENSOR_MHZ19
+#define MODULE_MHZ19 0
+// Enable this module to use one of the following sensors: SENSOR_AM2320
+#define MODULE_AM2320 0
+// Enable this module to use one of the following sensors: SENSOR_TSL2561
+#define MODULE_TSL2561 0
 #endif
