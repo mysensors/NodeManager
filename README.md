@@ -1,5 +1,3 @@
-# Introduction
-
 NodeManager is intended to take care on your behalf of all those common tasks a MySensors node has to accomplish, speeding up the development cycle of your projects.
 
 NodeManager includes the following main components:
@@ -23,7 +21,7 @@ NodeManager includes the following main components:
 * Allow rebooting the board remotely
 * Provide out-of-the-box sensors personalities and automatically execute their main task at each cycle
 
-# Installation
+## Installation
 * Download the package or clone the git repository at https://github.com/mysensors/NodeManager
 * Open the provided sketch template and save it under a different name
 * Open `config.h` and customize both MySensors configuration and NodeManager global settings
@@ -32,22 +30,22 @@ NodeManager includes the following main components:
 
 Please note NodeManager cannot be used as an arduino library since requires access to your MySensors configuration directives, hence its files have to be placed into the same directory of your sketch.
 
-## Upgrade
+### Upgrade
 * Download the package
 * Replace the NodeManager.cpp and NodeManager.h of your project with those just downloaded
 * Review the release notes in case there is any manual change required to the existing sketch or config.h file
 
-# Configuration
+## Configuration
 NodeManager configuration includes compile-time configuration directives (which can be set in config.h), runtime global and per-sensor configuration settings (which can be set in your sketch) and settings that can be customized remotely (via a special child id).
 
-## Setup MySensors
+### Setup MySensors
 Since NodeManager has to communicate with the MySensors gateway on your behalf, it has to know how to do it. Place on top of the `config.h` file all the MySensors typical directives you are used to set on top of your sketch so both your sketch AND NodeManager will be able to share the same configuration. For example:
 ~~~c
 /**********************************
  * Sketch configuration
  */
 
-#define SKETCH_NAME "NodeManagerTemplate"
+#define SKETCH_NAME "NodeManager"
 #define SKETCH_VERSION "1.0"
 
 /**********************************
@@ -123,11 +121,14 @@ Since NodeManager has to communicate with the MySensors gateway on your behalf, 
 //#define MY_DEFAULT_TX_LED_PIN  6
 ~~~
 
-## Enable/Disable NodeManager's modules
+### Enable/Disable NodeManager's modules
 
 Those NodeManager's directives in the `config.h` file control which module/library/functionality will be made available to your sketch. Enable (e.g. set to 1) only what you need to ensure enough space is left to your custom code.
 
 ~~~c
+// if enabled, enable debug messages on serial port
+#define DEBUG 1
+
 // if enabled, enable the capability to power on sensors with the arduino's pins to save battery while sleeping
 #define POWER_MANAGER 1
 // if enabled, will load the battery manager library to allow the battery level to be reported automatically or on demand
@@ -137,15 +138,12 @@ Those NodeManager's directives in the `config.h` file control which module/libra
 // if enabled, persist the configuration settings on EEPROM
 #define PERSIST 0
 
-// if enabled, enable debug messages on serial port
-#define DEBUG 1
-
 // if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle and STARTED when starting/rebooting
-#define SERVICE_MESSAGES 1
+#define SERVICE_MESSAGES 0
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
 #define BATTERY_SENSOR 1
 
-// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN_GAUGE
+// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN_GAUGE, SENSOR_RAIN, SENSOR_SOIL_MOISTURE
 #define MODULE_ANALOG_INPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
 #define MODULE_DIGITAL_INPUT 1
@@ -153,7 +151,7 @@ Those NodeManager's directives in the `config.h` file control which module/libra
 #define MODULE_DIGITAL_OUTPUT 1
 // Enable this module to use one of the following sensors: SENSOR_SHT21
 #define MODULE_SHT21 0
-// Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
+// Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22, SENSOR_DHT21
 #define MODULE_DHT 0
 // Enable this module to use one of the following sensors: SENSOR_SWITCH, SENSOR_DOOR, SENSOR_MOTION
 #define MODULE_SWITCH 0
@@ -173,9 +171,17 @@ Those NodeManager's directives in the `config.h` file control which module/libra
 #define MODULE_HCSR04 0
 // Enable this module to use one of the following sensors: SENSOR_MCP9808
 #define MODULE_MCP9808 0
+// Enable this module to use one of the following sensors: SENSOR_MQ
+#define MODULE_MQ 0
+// Enable this module to use one of the following sensors: SENSOR_MHZ19
+#define MODULE_MHZ19 0
+// Enable this module to use one of the following sensors: SENSOR_AM2320
+#define MODULE_AM2320 0
+// Enable this module to use one of the following sensors: SENSOR_TSL2561
+#define MODULE_TSL2561 0
 ~~~
 
-## Installing the dependencies
+### Installing the dependencies
 
 Some of the modules above rely on third party libraries. Those libraries are not included within NodeManager and have to be installed from the Arduino IDE Library Manager (Sketch -> Include Library -> Manager Libraries). You need to install the library ONLY if the module is enabled:
 
@@ -191,73 +197,109 @@ MODULE_SONOFF | https://github.com/thomasfredericks/Bounce2
 MODULE_BMP085 | https://github.com/adafruit/Adafruit-BMP085-Library
 MODULE_HCSR04 | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/NewPing
 MODULE_MCP9808 | https://github.com/adafruit/Adafruit_MCP9808_Library
+MODULE_AM2320 | https://github.com/thakshak/AM2320
+MODULE_TSL2561 | https://github.com/adafruit/TSL2561-Arduino-Library
 
-## Configure NodeManager
+### Configure NodeManager
 
 Node Manager comes with a reasonable default configuration. If you want/need to change its settings, this can be done in your sketch, inside the `before()` function and just before registering your sensors. The following methods are exposed for your convenience:
 
 ~~~c
-    // send the same service message multiple times (default: 1)
+    // [10] send the same service message multiple times (default: 1)
     void setRetries(int value);
+    int getRetries();
     #if BATTERY_MANAGER == 1
-      // the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
+      // [11] the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
       void setBatteryMin(float value);
-      // the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
+      // [12] the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
       void setBatteryMax(float value);
-      // after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: 10)
+      // [13] after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: -)
       void setBatteryReportCycles(int value);
-      // if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
+      // [14] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60)
+      void setBatteryReportMinutes(int value);
+      // [15] if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
       void setBatteryInternalVcc(bool value);
-      // if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
+      // [16] if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
       void setBatteryPin(int value);
-      // if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
+      // [17] if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
       void setBatteryVoltsPerBit(float value);
-      // If true, wake up by an interrupt counts as a valid cycle for battery reports otherwise only uninterrupted sleep cycles would contribute (default: true)
+      // [18] If true, wake up by an interrupt counts as a valid cycle for battery reports otherwise only uninterrupted sleep cycles would contribute (default: true)
       void setBatteryReportWithInterrupt(bool value);
+      // [2] Send a battery level report to the controller
+      void batteryReport();
     #endif
-    // define the way the node should behave. It can be IDLE (stay awake withtout executing each sensors' loop), SLEEP (go to sleep for the configured interval), WAIT (wait for the configured interval), ALWAYS_ON (stay awake and execute each sensors' loop)
+    // [3] define the way the node should behave. It can be (0) IDLE (stay awake withtout executing each sensors' loop), (1) SLEEP (go to sleep for the configured interval), (2) WAIT (wait for the configured interval), (3) ALWAYS_ON (stay awake and execute each sensors' loop)
     void setSleepMode(int value);
     void setMode(int value);
-    // define for how long the board will sleep (default: 0)
+    int getMode();
+    // [4] define for how long the board will sleep (default: 0)
     void setSleepTime(int value);
-    // define the unit of SLEEP_TIME. It can be SECONDS, MINUTES, HOURS or DAYS (default: MINUTES)
+    int getSleepTime();
+    // [5] define the unit of SLEEP_TIME. It can be SECONDS, MINUTES, HOURS or DAYS (default: MINUTES)
     void setSleepUnit(int value);
+    int getSleepUnit();
     // configure the node's behavior, parameters are mode, time and unit
     void setSleep(int value1, int value2, int value3);
-    // if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
+    // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
     void setSleepInterruptPin(int value);
-    #endif
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
     void setInterrupt(int pin, int mode, int pull = -1);
-    // optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
+    // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
-    // set the interrupt pin the sensor is attached to so its loop() will be executed only upon that interrupt (default: -1)
-    void setInterruptPin(int value);
+    int getSleepBetweenSend();
     // register a built-in sensor
     int registerSensor(int sensor_type, int pin = -1, int child_id = -1);
-    // un-register a sensor
-    void unRegisterSensor(int sensor_index);
     // register a custom sensor
     int registerSensor(Sensor* sensor);
+    // [26] un-register a sensor
+    void unRegisterSensor(int sensor_index);
     // return a sensor by its index
     Sensor* get(int sensor_index);
-	Sensor* getSensor(int sensor_index);
-	// assign a different child id to a sensor
+    Sensor* getSensor(int sensor_index);
+    // assign a different child id to a sensor
     bool renameSensor(int old_child_id, int new_child_id);
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-      void setPowerPins(int ground_pin, int vcc_pin, long wait = 0);
-      // if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
+      void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
+      // [23] if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
       void setAutoPowerPins(bool value);
-      // manually turn the power on
+      // [24] manually turn the power on
       void powerOn();
-      // manually turn the power off
-      void powerOff();
+      // [25] manually turn the power off
+      void powerOff(); 
     #endif
-    // set this to true if you want destination node to send ack back to this node (default: false)
+    // [21] set this to true if you want destination node to send ack back to this node (default: false)
     void setAck(bool value);
+    bool getAck();
     // request and return the current timestamp from the controller
     long getTimestamp();
+    // Request the controller's configuration on startup (default: true)
+    void setGetControllerConfig(bool value);
+    // [22] Manually set isMetric setting
+    void setIsMetric(bool value);
+    bool getIsMetric();
+    // Convert a temperature from celsius to fahrenheit depending on how isMetric is set
+    float celsiusToFahrenheit(float temperature);
+    // return true if sleep or wait is configured and hence this is a sleeping node
+    bool isSleepingNode();
+    // [1] Send a hello message back to the controller
+    void hello();
+    // [6] reboot the board
+    void reboot();
+    // [8] send NodeManager's the version back to the controller
+    void version();
+    // [7] clear the EEPROM
+    void clearEeprom();
+    // [9] wake up the board
+    void wakeup();
+    // process a remote request
+    void process(Request & request);
+    // return the value stored at the requested index from the EEPROM
+    int loadFromMemory(int index);
+    // [27] save the given index of the EEPROM the provided value
+    void saveToMemory(int index, int value);
+    // return vcc in V
+    float getVcc();
 ~~~
 
 For example
@@ -266,7 +308,7 @@ For example
 	nodeManager.setBatteryMin(1.8);
 ~~~
 
-## Register your sensors
+### Register your sensors
 In your sketch, inside the `before()` function and just before calling `nodeManager.before()`, you can register your sensors against NodeManager. The following built-in sensor types are available:
 
 Sensor type  | Description
@@ -297,6 +339,11 @@ SENSOR_HCSR04 | HC-SR04 sensor, return the distance between the sensor and an ob
 SENSOR_ACS712 | ACS712 sensor, measure the current going through the attached module
 SENSOR_MCP9808 | MCP9808 sensor, measure the temperature through the attached module
 SENSOR_RAIN_GAUGE | Rain gauge sensor
+SENSOR_RAIN | Rain sensor, return the percentage of rain from an attached analog sensor
+SENSOR_SOIL_MOISTURE | Soil moisture sensor, return the percentage of moisture from an attached analog sensor
+SENSOR_MHZ19 | MH-Z19 CO2 sensor via UART (SoftwareSerial, default on pins 6(Rx) and 7(Tx)
+SENSOR_TSL2561 | TSL2561 sensor, return light in lux
+SENSOR_AM2320 | AM2320 sensors, return temperature/humidity based on the attached AM2320 sensor
 
 To register a sensor simply call the NodeManager instance with the sensory type and the pin the sensor is conncted to. For example:
 ~~~c
@@ -308,9 +355,9 @@ Once registered, your job is done. NodeManager will assign a child id automatica
 
 When called, registerSensor returns the child_id of the sensor so you will be able to retrieve it later if needed. If you want to set a child_id manually, this can be passed as third argument to the function.
 
-### Creating a custom sensor
+#### Creating a custom sensor
 
-If you want to create a custom sensor and register it with NodeManager so it can take care of all the common tasks, you can create a class inheriting from `Sensor` and implement the following methods:
+If you want to create a custom sensor and register it with NodeManager so it can take care of all the common tasks, you can create an inline class inheriting from `Sensor` or other subclasses and implement the following methods:
 ~~~c
     // define what to do during before() to setup the sensor
     void onBefore();
@@ -320,14 +367,16 @@ If you want to create a custom sensor and register it with NodeManager so it can
     void onLoop();
     // define what to do during receive() when the sensor receives a message
     void onReceive(const MyMessage & message);
+	// define what to do when receiving a remote configuration message
+	void onProcess(Request & request);
 ~~~
 
 You can then instantiate your newly created class and register with NodeManager:
 ~~~c
-	nodeManager.registerSensor(new SensorCustom(child_id, pin));
+	nodeManager.registerSensor(new SensorCustom(&nodeManager,child_id, pin));
 ~~~
 
-## Configuring the sensors
+### Configuring the sensors
 Each built-in sensor class comes with reasonable default settings. In case you want/need to customize any of those settings, after having registered the sensor, you can retrieve it back and call set functions common to all the sensors or specific for a given class.
 
 To do so, use `nodeManager.getSensor(child_id)` which will return a pointer to the sensor. Remeber to cast it to the right class before calling their functions. For example:
@@ -337,111 +386,113 @@ To do so, use `nodeManager.getSensor(child_id)` which will return a pointer to t
 ~~~
 
 
-### Sensor's general configuration
+#### Sensor's general configuration
 
 The following methods are available for all the sensors:
 ~~~c
-    // where the sensor is attached to (default: not set)
+    // [1] where the sensor is attached to (default: not set)
     void setPin(int value);
-	int getPin();
-    // child_id of this sensor (default: not set)
+    int getPin();
+    // [2] child_id of this sensor (default: not set)
     void setChildId(int value);
-	int getChildId();
+    int getChildId();
     // presentation of this sensor (default: S_CUSTOM)
     void setPresentation(int value);
-	int getPresentation();
-    // type of this sensor (default: V_CUSTOM)
+    int getPresentation();
+    // [3] type of this sensor (default: V_CUSTOM)
     void setType(int value);
-	int getType();
-    // description of the sensor (default: '')
+    int getType();
+    // [4] description of the sensor (default: '')
     void setDescription(char *value);
-    // set this to true if you want destination node to send ack back to this node (default: false)
-    void setAck(bool value);
-    // when queried, send the message multiple times (default: 1)
-    void setRetries(int value);
-    // For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)
+    // [5] For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)
     void setSamples(int value);
-    // If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
+    // [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
     void setSamplesInterval(int value);
-    // if true will report the measure only if different then the previous one (default: false)
-    void setTackLastValue(bool value);
-    // if track last value is enabled, force to send an update after the configured number of cycles (default: -1)
+    // [7] if true will report the measure only if different than the previous one (default: false)
+    void setTrackLastValue(bool value);
+    // [8] if track last value is enabled, force to send an update after the configured number of cycles (default: -1)
     void setForceUpdate(int value);
-    // the value type of this sensor (default: TYPE_INTEGER)
+    void setForceUpdateCycles(int value);
+    // [9] if track last value is enabled, force to send an update after the configured number of minutes (default: -1)
+    void setForceUpdateMinutes(int value);
+    // [10] the value type of this sensor (default: TYPE_INTEGER)
     void setValueType(int value);
-	int getValueType();
-	// for float values, set the float precision (default: 2)
-    void setFloatPrecision(int value);
-    // optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
-    void setSleepBetweenSend(int value);
-    // set the interrupt pin the sensor is attached to so its loop() will be executed only upon that interrupt (default: -1)
-    void setInterruptPin(int value);
-    int getInterruptPin();
+    int getValueType();
+    // [11] for float values, set the float precision (default: 2)
+    void  setFloatPrecision(int value);
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-      void setPowerPins(int ground_pin, int vcc_pin, long wait = 0);
-      // if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
+      void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
+      // [12] if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
       void setAutoPowerPins(bool value);
-      // manually turn the power on
+      // [13] manually turn the power on
       void powerOn();
-      // manually turn the power off
+      // [14] manually turn the power off
       void powerOff();
     #endif
     // get the latest recorded value from the sensor
     int getValueInt();
     float getValueFloat();
     char* getValueString();
+    // [15] After how many cycles the sensor will report back its measure (default: 1 cycle)
+    void setReportIntervalCycles(int value);
+    // [16] After how many minutes the sensor will report back its measure (default: 1 cycle)
+    void setReportIntervalMinutes(int value);
+    // process a remote request
+    void process(Request & request);
+    // return the pin the interrupt is attached to
+    int getInterruptPin();
 ~~~
 
-### Sensor's specific configuration
+#### Sensor's specific configuration
 
 Each sensor class can expose additional methods.
 
-#### SensorAnalogInput / SensorLDR
+* SensorAnalogInput / SensorLDR / SensorRain / SensorSoilMoisture
 ~~~c
-    // the analog reference to use (default: not set, can be either INTERNAL or DEFAULT)
+    // [101] the analog reference to use (default: not set, can be either INTERNAL or DEFAULT)
     void setReference(int value);
-    // reverse the value or the percentage (e.g. 70% -> 30%) (default: false)
+    // [102] reverse the value or the percentage (e.g. 70% -> 30%) (default: false)
     void setReverse(bool value);
-    // when true returns the value as a percentage (default: true)
+    // [103] when true returns the value as a percentage (default: true)
     void setOutputPercentage(bool value);
-    // minimum value for calculating the percentage (default: 0)
+    // [104] minimum value for calculating the percentage (default: 0)
     void setRangeMin(int value);
-    // maximum value for calculating the percentage (default: 1024)
+    // [105] maximum value for calculating the percentage (default: 1024)
     void setRangeMax(int value);
 ~~~
 
-#### SensorThermistor
+* SensorThermistor
 ~~~c
-    // resistance at 25 degrees C (default: 10000)
+    // [101] resistance at 25 degrees C (default: 10000)
     void setNominalResistor(long value);
-    // temperature for nominal resistance (default: 25)
+    // [102] temperature for nominal resistance (default: 25)
     void setNominalTemperature(int value);
-    // The beta coefficient of the thermistor (default: 3950)
+    // [103] The beta coefficient of the thermistor (default: 3950)
     void setBCoefficient(int value);
-    // the value of the resistor in series with the thermistor (default: 10000)
+    // [104] the value of the resistor in series with the thermistor (default: 10000)
     void setSeriesResistor(long value);
-    // set a temperature offset
+    // [105] set a temperature offset
     void setOffset(float value);
 ~~~
 
-#### SensorMQ
+* SensorMQ
 ~~~c
-    // define the target gas whose ppm has to be returned. 0: LPG, 1: CO, 2: Smoke (default: 1);
+    // [101] define the target gas whose ppm has to be returned. 0: LPG, 1: CO, 2: Smoke (default: 1);
     void setTargetGas(int value);
-    // define the load resistance on the board, in kilo ohms (default: 1);
+    // [102] define the load resistance on the board, in kilo ohms (default: 1);
     void setRlValue(float value);
-    // define the Ro resistance on the board (default: 10000);
+    // [103] define the Ro resistance on the board (default: 10000);
     void setRoValue(float value);
-    // Sensor resistance in clean air (default: 9.83);
+    // [104] Sensor resistance in clean air (default: 9.83);
     void setCleanAirFactor(float value);
-    // define how many samples you are going to take in the calibration phase (default: 50);
+    // [105] define how many samples you are going to take in the calibration phase (default: 50);
     void setCalibrationSampleTimes(int value);
-    // define the time interal(in milisecond) between each samples in the cablibration phase (default: 500);
+    // [106] define the time interal(in milisecond) between each samples in the cablibration phase (default: 500);
     void setCalibrationSampleInterval(int value);
-    // define how many samples you are going to take in normal operation (default: 50);
+    // [107] define how many samples you are going to take in normal operation (default: 50);
     void setReadSampleTimes(int value);
-    // define the time interal(in milisecond) between each samples in the normal operations (default: 5);
+    // [108] define the time interal(in milisecond) between each samples in the normal operations (default: 5);
     void setReadSampleInterval(int value);
     // set the LPGCurve array (default: {2.3,0.21,-0.47})
     void setLPGCurve(float *value);
@@ -451,188 +502,226 @@ Each sensor class can expose additional methods.
     void setSmokeCurve(float *value);
 ~~~
 
-#### SensorDigitalOutput / SensorRelay / SensorLatchingRelay
+* SensorACS712
 ~~~c
-    // set how to initialize the output (default: LOW)
-    void setInitialValue(int value);
-    // if greater than 0, send a pulse of the given duration in ms and then restore the output back to the original value (default: 0)
-    void setPulseWidth(int value);
-    // define which value to set to the output when set to on (default: HIGH)
-    void setOnValue(int value);
-    // when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
-    void setLegacyMode(bool value);
-~~~
-
-#### SensorSwitch / SensorDoor / SensorMotion
-~~~c
-    // set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
-    void setMode(int value);
-    // milliseconds to wait before reading the input (default: 0)
-    void setDebounce(int value);
-    // time to wait in milliseconds after a change is detected to allow the signal to be restored to its normal value (default: 0)
-    void setTriggerTime(int value);
-    // Set initial value on the interrupt pin (default: HIGH)
-    void setInitial(int value);
-~~~
-
-#### SensorDs18b20
-~~~c
-    // return the sensors' device address
-    DeviceAddress* getDeviceAddress();
-    // returns the sensor's resolution in bits
-    int getResolution();
-    // set the sensor's resolution in bits
-    void setResolution(int value);
-    // sleep while DS18B20 calculates temperature (default: false)
-    void setSleepDuringConversion(bool value);
-~~~
-
-#### SensorBME280
-~~~c
-    // define how many pressure samples to keep track of for calculating the forecast (default: 5)
-    void setForecastSamplesCount(int value);
-~~~
-
-#### SensorSonoff
-~~~c
-    // set the button's pin (default: 0)
-    void setButtonPin(int value);
-    // set the relay's pin (default: 12)
-    void setRelayPin(int value);
-    // set the led's pin (default: 13)
-    void setLedPin(int value);
-~~~
-
-#### SensorBMP085
-~~~c
-    // define how many pressure samples to keep track of for calculating the forecast (default: 5)
-    void setForecastSamplesCount(int value);
-~~~
-
-#### SensorHCSR04
-~~~c
-    // Arduino pin tied to trigger pin on the ultrasonic sensor (default: the pin set while registering the sensor)
-    void setTriggerPin(int value);
-    // Arduino pin tied to echo pin on the ultrasonic sensor (default: the pin set while registering the sensor)
-    void setEchoPin(int value);
-    // Maximum distance we want to ping for (in centimeters) (default: 300)
-    void setMaxDistance(int value);
-~~~
-
-#### SensorACS712
-~~~c
-    // set how many mV are equivalent to 1 Amp. The value depends on the module (100 for 20A Module, 66 for 30A Module) (default: 185);
+    // [101] set how many mV are equivalent to 1 Amp. The value depends on the module (100 for 20A Module, 66 for 30A Module) (default: 185);
     void setmVPerAmp(int value);
-    // set ACS offset (default: 2500);
+    // [102] set ACS offset (default: 2500);
     void setOffset(int value);
 ~~~
 
-#### SensorRainGauge
+* SensorRainGauge
 ~~~c
-    // set how frequently to report back to the controller in minutes. After reporting the measure is resetted (default: 60);
+    // [101] set how frequently to report back to the controller in minutes. After reporting the measure is resetted (default: 60)
     void setReportInterval(int value);
-    // set how many mm of rain to count for each tip (default: 0.11);
+    // [102] set how many mm of rain to count for each tip (default: 0.11)
     void setSingleTip(float value);
 ~~~
 
-## Upload your sketch
+* SensorDigitalOutput / SensorRelay
+~~~c
+    // [103] define which value to set to the output when set to on (default: HIGH)
+    void setOnValue(int value);
+    // [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
+    void setLegacyMode(bool value);
+    // [105] automatically turn the output off after the given number of minutes
+    void setSafeguard(int value);
+    // [106] if true the input value becomes a duration in minutes after which the output will be automatically turned off (default: false)
+    void setInputIsElapsed(bool value);
+    // [107] optionally wait for the given number of milliseconds after changing the status (default: 0)
+    void setWaitAfterSet(int value);
+    // manually switch the output to the provided value
+    void setStatus(int value);
+    // get the current state
+    int getStatus();
+~~~
+
+* SensorLatchingRelay (in addition to those available for SensorDigitalOutput / SensorRelay)
+~~~c
+    // [201] set the duration of the pulse to send in ms to activate the relay (default: 50)
+    void setPulseWidth(int value);
+    // [202] set the pin which turns the relay off (default: the pin provided while registering the sensor)
+    void setPinOff(int value);
+    // [203] set the pin which turns the relay on (default: the pin provided while registering the sensor + 1)
+    void setPinOn(int value);
+~~~
+
+*  SensorSwitch / SensorDoor / SensorMotion
+~~~c
+    // [101] set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
+    void setMode(int value);
+    // [102] milliseconds to wait before reading the input (default: 0)
+    void setDebounce(int value);
+    // [103] time to wait in milliseconds after a change is detected to allow the signal to be restored to its normal value (default: 0)
+    void setTriggerTime(int value);
+    // [104] Set initial value on the interrupt pin (default: HIGH)
+    void setInitial(int value);
+~~~
+
+*  SensorDs18b20
+~~~c
+    // returns the sensor's resolution in bits
+    int getResolution();
+    // [101] set the sensor's resolution in bits
+    void setResolution(int value);
+    // [102] sleep while DS18B20 calculates temperature (default: false)
+    void setSleepDuringConversion(bool value);
+    // return the sensors' device address
+    DeviceAddress* getDeviceAddress();
+~~~
+
+*  SensorBME280 / SensorBMP085
+~~~c
+    // [101] define how many pressure samples to keep track of for calculating the forecast (default: 5)
+    void setForecastSamplesCount(int value);
+~~~
+
+* SensorHCSR04
+~~~c
+    // [101] Arduino pin tied to trigger pin on the ultrasonic sensor (default: the pin set while registering the sensor)
+    void setTriggerPin(int value);
+    // [102] Arduino pin tied to echo pin on the ultrasonic sensor (default: the pin set while registering the sensor)
+    void setEchoPin(int value);
+    // [103] Maximum distance we want to ping for (in centimeters) (default: 300)
+    void setMaxDistance(int value);
+~~~
+
+*  SensorSonoff
+~~~c
+    // [101] set the button's pin (default: 0)
+    void setButtonPin(int value);
+    // [102] set the relay's pin (default: 12)
+    void setRelayPin(int value);
+    // [103] set the led's pin (default: 13)
+    void setLedPin(int value);
+~~~
+
+* SensorMHZ19
+~~~c
+    // set the RX and TX pins for the software serial port to talk to the sensor
+    void setRxTx(int rxpin, int txpin);
+~~~
+
+* SensorTSL2561
+~~~c
+    // [101] set the gain, possible values are SensorTSL2561::GAIN_0X (0), SensorTSL2561::GAIN_16X (1) (default 16x)
+    void setGain(int value);
+    // [102] set the timing, possible values are SensorTSL2561::INTEGRATIONTIME_13MS (0), SensorTSL2561::INTEGRATIONTIME_101MS (1), SensorTSL2561::INTEGRATIONTIME_402MS (2) (default: 13ms)
+    void setTiming(int value);
+    // [103] set the spectrum, possible values are SensorTSL2561::VISIBLE (0), SensorTSL2561::FULLSPECTRUM (1), SensorTSL2561::INFRARED (2), SensorTSL2561::FULL (3) (default: visible)
+    void setSpectrum(int value);
+    // [104] set the i2c address values are SensorTSL2561::ADDR_FLOAT, SensorTSL2561::ADDR_LOW, SensorTSL2561::ADDR_HIGH
+    void setAddress(int value);
+~~~
+
+### Upload your sketch
 
 Upload your sketch to your arduino board as you are used to.
-
-## Verify if everything works fine
 
 Check your gateway's logs to ensure the node is working as expected. You should see the node presenting itself, reporting battery level, presenting all the registered sensors and the configuration child id service.
 When `DEBUG` is enabled, detailed information is available through the serial port. Remember to disable debug once the tests have been completed.
 
-## Communicate with each sensor
+### Communicate with NodeManager and its sensors
 
-You can interact with each registered sensor asking to execute their main tasks by sending to the child id a `REQ` command. For example to request the temperature to node_id 254 and child_id 1:
+You can interact with each registered sensor by asking to execute their main tasks by sending to the child id a `REQ` command (or a `SET` for output sensors like relays). For example to request the temperature to node_id 254 and child_id 1:
 
 `254;1;2;0;0;`
 
 To activate a relay connected to the same node, child_id 100:
 
-`254;100;2;0;2;1`
+`254;100;1;0;2;1`
 
 No need to implement anything on your side since for built-in sensor types this is handled automatically. 
-Once the node will be sleeping, it will report automatically each measure at the end of every sleep cycle.
+Once the node will be sleeping, it will report automatically each measure at the end of every sleep cycle, unless configured otherwise.
 
-## Communicate with the node
+NodeManager exposes also a configuration service by default on child_id 200 so you can interact with it by sending `V_CUSTOM` type of messages and commands within the payload. For each `REQ` message, the node will respond with a `SET` message if successful. 
+Almost all the functions made available through the API can be called remotely. To do so, the payload must be in the format `<function_id>[,<value_to_set>]` where function_id is the number between square brackets you can find in the description just above each function and, if the function takes and argument, this can be passed along in value_to_set. 
+For example, to request a battery report, find the function you need to call remotely within the documentation:
+~~~c
+    // [2] Send a battery level report to the controller
+    void batteryReport();
+~~~
+In this case the function_id will be 2. To request a battery report to the node_id 100, send the following message:
+`<node_id>;<configuration_child_id>;<req>;0;<V_CUSTOM>;<function_id>`
+`100;200;2;0;48;2`
 
-NodeManager exposes a configuration service by default on child_id 200 so you can interact with it by sending `V_CUSTOM` type of messages and commands within the payload. For each `REQ` message, the node will respond with a `SET` message.
-The following custom commands are available:
-
-NodeManager command  | Description
- ------------- | -------------
-BATTERY | Report the battery level back to the gateway/controller
-HELLO | Hello request
-REBOOT | Reboot the board
-CLEAR | Wipe from the EEPROM NodeManager's settings
-VERSION | Respond with NodeManager's version
-IDxxx |  Change the node id to the provided one. E.g. ID025: change the node id to 25. Requires a reboot to take effect
-INTVLnnnX | Set the wait/sleep interval to nnn where X is S=Seconds, M=mins, H=Hours, D=Days. E.g. INTVL010M would be 10 minutes
-MODEx | change the way the node behaves. 0: stay awake withtout executing each sensors' loop(), 1: go to sleep for the configured interval, 2: wait for the configured interval, 3: stay awake and execute each sensors' loop()
-AWAKE | When received after a sleeping cycle or during wait, abort the cycle and stay awake
-
-For example, to request the battery level to node id 254:
-
-`254;200;2;0;48;BATTERY`
-
-To set the sleeping cycle to 1 hour:
-
-`254;200;2;0;48;INTVL001H`
+The change the sleep time from e.g. 10 minutes as set in the sketch to 5 minutes:
+~~~c
+    // [4] define for how long the board will sleep (default: 0)
+    void setSleepTime(int value);
+~~~
+`<node_id>;<configuration_child_id>;<req>;0;<V_CUSTOM>;<function_id>,<value>`
+`100;200;2;0;48;4,5`
 
 To ask the node to start sleeping (and waking up based on the previously configured interval):
+~~~c
+    // [3] define the way the node should behave. It can be (0) IDLE (stay awake withtout executing each sensors' loop), (1) SLEEP (go to sleep for the configured interval), (2) WAIT (wait for the configured interval), (3) ALWAYS_ON (stay awake and execute each sensors' loop)
+    void setSleepMode(int value);
+~~~
+`100;200;2;0;48;3,1`
 
-`254;200;2;0;48;MODE1`
+To wake up a node previously configured as sleeping, send the following just it wakes up next:
+~~~c
+    // [9] wake up the board
+    void wakeup();
+~~~
+`100;200;2;0;48;9`
 
-To wake up a node previously configured with `MODE1`, send the following just after reporting `AWAKE`:
+The same protocol can be used to execute remotely also sensor-specific functions. In this case the message has to be sent to the sensor's child_id, with a V_CUSTOM type of message. For example if you want to collect and average 10 samples for child_id 1:
+~~~c
+    // [5] For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)
+    void setSamples(int value);
+~~~
+`100;1;2;0;48;5,10`
 
-`254;200;2;0;48;WAKEUP`
+If you want to decrease the temperature offset of a thermistor sensor to -2:
+~~~c
+    // [105] set a temperature offset
+    void setOffset(float value);
+~~~
+`100;1;2;0;48;105,-2`
 
-In addition, NodeManager will report with custom messages every time the board is going to sleep (`SLEEPING`) or it is awake (`AWAKE`).
+Please note that anything set remotely will NOT persist a reboot apart from those provided to setSleepMode(), setSleepTime() and setSleepUnit() which are saved to the EEPROM (provided `PERSIST` is enabled).
 
-If `PERSIST` is enabled, the settings provided with `INTVLnnnX` and `MODEx` are saved to the EEPROM to be persistent even after rebooting the board.
-
-# How it works
+## Understanding NodeManager: how it works
 
 A NodeManager object must be created and called from within your sketch during `before()`, `presentation()`, `loop()` and `receive()` to work properly. NodeManager will do the following during each phase:
 
-## NodeManager::before()
+NodeManager::before():
 * Setup the interrupt pins to wake up the board based on the configured interrupts (e.g. stop sleeping when the pin is connected to ground or wake up and notify when a motion sensor has trigger)
 * If persistance is enabled, restore from the EEPROM the latest sleeping settings
 * Call `before()` of each registered sensor
 
-### Sensor::before()
+Sensor::before():
 * Call sensor-specific implementation of before by invoking `onBefore()` to initialize the sensor
 
-## NodeManager::setup()
+NodeManager::setup():
 * Send a custom message with a STARTED payload to the controller
 * Call `setup()` of each registered sensor
 
-### Sensor::setup()
+Sensor::setup():
 * Call sensor-specific implementation of setup by invoking `onSetup()` to initialize the sensor
 
-## NodeManager::loop()
+NodeManager::loop():
 * If all the sensors are powered by an arduino pin, this is set to HIGH
 * Call `loop()` of each registered sensor
 * If all the sensors are powered by an arduino pin, this is set to LOW
 
-### Sensor::loop()
+Sensor::loop():
 * If the sensor is powered by an arduino pin, this is set to HIGH
 * For each registered sensor, the sensor-specific `onLoop()` is called. If multiple samples are requested, this is run multiple times.
 * In case multiple samples have been collected, the average is calculated
 * A message is sent to the gateway with the calculated value. Depending on the configuration, this is not sent if it is the same as the previous value or sent anyway after a given number of cycles. These functionalies are not sensor-specific and common to all the sensors inheriting from the `Sensor` class.
 * If the sensor is powered by an arduino pin, this is set to LOW
 
-## NodeManager::receive()
+NodeManager::receive():
 * Receive a message from the radio network 
 * If the destination child id is the configuration node, it will handle the incoming message, otherwise will dispatch the message to the recipient sensor
 
-### Sensor::receive()
+Sensor::receive(): 
 * Invoke `Sensor::loop()` which will execute the sensor main taks and eventually call `Sensor::onReceive()`
 
-# Examples
+## Examples
 All the examples below takes place within the before() function in the main sketch, just below the "Register below your sensors" comment.
 
 Set battery minimum and maxium voltage. This will be used to calculate the level percentage:
@@ -697,12 +786,11 @@ Register a latching relay connecting to pin 6 (set) and pin 7 (unset):
 
 ~~~c
   nodeManager.registerSensor(SENSOR_LATCHING_RELAY,6);
-  nodeManager.registerSensor(SENSOR_LATCHING_RELAY,7);
 ~~~
 
-# Example Sketches
+## Example Sketches
 
-## Analog Light and Temperature Sensor
+*  Analog Light and Temperature Sensor
 
 The following sketch can be used to report the temperature and the light level based on a thermistor and LDR sensors attached to two analog pins of the arduino board (A1 and A2). Both the thermistor and the LDR are connected to ground on one side and to vcc via a resistor on the other so to measure the voltage drop across each of them through the analog pins. 
 
@@ -753,8 +841,6 @@ void before() {
 
 // presentation
 void presentation() {
-  // Send the sketch version information to the gateway and Controller
-	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
   // call NodeManager presentation routine
   nodeManager.presentation();
 
@@ -778,9 +864,15 @@ void receive(const MyMessage &message) {
   // call NodeManager receive routine
   nodeManager.receive(message);
 }
+
+// receiveTime
+void receiveTime(unsigned long ts) {
+  // call NodeManager receiveTime routine
+  nodeManager.receiveTime(ts);
+}
 ~~~
 
-## Motion Sensor
+*  Motion Sensor
 
 The following sketch can be used to report back to the controller when a motion sensor attached to the board's pin 3 triggers. In this example, the board will be put to sleep just after startup and will report a heartbeat every hour. NodeManager will take care of configuring an interrupt associated to the provided pin so automatically wake up when a motion is detected and report a V_TRIPPED message back. This sketch requires MODULE_SWITCH to be enabled in the global config.h file.
 
@@ -801,6 +893,10 @@ Documentation available on: https://github.com/mysensors/NodeManager
  
 // load user settings
 #include "config.h"
+// include supporting libraries
+#ifdef MY_GATEWAY_ESP8266
+  #include <ESP8266WiFi.h>
+#endif
 // load MySensors library
 #include <MySensors.h>
 // load NodeManager library
@@ -827,8 +923,6 @@ void before() {
 
 // presentation
 void presentation() {
-  // Send the sketch version information to the gateway and Controller
-	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
   // call NodeManager presentation routine
   nodeManager.presentation();
 
@@ -852,11 +946,17 @@ void receive(const MyMessage &message) {
   // call NodeManager receive routine
   nodeManager.receive(message);
 }
+
+// receiveTime
+void receiveTime(unsigned long ts) {
+  // call NodeManager receiveTime routine
+  nodeManager.receiveTime(ts);
+}
 ~~~
 
-## Boiler Sensor
+*  Boiler Sensor
 
-The following sketch controls a latching relay connected to a boiler. A latching relay (requiring only a pulse to switch) has been chosen to minimize the power consumption required by a traditional relay to stay on. This relay has normally two pins, one for closing and the other for opening the controlled circuit, connected to pin 6 and 7 of the arduino board. This is why we have to register two sensors against NodeManager so to control the two funtions indipendently. Since using a SENSOR_LATCHING_RELAY type of sensor, NodeManager will take care of just sending out a single pulse only when a REQ command of type V_STATUS is sent to one or the other child id.
+The following sketch controls a latching relay connected to a boiler. A latching relay (requiring only a pulse to switch) has been chosen to minimize the power consumption required by a traditional relay to stay on. This relay has normally two pins, one for closing and the other for opening the controlled circuit, connected to pin 6 and 7 of the arduino board. Since using a SENSOR_LATCHING_RELAY type of sensor, NodeManager will automatically consider the provided pin as the ON pin and the one just after as the OFF pin and will take care of just sending out a single pulse only when a SET command of type V_STATUS is sent to the child id. The appropriate pin will be then used.
 
 In this example, the board also runs at 1Mhz so it can go down to 1.8V: by setting setBatteryMin() and setBatteryMax(), the battery percentage will be calculated and reported (by default, automatically every 10 sleeping cycles) based on these custom boundaries.
 
@@ -879,6 +979,10 @@ Documentation available on: https://github.com/mysensors/NodeManager
  
 // load user settings
 #include "config.h"
+// include supporting libraries
+#ifdef MY_GATEWAY_ESP8266
+  #include <ESP8266WiFi.h>
+#endif
 // load MySensors library
 #include <MySensors.h>
 // load NodeManager library
@@ -898,7 +1002,6 @@ void before() {
   nodeManager.setBatteryMax(3.2);
   nodeManager.setSleep(SLEEP,5,MINUTES);
   nodeManager.registerSensor(SENSOR_LATCHING_RELAY,6);
-  nodeManager.registerSensor(SENSOR_LATCHING_RELAY,7);
 
   /*
    * Register above your sensors
@@ -908,8 +1011,6 @@ void before() {
 
 // presentation
 void presentation() {
-  // Send the sketch version information to the gateway and Controller
-	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
   // call NodeManager presentation routine
   nodeManager.presentation();
 
@@ -933,10 +1034,16 @@ void receive(const MyMessage &message) {
   // call NodeManager receive routine
   nodeManager.receive(message);
 }
+
+// receiveTime
+void receiveTime(unsigned long ts) {
+  // call NodeManager receiveTime routine
+  nodeManager.receiveTime(ts);
+}
 ~~~
 
 
-## Rain and Soil Moisture Sensor
+*  Rain and Soil Moisture Sensor
 
 The following sketch can be used to report the rain level and the soil moisture based on two sensors connected to the board's analog pins (A1 and A2). In this case we are customizing the out-of-the-box SENSOR_ANALOG_INPUT sensor type since we just need to measure an analog input but we also want to provide the correct type and presentation for each sensor. 
 
@@ -964,6 +1071,10 @@ Documentation available on: https://github.com/mysensors/NodeManager
  
 // load user settings
 #include "config.h"
+// include supporting libraries
+#ifdef MY_GATEWAY_ESP8266
+  #include <ESP8266WiFi.h>
+#endif
 // load MySensors library
 #include <MySensors.h>
 // load NodeManager library
@@ -1012,8 +1123,6 @@ void before() {
 
 // presentation
 void presentation() {
-  // Send the sketch version information to the gateway and Controller
-	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
   // call NodeManager presentation routine
   nodeManager.presentation();
 
@@ -1037,9 +1146,61 @@ void receive(const MyMessage &message) {
   // call NodeManager receive routine
   nodeManager.receive(message);
 }
+
+// receiveTime
+void receiveTime(unsigned long ts) {
+  // call NodeManager receiveTime routine
+  nodeManager.receiveTime(ts);
+}
 ~~~
 
-# Release Notes
+## Contributing
+
+Contributes to NodeManager are of course more than welcome. 
+
+### Reporting an issue or request an enhancement
+
+For reporting an issue, requesting support for a new sensor or any other kind of enhancement, please drop a message either on the project's main page (<https://www.mysensors.org/download/node-manager>) or directly on Github (<https://github.com/mysensors/NodeManager/issues>).
+
+
+### Contributing to the code
+
+If you want to contribute to the code, a pull request on Github is the way to go. First of all setup your development environment:
+
+* Create a copy of the project in your Github account by clicking on the "Fork" button on `https://github.com/mysensors/NodeManager` 
+* Check the copy actually exists on `https://github.com/<username>/NodeManager`
+* Clone your repository on your computer: `git clone https://github.com/<username>/NodeManager.git`
+* Configure the main project's repository as an upstream: `git remote add upstream https://github.com/mysensors/NodeManager.git`
+* Create and switch to a local development branch: `git checkout -b development origin/development`
+
+Before applying any change, ensure you have the latest development version available:
+* Switch to your local development branch: `git checkout development`
+* Fetch the latest version from the main project's repository: `git fetch upstream`
+* Merge into your development copy all the changes from the main repository: `git merge development upstream/development`
+* Update the development branch of your repository: `git push origin development`
+
+Create a branch for the fix/feature you want to work on and apply changes to the code:
+* Create and switch to a new branch (give it a significant name, e.g. fix/enum-sensors): `git checkout -b <yourbranch>`
+* Do any required change to the code
+* Include all the files changed for your commit: `git add .`
+* Commit the changes: `git  commit -m"Use enum instead of define for defining each sensor #121"`
+* Ensure both the main sketch and the config.h file do not present any change
+* Push the branch with the changes to your repository: `git push origin <yourbranch>`
+* Visit `https://github.com/<username>/NodeManager/branches` and click the "New pull request" button just aside your newly created branch
+* Fill in the request with a significant title and description and select the "development" branch from the main repository to be compared against your branch
+* Submit the request and start the discussion
+* Any additional commits to your branch which will be presented within the same pull request
+* When the pull request is merged, delete your working branch: `git branch -D <yourbranch>`
+* Update your local and remote development branch as per the instructions above
+
+If there are changes introduced to the development branch that conflicts with an open pull request, you will have to resolve the conflicts and update the PR:
+* Fetch and merge into development any change from upstream/development as detailed above
+* Switch to your branch: `git checkout <yourbranch>`
+* Rebase the branch you filed the PR from against your updated development branch: `git rebase development`
+* Resolve the conflicts and commit again
+* Force push your updated branch so the PR gets updated: `git push HEAD:<yourbranch> -f`
+
+## Release Notes
 
 v1.0:
 

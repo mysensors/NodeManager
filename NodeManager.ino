@@ -62,64 +62,6 @@ void before() {
    * Register below your sensors
   */
 
-//////// RELAY 
-//  int relayState1 = nodeManager.registerSensor(SENSOR_RELAY,4,1);
-//  SensorRelay* relay1 = ((SensorRelay*)nodeManager.getSensor(relayState1));
-//  relay1->setInitialValue(LOW);
-//  int relayState2 = nodeManager.registerSensor(SENSOR_RELAY,5,2);
-//  SensorRelay* relay2 = ((SensorRelay*)nodeManager.getSensor(relayState2));
-//  relay2->setInitialValue(HIGH);
-
-//////// TEMPERATURE AND HUMIDITY SENSORS
-//   nodeManager.registerSensor(SENSOR_DHT21,A5);
-//   nodeManager.registerSensor(SENSOR_DHT11,A4);
-//   nodeManager.registerSensor(SENSOR_AM2320,1);
-//   nodeManager.registerSensor(SENSOR_SHT21,1);
-
-//////// DETECTION SENSORS
-//   nodeManager.setSleepInterruptPin(false);
-//   nodeManager.registerSensor(SENSOR_SWITCH,2,1);
-//   nodeManager.registerSensor(SENSOR_SWITCH,3,2);
-//
-// or
-//  
-//  int liquidLevel1 = nodeManager.registerSensor(SENSOR_SWITCH,2,1);
-//  SensorSwitch* liquidLevelSensor1 = ((SensorSwitch*)nodeManager.getSensor(liquidLevel1));
-//  liquidLevelSensor1->setPowerPins(4,5,1000);
-//  int liquidLevel2 = nodeManager.registerSensor(SENSOR_SWITCH,3,2);
-//  SensorSwitch* liquidLevelSensor2 = ((SensorSwitch*)nodeManager.getSensor(liquidLevel2));
-//  liquidLevelSensor2->setPowerPins(7,6,1000);
-//  liquidLevelSensor2->setRetries(6);
-//  liquidLevelSensor2->setMode(CHANGE);
-//  liquidLevelSensor2>setInitial(HIGH);
-//  liquidLevelSensor2->setTriggerTime(10);
-//  liquidLevelSensor2->setDebounce(10);
-
-//////// LIGHT SENSORS
-//   nodeManager.registerSensor(SENSOR_BH1750,2);
-//   nodeManager.registerSensor(SENSOR_TSL2561,2);
-//
-// or
-//
-//   int Light = nodeManager.registerSensor(SENSOR_BH1750,2);
-//   SensorBH1750* LightSensor = ((SensorBH1750*)nodeManager.getSensor(Light));
-//   LightSensor->setPowerPins(7,8,200);
-
-//   int Light = nodeManager.registerSensor(SENSOR_TSL2561,2);
-//   SensorTSL2561* LightSensor = ((SensorTSL2561*)nodeManager.getSensor(Light));
-// Maybe putting this in README ?
-// You can change the gain on the fly, to adapt to brighter/dimmer light situations     
-//   LightSensor->setGain(SensorTSL2561::GAIN_0X); // set no gain (for bright situtations)
-//   LightSensor->setGain(SensorTSL2561::GAIN_16X); // set 16x gain (for dim situations)
-// Changing the integration time gives you a longer time over which to sense light
-// longer timelines are slower, but are good in very low light situtations!
-//   LightSensor->setTiming(SensorTSL2561::INTEGRATIONTIME_13MS); // shortest integration time (bright light)
-//   LightSensor->setTiming(SensorTSL2561::INTEGRATIONTIME_101MS); // medium integration time (medium light)
-//   LightSensor->setTiming(SensorTSL2561::INTEGRATIONTIME_402MS); // longest integration time (dim light)
-//   LightSensor->setSpectrum(SensorTSL2561::VISIBLE);
-//   LightSensor->setSpectrum(SensorTSL2561::FULLSPECTRUM);
-//   LightSensor->setSpectrum(SensorTSL2561::INFRARED); 
-//   LightSensor->setSpectrum(SensorTSL2561::FULL); // return LUX, IR, FULL and VISIBLE
 
   /*
    * Register above your sensors
@@ -143,7 +85,6 @@ void setup() {
 void loop() {
   // call NodeManager loop routine
   nodeManager.loop();
-
 }
 
 // receive
