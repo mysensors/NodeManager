@@ -34,11 +34,11 @@ void before() {
   */
 
 ///////// BATTERY MANAGER
-   nodeManager.setBatteryMin(2.5);
-   nodeManager.setBatteryMax(3.4);
-   nodeManager.setBatteryInternalVcc(false);
-   nodeManager.setBatteryPin(A0);
-   nodeManager.setBatteryVoltsPerBit(0.003363075);
+//   nodeManager.setBatteryMin(2.5);
+//   nodeManager.setBatteryMax(3.3);
+//   nodeManager.setBatteryInternalVcc(false);
+//   nodeManager.setBatteryPin(A0);
+//   nodeManager.setBatteryVoltsPerBit(0.003363075);
 
 ///////// POWER MANAGER
 //  nodeManager.setRebootPin(8);
@@ -50,18 +50,16 @@ void before() {
 //  nodeManager.powerOn();
 
 //////// SLEEP MANAGER
- // nodeManager.setSleep(SLEEP,10,MINUTES);
-  nodeManager.setSleepMode(SLEEP); 
-  nodeManager.setSleepTime(5);
-  nodeManager.setSleepUnit(SECONDS);
-  nodeManager.setSleepBetweenSend(10);
+//  nodeManager.setSleep(SLEEP,10,MINUTES);
+//  nodeManager.setSleepMode(SLEEP); 
+//  nodeManager.setSleepTime(5);
+//  nodeManager.setSleepUnit(SECONDS);
+//  nodeManager.setSleepBetweenSend(10);
 
   /*
    * Register below your sensors
   */
-//////// TEMPERATURE AND HUMIDITY SENSORS
 
-   nodeManager.registerSensor(SENSOR_DHT21,A5,1);
 
   /*
    * Register above your sensors

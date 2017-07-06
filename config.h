@@ -14,18 +14,37 @@
 
 // General settings
 //#define MY_BAUD_RATE 9600
-#define MY_BAUD_RATE 115200
 //#define MY_DEBUG
-#define MY_NODE_ID AUTO
+//#define MY_NODE_ID 22
 
 // NRF24 radio settings
-#define MY_RADIO_NRF24
+//#define MY_RADIO_NRF24#ifndef config_h
+#define config_h
+
+/**********************************
+ * Sketch configuration
+ */
+
+#define SKETCH_NAME "NodeManager"
+#define SKETCH_VERSION "1.0"
+
+/**********************************
+ * MySensors node configuration
+ */
+
+// General settings
+//#define MY_BAUD_RATE 9600
+//#define MY_DEBUG
+//#define MY_NODE_ID 22
+
+// NRF24 radio settings
+//#define MY_RADIO_NRF24
 //#define MY_RF24_ENABLE_ENCRYPTION
-#define MY_RF24_CHANNEL 108
+//#define MY_RF24_CHANNEL 108
 //#define MY_RF24_PA_LEVEL RF24_PA_LOW
 //#define MY_DEBUG_VERBOSE_RF24
 //#define MY_RF24_DATARATE RF24_250KBPS
-#define MY_RF24_DATARATE RF24_1MBPS
+//#define MY_RF24_DATARATE RF24_1MBPS
 
 // RFM69 radio settings
 //#define MY_RADIO_RFM69
@@ -42,9 +61,9 @@
 //#define MY_SENSOR_NETWORK
 
 // Avoid battery drain if Gateway disconnected and the node sends more than MY_TRANSPORT_STATE_RETRIES times message.
-#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
-#define MY_PARENT_NODE_IS_STATIC
-#define MY_PARENT_NODE_ID 0
+//#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
+//#define MY_PARENT_NODE_IS_STATIC
+//#define MY_PARENT_NODE_ID 0
 
 //#define MY_TRANSPORT_WAIT_READY_MS (5*1000ul)
 //#define MY_TRANSPORT_TIMEOUT_EXT_FAILURE_STATE (15*60*1000ul)
@@ -121,9 +140,9 @@
 // if enabled, enable the capability to power on sensors with the arduino's pins to save battery while sleeping
 #define POWER_MANAGER 0
 // if enabled, will load the battery manager library to allow the battery level to be reported automatically or on demand
-#define BATTERY_MANAGER 1
+#define BATTERY_MANAGER 0
 // if enabled, allow modifying the configuration remotely by interacting with the configuration child id
-#define REMOTE_CONFIGURATION 1
+#define REMOTE_CONFIGURATION 0
 // if enabled, persist the remote configuration settings on EEPROM
 #define PERSIST 0
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
@@ -139,7 +158,9 @@
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_OUTPUT, SENSOR_RELAY, SENSOR_LATCHING_RELAY
 #define MODULE_DIGITAL_OUTPUT 0
 // Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
-#define MODULE_DHT 1
+#define MODULE_DHT 0
+// Enable this module to use one of the following sensors: SENSOR_AM2320
+#define MODULE_AM2320 0
 // Enable this module to use one of the following sensors: SENSOR_SHT21
 #define MODULE_SHT21 0
 // Enable this module to use one of the following sensors: SENSOR_SWITCH, SENSOR_DOOR, SENSOR_MOTION
@@ -148,6 +169,8 @@
 #define MODULE_DS18B20 0
 // Enable this module to use one of the following sensors: SENSOR_BH1750
 #define MODULE_BH1750 0
+// Enable this module to use one of the following sensors: SENSOR_TSL2561
+#define MODULE_TSL2561 0
 // Enable this module to use one of the following sensors: SENSOR_MLX90614
 #define MODULE_MLX90614 0
 // Enable this module to use one of the following sensors: SENSOR_BME280
@@ -169,4 +192,3 @@
 // Enable this module to use one of the following sensors: SENSOR_TSL2561
 #define MODULE_TSL2561 0
 #endif
-

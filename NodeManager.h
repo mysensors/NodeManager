@@ -1249,6 +1249,7 @@ class SensorTSL2561: public Sensor {
     const static int FULL = 3;
   protected:
     TSL2561* _tsl;
+    int _tsl_address = 0;
     int _tsl_gain = 1;
     int _tsl_timing = 0;
     int _tsl_spectrum = 0;

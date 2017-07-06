@@ -16,13 +16,14 @@ void PowerManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
     Serial.print(F(" V="));
     Serial.println(vcc_pin);
   #endif
-  if (_ground_pin > 0) {
+  //if (_ground_pin > 0) {
+  if (ground_pin > 0) {
     // configure the ground pin as output and initialize to low
     _ground_pin = ground_pin;
     pinMode(_ground_pin, OUTPUT);
     digitalWrite(_ground_pin, LOW);
   }
-  if (_vcc_pin > 0) {
+  if (vcc_pin > 0) {
     // configure the vcc pin as output and initialize to high (power on)
     _vcc_pin = vcc_pin;
     pinMode(_vcc_pin, OUTPUT);
@@ -2527,7 +2528,6 @@ void SensorAM2320::onProcess(Request & request) {
 SensorTSL2561::SensorTSL2561(NodeManager* node_manager, int child_id): Sensor(node_manager, child_id,A2) {
   setPresentation(S_LIGHT_LEVEL);
   setType(V_LEVEL);
-  _tsl = new TSL2561(TSL2561_ADDR_FLOAT);
 }
 
 // setter/getter
@@ -2541,14 +2541,27 @@ void SensorTSL2561::setSpectrum(int value) {
   _tsl_spectrum = value;
 }
 void SensorTSL2561::setAddress(int value) {
-  if (value = SensorTSL2561::ADDR_FLOAT) _tsl = new TSL2561(TSL2561_ADDR_FLOAT);
-  else if (value = SensorTSL2561::ADDR_LOW) _tsl = new TSL2561(TSL2561_ADDR_LOW);
-  else if (value = SensorTSL2561::ADDR_HIGH) _tsl = new TSL2561(TSL2561_ADDR_HIGH); 
+  _tsl_address = value;
 }
 
 // what do to during before
 void SensorTSL2561::onBefore() {
-  if (_tsl->begin()) {
+   switch (_tsl_address) {
+    case SensorTSL2561::ADDR_FLOAT:
+      _tsl = new TSL2561(TSL2561_ADDR_FLOAT);
+      break;
+    case SensorTSL2561::ADDR_LOW:
+      _tsl = new TSL2561(TSL2561_ADDR_LOW);
+      break;   
+    case SensorTSL2561::ADDR_HIGH:
+      _tsl = new TSL2561(TSL2561_ADDR_HIGH);
+      break;   
+  }
+}
+
+// what do to during setup
+void SensorTSL2561::onSetup() {
+   if (_tsl->begin()) {
     switch (_tsl_gain) {
       case SensorTSL2561::GAIN_0X:
         _tsl->setGain(TSL2561_GAIN_0X);
@@ -2572,10 +2585,6 @@ void SensorTSL2561::onBefore() {
   else {
     Serial.println(F("TSL2561 offline"));
   } 
-}
-
-// what do to during setup
-void SensorTSL2561::onSetup() {
 }
 
 // what do to during loop
@@ -2730,7 +2739,7 @@ void NodeManager::setInterrupt(int pin, int mode, int pull) {
     _powerManager.setPowerPins(ground_pin, vcc_pin, wait_time);
   }
   void NodeManager::setAutoPowerPins(bool value) {
-    _auto_power_pins = value;
+    _auto_power_pins = value;  
   }
   void NodeManager::powerOn() {
     _powerManager.powerOn();
@@ -2955,6 +2964,7 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   #endif
   #if MODULE_TSL2561 == 1 
     else if (sensor_type == SENSOR_TSL2561) {
+      
       // register light sensor
       return registerSensor(new SensorTSL2561(this, child_id));
     }
