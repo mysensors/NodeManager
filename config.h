@@ -8,25 +8,6 @@
 #define SKETCH_NAME "NodeManager"
 #define SKETCH_VERSION "1.0"
 
-/**********************************
- * MySensors node configuration
- */
-
-// General settings
-//#define MY_BAUD_RATE 9600
-//#define MY_DEBUG
-//#define MY_NODE_ID 22
-
-// NRF24 radio settings
-//#define MY_RADIO_NRF24#ifndef config_h
-#define config_h
-
-/**********************************
- * Sketch configuration
- */
-
-#define SKETCH_NAME "NodeManager"
-#define SKETCH_VERSION "1.0"
 
 /**********************************
  * MySensors node configuration
