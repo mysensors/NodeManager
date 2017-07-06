@@ -819,28 +819,6 @@ class SensorDHT: public Sensor {
 #endif
 
 /*
-   SensorAM2320
-*/
-#if MODULE_AM2320 == 1
-class SensorAM2320: public Sensor {
-  public:
-    //SensorAM2320(int child_id, int sensor_type);
-    SensorAM2320(int child_id, AM2320* th, int sensor_type);
-    // define what to do at each stage of the sketch
-    void onBefore();
-    void onSetup();
-    void onLoop();
-    void onReceive(const MyMessage & message);
-    // constants
-    const static int TEMPERATURE = 0;
-    const static int HUMIDITY = 1;
-  protected:
-    AM2320* _th;
-    int _sensor_type = 0;
-};
-#endif
-
-/*
    SensorSHT21: temperature and humidity sensor
 */
 #if MODULE_SHT21 == 1
@@ -960,41 +938,6 @@ class SensorBH1750: public Sensor {
     void onProcess(Request & request);
   protected:
     BH1750* _lightSensor;
-};
-#endif
-
-/*
-   SensorTSL2561
-*/
-#if MODULE_TSL2561 == 1
-class SensorTSL2561: public Sensor {
-  public:
-    SensorTSL2561(int child_id, TSL2561* tsl);
-    void setGain(int value);
-    void setTiming(int value);
-    void setSpectrum(int value);
-    void onBefore();
-    void onSetup();
-    void onLoop();
-    void onReceive(const MyMessage & message);
-    const static int ADDR_FLOAT = 0;
-    const static int ADDR_LOW = 1;
-    const static int ADDR_HIGH = 2;
-    const static int GAIN_0X = 0;
-    const static int GAIN_16X = 1;
-    const static int INTEGRATIONTIME_13MS = 0;
-    const static int INTEGRATIONTIME_101MS = 1;
-    const static int INTEGRATIONTIME_402MS = 2;
-    const static int VISIBLE = 0;
-    const static int FULLSPECTRUM = 1;
-    const static int INFRARED = 2;
-    const static int FULL = 3;
-  protected:
-    TSL2561* _tsl;
-    int _tsl_address = TSL2561_ADDR_FLOAT; //Still not used
-    int _tsl_gain = 1;
-    int _tsl_timing = 0;
-    int _tsl_spectrum = 0;
 };
 #endif
 
@@ -1306,6 +1249,7 @@ class SensorTSL2561: public Sensor {
     const static int FULL = 3;
   protected:
     TSL2561* _tsl;
+    int _tsl_address = 0;
     int _tsl_gain = 1;
     int _tsl_timing = 0;
     int _tsl_spectrum = 0;

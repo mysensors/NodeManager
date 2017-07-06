@@ -8,6 +8,7 @@
 #define SKETCH_NAME "NodeManager"
 #define SKETCH_VERSION "1.0"
 
+
 /**********************************
  * MySensors node configuration
  */
