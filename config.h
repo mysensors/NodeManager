@@ -108,7 +108,7 @@
 #define MODULE_DIGITAL_INPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_OUTPUT, SENSOR_RELAY, SENSOR_LATCHING_RELAY
 #define MODULE_DIGITAL_OUTPUT 1
-// Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
+// Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22, SENSOR_DHT21
 #define MODULE_DHT 0
 // Enable this module to use one of the following sensors: SENSOR_SHT21
 #define MODULE_SHT21 0
@@ -134,6 +134,9 @@
 #define MODULE_MQ 0
 // Enable this module to use one of the following sensors: SENSOR_MHZ19
 #define MODULE_MHZ19 0
-
+// Enable this module to use one of the following sensors: SENSOR_AM2320    
+#define MODULE_AM2320 0
+// Enable this module to use one of the following sensors: SENSOR_TSL2561    
+#define MODULE_TSL2561 0
 #endif
 
