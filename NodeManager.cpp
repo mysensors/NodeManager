@@ -10,22 +10,21 @@
 
 // set the vcc and ground pin the sensor is connected to
 void PowerManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
+  _ground_pin = ground_pin;
+  _vcc_pin = vcc_pin;
   #if DEBUG == 1
     Serial.print(F("PWR G="));
-    Serial.print(ground_pin);
+    Serial.print(_ground_pin);
     Serial.print(F(" V="));
-    Serial.println(vcc_pin);
+    Serial.println(_vcc_pin);
   #endif
-  //if (_ground_pin > 0) {
-  if (ground_pin > 0) {
+  if (_ground_pin > 0) {
     // configure the ground pin as output and initialize to low
-    _ground_pin = ground_pin;
     pinMode(_ground_pin, OUTPUT);
     digitalWrite(_ground_pin, LOW);
   }
-  if (vcc_pin > 0) {
+  if (_vcc_pin > 0) {
     // configure the vcc pin as output and initialize to high (power on)
-    _vcc_pin = vcc_pin;
     pinMode(_vcc_pin, OUTPUT);
     digitalWrite(_vcc_pin, HIGH);
   }
@@ -1019,9 +1018,6 @@ void SensorDigitalOutput::onBefore() {
 
 // what to do during setup
 void SensorDigitalOutput::onSetup() {
-  // inform the controller about relay state
-  // send(_msg.set(loadState(_child_id)?LOW:HIGH));
-  _send(_msg.set(_initial_value));
 }
 
 // setter/getter
