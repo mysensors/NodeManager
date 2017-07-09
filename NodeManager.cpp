@@ -365,7 +365,6 @@ void Sensor::loop(const MyMessage & message) {
   #endif
   // for numeric sensor requiring multiple samples, keep track of the total
   float total = 0;
-  // keep track of the number of cycles since the last update
   // collect multiple samples if needed
   for (int i = 0; i < _samples; i++) {
     // call the sensor-specific implementation of the main task which will store the result in the _value variable
@@ -392,6 +391,7 @@ void Sensor::loop(const MyMessage & message) {
       _last_value_int = avg;
       _send(_msg.set(avg));
     }
+    _value_int = -1;
   }
   // process a float value
   else if (_value_type == TYPE_FLOAT && total > -1) {
@@ -402,6 +402,7 @@ void Sensor::loop(const MyMessage & message) {
       _last_value_float = avg;
       _send(_msg.set(avg, _float_precision));
     }
+    _value_float = -1;
   }
   // process a string value
   else if (_value_type == TYPE_STRING) {
@@ -410,6 +411,7 @@ void Sensor::loop(const MyMessage & message) {
       _last_value_string = _value_string;
       _send(_msg.set(_value_string));
     }
+    _value_string = "";
   }
   // turn the sensor off
   #if POWER_MANAGER == 1
@@ -417,6 +419,12 @@ void Sensor::loop(const MyMessage & message) {
   #endif
   // restart the report timer if over
   if (! _isReceive(message) && _report_timer->isRunning() && _report_timer->isOver()) _report_timer->restart();
+}
+
+// receive and handle an interrupt
+void Sensor::interrupt() {
+  // call the implementation of onInterrupt()
+  onInterrupt();
 }
 
 // receive a message from the radio network
@@ -1394,6 +1402,7 @@ void SensorSwitch::onSetup() {
 // what to do during loop
 void SensorSwitch::onLoop() {
 }
+
 // what to do as the main task when receiving a message
 void SensorSwitch::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) {
@@ -2817,12 +2826,12 @@ void NodeManager::loop() {
     // turn on the pin powering all the sensors
     if (_auto_power_pins) powerOn();
   #endif
-  // run loop for all the registered sensors
+  // run interrupt/loop for all the registered sensors
   for (int i = 1; i <= MAX_SENSORS; i++) {
     // skip unconfigured sensors
     if (_sensors[i] == 0) continue;
-    // if the sensor is associated with an interrupt and the last interrupt is different than the sensor's interrupt, skip it
-    if (_sensors[i]->getInterruptPin() != -1 && _last_interrupt_pin != _sensors[i]->getInterruptPin()) continue;
+    // if there was an interrupt for this sensor, call the sensor's interrupt()
+    if (_last_interrupt_pin != -1 && _sensors[i]->getInterruptPin() == _last_interrupt_pin) _sensors[i]->interrupt();
     // call the sensor's loop()
     _sensors[i]->loop(empty);
   }

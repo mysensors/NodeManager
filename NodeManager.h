@@ -464,6 +464,7 @@ class Sensor {
     virtual void presentation();
     virtual void setup();
     virtual void loop(const MyMessage & message);
+    virtual void interrupt();
     virtual void receive(const MyMessage & message);
     // abstract functions, subclasses need to implement
     virtual void onBefore() = 0;
@@ -1271,7 +1272,7 @@ class NodeManager {
     static long _last_interrupt_1;
     static long _last_interrupt_2;
     long _timestamp = -1;
-    Sensor* _sensors[MAX_SENSORS] = {0};
+    Sensor* _sensors[MAX_SENSORS+1] = {0};
     bool _ack = false;
     void _sleep();
     void _present(int child_id, int type);
