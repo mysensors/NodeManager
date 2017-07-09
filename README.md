@@ -505,6 +505,8 @@ Each sensor class can expose additional methods.
     void setReportInterval(int value);
     // [102] set how many mm of rain to count for each tip (default: 0.11)
     void setSingleTip(float value);
+    // set initial value - internal pull up (default: HIGH)
+    void setInitialValue(int value);
 ~~~
 
 * SensorDigitalOutput / SensorRelay / SensorLatchingRelay

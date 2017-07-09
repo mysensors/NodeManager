@@ -855,11 +855,15 @@ void SensorRainGauge::setReportInterval(int value) {
 void SensorRainGauge::setSingleTip(float value) {
   _single_tip = value;
 }
+void SensorRainGauge::setInitialValue(int value) {
+  _initial_value = value;
+}
 
 // what to do during before
 void SensorRainGauge::onBefore() {
   // set the pin as input and enabled pull up
-  pinMode(_pin, INPUT_PULLUP);
+  pinMode(_pin, INPUT);
+  digitalWrite(_pin,_initial_value);
   // attach to the pin's interrupt and execute the routine on falling
   attachInterrupt(digitalPinToInterrupt(_pin), _onTipped, FALLING);
   // start the timer

@@ -624,6 +624,8 @@ class SensorRainGauge: public Sensor {
     void setReportInterval(int value);
     // [102] set how many mm of rain to count for each tip (default: 0.11)
     void setSingleTip(float value);
+    // set initial value - internal pull up (default: HIGH)
+    void setInitialValue(int value);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
@@ -637,6 +639,7 @@ class SensorRainGauge: public Sensor {
   protected:
     int _report_interval = 60;
     float _single_tip = 0.11;
+    int _initial_value = HIGH;
     Timer* _timer;
 };
 
