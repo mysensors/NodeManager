@@ -587,6 +587,10 @@ void SensorAnalogInput::onProcess(Request & request) {
   _send(_msg_service.set(function));
 }
 
+// what to do when receiving an interrupt
+void SensorAnalogInput::onInterrupt() {
+}
+
 // read the analog input
 int SensorAnalogInput::_getAnalogRead() {
   #ifndef MY_GATEWAY_ESP8266
@@ -712,6 +716,10 @@ void SensorThermistor::onProcess(Request & request) {
   _send(_msg_service.set(function));
 }
 
+// what to do when receiving an interrupt
+void SensorThermistor::onInterrupt() {
+}
+
 /*
    SensorML8511
 */
@@ -762,6 +770,10 @@ void SensorML8511::onReceive(const MyMessage & message) {
 
 // what to do when receiving a remote message
 void SensorML8511::onProcess(Request & request) {
+}
+
+// what to do when receiving an interrupt
+void SensorML8511::onInterrupt() {
 }
 
 // The Arduino Map function but for floats
@@ -830,6 +842,10 @@ void SensorACS712::onProcess(Request & request) {
   _send(_msg_service.set(function));
 }
 
+// what to do when receiving an interrupt
+void SensorACS712::onInterrupt() {
+}
+
 /*
    SensorRainGauge
 */
@@ -861,11 +877,9 @@ void SensorRainGauge::setInitialValue(int value) {
 
 // what to do during before
 void SensorRainGauge::onBefore() {
-  // set the pin as input and enabled pull up
-  pinMode(_pin, INPUT);
-  digitalWrite(_pin,_initial_value);
-  // attach to the pin's interrupt and execute the routine on falling
-  attachInterrupt(digitalPinToInterrupt(_pin), _onTipped, FALLING);
+  // set the interrupt pin so it will be called only when waking up from that interrupt
+  _interrupt_pin = _pin;
+  _node_manager->setInterrupt(_pin,FALLING,_initial_value);
   // start the timer
   _timer->start(_report_interval,MINUTES);
 }
@@ -925,6 +939,10 @@ void SensorRainGauge::onProcess(Request & request) {
     default: return;
   }
   _send(_msg_service.set(function));
+}
+
+// what to do when receiving an interrupt
+void SensorRainGauge::onInterrupt() {
 }
 
 /*
@@ -1001,6 +1019,10 @@ void SensorDigitalInput::onReceive(const MyMessage & message) {
 
 // what to do when receiving a remote message
 void SensorDigitalInput::onProcess(Request & request) {
+}
+
+// what to do when receiving an interrupt
+void SensorDigitalInput::onInterrupt() {
 }
 #endif
 
@@ -1091,6 +1113,10 @@ void SensorDigitalOutput::onProcess(Request & request) {
     default: return;
   }
   _send(_msg_service.set(function));
+}
+
+// what to do when receiving an interrupt
+void SensorDigitalOutput::onInterrupt() {
 }
 
 // write the value to the output
@@ -1235,6 +1261,10 @@ void SensorDHT::onReceive(const MyMessage & message) {
 // what to do when receiving a remote message
 void SensorDHT::onProcess(Request & request) {
 }
+
+// what to do when receiving an interrupt
+void SensorDHT::onInterrupt() {
+}
 #endif
 
 /*
@@ -1309,6 +1339,10 @@ void SensorSHT21::onReceive(const MyMessage & message) {
 
 // what to do when receiving a remote message
 void SensorSHT21::onProcess(Request & request) {
+}
+
+// what to do when receiving an interrupt
+void SensorSHT21::onInterrupt() {
 }
 #endif
 
@@ -1399,6 +1433,10 @@ void SensorSwitch::onProcess(Request & request) {
   _send(_msg_service.set(function));
 }
 
+// what to do when receiving an interrupt
+void SensorSwitch::onInterrupt() {
+}
+
 /*
  * SensorDoor
  */
@@ -1482,6 +1520,10 @@ void SensorDs18b20::onProcess(Request & request) {
   _send(_msg_service.set(function));
 }
 
+// what to do when receiving an interrupt
+void SensorDs18b20::onInterrupt() {
+}
+
 // function to print a device address
 DeviceAddress* SensorDs18b20::getDeviceAddress() {
   return &_device_address;
@@ -1544,6 +1586,11 @@ void SensorBH1750::onReceive(const MyMessage & message) {
 // what to do when receiving a remote message
 void SensorBH1750::onProcess(Request & request) {
 }
+
+
+// what to do when receiving an interrupt
+void SensorBH1750::onInterrupt() {
+}
 #endif
 
 /*
@@ -1591,6 +1638,10 @@ void SensorMLX90614::onReceive(const MyMessage & message) {
 
 // what to do when receiving a remote message
 void SensorMLX90614::onProcess(Request & request) {
+}
+
+// what to do when receiving an interrupt
+void SensorMLX90614::onInterrupt() {
 }
 #endif
 
@@ -1660,6 +1711,10 @@ void SensorBosch::onProcess(Request & request) {
     default: return;
   }
   _send(_msg_service.set(function));
+}
+
+// what to do when receiving an interrupt
+void SensorBosch::onInterrupt() {
 }
 
 // calculate and send the forecast back
@@ -1944,6 +1999,10 @@ void SensorHCSR04::onProcess(Request & request) {
   }
   _send(_msg_service.set(function));
 }
+
+// what to do when receiving an interrupt
+void SensorHCSR04::onInterrupt() {
+}
 #endif
 
 /*
@@ -2028,6 +2087,10 @@ void SensorSonoff::onProcess(Request & request) {
   _send(_msg_service.set(function));
 }
 
+// what to do when receiving an interrupt
+void SensorSonoff::onInterrupt() {
+}
+
 // toggle the state
 void SensorSonoff::_toggle() {
   // toggle the state
@@ -2100,6 +2163,10 @@ void SensorMCP9808::onReceive(const MyMessage & message) {
 
 // what to do when receiving a remote message
 void SensorMCP9808::onProcess(Request & request) {
+}
+
+// what to do when receiving an interrupt
+void SensorMCP9808::onInterrupt() {
 }
 #endif
 
@@ -2212,6 +2279,10 @@ void SensorMQ::onProcess(Request & request) {
     default: return;
   }
   _send(_msg_service.set(function));
+}
+
+// what to do when receiving an interrupt
+void SensorMQ::onInterrupt() {
 }
 
 // returns the calculated sensor resistance

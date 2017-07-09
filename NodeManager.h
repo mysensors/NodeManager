@@ -471,6 +471,7 @@ class Sensor {
     virtual void onLoop() = 0;
     virtual void onReceive(const MyMessage & message) = 0;
     virtual void onProcess(Request & request) = 0;
+    virtual void onInterrupt() = 0;
   protected:
     MyMessage _msg;
     MyMessage _msg_service;
@@ -526,6 +527,7 @@ class SensorAnalogInput: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     int _reference = -1;
     bool _reverse = false;
@@ -566,6 +568,7 @@ class SensorThermistor: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     long _nominal_resistor = 10000;
     int _nominal_temperature = 25;
@@ -587,6 +590,7 @@ class SensorML8511: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     float _mapfloat(float x, float in_min, float in_max, float out_min, float out_max);
 };
@@ -608,6 +612,7 @@ class SensorACS712: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     int _ACS_offset = 2500;
     int _mv_per_amp = 185;
@@ -632,6 +637,7 @@ class SensorRainGauge: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   public:
     static void _onTipped();
     static long _last_tip;
@@ -674,6 +680,7 @@ class SensorDigitalInput: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
 };
 #endif
 
@@ -706,6 +713,7 @@ class SensorDigitalOutput: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     int _initial_value = LOW;
     int _on_value = HIGH;
@@ -747,6 +755,7 @@ class SensorDHT: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
     // constants
     const static int TEMPERATURE = 0;
     const static int HUMIDITY = 1;
@@ -771,6 +780,7 @@ class SensorSHT21: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
     // constants
     const static int TEMPERATURE = 0;
     const static int HUMIDITY = 1;
@@ -810,6 +820,7 @@ class SensorSwitch: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     int _debounce = 0;
     int _trigger_time = 0;
@@ -854,6 +865,7 @@ class SensorDs18b20: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     float _offset = 0;
     int _index;
@@ -876,6 +888,7 @@ class SensorBH1750: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     BH1750* _lightSensor;
 };
@@ -894,6 +907,7 @@ class SensorMLX90614: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
     // constants
     const static int TEMPERATURE_AMBIENT = 0;
     const static int TEMPERATURE_OBJECT = 1;
@@ -920,6 +934,7 @@ class SensorBosch: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
     // constants
     const static int TEMPERATURE = 0;
     const static int HUMIDITY = 1;
@@ -986,6 +1001,7 @@ class SensorHCSR04: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     int _trigger_pin;
     int _echo_pin;
@@ -1013,6 +1029,7 @@ class SensorSonoff: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     Bounce _debouncer = Bounce();
     int _button_pin = 0;
@@ -1042,6 +1059,7 @@ class SensorMCP9808: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     Adafruit_MCP9808* _mcp;
 };
@@ -1082,6 +1100,7 @@ class SensorMQ: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     float _rl_value = 1.0;
     float _ro_clean_air_factor = 9.83;
