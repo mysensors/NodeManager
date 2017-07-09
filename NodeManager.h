@@ -459,6 +459,8 @@ class Sensor {
     void process(Request & request);
     // return the pin the interrupt is attached to
     int getInterruptPin();
+    // listen for interrupts on the given pin so interrupt() will be called when occurring
+    void setInterrupt(int pin, int mode, int initial);
     // define what to do at each stage of the sketch
     virtual void before();
     virtual void presentation();

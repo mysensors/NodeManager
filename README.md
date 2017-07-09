@@ -431,6 +431,8 @@ The following methods are available for all the sensors:
     void process(Request & request);
     // return the pin the interrupt is attached to
     int getInterruptPin();
+    // listen for interrupts on the given pin so interrupt() will be called when occurring
+    void setInterrupt(int pin, int mode, int initial);
 ~~~
 
 #### Sensor's specific configuration

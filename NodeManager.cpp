@@ -323,6 +323,12 @@ void Sensor::setReportIntervalMinutes(int value) {
   _report_timer->start(value,MINUTES);
 }
 
+// listen for interrupts on the given pin so interrupt() will be called when occurring
+void Sensor::setInterrupt(int pin, int mode, int initial) {
+  _interrupt_pin = pin;
+  _node_manager->setInterrupt(pin,mode,initial);
+}
+
 // present the sensor to the gateway and controller
 void Sensor::presentation() {
   #if DEBUG == 1
@@ -1083,9 +1089,6 @@ void SensorDigitalOutput::setInputIsElapsed(bool value) {
 
 // main task
 void SensorDigitalOutput::onLoop() {
-    // set the value to -1 so to avoid reporting to the gateway during loop
-    _value_int = -1;
-    _last_value_int = -1;
   // if a safeguard is set, check if it is time for it
   if (_safeguard_timer->isRunning()) {
     // update the timer
@@ -1391,8 +1394,7 @@ void SensorSwitch::onBefore() {
   if (_mode == RISING) _value_int = LOW;
   else if (_mode == FALLING) _value_int = HIGH;
   // set the interrupt pin so it will be called only when waking up from that interrupt
-  _interrupt_pin = _pin;
-  _node_manager->setInterrupt(_pin,_mode,_initial);
+  setInterrupt(_pin,_mode,_initial);
 }
 
 // what to do during setup
@@ -2059,8 +2061,6 @@ void SensorSonoff::onSetup() {
 
 // what to do during loop
 void SensorSonoff::onLoop() {
-  // set the value to -1 so to avoid reporting to the gateway during loop
-  _value_int = -1;
   _debouncer.update();
   // Get the update value from the button
   int value = _debouncer.read();
