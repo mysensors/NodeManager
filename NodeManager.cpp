@@ -2720,8 +2720,6 @@ void NodeManager::setup() {
 // run the main function for all the register sensors
 void NodeManager::loop() {
   MyMessage empty;
-  // reset the last interrupt pin
-  _last_interrupt_pin = -1;
   // if in idle mode, do nothing
   if (_sleep_mode == IDLE) return;
   // if sleep time is not set, do nothing
@@ -2751,6 +2749,8 @@ void NodeManager::loop() {
     // call the sensor's loop()
     _sensors[i]->loop(empty);
   }
+  // reset the last interrupt pin
+  _last_interrupt_pin = -1;
   #if POWER_MANAGER == 1
     // turn off the pin powering all the sensors
     if (_auto_power_pins) powerOff();

@@ -33,13 +33,13 @@ void before() {
   /*
    * Register below your sensors
   */
-      pinMode(4, OUTPUT);
+    pinMode(4, OUTPUT);
     digitalWrite(4, LOW);
     pinMode(5, OUTPUT);
     digitalWrite(5, HIGH);
     int a = nodeManager.registerSensor(SENSOR_MOTION,3);
     SensorMotion* s = (SensorMotion*)nodeManager.get(a);
-    s->setMode(CHANGE);
+    //s->setMode(CHANGE);
     nodeManager.setMode(ALWAYS_ON);
 
   /*
