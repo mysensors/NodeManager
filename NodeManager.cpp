@@ -2743,7 +2743,7 @@ void NodeManager::loop() {
     if (_auto_power_pins) powerOn();
   #endif
   // run loop for all the registered sensors
-  for (int i = 0; i < MAX_SENSORS; i++) {
+  for (int i = 1; i <= MAX_SENSORS; i++) {
     // skip unconfigured sensors
     if (_sensors[i] == 0) continue;
     // if the sensor is associated with an interrupt and the last interrupt is different than the sensor's interrupt, skip it
