@@ -1393,6 +1393,29 @@ void SensorSwitch::onSetup() {
 
 // what to do during loop
 void SensorSwitch::onLoop() {
+}
+// what to do as the main task when receiving a message
+void SensorSwitch::onReceive(const MyMessage & message) {
+  if (message.getCommand() == C_REQ) {
+    _value_int = digitalRead(_pin);
+  }
+}
+
+// what to do when receiving a remote message
+void SensorSwitch::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 101: setMode(request.getValueInt()); break;
+    case 102: setDebounce(request.getValueInt()); break;
+    case 103: setTriggerTime(request.getValueInt()); break;
+    case 104: setInitial(request.getValueInt()); break;
+    default: return;
+  }
+  _send(_msg_service.set(function));
+}
+
+// what to do when receiving an interrupt
+void SensorSwitch::onInterrupt() {
   // wait to ensure the the input is not floating
   if (_debounce > 0) wait(_debounce);
   // read the value of the pin
@@ -1414,27 +1437,6 @@ void SensorSwitch::onLoop() {
     // invalid
     _value_int = -1;
   }
-}
-// what to do as the main task when receiving a message
-void SensorSwitch::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
-}
-
-// what to do when receiving a remote message
-void SensorSwitch::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setMode(request.getValueInt()); break;
-    case 102: setDebounce(request.getValueInt()); break;
-    case 103: setTriggerTime(request.getValueInt()); break;
-    case 104: setInitial(request.getValueInt()); break;
-    default: return;
-  }
-  _send(_msg_service.set(function));
-}
-
-// what to do when receiving an interrupt
-void SensorSwitch::onInterrupt() {
 }
 
 /*
