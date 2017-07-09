@@ -870,18 +870,9 @@ SensorRainGauge::SensorRainGauge(NodeManager* node_manager, int child_id, int pi
   setPresentation(S_RAIN);
   setType(V_RAIN);
   setValueType(TYPE_FLOAT);
-  // create the timer
-  _timer = new Timer(node_manager);
 }
-
-// initialize static variables
-long SensorRainGauge::_last_tip = 0;
-long SensorRainGauge::_count = 0;
 
 // setter/getter
-void SensorRainGauge::setReportInterval(int value) {
-  _report_interval = value;
-}
 void SensorRainGauge::setSingleTip(float value) {
   _single_tip = value;
 }
@@ -891,56 +882,33 @@ void SensorRainGauge::setInitialValue(int value) {
 
 // what to do during before
 void SensorRainGauge::onBefore() {
-  // set the interrupt pin so it will be called only when waking up from that interrupt
-  _interrupt_pin = _pin;
-  _node_manager->setInterrupt(_pin,FALLING,_initial_value);
-  // start the timer
-  _timer->start(_report_interval,MINUTES);
+  // configure the interrupt pin so onInterrupt() will be called on tip
+  setInterrupt(_pin,FALLING,_initial_value);
 }
 
 // what to do during setup
 void SensorRainGauge::onSetup() {
 }
 
-// what to do when when receiving an interrupt
-void SensorRainGauge::_onTipped() {
-  long now = millis();
-  // on tipping, two consecutive interrupts are received, ignore the second one
-  if ( (now - _last_tip > 100) || (now < _last_tip) ){
-    // increase the counter
-    _count++;
-    #if DEBUG == 1
-      Serial.println(F("RAIN+"));
-    #endif
-  }
-  _last_tip = now;
-}
-
 // what to do during loop
 void SensorRainGauge::onLoop() {
-  // avoid reporting the same value multiple times
-  _value_float = -1;
-  _timer->update();
-  // time to report 
-  if (_timer->isOver()) {
-    // report the total amount of rain for the last period
-    _value_float = _count * _single_tip;
-    #if DEBUG == 1
-      Serial.print(F("RAIN I="));
-      Serial.print(_child_id);
-      Serial.print(F(" T="));
-      Serial.println(_value_float);
-    #endif
-    // reset the timer
-    _timer->restart();
-  }
+  // time to report the rain so far
+  _value_float = _count * _single_tip;
+  #if DEBUG == 1
+    Serial.print(F("RAIN I="));
+    Serial.print(_child_id);
+    Serial.print(F(" T="));
+    Serial.println(_value_float);
+  #endif
+  // reset the counter
+  _count = 0;
 }
 
 // what to do as the main task when receiving a message
 void SensorRainGauge::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) {
     // report the total amount of rain for the last period
-    _value_float = _count * _single_tip;    
+    _value_float = _count * _single_tip;
   }
 }
 
@@ -948,7 +916,6 @@ void SensorRainGauge::onReceive(const MyMessage & message) {
 void SensorRainGauge::onProcess(Request & request) {
   int function = request.getFunction();
   switch(function) {
-    case 101: setReportInterval(request.getValueInt()); break;
     case 102: setSingleTip(request.getValueFloat()); break;
     default: return;
   }
@@ -957,6 +924,11 @@ void SensorRainGauge::onProcess(Request & request) {
 
 // what to do when receiving an interrupt
 void SensorRainGauge::onInterrupt() {
+  // increase the counter
+  _count++;
+  #if DEBUG == 1
+    Serial.println(F("RAIN+"));
+  #endif
 }
 
 /*

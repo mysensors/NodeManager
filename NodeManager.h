@@ -628,8 +628,6 @@ class SensorACS712: public Sensor {
 class SensorRainGauge: public Sensor {
   public:
     SensorRainGauge(NodeManager* node_manager, int child_id, int pin);
-    // [101] set how frequently to report back to the controller in minutes. After reporting the measure is resetted (default: 60)
-    void setReportInterval(int value);
     // [102] set how many mm of rain to count for each tip (default: 0.11)
     void setSingleTip(float value);
     // set initial value - internal pull up (default: HIGH)
@@ -641,15 +639,10 @@ class SensorRainGauge: public Sensor {
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
-  public:
-    static void _onTipped();
-    static long _last_tip;
-    static long _count;
   protected:
-    int _report_interval = 60;
+    long _count = 0;
     float _single_tip = 0.11;
     int _initial_value = HIGH;
-    Timer* _timer;
 };
 
 /*

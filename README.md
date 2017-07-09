@@ -503,8 +503,6 @@ Each sensor class can expose additional methods.
 
 * SensorRainGauge
 ~~~c
-    // [101] set how frequently to report back to the controller in minutes. After reporting the measure is resetted (default: 60)
-    void setReportInterval(int value);
     // [102] set how many mm of rain to count for each tip (default: 0.11)
     void setSingleTip(float value);
     // set initial value - internal pull up (default: HIGH)

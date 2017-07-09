@@ -37,10 +37,11 @@ void before() {
     digitalWrite(4, LOW);
     pinMode(5, OUTPUT);
     digitalWrite(5, HIGH);
-    int a = nodeManager.registerSensor(SENSOR_MOTION,3);
-     SensorMotion* s = (SensorMotion*)nodeManager.get(a);
-    s->setMode(CHANGE);   
-    //SensorRainGauge* s = (SensorRainGauge*)nodeManager.get(a);
+    int a = nodeManager.registerSensor(SENSOR_RAIN_GAUGE,3);
+    // SensorMotion* s = (SensorMotion*)nodeManager.get(a);
+    //s->setMode(CHANGE);   
+    SensorRainGauge* s = (SensorRainGauge*)nodeManager.get(a);
+    s->setReportIntervalMinutes(1);
     //s->setMode(CHANGE);
     nodeManager.setMode(ALWAYS_ON);
     //nodeManager.setSleep(SLEEP,10,MINUTES);
