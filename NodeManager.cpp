@@ -2800,7 +2800,7 @@ void NodeManager::loop() {
     // turn on the pin powering all the sensors
     if (_auto_power_pins) powerOn();
   #endif
-  // run interrupt/loop for all the registered sensors
+  // run loop for all the registered sensors
   for (int i = 1; i <= MAX_SENSORS; i++) {
     // skip unconfigured sensors
     if (_sensors[i] == 0) continue;
