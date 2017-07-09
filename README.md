@@ -294,6 +294,10 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
     void saveToMemory(int index, int value);
     // return vcc in V
     float getVcc();
+    // setup the configured interrupt pins
+    void setupInterrupts();
+    // return the pin from which the last interrupt came
+    int getLastInterruptPin();
 ~~~
 
 For example
@@ -361,6 +365,8 @@ If you want to create a custom sensor and register it with NodeManager so it can
     void onReceive(const MyMessage & message);
 	// define what to do when receiving a remote configuration message
 	void onProcess(Request & request);
+	// define what to do when receiving an interrupt
+	void onInterrupt();
 ~~~
 
 You can then instantiate your newly created class and register with NodeManager:
@@ -434,6 +440,8 @@ The following methods are available for all the sensors:
     void process(Request & request);
     // return the pin the interrupt is attached to
     int getInterruptPin();
+    // listen for interrupts on the given pin so interrupt() will be called when occurring
+    void setInterrupt(int pin, int mode, int initial);
 ~~~
 
 #### Sensor's specific configuration
@@ -504,10 +512,10 @@ Each sensor class can expose additional methods.
 
 * SensorRainGauge
 ~~~c
-    // [101] set how frequently to report back to the controller in minutes. After reporting the measure is resetted (default: 60)
-    void setReportInterval(int value);
     // [102] set how many mm of rain to count for each tip (default: 0.11)
     void setSingleTip(float value);
+    // set initial value - internal pull up (default: HIGH)
+    void setInitialValue(int value);
 ~~~
 
 * SensorDigitalOutput / SensorRelay
@@ -700,6 +708,16 @@ NodeManager::receive():
 
 Sensor::receive(): 
 * Invoke `Sensor::loop()` which will execute the sensor main taks and eventually call `Sensor::onReceive()`
+
+NodeManager::process():
+* Process an incoming remote configuration request
+
+Sensor::process():
+* Process a sensor-generic incoming remote configuration request
+* Calls onProcess() for sensor-specific incoming remote configuration request
+
+Sensor::interrupt():
+* Calls the sensor's implementation of onInterrupt() to handle the interrupt
 
 ## Examples
 All the examples below takes place within the before() function in the main sketch, just below the "Register below your sensors" comment.
