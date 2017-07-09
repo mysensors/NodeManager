@@ -323,6 +323,12 @@ void Sensor::setReportIntervalMinutes(int value) {
   _report_timer->start(value,MINUTES);
 }
 
+// listen for interrupts on the given pin so interrupt() will be called when occurring
+void Sensor::setInterrupt(int pin, int mode, int initial) {
+  _interrupt_pin = pin;
+  _node_manager->setInterrupt(pin,mode,initial);
+}
+
 // present the sensor to the gateway and controller
 void Sensor::presentation() {
   #if DEBUG == 1
@@ -365,7 +371,6 @@ void Sensor::loop(const MyMessage & message) {
   #endif
   // for numeric sensor requiring multiple samples, keep track of the total
   float total = 0;
-  // keep track of the number of cycles since the last update
   // collect multiple samples if needed
   for (int i = 0; i < _samples; i++) {
     // call the sensor-specific implementation of the main task which will store the result in the _value variable
@@ -391,6 +396,7 @@ void Sensor::loop(const MyMessage & message) {
     if (_isReceive(message) || _isWorthSending(avg != _last_value_int))  {
       _last_value_int = avg;
       _send(_msg.set(avg));
+      _value_int = -1;
     }
   }
   // process a float value
@@ -401,6 +407,7 @@ void Sensor::loop(const MyMessage & message) {
     if (_isReceive(message) || _isWorthSending(avg != _last_value_float))  {
       _last_value_float = avg;
       _send(_msg.set(avg, _float_precision));
+      _value_float = -1;
     }
   }
   // process a string value
@@ -409,6 +416,7 @@ void Sensor::loop(const MyMessage & message) {
     if (_isReceive(message) || _isWorthSending(strcmp(_value_string, _last_value_string) != 0))  {
       _last_value_string = _value_string;
       _send(_msg.set(_value_string));
+      _value_string = "";
     }
   }
   // turn the sensor off
@@ -417,6 +425,12 @@ void Sensor::loop(const MyMessage & message) {
   #endif
   // restart the report timer if over
   if (! _isReceive(message) && _report_timer->isRunning() && _report_timer->isOver()) _report_timer->restart();
+}
+
+// receive and handle an interrupt
+void Sensor::interrupt() {
+  // call the implementation of onInterrupt()
+  onInterrupt();
 }
 
 // receive a message from the radio network
@@ -587,6 +601,10 @@ void SensorAnalogInput::onProcess(Request & request) {
   _send(_msg_service.set(function));
 }
 
+// what to do when receiving an interrupt
+void SensorAnalogInput::onInterrupt() {
+}
+
 // read the analog input
 int SensorAnalogInput::_getAnalogRead() {
   #ifndef MY_GATEWAY_ESP8266
@@ -712,6 +730,10 @@ void SensorThermistor::onProcess(Request & request) {
   _send(_msg_service.set(function));
 }
 
+// what to do when receiving an interrupt
+void SensorThermistor::onInterrupt() {
+}
+
 /*
    SensorML8511
 */
@@ -762,6 +784,10 @@ void SensorML8511::onReceive(const MyMessage & message) {
 
 // what to do when receiving a remote message
 void SensorML8511::onProcess(Request & request) {
+}
+
+// what to do when receiving an interrupt
+void SensorML8511::onInterrupt() {
 }
 
 // The Arduino Map function but for floats
@@ -830,6 +856,10 @@ void SensorACS712::onProcess(Request & request) {
   _send(_msg_service.set(function));
 }
 
+// what to do when receiving an interrupt
+void SensorACS712::onInterrupt() {
+}
+
 /*
    SensorRainGauge
 */
@@ -840,75 +870,47 @@ SensorRainGauge::SensorRainGauge(NodeManager* node_manager, int child_id, int pi
   setPresentation(S_RAIN);
   setType(V_RAIN);
   setValueType(TYPE_FLOAT);
-  // create the timer
-  _timer = new Timer(node_manager);
 }
-
-// initialize static variables
-long SensorRainGauge::_last_tip = 0;
-long SensorRainGauge::_count = 0;
 
 // setter/getter
-void SensorRainGauge::setReportInterval(int value) {
-  _report_interval = value;
-}
 void SensorRainGauge::setSingleTip(float value) {
   _single_tip = value;
+}
+void SensorRainGauge::setInitialValue(int value) {
+  _initial_value = value;
 }
 
 // what to do during before
 void SensorRainGauge::onBefore() {
-  // set the pin as input and enabled pull up
-  pinMode(_pin, INPUT_PULLUP);
-  // attach to the pin's interrupt and execute the routine on falling
-  attachInterrupt(digitalPinToInterrupt(_pin), _onTipped, FALLING);
-  // start the timer
-  _timer->start(_report_interval,MINUTES);
+  // configure the interrupt pin so onInterrupt() will be called on tip
+  setInterrupt(_pin,FALLING,_initial_value);
 }
 
 // what to do during setup
 void SensorRainGauge::onSetup() {
 }
 
-// what to do when when receiving an interrupt
-void SensorRainGauge::_onTipped() {
-  long now = millis();
-  // on tipping, two consecutive interrupts are received, ignore the second one
-  if ( (now - _last_tip > 100) || (now < _last_tip) ){
-    // increase the counter
-    _count++;
-    #if DEBUG == 1
-      Serial.println(F("RAIN+"));
-    #endif
-  }
-  _last_tip = now;
-}
-
 // what to do during loop
 void SensorRainGauge::onLoop() {
-  // avoid reporting the same value multiple times
-  _value_float = -1;
-  _timer->update();
-  // time to report 
-  if (_timer->isOver()) {
-    // report the total amount of rain for the last period
-    _value_float = _count * _single_tip;
-    #if DEBUG == 1
-      Serial.print(F("RAIN I="));
-      Serial.print(_child_id);
-      Serial.print(F(" T="));
-      Serial.println(_value_float);
-    #endif
-    // reset the timer
-    _timer->restart();
-  }
+  // do not execute loop if called by an interrupt
+  if (_node_manager->getLastInterruptPin() == _interrupt_pin) return;
+  // time to report the rain so far
+  _value_float = _count * _single_tip;
+  #if DEBUG == 1
+    Serial.print(F("RAIN I="));
+    Serial.print(_child_id);
+    Serial.print(F(" T="));
+    Serial.println(_value_float);
+  #endif
+  // reset the counter
+  _count = 0;
 }
 
 // what to do as the main task when receiving a message
 void SensorRainGauge::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) {
     // report the total amount of rain for the last period
-    _value_float = _count * _single_tip;    
+    _value_float = _count * _single_tip;
   }
 }
 
@@ -916,11 +918,19 @@ void SensorRainGauge::onReceive(const MyMessage & message) {
 void SensorRainGauge::onProcess(Request & request) {
   int function = request.getFunction();
   switch(function) {
-    case 101: setReportInterval(request.getValueInt()); break;
     case 102: setSingleTip(request.getValueFloat()); break;
     default: return;
   }
   _send(_msg_service.set(function));
+}
+
+// what to do when receiving an interrupt
+void SensorRainGauge::onInterrupt() {
+  // increase the counter
+  _count++;
+  #if DEBUG == 1
+    Serial.println(F("RAIN+"));
+  #endif
 }
 
 /*
@@ -997,6 +1007,10 @@ void SensorDigitalInput::onReceive(const MyMessage & message) {
 
 // what to do when receiving a remote message
 void SensorDigitalInput::onProcess(Request & request) {
+}
+
+// what to do when receiving an interrupt
+void SensorDigitalInput::onInterrupt() {
 }
 #endif
 
@@ -1079,6 +1093,10 @@ void SensorDigitalOutput::onProcess(Request & request) {
     default: return;
   }
   _send(_msg_service.set(function));
+}
+
+// what to do when receiving an interrupt
+void SensorDigitalOutput::onInterrupt() {
 }
 
 // write the value to the output
@@ -1302,6 +1320,10 @@ void SensorDHT::onReceive(const MyMessage & message) {
 // what to do when receiving a remote message
 void SensorDHT::onProcess(Request & request) {
 }
+
+// what to do when receiving an interrupt
+void SensorDHT::onInterrupt() {
+}
 #endif
 
 /*
@@ -1377,6 +1399,10 @@ void SensorSHT21::onReceive(const MyMessage & message) {
 // what to do when receiving a remote message
 void SensorSHT21::onProcess(Request & request) {
 }
+
+// what to do when receiving an interrupt
+void SensorSHT21::onInterrupt() {
+}
 #endif
 
 /*
@@ -1416,8 +1442,7 @@ void SensorSwitch::onBefore() {
   if (_mode == RISING) _value_int = LOW;
   else if (_mode == FALLING) _value_int = HIGH;
   // set the interrupt pin so it will be called only when waking up from that interrupt
-  _interrupt_pin = _pin;
-  _node_manager->setInterrupt(_pin,_mode,_initial);
+  setInterrupt(_pin,_mode,_initial);
 }
 
 // what to do during setup
@@ -1426,6 +1451,30 @@ void SensorSwitch::onSetup() {
 
 // what to do during loop
 void SensorSwitch::onLoop() {
+}
+
+// what to do as the main task when receiving a message
+void SensorSwitch::onReceive(const MyMessage & message) {
+  if (message.getCommand() == C_REQ) {
+    _value_int = digitalRead(_pin);
+  }
+}
+
+// what to do when receiving a remote message
+void SensorSwitch::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 101: setMode(request.getValueInt()); break;
+    case 102: setDebounce(request.getValueInt()); break;
+    case 103: setTriggerTime(request.getValueInt()); break;
+    case 104: setInitial(request.getValueInt()); break;
+    default: return;
+  }
+  _send(_msg_service.set(function));
+}
+
+// what to do when receiving an interrupt
+void SensorSwitch::onInterrupt() {
   // wait to ensure the the input is not floating
   if (_debounce > 0) wait(_debounce);
   // read the value of the pin
@@ -1447,23 +1496,6 @@ void SensorSwitch::onLoop() {
     // invalid
     _value_int = -1;
   }
-}
-// what to do as the main task when receiving a message
-void SensorSwitch::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
-}
-
-// what to do when receiving a remote message
-void SensorSwitch::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setMode(request.getValueInt()); break;
-    case 102: setDebounce(request.getValueInt()); break;
-    case 103: setTriggerTime(request.getValueInt()); break;
-    case 104: setInitial(request.getValueInt()); break;
-    default: return;
-  }
-  _send(_msg_service.set(function));
 }
 
 /*
@@ -1549,6 +1581,10 @@ void SensorDs18b20::onProcess(Request & request) {
   _send(_msg_service.set(function));
 }
 
+// what to do when receiving an interrupt
+void SensorDs18b20::onInterrupt() {
+}
+
 // function to print a device address
 DeviceAddress* SensorDs18b20::getDeviceAddress() {
   return &_device_address;
@@ -1611,6 +1647,11 @@ void SensorBH1750::onReceive(const MyMessage & message) {
 // what to do when receiving a remote message
 void SensorBH1750::onProcess(Request & request) {
 }
+
+
+// what to do when receiving an interrupt
+void SensorBH1750::onInterrupt() {
+}
 #endif
 
 /*
@@ -1658,6 +1699,10 @@ void SensorMLX90614::onReceive(const MyMessage & message) {
 
 // what to do when receiving a remote message
 void SensorMLX90614::onProcess(Request & request) {
+}
+
+// what to do when receiving an interrupt
+void SensorMLX90614::onInterrupt() {
 }
 #endif
 
@@ -1727,6 +1772,10 @@ void SensorBosch::onProcess(Request & request) {
     default: return;
   }
   _send(_msg_service.set(function));
+}
+
+// what to do when receiving an interrupt
+void SensorBosch::onInterrupt() {
 }
 
 // calculate and send the forecast back
@@ -2011,6 +2060,10 @@ void SensorHCSR04::onProcess(Request & request) {
   }
   _send(_msg_service.set(function));
 }
+
+// what to do when receiving an interrupt
+void SensorHCSR04::onInterrupt() {
+}
 #endif
 
 /*
@@ -2056,8 +2109,6 @@ void SensorSonoff::onSetup() {
 
 // what to do during loop
 void SensorSonoff::onLoop() {
-  // set the value to -1 so to avoid reporting to the gateway during loop
-  _value_int = -1;
   _debouncer.update();
   // Get the update value from the button
   int value = _debouncer.read();
@@ -2093,6 +2144,10 @@ void SensorSonoff::onProcess(Request & request) {
     default: return;
   }
   _send(_msg_service.set(function));
+}
+
+// what to do when receiving an interrupt
+void SensorSonoff::onInterrupt() {
 }
 
 // toggle the state
@@ -2167,6 +2222,10 @@ void SensorMCP9808::onReceive(const MyMessage & message) {
 
 // what to do when receiving a remote message
 void SensorMCP9808::onProcess(Request & request) {
+}
+
+// what to do when receiving an interrupt
+void SensorMCP9808::onInterrupt() {
 }
 #endif
 
@@ -2284,6 +2343,10 @@ void SensorMQ::onProcess(Request & request) {
     default: return;
   }
   _send(_msg_service.set(function));
+}
+
+// what to do when receiving an interrupt
+void SensorMQ::onInterrupt() {
 }
 
 // returns the calculated sensor resistance
@@ -2658,6 +2721,11 @@ NodeManager::NodeManager() {
   _msg = MyMessage(CONFIGURATION_CHILD_ID, V_CUSTOM);
 }
 
+int NodeManager::_last_interrupt_pin = -1;
+long NodeManager::_last_interrupt_1 = millis();
+long NodeManager::_last_interrupt_2 = millis();
+long NodeManager::_interrupt_min_delta = 100;
+
 // setter/getter
 void NodeManager::setRetries(int value) {
   _retries = value;
@@ -2720,15 +2788,18 @@ void NodeManager::setSleep(int value1, int value2, int value3) {
 void NodeManager::setSleepInterruptPin(int value) {
   _sleep_interrupt_pin = value;
 }
-void NodeManager::setInterrupt(int pin, int mode, int pull) {
+void NodeManager::setInterrupt(int pin, int mode, int initial) {
   if (pin == INTERRUPT_PIN_1) {
     _interrupt_1_mode = mode;
-    _interrupt_1_pull = pull;
+    _interrupt_1_initial = initial;
   }
-  if (pin == INTERRUPT_PIN_2) {
+  if (pin == INTERRUPT_PIN_2) { 
     _interrupt_2_mode = mode;
-    _interrupt_2_pull = pull;
+    _interrupt_2_initial = initial;
   }
+}
+void NodeManager::setInterruptMinDelta(long value) {
+  _interrupt_min_delta = value;
 }
 #if POWER_MANAGER == 1
   void NodeManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
@@ -2976,6 +3047,7 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
 
 // attach a built-in or custom sensor to this manager
 int NodeManager::registerSensor(Sensor* sensor) {
+  if (sensor->getChildId() > MAX_SENSORS) return;
   #if DEBUG == 1
     Serial.print(F("REG I="));
     Serial.print(sensor->getChildId());
@@ -2998,12 +3070,14 @@ int NodeManager::registerSensor(Sensor* sensor) {
 
 // un-register a sensor to this manager
 void NodeManager::unRegisterSensor(int sensor_index) {
+  if (sensor_index > MAX_SENSORS) return;
   // unlink the pointer to this sensor
   _sensors[sensor_index] == 0;
 }
 
 // return a sensor given its index
 Sensor* NodeManager::get(int child_id) {
+  if (child_id > MAX_SENSORS) return 0;
   // return a pointer to the sensor from the given child_id
   return _sensors[child_id];
 }
@@ -3013,6 +3087,7 @@ Sensor* NodeManager::getSensor(int child_id) {
 
 // assign a different child id to a sensor'
 bool NodeManager::renameSensor(int old_child_id, int new_child_id) {
+  if (old_child_id > MAX_SENSORS || new_child_id > MAX_SENSORS) return;
   // ensure the old id exists and the new is available
   if (_sensors[old_child_id] == 0 || _sensors[new_child_id] != 0) return false;
   // assign the sensor to new id
@@ -3048,26 +3123,6 @@ void NodeManager::before() {
     Serial.print(F(" B="));
     Serial.println(MY_CAP_RXBUF);
   #endif
-  // setup the sleep interrupt pin
-  if (_sleep_interrupt_pin > -1) {
-    // set the interrupt when the pin is connected to ground
-    setInterrupt(_sleep_interrupt_pin,FALLING,HIGH);
-  }
-  // setup the interrupt pins
-  if (_interrupt_1_mode != MODE_NOT_DEFINED) {
-    pinMode(INTERRUPT_PIN_1,INPUT);
-    if (_interrupt_1_pull > -1) digitalWrite(INTERRUPT_PIN_1,_interrupt_1_pull);
-  }
-  if (_interrupt_2_mode != MODE_NOT_DEFINED) {
-    pinMode(INTERRUPT_PIN_2, INPUT);
-    if (_interrupt_2_pull > -1) digitalWrite(INTERRUPT_PIN_2,_interrupt_2_pull);
-  }
-  #if DEBUG == 1
-    Serial.print(F("INT1 M="));
-    Serial.println(_interrupt_1_mode);
-    Serial.print(F("INT2 M="));
-    Serial.println(_interrupt_2_mode);
-  #endif
   #if PERSIST == 1
     // restore the configuration saved in the eeprom
     _loadConfig();
@@ -3080,11 +3135,13 @@ void NodeManager::before() {
     _battery_report_timer.start();
   #endif
   // setup individual sensors
-  for (int i = 0; i < MAX_SENSORS; i++) {
+  for (int i = 1; i <= MAX_SENSORS; i++) {
     if (_sensors[i] == 0) continue;
     // call each sensor's setup()
     _sensors[i]->before();
   }
+  // setup the interrupt pins
+  setupInterrupts();
 }
 
 // present NodeManager and its sensors
@@ -3104,7 +3161,7 @@ void NodeManager::presentation() {
     batteryReport();
   #endif
   // present each sensor
-  for (int i = 0; i < MAX_SENSORS; i++) {
+  for (int i = 1; i <= MAX_SENSORS; i++) {
     if (_sensors[i] == 0) continue;
     // call each sensor's presentation()
     if (_sleep_between_send > 0) sleep(_sleep_between_send);
@@ -3131,7 +3188,7 @@ void NodeManager::setup() {
     _send(_msg.set("STARTED"));
   #endif
   // run setup for all the registered sensors
-  for (int i = 0; i < MAX_SENSORS; i++) {
+  for (int i = 1; i <= MAX_SENSORS; i++) {
     if (_sensors[i] == 0) continue;
     // call each sensor's setup()
     _sensors[i]->setup();
@@ -3144,13 +3201,11 @@ void NodeManager::loop() {
   // if in idle mode, do nothing
   if (_sleep_mode == IDLE) return;
   // if sleep time is not set, do nothing
-  if ((_sleep_mode == SLEEP || _sleep_mode == WAIT) &&  _sleep_time == 0) return;
+  if (isSleepingNode() &&  _sleep_time == 0) return;
   #if BATTERY_MANAGER == 1
     // update the timer for battery report
     if (_battery_report_timer.getUnit() == MINUTES) _battery_report_timer.update();
     if (_battery_report_timer.getUnit() == CYCLES && (_last_interrupt_pin == -1 || _battery_report_with_interrupt)) _battery_report_timer.update();
-    // keep track of the number of sleeping cycles (ignoring if )
-    if (_last_interrupt_pin == -1 || _battery_report_with_interrupt) 
     // if it is time to report the battery level
     if (_battery_report_timer.isOver()) {
       // time to report the battery level again
@@ -3164,20 +3219,22 @@ void NodeManager::loop() {
     if (_auto_power_pins) powerOn();
   #endif
   // run loop for all the registered sensors
-  for (int i = 0; i < MAX_SENSORS; i++) {
+  for (int i = 1; i <= MAX_SENSORS; i++) {
     // skip not configured sensors
     if (_sensors[i] == 0) continue;
-    // if waking up from an interrupt skip all the sensor without that interrupt configured
-    if (_last_interrupt_pin != -1 && _sensors[i]->getInterruptPin() != _last_interrupt_pin) continue;
-    // call each sensor's loop()
+    // if there was an interrupt for this sensor, call the sensor's interrupt()
+    if (_last_interrupt_pin != -1 && _sensors[i]->getInterruptPin() == _last_interrupt_pin) _sensors[i]->interrupt();
+    // call the sensor's loop()
     _sensors[i]->loop(empty);
   }
+  // reset the last interrupt pin
+  _last_interrupt_pin = -1;
   #if POWER_MANAGER == 1
     // turn off the pin powering all the sensors
     if (_auto_power_pins) powerOff();
   #endif
   // continue/start sleeping as requested
-  if (_sleep_mode == SLEEP || _sleep_mode == WAIT) _sleep();
+  if (isSleepingNode()) _sleep();
 }
 
 // dispacth inbound messages
@@ -3204,7 +3261,7 @@ void NodeManager::receive(const MyMessage &message) {
     #endif
   }
   // dispatch the message to the registered sensor
-  else if (_sensors[message.sensor] != 0) {
+  else if (message.sensor <= MAX_SENSORS && _sensors[message.sensor] != 0) {
     #if POWER_MANAGER == 1
       // turn on the pin powering all the sensors
       if (_auto_power_pins) powerOn();
@@ -3296,6 +3353,7 @@ void NodeManager::process(Request & request) {
     #endif
     case 26: unRegisterSensor(request.getValueInt()); break;
     case 27: saveToMemory(0,request.getValueInt()); break;
+    case 28: setInterruptMinDelta(request.getValueInt()); break;
     default: return; 
   }
   _send(_msg.set(function));
@@ -3403,6 +3461,67 @@ float NodeManager::getVcc() {
   #endif
 }
 
+// setup the interrupt pins
+void NodeManager::setupInterrupts() {
+  // configure wakeup pin if needed
+  if (_sleep_interrupt_pin > -1) {
+    // set the interrupt when the pin is connected to ground
+    setInterrupt(_sleep_interrupt_pin,FALLING,HIGH);
+  }
+  // setup the interrupt pins
+  if (_interrupt_1_mode != MODE_NOT_DEFINED) {
+    pinMode(INTERRUPT_PIN_1,INPUT);
+    if (_interrupt_1_initial > -1) digitalWrite(INTERRUPT_PIN_1,_interrupt_1_initial);
+    // for non sleeping nodes, we need to handle the interrupt by ourselves  
+    if (_sleep_mode != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, _interrupt_1_mode);
+  }
+  if (_interrupt_2_mode != MODE_NOT_DEFINED) {
+    pinMode(INTERRUPT_PIN_2, INPUT);
+    if (_interrupt_2_initial > -1) digitalWrite(INTERRUPT_PIN_2,_interrupt_2_initial);
+    // for non sleeping nodes, we need to handle the interrupt by ourselves  
+    if (_sleep_mode != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, _interrupt_2_mode);
+  }
+  #if DEBUG == 1
+    Serial.print(F("INT P="));
+    Serial.print(INTERRUPT_PIN_1);
+    Serial.print(F(" M="));
+    Serial.println(_interrupt_1_mode);
+    Serial.print(F("INT P="));
+    Serial.print(INTERRUPT_PIN_2);
+    Serial.print(F(" M="));
+    Serial.println(_interrupt_2_mode);
+  #endif
+}
+
+// return the pin from which the last interrupt came
+int NodeManager::getLastInterruptPin() {
+  return _last_interrupt_pin;
+}
+
+// handle an interrupt
+void NodeManager::_onInterrupt_1() {
+  long now = millis();
+  if ( (now - _last_interrupt_1 > _interrupt_min_delta) || (now < _last_interrupt_1) ) {
+    _last_interrupt_pin = INTERRUPT_PIN_1;
+    #if DEBUG == 1
+      Serial.print(F("INT P="));
+      Serial.println(INTERRUPT_PIN_1);
+    #endif
+    _last_interrupt_1 = now;
+  }
+}
+void NodeManager::_onInterrupt_2() {
+  long now = millis();
+  if ( (now - _last_interrupt_2 > _interrupt_min_delta) || (now < _last_interrupt_2) ) {
+    _last_interrupt_pin = INTERRUPT_PIN_2;
+    #if DEBUG == 1
+      Serial.print(F("INT P="));
+      Serial.println(INTERRUPT_PIN_2);
+    #endif
+    _last_interrupt_2 = now;
+  }
+}
+
 // send a message to the network
 void NodeManager::_send(MyMessage & message) {
   // send the message, multiple times if requested
@@ -3431,8 +3550,6 @@ void NodeManager::_send(MyMessage & message) {
 
 // wrapper of smart sleep
 void NodeManager::_sleep() {
-  // reset the last interrupt pin
-  _last_interrupt_pin = -1;
   // calculate the seconds to sleep
   long sleep_sec = _sleep_time;
   if (_sleep_unit == MINUTES) sleep_sec = sleep_sec * 60;
@@ -3514,12 +3631,13 @@ void NodeManager::_present(int child_id, int type) {
 
 // return the next available child_id
 int NodeManager::_getAvailableChildId() {
-  for (int i = 1; i < MAX_SENSORS; i++) {
+  for (int i = 1; i <= MAX_SENSORS; i++) {
     if (i == CONFIGURATION_CHILD_ID) continue;
     if (i == BATTERY_CHILD_ID) continue;
     // empty place, return it
     if (_sensors[i] == 0) return i;
   }
+  return MAX_SENSORS;
 }
 
 // guess the initial value of a digital output based on the configured interrupt mode
