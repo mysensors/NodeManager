@@ -1063,6 +1063,9 @@ void SensorDigitalOutput::setInputIsElapsed(bool value) {
 
 // main task
 void SensorDigitalOutput::onLoop() {
+  // set the value to -1 so to avoid reporting to the gateway during loop
+  _value_int = -1;
+  _last_value_int = -1;
   // if a safeguard is set, check if it is time for it
   if (_safeguard_timer->isRunning()) {
     // update the timer
@@ -2802,7 +2805,7 @@ void NodeManager::loop() {
   #endif
   // run loop for all the registered sensors
   for (int i = 1; i <= MAX_SENSORS; i++) {
-    // skip unconfigured sensors
+    // skip not configured sensors
     if (_sensors[i] == 0) continue;
     // if there was an interrupt for this sensor, call the sensor's interrupt()
     if (_last_interrupt_pin != -1 && _sensors[i]->getInterruptPin() == _last_interrupt_pin) _sensors[i]->interrupt();
