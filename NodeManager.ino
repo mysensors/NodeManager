@@ -43,6 +43,7 @@ void before() {
     //SensorRainGauge* s = (SensorRainGauge*)nodeManager.get(a);
     //s->setMode(CHANGE);
     nodeManager.setMode(ALWAYS_ON);
+    //nodeManager.setSleep(SLEEP,10,MINUTES);
 
   /*
    * Register above your sensors

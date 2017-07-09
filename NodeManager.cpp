@@ -390,8 +390,8 @@ void Sensor::loop(const MyMessage & message) {
     if (_isReceive(message) || _isWorthSending(avg != _last_value_int))  {
       _last_value_int = avg;
       _send(_msg.set(avg));
+      _value_int = -1;
     }
-    _value_int = -1;
   }
   // process a float value
   else if (_value_type == TYPE_FLOAT && total > -1) {
@@ -401,8 +401,8 @@ void Sensor::loop(const MyMessage & message) {
     if (_isReceive(message) || _isWorthSending(avg != _last_value_float))  {
       _last_value_float = avg;
       _send(_msg.set(avg, _float_precision));
+      _value_float = -1;
     }
-    _value_float = -1;
   }
   // process a string value
   else if (_value_type == TYPE_STRING) {
@@ -410,8 +410,8 @@ void Sensor::loop(const MyMessage & message) {
     if (_isReceive(message) || _isWorthSending(strcmp(_value_string, _last_value_string) != 0))  {
       _last_value_string = _value_string;
       _send(_msg.set(_value_string));
+      _value_string = "";
     }
-    _value_string = "";
   }
   // turn the sensor off
   #if POWER_MANAGER == 1
