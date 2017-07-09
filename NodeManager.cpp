@@ -892,6 +892,8 @@ void SensorRainGauge::onSetup() {
 
 // what to do during loop
 void SensorRainGauge::onLoop() {
+  // do not execute loop if called by an interrupt
+  if (_node_manager->getLastInterruptPin() == _interrupt_pin) return;
   // time to report the rain so far
   _value_float = _count * _single_tip;
   #if DEBUG == 1
@@ -3071,6 +3073,11 @@ void NodeManager::setupInterrupts() {
     Serial.print(F(" M="));
     Serial.println(_interrupt_2_mode);
   #endif
+}
+
+// return the pin from which the last interrupt came
+int NodeManager::getLastInterruptPin() {
+  return _last_interrupt_pin;
 }
 
 // handle an interrupt

@@ -1225,6 +1225,8 @@ class NodeManager {
     float getVcc();
     // setup the configured interrupt pins
     void setupInterrupts();
+    // return the pin from which the last interrupt came
+    int getLastInterruptPin();
     // hook into the main sketch functions
     void before();
     void presentation();

@@ -292,6 +292,10 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
     void saveToMemory(int index, int value);
     // return vcc in V
     float getVcc();
+    // setup the configured interrupt pins
+    void setupInterrupts();
+    // return the pin from which the last interrupt came
+    int getLastInterruptPin();
 ~~~
 
 For example
