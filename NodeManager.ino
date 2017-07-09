@@ -33,19 +33,9 @@ void before() {
   /*
    * Register below your sensors
   */
-    pinMode(4, OUTPUT);
-    digitalWrite(4, LOW);
-    pinMode(5, OUTPUT);
-    digitalWrite(5, HIGH);
-    int a = nodeManager.registerSensor(SENSOR_RAIN_GAUGE,3);
-    // SensorMotion* s = (SensorMotion*)nodeManager.get(a);
-    //s->setMode(CHANGE);   
-    SensorRainGauge* s = (SensorRainGauge*)nodeManager.get(a);
-    
-    //s->setMode(CHANGE);
-    //nodeManager.setMode(ALWAYS_ON);
-    nodeManager.setSleep(SLEEP,1,MINUTES);
-    s->setReportIntervalMinutes(2);
+
+
+
 
   /*
    * Register above your sensors

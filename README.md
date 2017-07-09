@@ -362,6 +362,8 @@ If you want to create a custom sensor and register it with NodeManager so it can
     void onReceive(const MyMessage & message);
 	// define what to do when receiving a remote configuration message
 	void onProcess(Request & request);
+	// define what to do when receiving an interrupt
+	void onInterrupt();
 ~~~
 
 You can then instantiate your newly created class and register with NodeManager:
@@ -689,6 +691,16 @@ NodeManager::receive():
 
 Sensor::receive(): 
 * Invoke `Sensor::loop()` which will execute the sensor main taks and eventually call `Sensor::onReceive()`
+
+NodeManager::process():
+* Process an incoming remote configuration request
+
+Sensor::process():
+* Process a sensor-generic incoming remote configuration request
+* Calls onProcess() for sensor-specific incoming remote configuration request
+
+Sensor::interrupt():
+* Calls the sensor's implementation of onInterrupt() to handle the interrupt
 
 ## Examples
 All the examples below takes place within the before() function in the main sketch, just below the "Register below your sensors" comment.
