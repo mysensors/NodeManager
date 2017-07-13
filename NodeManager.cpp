@@ -2536,8 +2536,6 @@ void SensorAM2320::onSetup() {
 // what do to during loop
 void SensorAM2320::onLoop() {
   switch(_th->Read()) {
-    case 2: Serial.println(F("AM2320 CRC failed")); break;
-    case 1: Serial.println(F("AM2320 offline")); break;
     case 0:
       // temperature sensor
       if (_sensor_type == SensorAM2320::TEMPERATURE) {
@@ -2566,6 +2564,9 @@ void SensorAM2320::onLoop() {
           // store the value
           _value_float = humidity;
         }
+        break;
+      case 1: Serial.println(F("AM2320 offline")); break;
+      case 2: Serial.println(F("AM2320 CRC failed")); break;
     }
 }
 
@@ -2709,6 +2710,65 @@ void SensorTSL2561::onProcess(Request & request) {
 }
 #endif
 
+/*
+   SensorPT100
+*/
+
+// contructor
+SensorPT100::SensorPT100(NodeManager* node_manager, int child_id, float voltageRef, int pin): Sensor(node_manager, child_id, pin) {
+//SensorPT100::SensorPT100(NodeManager* node_manager, int child_id, DFRobotHighTemperature* PT100, int pin): Sensor(node_manager, child_id, pin) {
+  // set presentation, type and value type
+  setPresentation(S_TEMP);
+  setType(V_TEMP);
+  setValueType(TYPE_FLOAT);
+  DFRobotHighTemperature PT100 = DFRobotHighTemperature(voltageRef);
+  //PT100 = _PT100;
+}
+
+//// setter/getter
+//void SensorPT100::setVoltageRef(float value) {
+//  _voltageRef = value;
+//}
+
+// what to do during before
+void SensorPT100::onBefore() {
+  // set the pin as input
+  pinMode(_pin, INPUT);
+}
+
+// what to do during setup
+void SensorPT100::onSetup() {
+}
+
+// what to do during loop
+void SensorPT100::onLoop() {
+  // read the PT100 sensor
+  int temperature = PT100.readTemperature(_pin);  
+  
+  #if DEBUG == 1
+    Serial.print(F("PT100 I="));
+    Serial.print(_child_id);
+    Serial.print(F(" T="));
+    Serial.println(temperature);
+  #endif
+  // store the value
+  _value_float = temperature;
+}
+
+// what to do as the main task when receiving a message
+void SensorPT100::onReceive(const MyMessage & message) {
+  if (message.getCommand() == C_REQ) onLoop();
+}
+
+// what to do when receiving a remote message
+void SensorPT100::onProcess(Request & request) {
+   int function = request.getFunction();
+  switch(function) {
+    case 101: setVoltageRef(request.getValueFloat()); break;
+    default: return;
+  }
+  _send(_msg_service.set(function));
+}
 
 
 /*******************************************
@@ -3023,17 +3083,24 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     else if (sensor_type == SENSOR_AM2320) {
       AM2320* th = new AM2320();
       // register temperature sensor
-      registerSensor(new SensorAM2320(this, child_id, th, SensorAM2320::TEMPERATURE));
+      registerSensor(new SensorAM2320(this,child_id,th,SensorAM2320::TEMPERATURE));
       // register humidity sensor
       child_id = _getAvailableChildId();
-      return registerSensor(new SensorAM2320(this, child_id, th, SensorAM2320::HUMIDITY));
+      return registerSensor(new SensorAM2320(this,child_id,th,SensorAM2320::HUMIDITY));
     }
   #endif
   #if MODULE_TSL2561 == 1 
-    else if (sensor_type == SENSOR_TSL2561) {
-      
+    else if (sensor_type == SENSOR_TSL2561) {    
       // register light sensor
-      return registerSensor(new SensorTSL2561(this, child_id));
+      return registerSensor(new SensorTSL2561(this,child_id));
+    }
+  #endif
+   #if MODULE_PT100 == 1 
+    else if (sensor_type == SENSOR_PT100) {   
+      DFRobotHighTemperature PT100 = new DFRobotHighTemperature(voltageRef); 
+      // register temperature sensor
+      return registerSensor(new SensorPT100(this,child_id,voltageRef,pin));
+     // return registerSensor(new SensorPT100(this, child_id, pin));
     }
   #endif
   else {

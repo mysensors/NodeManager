@@ -17,12 +17,15 @@
 //#define MY_DEBUG
 //#define MY_NODE_ID 100
 
+
 // NRF24 radio settings
 #define MY_RADIO_NRF24
 //#define MY_RF24_ENABLE_ENCRYPTION
 //#define MY_RF24_CHANNEL 76
 //#define MY_RF24_PA_LEVEL RF24_PA_HIGH
 //#define MY_DEBUG_VERBOSE_RF24
+//#define MY_RF24_DATARATE RF24_250KBPS
+
 
 // RFM69 radio settings
 //#define MY_RADIO_RFM69
@@ -138,5 +141,7 @@
 #define MODULE_AM2320 0
 // Enable this module to use one of the following sensors: SENSOR_TSL2561    
 #define MODULE_TSL2561 0
+// Enable this module to use one of the following sensors: SENSOR_PT100
+#define MODULE_PT100 1
 #endif
 

@@ -32,13 +32,11 @@ void before() {
   /*
    * Register below your device specific config
   */
+
   
-  
-    
   /*
    * Register below your sensors
   */
-
 
 
 

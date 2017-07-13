@@ -111,7 +111,7 @@
    Default module settings
 */
 
-// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_ACS712
+// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_ACS712, SENSOR_PT100
 #ifndef MODULE_ANALOG_INPUT
   #define MODULE_ANALOG_INPUT 0
 #endif
@@ -285,6 +285,10 @@ enum supported_sensors {
     // AM2320 sensors, return temperature/humidity based on the attached AM2320 sensor
     SENSOR_AM2320,
   #endif
+   #if MODULE_PT100 == 1
+    // High temperature sensor, return the temperature in C° from the attached PT100 sensor
+    SENSOR_PT100,
+  #endif
 };
  
 /***********************************
@@ -307,10 +311,6 @@ enum supported_sensors {
 #if MODULE_DHT == 1
   #include <DHT.h>
 #endif
-#if MODULE_AM2320 == 1
-  #include <Wire.h>
-  #include <AM2320.h>
-#endif
 #if MODULE_SHT21 == 1
   #include <Wire.h>
   #include <Sodaq_SHT2x.h>
@@ -321,10 +321,6 @@ enum supported_sensors {
 #endif
 #if MODULE_BH1750 == 1
   #include <BH1750.h>
-  #include <Wire.h>
-#endif
-#if MODULE_TSL2561 == 1
-  #include <TSL2561.h>
   #include <Wire.h>
 #endif
 #if MODULE_MLX90614 == 1
@@ -361,6 +357,9 @@ enum supported_sensors {
 #if MODULE_TSL2561 == 1
   #include <TSL2561.h>
   #include <Wire.h>
+#endif
+#if MODULE_PT100 == 1
+  #include<DFRobotHighTemperatureSensor.h>
 #endif
 
 /*******************************************************************
@@ -1273,6 +1272,28 @@ class SensorTSL2561: public Sensor {
     int _tsl_spectrum = 0;
 };
 #endif
+
+/*
+    SensorPT100
+*/
+
+class SensorPT100: public Sensor {
+  public:
+   // SensorPT100(NodeManager* node_manager, int child_id, DFRobotHighTemperature* PT100, int pin);
+    SensorPT100(NodeManager* node_manager, int child_id, float voltageRef, int pin);
+    // [101] set the voltageRef used to compare with analog measures
+    void setVoltageRef(float value);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
+  protected:
+    int PT100();
+   // DFRobotHighTemperature* _PT100;
+   // float _voltageRef = 3.3;
+};
 
 /***************************************
    NodeManager: manages all the aspects of the node
