@@ -507,11 +507,14 @@ class Sensor {
     void process(Request & request);
     // return the pin the interrupt is attached to
     int getInterruptPin();
+    // listen for interrupts on the given pin so interrupt() will be called when occurring
+    void setInterrupt(int pin, int mode, int initial);
     // define what to do at each stage of the sketch
     virtual void before();
     virtual void presentation();
     virtual void setup();
     virtual void loop(const MyMessage & message);
+    virtual void interrupt();
     virtual void receive(const MyMessage & message);
     // abstract functions, subclasses need to implement
     virtual void onBefore() = 0;
@@ -519,6 +522,7 @@ class Sensor {
     virtual void onLoop() = 0;
     virtual void onReceive(const MyMessage & message) = 0;
     virtual void onProcess(Request & request) = 0;
+    virtual void onInterrupt() = 0;
   protected:
     MyMessage _msg;
     MyMessage _msg_service;
@@ -574,6 +578,7 @@ class SensorAnalogInput: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     int _reference = -1;
     bool _reverse = false;
@@ -614,6 +619,7 @@ class SensorThermistor: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     long _nominal_resistor = 10000;
     int _nominal_temperature = 25;
@@ -635,6 +641,7 @@ class SensorML8511: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     float _mapfloat(float x, float in_min, float in_max, float out_min, float out_max);
 };
@@ -656,6 +663,7 @@ class SensorACS712: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     int _ACS_offset = 2500;
     int _mv_per_amp = 185;
@@ -668,24 +676,21 @@ class SensorACS712: public Sensor {
 class SensorRainGauge: public Sensor {
   public:
     SensorRainGauge(NodeManager* node_manager, int child_id, int pin);
-    // [101] set how frequently to report back to the controller in minutes. After reporting the measure is resetted (default: 60)
-    void setReportInterval(int value);
     // [102] set how many mm of rain to count for each tip (default: 0.11)
     void setSingleTip(float value);
+    // set initial value - internal pull up (default: HIGH)
+    void setInitialValue(int value);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
-  public:
-    static void _onTipped();
-    static long _last_tip;
-    static long _count;
+    void onInterrupt();
   protected:
-    int _report_interval = 60;
+    long _count = 0;
     float _single_tip = 0.11;
-    Timer* _timer;
+    int _initial_value = HIGH;
 };
 
 /*
@@ -719,6 +724,7 @@ class SensorDigitalInput: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
 };
 #endif
 
@@ -749,6 +755,7 @@ class SensorDigitalOutput: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     int _on_value = HIGH;
     int _status = OFF;
@@ -806,6 +813,7 @@ class SensorDHT: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
     // constants
     const static int TEMPERATURE = 0;
     const static int HUMIDITY = 1;
@@ -830,6 +838,7 @@ class SensorSHT21: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
     // constants
     const static int TEMPERATURE = 0;
     const static int HUMIDITY = 1;
@@ -869,6 +878,7 @@ class SensorSwitch: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     int _debounce = 0;
     int _trigger_time = 0;
@@ -913,6 +923,7 @@ class SensorDs18b20: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     float _offset = 0;
     int _index;
@@ -935,6 +946,7 @@ class SensorBH1750: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     BH1750* _lightSensor;
 };
@@ -953,6 +965,7 @@ class SensorMLX90614: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
     // constants
     const static int TEMPERATURE_AMBIENT = 0;
     const static int TEMPERATURE_OBJECT = 1;
@@ -979,6 +992,7 @@ class SensorBosch: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
     // constants
     const static int TEMPERATURE = 0;
     const static int HUMIDITY = 1;
@@ -1045,6 +1059,7 @@ class SensorHCSR04: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     int _trigger_pin;
     int _echo_pin;
@@ -1072,6 +1087,7 @@ class SensorSonoff: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     Bounce _debouncer = Bounce();
     int _button_pin = 0;
@@ -1101,6 +1117,7 @@ class SensorMCP9808: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     Adafruit_MCP9808* _mcp;
 };
@@ -1141,6 +1158,7 @@ class SensorMQ: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     float _rl_value = 1.0;
     float _ro_clean_air_factor = 9.83;
@@ -1319,7 +1337,9 @@ class NodeManager {
     // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
     void setSleepInterruptPin(int value);
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
-    void setInterrupt(int pin, int mode, int pull = -1);
+    void setInterrupt(int pin, int mode, int initial = -1);
+    // [28] ignore two consecutive interrupts if happening within this timeframe in milliseconds (default: 100)
+    void setInterruptMinDelta(long value);
     // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
     int getSleepBetweenSend();
@@ -1376,6 +1396,10 @@ class NodeManager {
     void saveToMemory(int index, int value);
     // return vcc in V
     float getVcc();
+    // setup the configured interrupt pins
+    void setupInterrupts();
+    // return the pin from which the last interrupt came
+    int getLastInterruptPin();
     // hook into the main sketch functions
     void before();
     void presentation();
@@ -1383,6 +1407,9 @@ class NodeManager {
     void loop();
     void receive(const MyMessage & msg);
     void receiveTime(unsigned long ts);
+    // handle interrupts
+    static void _onInterrupt_1();
+    static void _onInterrupt_2();
   private:
     #if BATTERY_MANAGER == 1
       float _battery_min = 2.6;
@@ -1408,11 +1435,14 @@ class NodeManager {
     int _retries = 1;
     int _interrupt_1_mode = MODE_NOT_DEFINED;
     int _interrupt_2_mode = MODE_NOT_DEFINED;
-    int _interrupt_1_pull = -1;
-    int _interrupt_2_pull = -1;
-    int _last_interrupt_pin = -1;
+    int _interrupt_1_initial = -1;
+    int _interrupt_2_initial = -1;
+    static int _last_interrupt_pin;
+    static long _interrupt_min_delta;
+    static long _last_interrupt_1;
+    static long _last_interrupt_2;
     long _timestamp = -1;
-    Sensor* _sensors[MAX_SENSORS] = {0};
+    Sensor* _sensors[MAX_SENSORS+1] = {0};
     bool _ack = false;
     void _sleep();
     void _present(int child_id, int type);
