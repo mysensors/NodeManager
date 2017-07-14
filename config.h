@@ -14,18 +14,17 @@
  */
 
 // General settings
-#define MY_BAUD_RATE 115200
-#define MY_DEBUG
+#define MY_BAUD_RATE 9600
+//#define MY_DEBUG
 #define MY_NODE_ID AUTO
 
 // NRF24 radio settings
-#define MY_RADIO_NRF24
+//#define MY_RADIO_NRF24
 //#define MY_RF24_ENABLE_ENCRYPTION
-#define MY_RF24_CHANNEL 108
-#define MY_RF24_PA_LEVEL RF24_PA_LOW
+//#define MY_RF24_CHANNEL 108
+//#define MY_RF24_PA_LEVEL RF24_PA_LOW
 //#define MY_DEBUG_VERBOSE_RF24
 //#define MY_RF24_DATARATE RF24_250KBPS
-#define MY_RF24_DATARATE RF24_1MBPS
 
 // RFM69 radio settings
 //#define MY_RADIO_RFM69
@@ -119,7 +118,7 @@
 #define DEBUG 1
 
 // if enabled, enable the capability to power on sensors with the arduino's pins to save battery while sleeping
-#define POWER_MANAGER 0
+#define POWER_MANAGER 1
 // if enabled, will load the battery manager library to allow the battery level to be reported automatically or on demand
 #define BATTERY_MANAGER 0
 // if enabled, allow modifying the configuration remotely by interacting with the configuration child id
@@ -171,5 +170,5 @@
 // Enable this module to use one of the following sensors: SENSOR_TSL2561
 #define MODULE_TSL2561 0
 // Enable this module to use one of the following sensors: SENSOR_PT100
-#define MODULE_PT100 1
+#define MODULE_PT100 0
 #endif

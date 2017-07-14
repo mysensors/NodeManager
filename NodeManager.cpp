@@ -2656,23 +2656,21 @@ void SensorTSL2561::onProcess(Request & request) {
 */
 
 // contructor
-SensorPT100::SensorPT100(NodeManager* node_manager, int child_id, float voltageRef, int pin): Sensor(node_manager, child_id, pin) {
-//SensorPT100::SensorPT100(NodeManager* node_manager, int child_id, DFRobotHighTemperature* PT100, int pin): Sensor(node_manager, child_id, pin) {
+SensorPT100::SensorPT100(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
   // set presentation, type and value type
   setPresentation(S_TEMP);
   setType(V_TEMP);
   setValueType(TYPE_FLOAT);
-  DFRobotHighTemperature PT100 = DFRobotHighTemperature(voltageRef);
-  //PT100 = _PT100;
 }
 
 //// setter/getter
-//void SensorPT100::setVoltageRef(float value) {
-//  _voltageRef = value;
-//}
+void SensorPT100::setVoltageRef(float value) {
+   _voltageRef = value;
+}
 
 // what to do during before
 void SensorPT100::onBefore() {
+  _PT100 = new DFRobotHighTemperature(_voltageRef); 
   // set the pin as input
   pinMode(_pin, INPUT);
 }
@@ -2684,7 +2682,7 @@ void SensorPT100::onSetup() {
 // what to do during loop
 void SensorPT100::onLoop() {
   // read the PT100 sensor
-  int temperature = PT100.readTemperature(_pin);  
+  int temperature = _PT100->readTemperature(_pin);  
   
   #if DEBUG == 1
     Serial.print(F("PT100 I="));
@@ -3030,10 +3028,8 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   #endif
    #if MODULE_PT100 == 1 
     else if (sensor_type == SENSOR_PT100) {   
-      DFRobotHighTemperature PT100 = new DFRobotHighTemperature(voltageRef); 
       // register temperature sensor
-      return registerSensor(new SensorPT100(this,child_id,voltageRef,pin));
-     // return registerSensor(new SensorPT100(this, child_id, pin));
+      return registerSensor(new SensorPT100(this,child_id,pin));
     }
   #endif
   else {

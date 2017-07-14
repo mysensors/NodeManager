@@ -286,7 +286,7 @@ enum supported_sensors {
     SENSOR_AM2320,
   #endif
    #if MODULE_PT100 == 1
-    // High temperature sensor, return the temperature in C° from the attached PT100 sensor
+    // High temperature sensor associated with DFRobot Driver, return the temperature in C° from the attached PT100 sensor
     SENSOR_PT100,
   #endif
 };
@@ -1261,8 +1261,7 @@ class SensorTSL2561: public Sensor {
 
 class SensorPT100: public Sensor {
   public:
-   // SensorPT100(NodeManager* node_manager, int child_id, DFRobotHighTemperature* PT100, int pin);
-    SensorPT100(NodeManager* node_manager, int child_id, float voltageRef, int pin);
+    SensorPT100(NodeManager* node_manager, int child_id, int pin);
     // [101] set the voltageRef used to compare with analog measures
     void setVoltageRef(float value);
     // define what to do at each stage of the sketch
@@ -1272,9 +1271,8 @@ class SensorPT100: public Sensor {
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
   protected:
-    int PT100();
-   // DFRobotHighTemperature* _PT100;
-   // float _voltageRef = 3.3;
+    DFRobotHighTemperature* _PT100;
+    float _voltageRef = 3.3;
 };
 
 /***************************************

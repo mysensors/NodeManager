@@ -34,11 +34,11 @@ void before() {
   */
 
 ///////// BATTERY MANAGER
-   nodeManager.setBatteryMin(2.5);
-   nodeManager.setBatteryMax(3.3);
-   nodeManager.setBatteryInternalVcc(false);
-   nodeManager.setBatteryPin(A0);
-   nodeManager.setBatteryVoltsPerBit(0.003363075);
+//   nodeManager.setBatteryMin(2.5);
+//   nodeManager.setBatteryMax(3.3);
+//   nodeManager.setBatteryInternalVcc(false);
+//   nodeManager.setBatteryPin(A0);
+//   nodeManager.setBatteryVoltsPerBit(0.003363075);
 
 ///////// POWER MANAGER
 //  nodeManager.setRebootPin(8);
@@ -59,10 +59,7 @@ void before() {
   /*
    * Register below your sensors
   */
-   nodeManager.registerSensor(SENSOR_DHT21,4);
-
- //  nodeManager.registerSensor(SENSOR_AM2320);
-
+ 
   /*
    * Register above your sensors
   */
