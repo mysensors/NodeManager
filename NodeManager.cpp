@@ -3203,7 +3203,7 @@ int NodeManager::registerSensor(Sensor* sensor) {
 void NodeManager::unRegisterSensor(int sensor_index) {
   if (sensor_index > MAX_SENSORS) return;
   // unlink the pointer to this sensor
-  _sensors[sensor_index] == 0;
+  if (_sensors[sensor_index] != 0) _sensors[sensor_index] == 0;
 }
 
 // return a sensor given its index
