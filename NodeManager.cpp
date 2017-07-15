@@ -2713,7 +2713,7 @@ void SensorTSL2561::onProcess(Request & request) {
 /*
    SensorPT100
 */
-
+#if MODULE_PT100 == 1
 // contructor
 SensorPT100::SensorPT100(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
   // set presentation, type and value type
@@ -2767,7 +2767,7 @@ void SensorPT100::onProcess(Request & request) {
   }
   _send(_msg_service.set(function));
 }
-
+#endif
 
 /*******************************************
    NodeManager

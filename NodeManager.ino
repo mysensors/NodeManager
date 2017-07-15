@@ -30,7 +30,7 @@ void before() {
   Serial.begin(MY_BAUD_RATE);  
 
   /*
-   * Register below your device specific config
+   * Register below your sensors
   */
 
    
