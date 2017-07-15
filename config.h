@@ -148,5 +148,8 @@
 #define MODULE_TSL2561 0
 // Enable this module to use one of the following sensors: SENSOR_PT100
 #define MODULE_PT100 0
+// Enable this module to use one of the following sensors: SENSOR_BMP280
+#define MODULE_BMP280 0
+
 #endif
 
