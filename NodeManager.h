@@ -111,7 +111,7 @@
    Default module settings
 */
 
-// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_ACS712, SENSOR_PT100
+// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN_GAUGE, SENSOR_RAIN, SENSOR_SOIL_MOISTURE
 #ifndef MODULE_ANALOG_INPUT
   #define MODULE_ANALOG_INPUT 0
 #endif
@@ -123,17 +123,13 @@
 #ifndef MODULE_DIGITAL_OUTPUT
   #define MODULE_DIGITAL_OUTPUT 0
 #endif
-// Enable this module to use one of the following sensors: SENSOR_SHT21, SENSOR_HTU21D
-#ifndef MODULE_SHT21
-  #define MODULE_SHT21 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_AM2320
-#ifndef MODULE_AM2320
-  #define MODULE_AM2320 0
-#endif
 // Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22, SENSOR_DHT21
 #ifndef MODULE_DHT
   #define MODULE_DHT 0
+#endif
+// Enable this module to use one of the following sensors: SENSOR_SHT21, SENSOR_HTU21D
+#ifndef MODULE_SHT21
+  #define MODULE_SHT21 0
 #endif
 // Enable this module to use one of the following sensors: SENSOR_SWITCH, SENSOR_DOOR, SENSOR_MOTION
 #ifndef MODULE_SWITCH
@@ -146,10 +142,6 @@
 // Enable this module to use one of the following sensors: SENSOR_BH1750
 #ifndef MODULE_BH1750
   #define MODULE_BH1750 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_TSL2561
-#ifndef MODULE_TSL2561
-  #define MODULE_TSL2561 0
 #endif
 // Enable this module to use one of the following sensors: SENSOR_MLX90614
 #ifndef MODULE_MLX90614
@@ -182,6 +174,18 @@
 // Enable this module to use one of the following sensors: SENSOR_MHZ19
 #ifndef MODULE_MHZ19
   #define MODULE_MHZ19 0
+#endif
+// Enable this module to use one of the following sensors: SENSOR_AM2320
+#ifndef MODULE_AM2320
+  #define MODULE_AM2320 0
+#endif
+// Enable this module to use one of the following sensors: SENSOR_TSL2561
+#ifndef MODULE_TSL2561
+  #define MODULE_TSL2561 0
+#endif
+// Enable this module to use one of the following sensors: SENSOR_PT100
+#ifndef MODULE_PT100
+  #define SENSOR_PT100 0
 #endif
 
 /***********************************
@@ -1276,7 +1280,7 @@ class SensorTSL2561: public Sensor {
 /*
     SensorPT100
 */
-
+#if MODULE_PT100 == 1
 class SensorPT100: public Sensor {
   public:
     SensorPT100(NodeManager* node_manager, int child_id, int pin);
@@ -1292,6 +1296,7 @@ class SensorPT100: public Sensor {
     DFRobotHighTemperature* _PT100;
     float _voltageRef = 3.3;
 };
+#endif
 
 /***************************************
    NodeManager: manages all the aspects of the node
