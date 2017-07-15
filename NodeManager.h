@@ -367,7 +367,7 @@ enum supported_sensors {
   #include <AM2320.h>
 #endif
 #if MODULE_TSL2561 == 1
-  #include <TSL2561.h>
+  #include <TSL2561.h>pt
   #include <Wire.h>
 #endif
 #if MODULE_PT100 == 1
