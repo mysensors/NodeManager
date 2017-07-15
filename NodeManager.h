@@ -187,6 +187,10 @@
 #ifndef MODULE_PT100
   #define SENSOR_PT100 0
 #endif
+// Enable this module to use one of the following sensors: SENSOR_BMP280
+#ifndef MODULE_BMP280
+  #define MODULE_BMP280 0
+#endif
 
 /***********************************
    Supported Sensors
@@ -254,7 +258,7 @@ enum supported_sensors {
     SENSOR_MLX90614,
   #endif
   #if MODULE_BME280 == 1
-    // MLX90614 sensor, contactless temperature sensor
+    // BME280 sensor, return temperature, humidity and pressure
     SENSOR_BME280,
   #endif
   #if MODULE_SONOFF == 1
@@ -292,6 +296,10 @@ enum supported_sensors {
    #if MODULE_PT100 == 1
     // High temperature sensor associated with DFRobot Driver, return the temperature in C° from the attached PT100 sensor
     SENSOR_PT100,
+  #endif
+  #if MODULE_BMP280 == 1
+    // BMP280 sensor, return temperature and pressure
+    SENSOR_BMP280,
   #endif
 };
  
@@ -363,7 +371,12 @@ enum supported_sensors {
   #include <Wire.h>
 #endif
 #if MODULE_PT100 == 1
-  #include<DFRobotHighTemperatureSensor.h>
+  #include <DFRobotHighTemperatureSensor.h>
+#endif
+#if MODULE_BMP280 == 1
+  #include <Wire.h>
+  #include <Adafruit_Sensor.h>
+  #include <Adafruit_BMP280.h>
 #endif
 
 /*******************************************************************
@@ -984,7 +997,7 @@ class SensorMLX90614: public Sensor {
  * SensorBosch
 */
 
-#if MODULE_BME280 == 1 || MODULE_BMP085 == 1
+#if MODULE_BME280 == 1 || MODULE_BMP085 == 1 || MODULE_BMP280 == 1
 class SensorBosch: public Sensor {
   public:
     SensorBosch(NodeManager* node_manager, int child_id, int sensor_type);
@@ -1041,6 +1054,19 @@ class SensorBMP085: public SensorBosch {
     void onLoop();
   protected:
     Adafruit_BMP085* _bmp;
+};
+#endif
+
+/*
+   SensorBMP280
+*/
+#if MODULE_BMP280 == 1
+class SensorBMP280: public SensorBosch {
+  public:
+    SensorBMP280(NodeManager* node_manager, int child_id, Adafruit_BMP280* bmp, int sensor_type);
+    void onLoop();
+  protected:
+    Adafruit_BMP280* _bmp;
 };
 #endif
 

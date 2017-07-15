@@ -179,6 +179,11 @@ Those NodeManager's directives in the `config.h` file control which module/libra
 #define MODULE_AM2320 0
 // Enable this module to use one of the following sensors: SENSOR_TSL2561
 #define MODULE_TSL2561 0
+// Enable this module to use one of the following sensors: SENSOR_PT100
+#define MODULE_PT100 0
+// Enable this module to use one of the following sensors: SENSOR_BMP280
+#define MODULE_BMP280 0
+
 ~~~
 
 ### Installing the dependencies
@@ -199,6 +204,7 @@ MODULE_HCSR04 | https://github.com/mysensors/MySensorsArduinoExamples/tree/maste
 MODULE_MCP9808 | https://github.com/adafruit/Adafruit_MCP9808_Library
 MODULE_AM2320 | https://github.com/thakshak/AM2320
 MODULE_TSL2561 | https://github.com/adafruit/TSL2561-Arduino-Library
+MODULE_BMP280 | https://github.com/adafruit/Adafruit_BMP280_Library
 
 ### Configure NodeManager
 
@@ -348,6 +354,8 @@ SENSOR_SOIL_MOISTURE | Soil moisture sensor, return the percentage of moisture f
 SENSOR_MHZ19 | MH-Z19 CO2 sensor via UART (SoftwareSerial, default on pins 6(Rx) and 7(Tx)
 SENSOR_TSL2561 | TSL2561 sensor, return light in lux
 SENSOR_AM2320 | AM2320 sensors, return temperature/humidity based on the attached AM2320 sensor
+SENSOR_PT100 | High temperature sensor associated with DFRobot Driver, return the temperature in C° from the attached PT100 sensor
+SENSOR_BMP280 | BMP280 sensor, return temperature/pressure based on the attached BMP280 sensor
 
 To register a sensor simply call the NodeManager instance with the sensory type and the pin the sensor is conncted to. For example:
 ~~~c
@@ -578,7 +586,7 @@ Each sensor class can expose additional methods.
     DeviceAddress* getDeviceAddress();
 ~~~
 
-*  SensorBME280 / SensorBMP085
+*  SensorBME280 / SensorBMP085 / SensorBMP280
 ~~~c
     // [101] define how many pressure samples to keep track of for calculating the forecast (default: 5)
     void setForecastSamplesCount(int value);

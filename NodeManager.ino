@@ -33,10 +33,6 @@ void before() {
    * Register below your sensors
   */
 
-   
-  /*
-   * Register below your sensors
-  */
 
 
   /*

@@ -1710,7 +1710,7 @@ void SensorMLX90614::onInterrupt() {
 /*
    SensorBosch
 */
-#if MODULE_BME280 == 1 || MODULE_BMP085 == 1
+#if MODULE_BME280 == 1 || MODULE_BMP085 == 1 || MODULE_BMP280 == 1
 // contructor
 SensorBosch::SensorBosch(NodeManager* node_manager, int child_id, int sensor_type): Sensor(node_manager, child_id,A4) {
   _sensor_type = sensor_type;
@@ -1994,6 +1994,54 @@ void SensorBMP085::onLoop() {
   else if (_sensor_type == SensorBMP085::FORECAST) {
     float pressure = _bmp->readPressure() / 100.0F;
     _forecast(pressure);    
+  }
+}
+#endif
+
+/*
+ * SensorBMP280
+ */
+#if MODULE_BMP280 == 1
+SensorBMP280::SensorBMP280(NodeManager* node_manager, int child_id, Adafruit_BMP280* bmp, int sensor_type): SensorBosch(node_manager, child_id,sensor_type) {
+  _bmp = bmp;
+}
+
+void SensorBMP280::onLoop() {
+  // temperature sensor
+  if (_sensor_type == SensorBMP280::TEMPERATURE) {
+    // read the temperature
+    float temperature = _bmp->readTemperature();
+    // convert it
+    temperature = _node_manager->celsiusToFahrenheit(temperature);
+    #if DEBUG == 1
+      Serial.print(F("BMP I="));
+      Serial.print(_child_id);
+      Serial.print(F(" T="));
+      Serial.println(temperature);
+    #endif
+    if (isnan(temperature)) return;
+    // store the value
+    _value_float = temperature;
+  }
+  // Pressure Sensor
+  else if (_sensor_type == SensorBMP280::PRESSURE) {
+    // read pressure
+    float pressure = _bmp->readPressure() / 100.0F;
+    if (isnan(pressure)) return;
+    #if DEBUG == 1
+      Serial.print(F("BMP I="));
+      Serial.print(_child_id);
+      Serial.print(F(" P="));
+      Serial.println(pressure);
+    #endif
+    if (isnan(pressure)) return;
+    // store the value
+    _value_float = pressure;
+  }
+  // Forecast Sensor
+  else if (_sensor_type == SensorBMP280::FORECAST) {
+    float pressure = _bmp->readPressure() / 100.0F;
+    _forecast(pressure);
   }
 }
 #endif
@@ -3023,6 +3071,26 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
       // register forecast sensor
       child_id = _getAvailableChildId();
       return registerSensor(new SensorBME280(this,child_id,bme,SensorBME280::FORECAST));
+    }
+  #endif
+  #if MODULE_BMP280 == 1
+    else if (sensor_type == SENSOR_BMP280) {
+      Adafruit_BMP280* bmp = new Adafruit_BMP280();
+      if (! bmp->begin(SensorBosch::GetI2CAddress(0x58))) {
+        #if DEBUG == 1
+          Serial.println(F("NO BMP"));
+        #endif
+        return -1;
+      }
+      // register temperature sensor
+      registerSensor(new SensorBMP280(this,child_id,bmp,SensorBMP280::TEMPERATURE));
+      child_id = _getAvailableChildId();
+      // register pressure sensor
+      child_id = _getAvailableChildId();
+      registerSensor(new SensorBMP280(this,child_id,bmp,SensorBMP280::PRESSURE));
+      // register forecast sensor
+      child_id = _getAvailableChildId();
+      return registerSensor(new SensorBMP280(this,child_id,bmp,SensorBMP280::FORECAST));
     }
   #endif
   #if MODULE_SONOFF == 1
