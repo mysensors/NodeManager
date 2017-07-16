@@ -101,7 +101,7 @@ void Timer::update() {
     else if (sleep_unit == HOURS) sleep_time = sleep_time*3600;
     else if (sleep_unit == DAYS) sleep_time = sleep_time*86400;
     // update elapsed
-    _elapsed += sleep_time
+    _elapsed += sleep_time;
   } else {
     // use millis() to calculate the elapsed time in seconds
     _elapsed = (long)((millis() - _last_millis)/1000);
@@ -435,7 +435,6 @@ void Sensor::process(Request & request) {
     case 5: setSamples(request.getValueInt()); break;
     case 6: setSamplesInterval(request.getValueInt()); break;
     case 7: setTrackLastValue(request.getValueInt()); break;
-    case 8: setForceUpdateCycles(request.getValueInt()); break;
     case 9: setForceUpdateMinutes(request.getValueInt()); break;
     case 10: setValueType(request.getValueInt()); break;
     case 11: setFloatPrecision(request.getValueInt()); break;
@@ -444,7 +443,6 @@ void Sensor::process(Request & request) {
       case 13: powerOn(); break;
       case 14: powerOff(); break;
     #endif
-    case 15: setReportIntervalCycles(request.getValueInt()); break;
     case 16: setReportIntervalMinutes(request.getValueInt()); break;
     default: return;
   }
@@ -3297,8 +3295,6 @@ void NodeManager::setup() {
 // run the main function for all the register sensors
 void NodeManager::loop() {
   MyMessage empty;
-  // if in idle mode, do nothing
-  if (_sleep_mode == IDLE) return;
   // if sleep time is not set, do nothing
   if (isSleepingNode() &&  _sleep_time == 0) return;
   #if BATTERY_MANAGER == 1
@@ -3409,7 +3405,6 @@ void NodeManager::process(Request & request) {
       case 2: batteryReport(); return;
       case 11: setBatteryMin(request.getValueFloat()); break;
       case 12: setBatteryMax(request.getValueFloat()); break;
-      case 13: setBatteryReportCycles(request.getValueInt()); break;
       case 14: setBatteryReportMinutes(request.getValueInt()); break;
       case 15: setBatteryInternalVcc(request.getValueInt()); break;
       case 16: setBatteryPin(request.getValueInt()); break;
@@ -3522,7 +3517,7 @@ void NodeManager::wakeup() {
   #if DEBUG == 1
     Serial.println(F("WAKEUP"));
   #endif
-  _sleep_mode = IDLE;
+  _sleep_mode = AWAKE;
 }
 
 // return the value stored at the requested index from the EEPROM
@@ -3703,7 +3698,7 @@ void NodeManager::_sleep() {
         Serial.println(interrupt_mode);
       #endif
       // when waking up from an interrupt on the wakup pin, stop sleeping
-      if (_sleep_interrupt_pin == pin_number) _sleep_mode = IDLE;
+      if (_sleep_interrupt_pin == pin_number) _sleep_mode = AWAKE;
     }
   }
   // coming out of sleep

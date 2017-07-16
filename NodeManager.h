@@ -14,7 +14,7 @@
 */
 
 // define sleep mode
-#define NO_SLEEP 0
+#define AWAKE 0
 #define SLEEP 1
 #define WAIT 2
 
@@ -1448,7 +1448,7 @@ class NodeManager {
     #endif
     MyMessage _msg;
     void _send(MyMessage & msg);
-    int _sleep_mode = IDLE;
+    int _sleep_mode = AWAKE;
     int _sleep_time = 0;
     int _sleep_unit = MINUTES;
     int _sleep_interrupt_pin = -1;
