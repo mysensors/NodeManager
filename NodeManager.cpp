@@ -142,11 +142,6 @@ float Timer::getElapsed() {
   return _elapsed;
 }
 
-// return the configured unit
-int Timer::getUnit() {
-  return _unit;
-}
-
 
 /******************************************
     Request
@@ -3227,7 +3222,7 @@ void NodeManager::before() {
   #if BATTERY_MANAGER == 1 && !defined(MY_GATEWAY_ESP8266)
     // set analogReference to internal if measuring the battery through a pin
     if (! _battery_internal_vcc && _battery_pin > -1) analogReference(INTERNAL);
-    // if not configured report battery every 10 cycles
+    // if not configured report battery every 60 minutes
     if (! _battery_report_timer.isConfigured()) _battery_report_timer.set(60,MINUTES);
     _battery_report_timer.start();
   #endif
@@ -3299,8 +3294,7 @@ void NodeManager::loop() {
   if (isSleepingNode() &&  _sleep_time == 0) return;
   #if BATTERY_MANAGER == 1
     // update the timer for battery report
-    if (_battery_report_timer.getUnit() == MINUTES) _battery_report_timer.update();
-    if (_battery_report_timer.getUnit() == CYCLES && (_last_interrupt_pin == -1 || _battery_report_with_interrupt)) _battery_report_timer.update();
+    if (_battery_report_timer.isRunning()) _battery_report_timer.update();
     // if it is time to report the battery level
     if (_battery_report_timer.isOver()) {
       // time to report the battery level again
@@ -3590,6 +3584,11 @@ void NodeManager::setupInterrupts() {
 // return the pin from which the last interrupt came
 int NodeManager::getLastInterruptPin() {
   return _last_interrupt_pin;
+}
+
+// set the default interval in minutes all the sensors will report their measures
+void NodeManager::setReportIntervalMinutes(int value) {
+  _report_interval = value*60;
 }
 
 // handle an interrupt

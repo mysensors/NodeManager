@@ -308,6 +308,10 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
     void setupInterrupts();
     // return the pin from which the last interrupt came
     int getLastInterruptPin();
+    // set the default interval in minutes all the sensors will report their measures. 
+    // If the same function is called on a specific sensor, this will not change the previously set value 
+    // For sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10)
+    void setReportIntervalMinutes(int value);
 ~~~
 
 For example

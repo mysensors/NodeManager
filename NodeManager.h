@@ -428,8 +428,6 @@ class Timer {
     void restart();
     // return the current elapsed time
     float getElapsed();
-    // return the configured unit
-    int getUnit();
     // return the configured target
     int getTarget();
    private:
@@ -1421,6 +1419,10 @@ class NodeManager {
     void setupInterrupts();
     // return the pin from which the last interrupt came
     int getLastInterruptPin();
+    // set the default interval in minutes all the sensors will report their measures. 
+    // If the same function is called on a specific sensor, this will not change the previously set value 
+    // For sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10)
+    void setReportIntervalMinutes(int value);
     // hook into the main sketch functions
     void before();
     void presentation();
@@ -1471,6 +1473,7 @@ class NodeManager {
     int _getInterruptInitialValue(int mode);
     bool _get_controller_config = true;
     int _is_metric = 1;
+    int _report_interval = 10*60;
     void _loadConfig();
     void _saveConfig(int what);
 };
