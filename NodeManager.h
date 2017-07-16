@@ -14,10 +14,9 @@
 */
 
 // define sleep mode
-#define IDLE 0
+#define NO_SLEEP 0
 #define SLEEP 1
 #define WAIT 2
-#define ALWAYS_ON 3
 
 // define time unit
 #define SECONDS 0
