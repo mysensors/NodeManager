@@ -409,13 +409,13 @@ class PowerManager {
 class Timer {
   public:
     Timer(NodeManager* node_manager);
-    // start the timer which will be over when interval passes by. Unit can be either CYCLES or MINUTES
-    void start(long target, int unit);
+    // start the timer which will be over when the configured target passes by
+    void start(int target, int unit);
     void start();
     // stop the timer
     void stop();
     // set the timer configuration but do not start it
-    void set(long target, int unit);
+    void set(int target, int unit);
     // update the timer. To be called at every cycle
     void update();
     // returns true if the time is over
@@ -434,12 +434,10 @@ class Timer {
     int getTarget();
    private:
     NodeManager* _node_manager;
-    long _target = 0;
+    int _target = 0;
     int _unit = 0;
-    float _elapsed = 0;
-    bool _use_millis = false;
+    long _elapsed = 0;
     long _last_millis = 0;
-    float _sleep_time = 0;
     bool _is_running = false;
     bool _is_configured = false;
 };

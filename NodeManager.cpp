@@ -66,7 +66,7 @@ Timer::Timer(NodeManager* node_manager) {
 }
 
 // start the timer
-void Timer::start(long target, int unit) {
+void Timer::start(int target, int unit) {
   set(target,unit);
   start();
 }
@@ -80,49 +80,31 @@ void Timer::stop() {
 }
 
 // setup the timer
-void Timer::set(long target, int unit) {
+void Timer::set(int target, int unit) {
   // reset the timer
   _elapsed = 0;
-  _use_millis = false;
   _last_millis = 0;
-  _sleep_time = 0;
   // save the settings
   _target = target;
   _unit = unit;
-  if (_unit == MINUTES) {
-    if (_node_manager->isSleepingNode()) {
-      // this is a sleeping node and millis() is not reliable so calculate how long a sleep/wait cycle would last
-      int sleep_unit = _node_manager->getSleepUnit();
-      _sleep_time = (float)_node_manager->getSleepTime();
-      if (sleep_unit == SECONDS) _sleep_time = _sleep_time/60;
-      else if (sleep_unit == HOURS) _sleep_time = _sleep_time*60;
-      else if (sleep_unit == DAYS) _sleep_time = _sleep_time*1440;
-    }
-    else {
-      // this is not a sleeping node, use millis() to keep track of the elapsed time
-      _use_millis = true;
-    }
-  }
   _is_configured = true;
 }
 
 // update the timer at every cycle
 void Timer::update() {
   if (! isRunning()) return;
-  if (_unit == CYCLES) {
-    // if not a sleeping node, counting the cycles do not make sense
-    if (! _node_manager->isSleepingNode()) return;
-    // just increase the cycle counter
-    _elapsed++;
-  }
-  else if (_unit == MINUTES) {
-    // if using millis(), calculate the elapsed minutes, otherwise add a sleep interval
-    if (_use_millis) {
-      _elapsed = (float)(millis() - _last_millis)/1000/60;
-    }
-    else {
-      _elapsed += _sleep_time;
-    }
+  if (_node_manager->isSleepingNode()) {
+    // this is a sleeping node and millis() is not reliable so calculate how long a sleep cycle would last in seconds
+    int sleep_unit = _node_manager->getSleepUnit();
+    int sleep_time = _node_manager->getSleepTime();
+    if (sleep_unit == MINUTES) sleep_time = sleep_time*60;
+    else if (sleep_unit == HOURS) sleep_time = sleep_time*3600;
+    else if (sleep_unit == DAYS) sleep_time = sleep_time*86400;
+    // update elapsed
+    _elapsed += sleep_time
+  } else {
+    // use millis() to calculate the elapsed time in seconds
+    _elapsed = (long)((millis() - _last_millis)/1000);
   }
 }
 
@@ -151,11 +133,11 @@ void Timer::restart() {
   if (! isRunning()) return;
   // reset elapsed
   _elapsed = 0;
-  // if using millis, keep track of the now timestamp
-  if (_use_millis) _last_millis = millis();
+  // if using millis(), keep track of the current timestamp
+  if (! _node_manager->isSleepingNode()) _last_millis = millis();
 }
 
-// return elapsed minutes so far
+// return elapsed seconds so far
 float Timer::getElapsed() {
   return _elapsed;
 }
