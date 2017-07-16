@@ -250,12 +250,6 @@ void Sensor::setSamplesInterval(int value) {
 void Sensor::setTrackLastValue(bool value) {
   _track_last_value = value;
 }
-void Sensor::setForceUpdate(int value) {
-  setForceUpdateCycles(value);
-}
-void Sensor::setForceUpdateCycles(int value) {
-  _force_update_timer->start(value,CYCLES);
-}
 void Sensor::setForceUpdateMinutes(int value) {
   _force_update_timer->start(value,MINUTES);
 }
@@ -293,11 +287,6 @@ float Sensor::getValueFloat() {
 }
 char* Sensor::getValueString() {
   return _last_value_string;
-}
-
-// After how many cycles the sensor will report back its measure (default: 1 cycle)
-void Sensor::setReportIntervalCycles(int value) {
-  _report_timer->start(value,CYCLES);
 }
 
 // After how many minutes the sensor will report back its measure (default: 1 cycle)
@@ -2827,9 +2816,6 @@ int NodeManager::getRetries() {
   }
   void NodeManager::setBatteryMax(float value) {
     _battery_max = value;
-  }
-  void NodeManager::setBatteryReportCycles(int value) {
-    _battery_report_timer.set(value,CYCLES);
   }
   void NodeManager::setBatteryReportMinutes(int value) {
     _battery_report_timer.set(value,MINUTES);

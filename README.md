@@ -219,8 +219,6 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
       void setBatteryMin(float value);
       // [12] the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
       void setBatteryMax(float value);
-      // [13] after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: -)
-      void setBatteryReportCycles(int value);
       // [14] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60)
       void setBatteryReportMinutes(int value);
       // [15] if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
@@ -424,9 +422,6 @@ The following methods are available for all the sensors:
     void setSamplesInterval(int value);
     // [7] if true will report the measure only if different than the previous one (default: false)
     void setTrackLastValue(bool value);
-    // [8] if track last value is enabled, force to send an update after the configured number of cycles (default: -1)
-    void setForceUpdate(int value);
-    void setForceUpdateCycles(int value);
     // [9] if track last value is enabled, force to send an update after the configured number of minutes (default: -1)
     void setForceUpdateMinutes(int value);
     // [10] the value type of this sensor (default: TYPE_INTEGER)
@@ -448,8 +443,6 @@ The following methods are available for all the sensors:
     int getValueInt();
     float getValueFloat();
     char* getValueString();
-    // [15] After how many cycles the sensor will report back its measure (default: 1 cycle)
-    void setReportIntervalCycles(int value);
     // [16] After how many minutes the sensor will report back its measure (default: 1 cycle)
     void setReportIntervalMinutes(int value);
     // process a remote request
