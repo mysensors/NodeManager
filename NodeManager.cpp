@@ -1284,9 +1284,7 @@ void SensorDHT::onLoop() {
   // temperature sensor
   if (_sensor_type == SensorDHT::TEMPERATURE) {
     // read the temperature
-    float temperature = _dht->readTemperature();
-    // convert it
-    temperature = _node_manager->celsiusToFahrenheit(temperature);
+    float temperature = _dht->readTemperature(! _node_manager->getIsMetric(), true);
     #if DEBUG == 1
       Serial.print(F("DHT I="));
       Serial.print(_child_id);
