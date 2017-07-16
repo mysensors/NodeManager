@@ -87,6 +87,7 @@ void Timer::set(int target, int unit) {
   // save the settings
   _target = target;
   _unit = unit;
+  _is_running = false;
   _is_configured = true;
 }
 
@@ -95,13 +96,8 @@ void Timer::update() {
   if (! isRunning()) return;
   if (_node_manager->isSleepingNode()) {
     // this is a sleeping node and millis() is not reliable so calculate how long a sleep cycle would last in seconds
-    int sleep_unit = _node_manager->getSleepUnit();
-    int sleep_time = _node_manager->getSleepTime();
-    if (sleep_unit == MINUTES) sleep_time = sleep_time*60;
-    else if (sleep_unit == HOURS) sleep_time = sleep_time*3600;
-    else if (sleep_unit == DAYS) sleep_time = sleep_time*86400;
     // update elapsed
-    _elapsed += sleep_time;
+    _elapsed += _node_manager->getSleepSeconds();
   } else {
     // use millis() to calculate the elapsed time in seconds
     _elapsed = (long)((millis() - _last_millis)/1000);
@@ -120,6 +116,7 @@ bool Timer::isOver() {
 
 // return true if the timer is running
 bool Timer::isRunning() {
+  if (! isConfigured()) return false;
   return _is_running;
 }
 
@@ -133,7 +130,7 @@ void Timer::restart() {
   if (! isRunning()) return;
   // reset elapsed
   _elapsed = 0;
-  // if using millis(), keep track of the current timestamp
+  // if using millis(), keep track of the current timestamp for calculating the difference
   if (! _node_manager->isSleepingNode()) _last_millis = millis();
 }
 
@@ -284,9 +281,19 @@ char* Sensor::getValueString() {
   return _last_value_string;
 }
 
-// After how many minutes the sensor will report back its measure (default: 1 cycle)
+// After how many minutes the sensor will report back its measure 
 void Sensor::setReportIntervalMinutes(int value) {
   _report_timer->start(value,MINUTES);
+}
+
+// After how many seconds the sensor will report back its measure
+void Sensor::setReportIntervalSeconds(int value) {
+  _report_timer->start(value,SECONDS);
+}
+
+// return true if the report interval has been already configured
+bool Sensor::isReportIntervalConfigured() {
+  return _report_timer->isConfigured();
 }
 
 // listen for interrupts on the given pin so interrupt() will be called when occurring
@@ -439,6 +446,7 @@ void Sensor::process(Request & request) {
       case 14: powerOff(); break;
     #endif
     case 16: setReportIntervalMinutes(request.getValueInt()); break;
+    case 17: setReportIntervalSeconds(request.getValueInt()); break;
     default: return;
   }
   _send(_msg_service.set(function));
@@ -2826,31 +2834,24 @@ int NodeManager::getRetries() {
     _battery_report_with_interrupt = value;
   }
 #endif
-void NodeManager::setSleepMode(int value) {
-  _sleep_mode = value;
-}
-void NodeManager::setMode(int value) {
-  setSleepMode(value);
-}
-int NodeManager::getMode() {
-  return _sleep_mode;
-}
-void NodeManager::setSleepTime(int value) {
+void NodeManager::setSleepSeconds(int value) {
+  // set the status to AWAKE if the time provided is 0, SLEEP otherwise
+  if (value == 0) _status = AWAKE;
+  else _status = SLEEP;
+  // store the time
   _sleep_time = value;
 }
-int NodeManager::getSleepTime() {
+void NodeManager::setSleepMinutes(int value) {
+  setSleepSeconds(value*60);
+}
+void NodeManager::setSleepHours(int value) {
+  setSleepMinutes(value*60);
+}
+void NodeManager::setSleepDays(int value) {
+  setSleepHours(value*24);
+}
+long NodeManager::getSleepSeconds() {
   return _sleep_time;
-}
-void NodeManager::setSleepUnit(int value) {
-  _sleep_unit = value;
-}
-int NodeManager::getSleepUnit() {
-  return _sleep_unit;
-}
-void NodeManager::setSleep(int value1, int value2, int value3) {
-  setMode(value1);
-  setSleepTime(value2);
-  setSleepUnit(value3);
 }
 void NodeManager::setSleepInterruptPin(int value) {
   _sleep_interrupt_pin = value;
@@ -2913,7 +2914,7 @@ float NodeManager::celsiusToFahrenheit(float temperature) {
 
 // return true if sleep or wait is configured and hence this is a sleeping node
 bool NodeManager::isSleepingNode() {
-  if (_sleep_mode == SLEEP || _sleep_mode == WAIT) return true;
+  if (_status == SLEEP) return true;
   return false;
 }
 
@@ -3229,7 +3230,9 @@ void NodeManager::before() {
   // setup individual sensors
   for (int i = 1; i <= MAX_SENSORS; i++) {
     if (_sensors[i] == 0) continue;
-    // call each sensor's setup()
+    // configure reporting interval
+    if (! _sensors[i]->isReportIntervalConfigured()) _sensors[i]->setReportIntervalSeconds(_report_interval_seconds);
+    // call each sensor's before()
     _sensors[i]->before();
   }
   // setup the interrupt pins
@@ -3406,21 +3409,27 @@ void NodeManager::process(Request & request) {
       case 18: setBatteryReportWithInterrupt(request.getValueInt()); break;
     #endif
     case 3:
-      setSleepMode(request.getValueInt());
+      setSleepSeconds(request.getValueInt());
       #if PERSIST == 1
-        _saveConfig(SAVE_SLEEP_MODE);
+        _saveConfig();
       #endif
       break;
     case 4:
-      setSleepTime(request.getValueInt());
+      setSleepMinutes(request.getValueInt());
       #if PERSIST == 1
-        _saveConfig(SAVE_SLEEP_TIME);
+        _saveConfig();
       #endif
       break;
     case 5:
-      setSleepUnit(request.getValueInt());
+      setSleepHours(request.getValueInt());
       #if PERSIST == 1
-        _saveConfig(SAVE_SLEEP_UNIT);
+        _saveConfig();
+      #endif
+      break;
+    case 29:
+      setSleepDays(request.getValueInt());
+      #if PERSIST == 1
+        _saveConfig();
       #endif
       break;
     #ifndef MY_GATEWAY_ESP8266
@@ -3511,7 +3520,7 @@ void NodeManager::wakeup() {
   #if DEBUG == 1
     Serial.println(F("WAKEUP"));
   #endif
-  _sleep_mode = AWAKE;
+  _status = AWAKE;
 }
 
 // return the value stored at the requested index from the EEPROM
@@ -3561,13 +3570,13 @@ void NodeManager::setupInterrupts() {
     pinMode(INTERRUPT_PIN_1,INPUT);
     if (_interrupt_1_initial > -1) digitalWrite(INTERRUPT_PIN_1,_interrupt_1_initial);
     // for non sleeping nodes, we need to handle the interrupt by ourselves  
-    if (_sleep_mode != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, _interrupt_1_mode);
+    if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, _interrupt_1_mode);
   }
   if (_interrupt_2_mode != MODE_NOT_DEFINED) {
     pinMode(INTERRUPT_PIN_2, INPUT);
     if (_interrupt_2_initial > -1) digitalWrite(INTERRUPT_PIN_2,_interrupt_2_initial);
     // for non sleeping nodes, we need to handle the interrupt by ourselves  
-    if (_sleep_mode != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, _interrupt_2_mode);
+    if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, _interrupt_2_mode);
   }
   #if DEBUG == 1
     Serial.print(F("INT P="));
@@ -3588,7 +3597,7 @@ int NodeManager::getLastInterruptPin() {
 
 // set the default interval in minutes all the sensors will report their measures
 void NodeManager::setReportIntervalMinutes(int value) {
-  _report_interval = value*60;
+  _report_interval_seconds = value*60;
 }
 
 // handle an interrupt
@@ -3643,15 +3652,9 @@ void NodeManager::_send(MyMessage & message) {
 
 // wrapper of smart sleep
 void NodeManager::_sleep() {
-  // calculate the seconds to sleep
-  long sleep_sec = _sleep_time;
-  if (_sleep_unit == MINUTES) sleep_sec = sleep_sec * 60;
-  else if (_sleep_unit == HOURS) sleep_sec = sleep_sec * 3600;
-  else if (_sleep_unit == DAYS) sleep_sec = sleep_sec * 43200;
-  long sleep_ms = sleep_sec * 1000;
   #if DEBUG == 1
     Serial.print(F("SLEEP "));
-    Serial.print(sleep_sec);
+    Serial.print(_sleep_time);
     Serial.println(F("s"));
   #endif
   #if SERVICE_MESSAGES == 1
@@ -3664,41 +3667,33 @@ void NodeManager::_sleep() {
   #endif
   // go to sleep
   int interrupt = -1;
-  if (_sleep_mode == WAIT) {
-    // wait for the given interval
-    wait(sleep_ms);
-    // send heartbeat to the controller
-    sendHeartbeat(_ack);
-  }
-  else if (_sleep_mode == SLEEP) {
-    // setup interrupt pins
-    int interrupt_1_pin = _interrupt_1_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_1);
-    int interrupt_2_pin = _interrupt_2_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_2);
-    // enter smart sleep for the requested sleep interval and with the configured interrupts
-    interrupt = sleep(interrupt_1_pin,_interrupt_1_mode,interrupt_2_pin,_interrupt_2_mode,sleep_ms, true);
-    if (interrupt > -1) {
-      // woke up by an interrupt
-      int pin_number = -1;
-      int interrupt_mode = -1;
-      // map the interrupt to the pin
-      if (digitalPinToInterrupt(INTERRUPT_PIN_1) == interrupt) {
-        pin_number = INTERRUPT_PIN_1;
-        interrupt_mode = _interrupt_1_mode;
-      }
-      if (digitalPinToInterrupt(INTERRUPT_PIN_2) == interrupt) {
-        pin_number = INTERRUPT_PIN_2;
-        interrupt_mode = _interrupt_2_mode;
-      }
-      _last_interrupt_pin = pin_number;
-      #if DEBUG == 1
-        Serial.print(F("WAKE P="));
-        Serial.print(pin_number);
-        Serial.print(F(", M="));
-        Serial.println(interrupt_mode);
-      #endif
-      // when waking up from an interrupt on the wakup pin, stop sleeping
-      if (_sleep_interrupt_pin == pin_number) _sleep_mode = AWAKE;
+  // setup interrupt pins
+  int interrupt_1_pin = _interrupt_1_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_1);
+  int interrupt_2_pin = _interrupt_2_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_2);
+  // enter smart sleep for the requested sleep interval and with the configured interrupts
+  interrupt = sleep(interrupt_1_pin,_interrupt_1_mode,interrupt_2_pin,_interrupt_2_mode,_sleep_time*1000, true);
+  if (interrupt > -1) {
+    // woke up by an interrupt
+    int pin_number = -1;
+    int interrupt_mode = -1;
+    // map the interrupt to the pin
+    if (digitalPinToInterrupt(INTERRUPT_PIN_1) == interrupt) {
+      pin_number = INTERRUPT_PIN_1;
+      interrupt_mode = _interrupt_1_mode;
     }
+    if (digitalPinToInterrupt(INTERRUPT_PIN_2) == interrupt) {
+      pin_number = INTERRUPT_PIN_2;
+      interrupt_mode = _interrupt_2_mode;
+    }
+    _last_interrupt_pin = pin_number;
+    #if DEBUG == 1
+      Serial.print(F("WAKE P="));
+      Serial.print(pin_number);
+      Serial.print(F(", M="));
+      Serial.println(interrupt_mode);
+    #endif
+    // when waking up from an interrupt on the wakup pin, stop sleeping
+    if (_sleep_interrupt_pin == pin_number) _status = AWAKE;
   }
   // coming out of sleep
   #if DEBUG == 1
@@ -3743,43 +3738,35 @@ int NodeManager::_getInterruptInitialValue(int mode) {
 // load the configuration stored in the eeprom
 void NodeManager::_loadConfig() {
   if (loadState(EEPROM_SLEEP_SAVED) == 1) {
-    // sleep settings found in the eeprom, restore them
-    _sleep_mode = loadState(EEPROM_SLEEP_MODE);
-    _sleep_time = loadState(EEPROM_SLEEP_TIME_MINOR);
-    int major = loadState(EEPROM_SLEEP_TIME_MAJOR);
-    if (major == 1) _sleep_time =  _sleep_time + 250;
-    else if (major == 2) _sleep_time =  _sleep_time + 250 * 2;
-    else if (major == 3) _sleep_time =  _sleep_time + 250 * 3;
-    _sleep_unit = loadState(EEPROM_SLEEP_UNIT);
+    // load sleep settings
+    int bit_1 = loadState(EEPROM_SLEEP_1);
+    int bit_2 = loadState(EEPROM_SLEEP_2);
+    int bit_3 = loadState(EEPROM_SLEEP_3);
+    _sleep_time = bit_3*255*255 + bit_2*255 + bit_1;
     #if DEBUG == 1
-      Serial.print(F("LOADSLP M="));
-      Serial.print(_sleep_mode);
-      Serial.print(F(" T="));
-      Serial.print(_sleep_time);
-      Serial.print(F(" U="));
-      Serial.println(_sleep_unit);
+      Serial.print(F("LOADSLP T="));
+      Serial.println(_sleep_time);
     #endif
   }
 }
 
 // save the configuration in the eeprom
-void NodeManager::_saveConfig(int what) {
-  if (what == SAVE_SLEEP_MODE) {
-    saveState(EEPROM_SLEEP_SAVED, 1);
-    saveState(EEPROM_SLEEP_MODE, _sleep_mode);
+void NodeManager::_saveConfig() {
+  if (_sleep_time == 0) return;
+  // encode the sleep time in 3 bits
+  int bit_1, bit_2, bit_3 = 0;
+  bit_1 = _sleep_time;
+  if (bit_1 >= 255) {
+    bit_2 = (int)bit_1/255;
+    bit_1 = bit_1 - bit_2*255;
   }
-  else if (what == SAVE_SLEEP_TIME) {
-    // encode sleep time
-    int major = 0;
-    if (_sleep_time > 750) major = 3;
-    else if (_sleep_time > 500) major = 2;
-    else if (_sleep_time > 250) major = 1;
-    int minor = _sleep_time - 250 * major;
-    saveState(EEPROM_SLEEP_SAVED, 1);
-    saveState(EEPROM_SLEEP_TIME_MINOR, minor);
-    saveState(EEPROM_SLEEP_TIME_MAJOR, major);
+  if (bit_2 >= 255) {
+    bit_3 = (int)bit_2/255;
+    bit_2 = bit_2 - bit_3*255;
   }
-  else if (what == SAVE_SLEEP_UNIT) {
-    saveState(EEPROM_SLEEP_UNIT, _sleep_unit);
-  }
+  // save the 3 bits
+  saveState(EEPROM_SLEEP_SAVED,1);
+  saveState(EEPROM_SLEEP_1,bit_1);
+  saveState(EEPROM_SLEEP_2,bit_2);
+  saveState(EEPROM_SLEEP_3,bit_3);
 }

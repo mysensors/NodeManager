@@ -449,6 +449,8 @@ The following methods are available for all the sensors:
     char* getValueString();
     // [16] After how many minutes the sensor will report back its measure (default: 1 cycle)
     void setReportIntervalMinutes(int value);
+    // return true if the report interval has been already configured
+    bool isReportIntervalConfigured();
     // process a remote request
     void process(Request & request);
     // return the pin the interrupt is attached to

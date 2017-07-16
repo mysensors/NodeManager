@@ -13,10 +13,9 @@
    Constants
 */
 
-// define sleep mode
+// define board status
 #define AWAKE 0
 #define SLEEP 1
-#define WAIT 2
 
 // define time unit
 #define SECONDS 0
@@ -38,17 +37,11 @@
 #define INTERRUPT_PIN_1 3
 #define INTERRUPT_PIN_2 2
 
-// define configuration settings that can be saved and loaded from the EEPROM
-#define SAVE_SLEEP_MODE 0
-#define SAVE_SLEEP_TIME 1
-#define SAVE_SLEEP_UNIT 2
-
 // define eeprom addresses
 #define EEPROM_SLEEP_SAVED 0
-#define EEPROM_SLEEP_MODE 1
-#define EEPROM_SLEEP_TIME_MAJOR 2
-#define EEPROM_SLEEP_TIME_MINOR 3
-#define EEPROM_SLEEP_UNIT 4
+#define EEPROM_SLEEP_1 5
+#define EEPROM_SLEEP_2 6
+#define EEPROM_SLEEP_3 7
 #define EEPROM_USER_START 100
 
 // define requests
@@ -510,6 +503,10 @@ class Sensor {
     char* getValueString();
     // [16] After how many minutes the sensor will report back its measure (default: 10 minutes)
     void setReportIntervalMinutes(int value);
+    // [17] After how many minutes the sensor will report back its measure (default: 10 minutes)
+    void setReportIntervalSeconds(int value);
+    // return true if the report interval has been already configured
+    bool isReportIntervalConfigured();
     // process a remote request
     void process(Request & request);
     // return the pin the interrupt is attached to
@@ -1341,18 +1338,15 @@ class NodeManager {
       // [2] Send a battery level report to the controller
       void batteryReport();
     #endif
-    // [3] define the way the node should behave. It can be (0) IDLE (stay awake withtout executing each sensors' loop), (1) SLEEP (go to sleep for the configured interval), (2) WAIT (wait for the configured interval), (3) ALWAYS_ON (stay awake and execute each sensors' loop)
-    void setSleepMode(int value);
-    void setMode(int value);
-    int getMode();
-    // [4] define for how long the board will sleep (default: 0)
-    void setSleepTime(int value);
-    int getSleepTime();
-    // [5] define the unit of SLEEP_TIME. It can be SECONDS, MINUTES, HOURS or DAYS (default: MINUTES)
-    void setSleepUnit(int value);
-    int getSleepUnit();
-    // configure the node's behavior, parameters are mode, time and unit
-    void setSleep(int value1, int value2, int value3);
+    // [3] set the duration (in seconds) of a sleep cycle
+    void setSleepSeconds(int value);
+    long getSleepSeconds();
+    // [4] set the duration (in minutes) of a sleep cycle
+    void setSleepMinutes(int value);
+    // [5] set the duration (in hours) of a sleep cycle
+    void setSleepHours(int value);
+    // [29] set the duration (in days) of a sleep cycle
+    void setSleepDays(int value);
     // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
     void setSleepInterruptPin(int value);
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
@@ -1450,9 +1444,8 @@ class NodeManager {
     #endif
     MyMessage _msg;
     void _send(MyMessage & msg);
-    int _sleep_mode = AWAKE;
-    int _sleep_time = 0;
-    int _sleep_unit = MINUTES;
+    int _status = AWAKE;
+    long _sleep_time = 0;
     int _sleep_interrupt_pin = -1;
     int _sleep_between_send = 0;
     int _retries = 1;
@@ -1473,9 +1466,9 @@ class NodeManager {
     int _getInterruptInitialValue(int mode);
     bool _get_controller_config = true;
     int _is_metric = 1;
-    int _report_interval = 10*60;
+    int _report_interval_seconds = 10*60;
     void _loadConfig();
-    void _saveConfig(int what);
+    void _saveConfig();
 };
 
 #endif
