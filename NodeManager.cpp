@@ -3600,6 +3600,11 @@ void NodeManager::setReportIntervalMinutes(int value) {
   _report_interval_seconds = value*60;
 }
 
+// set the default interval in seconds all the sensors will report their measures
+void NodeManager::setReportIntervalSeconds(int value) {
+  _report_interval_seconds = value;
+}
+
 // handle an interrupt
 void NodeManager::_onInterrupt_1() {
   long now = millis();

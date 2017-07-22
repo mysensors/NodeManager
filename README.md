@@ -232,22 +232,21 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
       // [2] Send a battery level report to the controller
       void batteryReport();
     #endif
-    // [3] define the way the node should behave. It can be (0) IDLE (stay awake withtout executing each sensors' loop), (1) SLEEP (go to sleep for the configured interval), (2) WAIT (wait for the configured interval), (3) ALWAYS_ON (stay awake and execute each sensors' loop)
-    void setSleepMode(int value);
-    void setMode(int value);
-    int getMode();
-    // [4] define for how long the board will sleep (default: 0)
-    void setSleepTime(int value);
-    int getSleepTime();
-    // [5] define the unit of SLEEP_TIME. It can be SECONDS, MINUTES, HOURS or DAYS (default: MINUTES)
-    void setSleepUnit(int value);
-    int getSleepUnit();
-    // configure the node's behavior, parameters are mode, time and unit
-    void setSleep(int value1, int value2, int value3);
+    // [3] set the duration (in seconds) of a sleep cycle
+    void setSleepSeconds(int value);
+    long getSleepSeconds();
+    // [4] set the duration (in minutes) of a sleep cycle
+    void setSleepMinutes(int value);
+    // [5] set the duration (in hours) of a sleep cycle
+    void setSleepHours(int value);
+    // [29] set the duration (in days) of a sleep cycle
+    void setSleepDays(int value);
     // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
     void setSleepInterruptPin(int value);
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
-    void setInterrupt(int pin, int mode, int pull = -1);
+    void setInterrupt(int pin, int mode, int initial = -1);
+    // [28] ignore two consecutive interrupts if happening within this timeframe in milliseconds (default: 100)
+    void setInterruptMinDelta(long value);
     // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
     int getSleepBetweenSend();
@@ -270,7 +269,7 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
       // [24] manually turn the power on
       void powerOn();
       // [25] manually turn the power off
-      void powerOff(); 
+      void powerOff();
     #endif
     // [21] set this to true if you want destination node to send ack back to this node (default: false)
     void setAck(bool value);
@@ -310,8 +309,9 @@ Node Manager comes with a reasonable default configuration. If you want/need to 
     int getLastInterruptPin();
     // set the default interval in minutes all the sensors will report their measures. 
     // If the same function is called on a specific sensor, this will not change the previously set value 
-    // For sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10)
+    // For sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
     void setReportIntervalMinutes(int value);
+    void setReportIntervalSeconds(int value);
 ~~~
 
 For example
@@ -447,8 +447,10 @@ The following methods are available for all the sensors:
     int getValueInt();
     float getValueFloat();
     char* getValueString();
-    // [16] After how many minutes the sensor will report back its measure (default: 1 cycle)
+    // [16] After how many minutes the sensor will report back its measure (default: 10 minutes)
     void setReportIntervalMinutes(int value);
+    // [17] After how many minutes the sensor will report back its measure (default: 10 minutes)
+    void setReportIntervalSeconds(int value);
     // return true if the report interval has been already configured
     bool isReportIntervalConfigured();
     // process a remote request

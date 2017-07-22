@@ -1415,8 +1415,9 @@ class NodeManager {
     int getLastInterruptPin();
     // set the default interval in minutes all the sensors will report their measures. 
     // If the same function is called on a specific sensor, this will not change the previously set value 
-    // For sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10)
+    // For sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
     void setReportIntervalMinutes(int value);
+    void setReportIntervalSeconds(int value);
     // hook into the main sketch functions
     void before();
     void presentation();
