@@ -36,9 +36,16 @@ void before() {
   digitalWrite(4, LOW);
   pinMode(5, OUTPUT);
   digitalWrite(5, HIGH);
-  nodeManager.registerSensor(SENSOR_DHT22,6);
-  nodeManager.setReportIntervalSeconds(20);
-  nodeManager.setBatteryReportMinutes(1);
+    pinMode(7, OUTPUT);
+  digitalWrite(7, LOW);
+  pinMode(8, OUTPUT);
+  digitalWrite(8, HIGH);
+  int s = nodeManager.registerSensor(SENSOR_DHT22,6);
+  nodeManager.registerSensor(SENSOR_MOTION,3);
+  SensorDHT* dh = (SensorDHT*)nodeManager.get(s);
+  nodeManager.setReportIntervalMinutes(2);
+  nodeManager.setBatteryReportMinutes(3);
+  nodeManager.setSleepMinutes(1);
 
 
   /*

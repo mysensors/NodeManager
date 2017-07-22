@@ -3316,10 +3316,15 @@ void NodeManager::loop() {
   for (int i = 1; i <= MAX_SENSORS; i++) {
     // skip not configured sensors
     if (_sensors[i] == 0) continue;
-    // if there was an interrupt for this sensor, call the sensor's interrupt()
-    if (_last_interrupt_pin != -1 && _sensors[i]->getInterruptPin() == _last_interrupt_pin) _sensors[i]->interrupt();
-    // call the sensor's loop()
-    _sensors[i]->loop(empty);
+    // if there was an interrupt for this sensor, call the sensor's interrupt() and loop()
+    if (_last_interrupt_pin != -1 && _sensors[i]->getInterruptPin() == _last_interrupt_pin) {
+      _sensors[i]->interrupt();
+      _sensors[i]->loop(empty);
+    }
+    // if this is just the time to report an updated measure call the sensor's loop() 
+    else if (_last_interrupt_pin == -1) {
+      _sensors[i]->loop(empty);
+    }
   }
   // reset the last interrupt pin
   _last_interrupt_pin = -1;
@@ -3694,7 +3699,7 @@ void NodeManager::_sleep() {
     }
     _last_interrupt_pin = pin_number;
     #if DEBUG == 1
-      Serial.print(F("WAKE P="));
+      Serial.print(F("INT P="));
       Serial.print(pin_number);
       Serial.print(F(", M="));
       Serial.println(interrupt_mode);
