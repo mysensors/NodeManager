@@ -1484,8 +1484,6 @@ SensorDoor::SensorDoor(NodeManager* node_manager, int child_id, int pin): Sensor
  */
 SensorMotion::SensorMotion(NodeManager* node_manager, int child_id, int pin): SensorSwitch(node_manager, child_id,pin) {
   setPresentation(S_MOTION);
-  // capture only when it triggers
-  setMode(RISING);
   // set initial value to LOW
   setInitial(LOW);
 }
