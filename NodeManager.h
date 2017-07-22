@@ -22,7 +22,6 @@
 #define MINUTES 1
 #define HOURS 2
 #define DAYS 3
-#define CYCLES 4
 
 // define on/off
 #define OFF 0
@@ -426,7 +425,6 @@ class Timer {
    private:
     NodeManager* _node_manager;
     int _target = 0;
-    int _unit = 0;
     long _elapsed = 0;
     long _last_millis = 0;
     bool _is_running = false;

@@ -86,7 +86,9 @@ void Timer::set(int target, int unit) {
   _last_millis = 0;
   // save the settings
   _target = target;
-  _unit = unit;
+  if (unit == MINUTES) _target = _target * 60;
+  else if (unit == HOURS) _target = _target * 60 *60;
+  else if (unit == DAYS) _target = _target * 60 * 60 *24;
   _is_running = false;
   _is_configured = true;
 }
@@ -3223,7 +3225,7 @@ void NodeManager::before() {
   #if BATTERY_MANAGER == 1 && !defined(MY_GATEWAY_ESP8266)
     // set analogReference to internal if measuring the battery through a pin
     if (! _battery_internal_vcc && _battery_pin > -1) analogReference(INTERNAL);
-    // if not configured report battery every 60 minutes
+    // if not already configured, report battery level every 60 minutes
     if (! _battery_report_timer.isConfigured()) _battery_report_timer.set(60,MINUTES);
     _battery_report_timer.start();
   #endif

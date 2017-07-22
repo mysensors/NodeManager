@@ -32,7 +32,13 @@ void before() {
   /*
    * Register below your sensors
   */
-
+  pinMode(4, OUTPUT);
+  digitalWrite(4, LOW);
+  pinMode(5, OUTPUT);
+  digitalWrite(5, HIGH);
+  nodeManager.registerSensor(SENSOR_DHT22,6);
+  nodeManager.setReportIntervalSeconds(20);
+  nodeManager.setBatteryReportMinutes(1);
 
 
   /*
