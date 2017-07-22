@@ -679,7 +679,7 @@ void SensorThermistor::onLoop() {
     Serial.print(F(" V="));
     Serial.print(adc);
     Serial.print(F(" T="));
-    Serial.print(temperature);
+    Serial.println(temperature);
   #endif
   // store the value
   _value_float = temperature;
@@ -1412,15 +1412,14 @@ void SensorSwitch::setInitial(int value) {
 
 // what to do during before
 void SensorSwitch::onBefore() {
-  // initialize the value
-  if (_mode == RISING) _value_int = LOW;
-  else if (_mode == FALLING) _value_int = HIGH;
   // set the interrupt pin so it will be called only when waking up from that interrupt
   setInterrupt(_pin,_mode,_initial);
 }
 
 // what to do during setup
 void SensorSwitch::onSetup() {
+  // report immediately
+  _report_timer->stop();
 }
 
 // what to do during loop
@@ -3296,8 +3295,8 @@ void NodeManager::loop() {
   // if sleep time is not set, do nothing
   if (isSleepingNode() &&  _sleep_time == 0) return;
   #if BATTERY_MANAGER == 1
-    // update the timer for battery report
-    if (_battery_report_timer.isRunning()) _battery_report_timer.update();
+    // update the timer for battery report when not waking up from an interrupt
+    if (_battery_report_timer.isRunning() && _last_interrupt_pin == -1) _battery_report_timer.update();
     // if it is time to report the battery level
     if (_battery_report_timer.isOver()) {
       // time to report the battery level again
@@ -3312,20 +3311,20 @@ void NodeManager::loop() {
   #endif
   // run loop for all the registered sensors
   for (int i = 1; i <= MAX_SENSORS; i++) {
-    // skip not configured sensors
+    // skip unconfigured sensors
     if (_sensors[i] == 0) continue;
-    // if there was an interrupt for this sensor, call the sensor's interrupt() and loop()
     if (_last_interrupt_pin != -1 && _sensors[i]->getInterruptPin() == _last_interrupt_pin) {
+      // if there was an interrupt for this sensor, call the sensor's interrupt() and then loop()
       _sensors[i]->interrupt();
       _sensors[i]->loop(empty);
+        // reset the last interrupt pin
+      _last_interrupt_pin = -1;
     }
-    // if this is just the time to report an updated measure call the sensor's loop() 
     else if (_last_interrupt_pin == -1) {
+      // if just at the end of a cycle, call the sensor's loop() 
       _sensors[i]->loop(empty);
     }
   }
-  // reset the last interrupt pin
-  _last_interrupt_pin = -1;
   #if POWER_MANAGER == 1
     // turn off the pin powering all the sensors
     if (_auto_power_pins) powerOff();
