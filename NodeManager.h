@@ -406,22 +406,25 @@ class Timer {
     void start();
     // stop the timer
     void stop();
+    // reset the timer
+    void reset();
+    // reset the timer and start over
+    void restart();
     // set the timer configuration but do not start it
     void set(int target, int unit);
+    void unset();
     // update the timer. To be called at every cycle
     void update();
-    // returns true if the time is over
+    // return true if the time is over
     bool isOver();
     // return true if the timer is running
     bool isRunning();
-    // returns true if the timer has been configured
+    // return true if the timer has been configured
     bool isConfigured();
-    // reset the timer and start over
-    void restart();
+    // return true if this is the first time the timer runs
+    bool isFirstRun();
     // return the current elapsed time
     float getElapsed();
-    // return the configured target
-    int getTarget();
    private:
     NodeManager* _node_manager;
     int _target = 0;
@@ -429,6 +432,7 @@ class Timer {
     long _last_millis = 0;
     bool _is_running = false;
     bool _is_configured = false;
+    bool _first_run = true;
 };
 
 /*

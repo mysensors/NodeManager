@@ -79,11 +79,26 @@ void Timer::stop() {
   _is_running = false;
 }
 
-// setup the timer
-void Timer::set(int target, int unit) {
+// reset the timer
+void Timer::reset() {
   // reset the timer
   _elapsed = 0;
   _last_millis = 0;
+}
+
+// restart the timer
+void Timer::restart() {
+  if (! isRunning()) return;
+  stop();
+  reset();
+  // if using millis(), keep track of the current timestamp for calculating the difference
+  if (! _node_manager->isSleepingNode()) _last_millis = millis();
+  start();
+}
+
+// setup the timer
+void Timer::set(int target, int unit) {
+  reset();
   // save the settings
   _target = target;
   if (unit == MINUTES) _target = _target * 60;
@@ -93,17 +108,23 @@ void Timer::set(int target, int unit) {
   _is_configured = true;
 }
 
+// unset the timer
+void Timer::unset() {
+  stop();
+  _is_configured = true;
+}
+
 // update the timer at every cycle
 void Timer::update() {
   if (! isRunning()) return;
   if (_node_manager->isSleepingNode()) {
-    // this is a sleeping node and millis() is not reliable so calculate how long a sleep cycle would last in seconds
-    // update elapsed
+    // millis() is not reliable while sleeping so calculate how long a sleep cycle would last in seconds and update the elapsed time
     _elapsed += _node_manager->getSleepSeconds();
   } else {
     // use millis() to calculate the elapsed time in seconds
     _elapsed = (long)((millis() - _last_millis)/1000);
   }
+  _first_run = false;
 }
 
 // return true if the time is over
@@ -127,13 +148,9 @@ bool Timer::isConfigured() {
   return _is_configured;
 }
 
-// restart the timer
-void Timer::restart() {
-  if (! isRunning()) return;
-  // reset elapsed
-  _elapsed = 0;
-  // if using millis(), keep track of the current timestamp for calculating the difference
-  if (! _node_manager->isSleepingNode()) _last_millis = millis();
+// return true if this is the first time the timer runs
+bool Timer::isFirstRun() {
+  return _first_run;
 }
 
 // return elapsed seconds so far
@@ -336,10 +353,12 @@ void Sensor::loop(const MyMessage & message) {
   // update the timers if within a loop cycle
   if (! _isReceive(message)) {
     if (_report_timer->isRunning()) {
+      // store the elapsed time before updating it
+      bool first_run = _report_timer->isFirstRun();
       // update the timer
       _report_timer->update();
-      // if it is not the time yet to report a new measure, just return
-      if (! _report_timer->isOver()) return;
+      // if it is not the time yet to report a new measure, just return (unless the first time)
+      if (! _report_timer->isOver() && ! first_run) return;
     }
     if (_force_update_timer->isRunning()) _force_update_timer->update();
   }
@@ -1423,7 +1442,7 @@ void SensorSwitch::onBefore() {
 // what to do during setup
 void SensorSwitch::onSetup() {
   // report immediately
-  _report_timer->stop();
+  _report_timer->unset();
 }
 
 // what to do during loop
@@ -3296,8 +3315,6 @@ void NodeManager::setup() {
 // run the main function for all the register sensors
 void NodeManager::loop() {
   MyMessage empty;
-  // if sleep time is not set, do nothing
-  if (isSleepingNode() &&  _sleep_time == 0) return;
   #if BATTERY_MANAGER == 1
     // update the timer for battery report when not waking up from an interrupt
     if (_battery_report_timer.isRunning() && _last_interrupt_pin == -1) _battery_report_timer.update();
