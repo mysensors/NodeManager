@@ -478,8 +478,10 @@ class Sensor {
     void setSamplesInterval(int value);
     // [7] if true will report the measure only if different than the previous one (default: false)
     void setTrackLastValue(bool value);
-    // [9] if track last value is enabled, force to send an update after the configured number of minutes (default: -1)
+    // [9] if track last value is enabled, force to send an update after the configured number of minutes
     void setForceUpdateMinutes(int value);
+    // [19] if track last value is enabled, force to send an update after the configured number of hours
+    void setForceUpdateHours(int value);
     // [10] the value type of this sensor (default: TYPE_INTEGER)
     void setValueType(int value);
     int getValueType();

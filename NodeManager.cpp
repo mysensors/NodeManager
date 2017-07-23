@@ -247,6 +247,9 @@ void Sensor::setTrackLastValue(bool value) {
 void Sensor::setForceUpdateMinutes(int value) {
   _force_update_timer->start(value,MINUTES);
 }
+void Sensor::setForceUpdateHours(int value) {
+  _force_update_timer->start(value,HOURS);
+}
 void Sensor::setValueType(int value) {
   _value_type = value;
 }
@@ -449,6 +452,7 @@ void Sensor::process(Request & request) {
     #endif
     case 16: setReportIntervalMinutes(request.getValueInt()); break;
     case 17: setReportIntervalSeconds(request.getValueInt()); break;
+    case 18: setForceUpdateHours(request.getValueInt()); break;
     default: return;
   }
   _send(_msg_service.set(function));
