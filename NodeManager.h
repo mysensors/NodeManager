@@ -13,18 +13,15 @@
    Constants
 */
 
-// define sleep mode
-#define IDLE 0
+// define board status
+#define AWAKE 0
 #define SLEEP 1
-#define WAIT 2
-#define ALWAYS_ON 3
 
 // define time unit
 #define SECONDS 0
 #define MINUTES 1
 #define HOURS 2
 #define DAYS 3
-#define CYCLES 4
 
 // define on/off
 #define OFF 0
@@ -39,17 +36,11 @@
 #define INTERRUPT_PIN_1 3
 #define INTERRUPT_PIN_2 2
 
-// define configuration settings that can be saved and loaded from the EEPROM
-#define SAVE_SLEEP_MODE 0
-#define SAVE_SLEEP_TIME 1
-#define SAVE_SLEEP_UNIT 2
-
 // define eeprom addresses
 #define EEPROM_SLEEP_SAVED 0
-#define EEPROM_SLEEP_MODE 1
-#define EEPROM_SLEEP_TIME_MAJOR 2
-#define EEPROM_SLEEP_TIME_MINOR 3
-#define EEPROM_SLEEP_UNIT 4
+#define EEPROM_SLEEP_1 5
+#define EEPROM_SLEEP_2 6
+#define EEPROM_SLEEP_3 7
 #define EEPROM_USER_START 100
 
 // define requests
@@ -410,39 +401,38 @@ class PowerManager {
 class Timer {
   public:
     Timer(NodeManager* node_manager);
-    // start the timer which will be over when interval passes by. Unit can be either CYCLES or MINUTES
-    void start(long target, int unit);
+    // start the timer which will be over when the configured target passes by
+    void start(int target, int unit);
     void start();
     // stop the timer
     void stop();
+    // reset the timer
+    void reset();
+    // reset the timer and start over
+    void restart();
     // set the timer configuration but do not start it
-    void set(long target, int unit);
+    void set(int target, int unit);
+    void unset();
     // update the timer. To be called at every cycle
     void update();
-    // returns true if the time is over
+    // return true if the time is over
     bool isOver();
     // return true if the timer is running
     bool isRunning();
-    // returns true if the timer has been configured
+    // return true if the timer has been configured
     bool isConfigured();
-    // reset the timer and start over
-    void restart();
+    // return true if this is the first time the timer runs
+    bool isFirstRun();
     // return the current elapsed time
     float getElapsed();
-    // return the configured unit
-    int getUnit();
-    // return the configured target
-    int getTarget();
    private:
     NodeManager* _node_manager;
-    long _target = 0;
-    int _unit = 0;
-    float _elapsed = 0;
-    bool _use_millis = false;
+    int _target = 0;
+    long _elapsed = 0;
     long _last_millis = 0;
-    float _sleep_time = 0;
     bool _is_running = false;
     bool _is_configured = false;
+    bool _first_run = true;
 };
 
 /*
@@ -492,11 +482,10 @@ class Sensor {
     void setSamplesInterval(int value);
     // [7] if true will report the measure only if different than the previous one (default: false)
     void setTrackLastValue(bool value);
-    // [8] if track last value is enabled, force to send an update after the configured number of cycles (default: -1)
-    void setForceUpdate(int value);
-    void setForceUpdateCycles(int value);
-    // [9] if track last value is enabled, force to send an update after the configured number of minutes (default: -1)
+    // [9] if track last value is enabled, force to send an update after the configured number of minutes
     void setForceUpdateMinutes(int value);
+    // [19] if track last value is enabled, force to send an update after the configured number of hours
+    void setForceUpdateHours(int value);
     // [10] the value type of this sensor (default: TYPE_INTEGER)
     void setValueType(int value);
     int getValueType();
@@ -516,10 +505,12 @@ class Sensor {
     int getValueInt();
     float getValueFloat();
     char* getValueString();
-    // [15] After how many cycles the sensor will report back its measure (default: 1 cycle)
-    void setReportIntervalCycles(int value);
-    // [16] After how many minutes the sensor will report back its measure (default: 1 cycle)
+    // [16] After how many minutes the sensor will report back its measure (default: 10 minutes)
     void setReportIntervalMinutes(int value);
+    // [17] After how many minutes the sensor will report back its measure (default: 10 minutes)
+    void setReportIntervalSeconds(int value);
+    // return true if the report interval has been already configured
+    bool isReportIntervalConfigured();
     // process a remote request
     void process(Request & request);
     // return the pin the interrupt is attached to
@@ -1338,8 +1329,6 @@ class NodeManager {
       void setBatteryMin(float value);
       // [12] the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
       void setBatteryMax(float value);
-      // [13] after how many sleeping cycles report the battery level to the controller. When reset the battery is always reported (default: -)
-      void setBatteryReportCycles(int value);
       // [14] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60)
       void setBatteryReportMinutes(int value);
       // [15] if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
@@ -1353,18 +1342,15 @@ class NodeManager {
       // [2] Send a battery level report to the controller
       void batteryReport();
     #endif
-    // [3] define the way the node should behave. It can be (0) IDLE (stay awake withtout executing each sensors' loop), (1) SLEEP (go to sleep for the configured interval), (2) WAIT (wait for the configured interval), (3) ALWAYS_ON (stay awake and execute each sensors' loop)
-    void setSleepMode(int value);
-    void setMode(int value);
-    int getMode();
-    // [4] define for how long the board will sleep (default: 0)
-    void setSleepTime(int value);
-    int getSleepTime();
-    // [5] define the unit of SLEEP_TIME. It can be SECONDS, MINUTES, HOURS or DAYS (default: MINUTES)
-    void setSleepUnit(int value);
-    int getSleepUnit();
-    // configure the node's behavior, parameters are mode, time and unit
-    void setSleep(int value1, int value2, int value3);
+    // [3] set the duration (in seconds) of a sleep cycle
+    void setSleepSeconds(int value);
+    long getSleepSeconds();
+    // [4] set the duration (in minutes) of a sleep cycle
+    void setSleepMinutes(int value);
+    // [5] set the duration (in hours) of a sleep cycle
+    void setSleepHours(int value);
+    // [29] set the duration (in days) of a sleep cycle
+    void setSleepDays(int value);
     // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
     void setSleepInterruptPin(int value);
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
@@ -1431,6 +1417,11 @@ class NodeManager {
     void setupInterrupts();
     // return the pin from which the last interrupt came
     int getLastInterruptPin();
+    // set the default interval in minutes all the sensors will report their measures. 
+    // If the same function is called on a specific sensor, this will not change the previously set value 
+    // For sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
+    void setReportIntervalMinutes(int value);
+    void setReportIntervalSeconds(int value);
     // hook into the main sketch functions
     void before();
     void presentation();
@@ -1458,9 +1449,8 @@ class NodeManager {
     #endif
     MyMessage _msg;
     void _send(MyMessage & msg);
-    int _sleep_mode = IDLE;
-    int _sleep_time = 0;
-    int _sleep_unit = MINUTES;
+    int _status = AWAKE;
+    long _sleep_time = 0;
     int _sleep_interrupt_pin = -1;
     int _sleep_between_send = 0;
     int _retries = 1;
@@ -1481,8 +1471,9 @@ class NodeManager {
     int _getInterruptInitialValue(int mode);
     bool _get_controller_config = true;
     int _is_metric = 1;
+    int _report_interval_seconds = 10*60;
     void _loadConfig();
-    void _saveConfig(int what);
+    void _saveConfig();
 };
 
 #endif
