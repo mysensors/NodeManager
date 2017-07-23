@@ -1273,7 +1273,7 @@ void SensorDHT::onBefore() {
 // what to do during setup
 void SensorDHT::onSetup() {
   // initialize the dht library
-  _dht->setup(_pin,DHT::AM2302);
+  _dht->setup(_pin);
 }
 
 // what to do during loop
