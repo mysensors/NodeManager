@@ -1268,20 +1268,23 @@ SensorDHT::SensorDHT(NodeManager* node_manager, int child_id, int pin, DHT* dht,
 
 // what to do during before
 void SensorDHT::onBefore() {
-    // initialize the dht library
-    _dht->begin();
 }
 
 // what to do during setup
 void SensorDHT::onSetup() {
+  // initialize the dht library
+  _dht->setup(_pin,DHT::AM2302);
 }
 
 // what to do during loop
 void SensorDHT::onLoop() {
+  wait(_dht->getMinimumSamplingPeriod());
+  _dht->readSensor(true);
   // temperature sensor
   if (_sensor_type == SensorDHT::TEMPERATURE) {
     // read the temperature
-    float temperature = _dht->readTemperature(! _node_manager->getIsMetric(), true);
+    float temperature = _dht->getTemperature();
+    if (! _node_manager->getIsMetric()) temperature = _dht->toFahrenheit(temperature);
     #if DEBUG == 1
       Serial.print(F("DHT I="));
       Serial.print(_child_id);
@@ -1294,8 +1297,7 @@ void SensorDHT::onLoop() {
   // humidity sensor
   else if (_sensor_type == SensorDHT::HUMIDITY) {
     // read humidity
-    float humidity = _dht->readHumidity();
-    if (isnan(humidity)) return;
+    float humidity = _dht->getHumidity();
     #if DEBUG == 1
       Serial.print(F("DHT I="));
       Serial.print(_child_id);
@@ -2965,10 +2967,10 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   #if MODULE_DHT == 1
     else if (sensor_type == SENSOR_DHT11 || sensor_type == SENSOR_DHT22 || sensor_type == SENSOR_DHT21) {
       int dht_type;
-      if (sensor_type == SENSOR_DHT11) dht_type = DHT11;
-      else if (sensor_type == SENSOR_DHT21) dht_type = DHT21;
-      else if (sensor_type == SENSOR_DHT22) dht_type = DHT22;
-      DHT* dht = new DHT(pin,dht_type);
+      if (sensor_type == SENSOR_DHT11) dht_type = SensorDHT::DHT11;
+//      else if (sensor_type == SENSOR_DHT21) dht_type = DHT::DHT21;
+      else if (sensor_type == SENSOR_DHT22) dht_type = SensorDHT::DHT22;
+      DHT* dht = new DHT();
       // register temperature sensor
       registerSensor(new SensorDHT(this,child_id,pin,dht,SensorDHT::TEMPERATURE,dht_type));
       // register humidity sensor

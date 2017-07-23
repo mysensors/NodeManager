@@ -825,9 +825,11 @@ class SensorDHT: public Sensor {
     // constants
     const static int TEMPERATURE = 0;
     const static int HUMIDITY = 1;
+    const static int DHT11 = 0;
+    const static int DHT22 = 1;
   protected:
     DHT* _dht;
-    int _dht_type = DHT11;
+    int _dht_type = DHT::DHT11;
     float _offset = 0;
     int _sensor_type = 0;
 };
