@@ -16,6 +16,7 @@
 #define MY_BAUD_RATE 9600
 //#define MY_DEBUG
 //#define MY_NODE_ID 100
+//#define MY_SMART_SLEEP_WAIT_DURATION_MS 500
 
 // NRF24 radio settings
 #define MY_RADIO_NRF24
@@ -43,6 +44,18 @@
 //#define MY_RS485_DE_PIN 2
 //#define MY_RS485_MAX_MESSAGE_LENGTH 40
 //#define MY_RS485_HWSERIAL Serial1
+
+// Message signing settings
+//#define MY_SIGNING_SOFT
+//#define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
+//#define MY_SIGNING_REQUEST_SIGNATURES
+//#define MY_SIGNING_ATSHA204
+
+// OTA Firmware update settings
+//#define MY_OTA_FIRMWARE_FEATURE
+//#define OTA_WAIT_PERIOD 300
+//#define FIRMWARE_MAX_REQUESTS 2
+//#define MY_OTA_RETRY 2
 
 /**********************************
  * MySensors gateway configuration
