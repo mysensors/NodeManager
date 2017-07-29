@@ -114,7 +114,7 @@
 #ifndef MODULE_DIGITAL_OUTPUT
   #define MODULE_DIGITAL_OUTPUT 0
 #endif
-// Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22, SENSOR_DHT21
+// Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
 #ifndef MODULE_DHT
   #define MODULE_DHT 0
 #endif
@@ -221,7 +221,6 @@ enum supported_sensors {
     // DHT11/DHT22 sensors, return temperature/humidity based on the attached DHT sensor
     SENSOR_DHT11,
     SENSOR_DHT22,
-    SENSOR_DHT21,
   #endif
   #if MODULE_SHT21 == 1
     // SHT21 sensor, return temperature/humidity based on the attached SHT21 sensor
@@ -827,7 +826,7 @@ class SensorDHT: public Sensor {
     const static int HUMIDITY = 1;
   protected:
     DHT* _dht;
-    int _dht_type = DHT11;
+    int _dht_type;
     float _offset = 0;
     int _sensor_type = 0;
 };
