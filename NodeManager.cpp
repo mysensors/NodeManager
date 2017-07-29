@@ -3486,6 +3486,7 @@ void NodeManager::process(Request & request) {
     case 28: setInterruptMinDelta(request.getValueInt()); break;
     case 30: setSleepOrWait(request.getValueInt()); break;
     case 31: setRebootPin(request.getValueInt()); break;
+    case 32: setADCOff(); break;
     default: return; 
   }
   _send(_msg.set(function));
@@ -3653,6 +3654,14 @@ void NodeManager::setSleepOrWait(bool value) {
 // set which pin is connected to RST of the board to reboot the board when requested. If not set the software reboot is used instead (default: -1)
 void NodeManager::setRebootPin(int value) {
   _reboot_pin = value;
+}
+
+// turn the ADC off so to save 0.2 mA
+void NodeManager::setADCOff() {
+  // Disable the ADC by setting the ADEN bit (bit 7) to zero
+  ADCSRA = ADCSRA & B01111111;
+  // Disable the analog comparator by setting the ACD bit (bit 7) to one
+  ACSR = B10000000;
 }
 
 // sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 

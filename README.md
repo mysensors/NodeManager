@@ -340,10 +340,12 @@ The next step is to configure NodeManager with settings which will instruct how 
     void setReportIntervalSeconds(int value);
     // [30] if set and when the board is battery powered, sleep() is always called instead of wait() (default: true)
     void setSleepOrWait(bool value);
-    // [31] set which pin is connected to RST of the board to reboot the board when requested. If not set the software reboot is used instead (default: -1)
-    void setRebootPin(int value);
     // sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 
     void sleepOrWait(long value);
+    // [31] set which pin is connected to RST of the board to reboot the board when requested. If not set the software reboot is used instead (default: -1)
+    void setRebootPin(int value);
+    // [32] turn the ADC off so to save 0.2 mA
+    void setADCOff();
 ~~~
 
 ### Set reporting intervals and sleeping cycles
