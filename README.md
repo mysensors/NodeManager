@@ -1364,6 +1364,7 @@ v1.6:
 * Added support for PT100 high temperature sensor
 * Added support for MH-Z19 CO2 sensor
 * Added buil-in rain and soil moisture analog sensors
+* Added support for generic dimmer sensor (PWM output)
 * SensorRainGauge now supports sleep mode
 * SensorSwitch now supports awake mode
 * SensorLatchingRealy now handles automatically both on and off commands
