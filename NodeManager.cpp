@@ -3220,6 +3220,15 @@ void NodeManager::before() {
     Serial.print(F("NodeManager v"));
     Serial.println(VERSION);
   #endif
+  // setup the reboot pin if needed
+  if (_reboot_pin > -1) {
+    #if DEBUG == 1
+      Serial.print("REB P=");
+      Serial.println(_reboot_pin);
+    #endif
+    pinMode(_reboot_pin, OUTPUT);
+    digitalWrite(_reboot_pin, HIGH);
+  }
   // print out MySensors' library capabilities
   #if DEBUG == 1
     Serial.print(F("LIB R="));
@@ -3476,6 +3485,7 @@ void NodeManager::process(Request & request) {
     case 27: saveToMemory(0,request.getValueInt()); break;
     case 28: setInterruptMinDelta(request.getValueInt()); break;
     case 30: setSleepOrWait(request.getValueInt()); break;
+    case 31: setRebootPin(request.getValueInt()); break;
     default: return; 
   }
   _send(_msg.set(function));
@@ -3519,12 +3529,17 @@ void NodeManager::reboot() {
   #if DEBUG == 1
     Serial.println(F("REBOOT"));
   #endif
-  // Software reboot with watchdog timer. Enter Watchdog Configuration mode:
-  WDTCSR |= (1<<WDCE) | (1<<WDE);
-  // Reset enable
-  WDTCSR= (1<<WDE);
-  // Infinite loop until watchdog reset after 16 ms
-  while(true){}
+  if (_reboot_pin > -1) {
+    // reboot the board through the reboot pin which is connected to RST by setting it to low
+    digitalWrite(_reboot_pin, LOW);
+  } else {
+    // Software reboot with watchdog timer. Enter Watchdog Configuration mode:
+    WDTCSR |= (1<<WDCE) | (1<<WDE);
+    // Reset enable
+    WDTCSR= (1<<WDE);
+    // Infinite loop until watchdog reset after 16 ms
+    while(true){}
+  }
 }
 
 // send NodeManager's the version back to the controller
@@ -3633,6 +3648,11 @@ void NodeManager::setReportIntervalSeconds(int value) {
 // if set and when the board is battery powered, sleep() is always called instead of wait()
 void NodeManager::setSleepOrWait(bool value) {
   _sleep_or_wait = value;
+}
+
+// set which pin is connected to RST of the board to reboot the board when requested. If not set the software reboot is used instead (default: -1)
+void NodeManager::setRebootPin(int value) {
+  _reboot_pin = value;
 }
 
 // sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 

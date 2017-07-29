@@ -56,23 +56,46 @@ Since NodeManager has to communicate with the MySensors gateway on your behalf, 
 #define MY_BAUD_RATE 9600
 //#define MY_DEBUG
 //#define MY_NODE_ID 100
+//#define MY_SMART_SLEEP_WAIT_DURATION_MS 500
 
 // NRF24 radio settings
 #define MY_RADIO_NRF24
 //#define MY_RF24_ENABLE_ENCRYPTION
 //#define MY_RF24_CHANNEL 76
 //#define MY_RF24_PA_LEVEL RF24_PA_HIGH
+//#define MY_DEBUG_VERBOSE_RF24
+//#define MY_RF24_DATARATE RF24_250KBPS
 
 // RFM69 radio settings
 //#define MY_RADIO_RFM69
 //#define MY_RFM69_FREQUENCY RF69_868MHZ
 //#define MY_IS_RFM69HW
+//#define MY_DEBUG_VERBOSE_RFM69
 //#define MY_RFM69_NEW_DRIVER
 //#define MY_RFM69_ENABLE_ENCRYPTION
 //#define MY_RFM69_NETWORKID 100
 //#define MY_RF69_IRQ_PIN D1
 //#define MY_RF69_IRQ_NUM MY_RF69_IRQ_PIN
 //#define MY_RF69_SPI_CS D2
+
+// RS485 serial transport settings
+//#define MY_RS485
+//#define MY_RS485_BAUD_RATE 9600
+//#define MY_RS485_DE_PIN 2
+//#define MY_RS485_MAX_MESSAGE_LENGTH 40
+//#define MY_RS485_HWSERIAL Serial1
+
+// Message signing settings
+//#define MY_SIGNING_SOFT
+//#define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
+//#define MY_SIGNING_REQUEST_SIGNATURES
+//#define MY_SIGNING_ATSHA204
+
+// OTA Firmware update settings
+//#define MY_OTA_FIRMWARE_FEATURE
+//#define OTA_WAIT_PERIOD 300
+//#define FIRMWARE_MAX_REQUESTS 2
+//#define MY_OTA_RETRY 2
 
 /**********************************
  * MySensors gateway configuration
@@ -88,8 +111,8 @@ Since NodeManager has to communicate with the MySensors gateway on your behalf, 
 
 // ESP8266 gateway settings
 //#define MY_GATEWAY_ESP8266
-//#define MY_ESP8266_SSID "MySSID"
-//#define MY_ESP8266_PASSWORD "MyVerySecretPassword"
+//#define MY_ESP8266_SSID ""
+//#define MY_ESP8266_PASSWORD ""
 
 // Gateway networking settings
 //#define MY_IP_ADDRESS 192,168,178,87
@@ -317,6 +340,8 @@ The next step is to configure NodeManager with settings which will instruct how 
     void setReportIntervalSeconds(int value);
     // [30] if set and when the board is battery powered, sleep() is always called instead of wait() (default: true)
     void setSleepOrWait(bool value);
+    // [31] set which pin is connected to RST of the board to reboot the board when requested. If not set the software reboot is used instead (default: -1)
+    void setRebootPin(int value);
     // sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 
     void sleepOrWait(long value);
 ~~~

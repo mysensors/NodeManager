@@ -1433,6 +1433,8 @@ class NodeManager {
     void setSleepOrWait(bool value);
     // sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 
     void sleepOrWait(long value);
+    // [31] set which pin is connected to RST of the board to reboot the board when requested. If not set the software reboot is used instead (default: -1)
+    void setRebootPin(int value);
     // hook into the main sketch functions
     void before();
     void presentation();
@@ -1484,6 +1486,7 @@ class NodeManager {
     int _is_metric = 1;
     int _report_interval_seconds = 10*60;
     bool _sleep_or_wait = true;
+    int _reboot_pin = -1;
     void _loadConfig();
     void _saveConfig();
 };
