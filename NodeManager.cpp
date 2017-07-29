@@ -1273,7 +1273,7 @@ void SensorDHT::onBefore() {
 // what to do during setup
 void SensorDHT::onSetup() {
   // initialize the dht library
-  _dht->setup(_pin);
+  _dht->setup(_pin,DHT::AUTO_DETECT);
 }
 
 // what to do during loop
@@ -2965,10 +2965,9 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     else if (sensor_type == SENSOR_LATCHING_RELAY) return registerSensor(new SensorLatchingRelay(this,child_id, pin));
   #endif
   #if MODULE_DHT == 1
-    else if (sensor_type == SENSOR_DHT11 || sensor_type == SENSOR_DHT22 || sensor_type == SENSOR_DHT21) {
+    else if (sensor_type == SENSOR_DHT11 || sensor_type == SENSOR_DHT22) {
       int dht_type;
       if (sensor_type == SENSOR_DHT11) dht_type = SensorDHT::DHT11;
-//      else if (sensor_type == SENSOR_DHT21) dht_type = DHT::DHT21;
       else if (sensor_type == SENSOR_DHT22) dht_type = SensorDHT::DHT22;
       DHT* dht = new DHT();
       // register temperature sensor
