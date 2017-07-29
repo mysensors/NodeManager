@@ -1,3 +1,4 @@
+
 /*
 NodeManager is intended to take care on your behalf of all those common tasks a MySensors node has to accomplish, speeding up the development cycle of your projects.
 NodeManager includes the following main components:
@@ -33,7 +34,7 @@ void before() {
    * Register below your sensors
   */
 
-
+nodeManager.registerSensor(SENSOR_DIMMER,5);
 
 
   /*

@@ -2542,6 +2542,10 @@ void SensorMHZ19::onProcess(Request & request) {
   _send(_msg_service.set(function));
 }
 
+// what to do when receiving an interrupt
+void SensorMHZ19::onInterrupt() {
+}
+
 #endif
 
 /*
@@ -2619,6 +2623,10 @@ void SensorAM2320::onReceive(const MyMessage & message) {
 
 // what to do when receiving a remote message
 void SensorAM2320::onProcess(Request & request) {
+}
+
+// what to do when receiving an interrupt
+void SensorAM2320::onInterrupt() {
 }
 #endif
 
@@ -2750,6 +2758,10 @@ void SensorTSL2561::onProcess(Request & request) {
   }
   _send(_msg_service.set(function));
 }
+
+// what to do when receiving an interrupt
+void SensorTSL2561::onInterrupt() {
+}
 #endif
 
 /*
@@ -2809,6 +2821,10 @@ void SensorPT100::onProcess(Request & request) {
   }
   _send(_msg_service.set(function));
 }
+
+// what to do when receiving an interrupt
+void SensorPT100::onInterrupt() {
+}
 #endif
 
 /*
@@ -2828,7 +2844,7 @@ void SensorDimmer::setEasing(int value) {
   _easing = value;
 }
 void SensorDimmer::setDuration(int value) {
-  _duration = value;
+  _duration = value*1000;
 }
 
 // what to do during before
@@ -2871,11 +2887,18 @@ void SensorDimmer::onProcess(Request & request) {
   _send(_msg_service.set(function));
 }
 
+// what to do when receiving an interrupt
+void SensorDimmer::onInterrupt() {
+}
+
 // fade to the provided value
 void SensorDimmer::fadeTo(int value) {
-  for (int current = 0; current < _duration; current++) {
-    analogWrite(_pin,_getEasing(current,_percentage,value,_duration));
-    wait(15);
+  int step_duration = 100;
+  int steps = _duration / step_duration;
+  for (int current_step = 0; current_step < steps; current_step++) {
+    int value_to_write = _getEasing(current_step,_percentage,value,steps);
+    analogWrite(_pin,value_to_write);
+    wait(step_duration);
   }
   _percentage = value;
 }
@@ -3227,6 +3250,12 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     else if (sensor_type == SENSOR_PT100) {   
       // register temperature sensor
       return registerSensor(new SensorPT100(this,child_id,pin));
+    }
+  #endif
+   #if MODULE_DIMMER == 1 
+    else if (sensor_type == SENSOR_DIMMER) {
+      // register the dimmer sensor
+      return registerSensor(new SensorDimmer(this,child_id,pin));
     }
   #endif
   else {

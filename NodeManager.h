@@ -1233,13 +1233,14 @@ class SensorMHZ19: public Sensor {
     SensorMHZ19(NodeManager* node_manager, int child_id, int pin);
     // set the pins for RX and TX of the SoftwareSerial (default: Rx=6, Tx=7)
     void setRxTx(int rxpin, int txpin);
+    int readCO2();
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
-    int readCO2();
+    void onInterrupt();
   protected:
     SoftwareSerial* _ser;
     int _tx_pin = 6;
@@ -1260,6 +1261,7 @@ class SensorAM2320: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
     // constants
     const static int TEMPERATURE = 0;
     const static int HUMIDITY = 1;
@@ -1290,6 +1292,7 @@ class SensorTSL2561: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
     // constants
     const static int ADDR_FLOAT = 0;
     const static int ADDR_LOW = 1;
@@ -1327,6 +1330,7 @@ class SensorPT100: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     DFRobotHighTemperature* _PT100;
     float _voltageRef = 3.3;
@@ -1357,10 +1361,11 @@ class SensorDimmer: public Sensor {
     void onLoop();
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
+    void onInterrupt();
   protected:
     int _percentage = 0;
     int _easing = EASE_LINEAR;
-    int _duration = 1;
+    int _duration = 1000;
     float _getEasing(float t, float b, float c, float d);
 };
 #endif
