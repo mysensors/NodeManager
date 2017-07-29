@@ -1346,8 +1346,10 @@ class SensorDimmer: public Sensor {
     SensorDimmer(NodeManager* node_manager, int child_id, int pin);
     // [101] set the effect to use for a smooth transition (default: EASE_LINEAR)
     void setEasing(int value);
-    // [102] set the duration of the transition in seconds (default: 1)
+    // [102] the duration of entire the transition in seconds (default: 1)
     void setDuration(int value);
+    // [103] the duration of a single step of the transition in milliseconds (default: 100)
+    void setStepDuration(int value);
     void fadeTo(int value);
     enum easing {
       EASE_LINEAR,
@@ -1366,6 +1368,7 @@ class SensorDimmer: public Sensor {
     int _percentage = 0;
     int _easing = EASE_LINEAR;
     int _duration = 1000;
+    int _step_duration = 100;
     float _getEasing(float t, float b, float c, float d);
 };
 #endif

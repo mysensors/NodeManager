@@ -2796,7 +2796,6 @@ void SensorPT100::onSetup() {
 void SensorPT100::onLoop() {
   // read the PT100 sensor
   int temperature = _PT100->readTemperature(_pin);  
-  
   #if DEBUG == 1
     Serial.print(F("PT100 I="));
     Serial.print(_child_id);
@@ -2846,6 +2845,9 @@ void SensorDimmer::setEasing(int value) {
 void SensorDimmer::setDuration(int value) {
   _duration = value*1000;
 }
+void SensorDimmer::setStepDuration(int value) {
+  _duration = value;
+}
 
 // what to do during before
 void SensorDimmer::onBefore() {
@@ -2892,15 +2894,27 @@ void SensorDimmer::onInterrupt() {
 }
 
 // fade to the provided value
-void SensorDimmer::fadeTo(int value) {
-  int step_duration = 100;
-  int steps = _duration / step_duration;
-  for (int current_step = 0; current_step < steps; current_step++) {
-    int value_to_write = _getEasing(current_step,_percentage,value,steps);
+void SensorDimmer::fadeTo(int target_percentage) {
+  #if DEBUG == 1
+    Serial.print(F("DIM I="));
+    Serial.print(_child_id);
+    Serial.print(F(" V="));
+    Serial.println(target_percentage);
+  #endif
+  // count how many steps we need to do
+  int steps = _duration / _step_duration;
+  // for each step
+  for (int current_step = 1; current_step <= steps; current_step++) {
+    // calculate the delta between the target value and the current
+    int delta = target_percentage - _percentage;
+    // calculate the smooth transition and adjust it in the 0-255 range
+    int value_to_write = (int)(_getEasing(current_step,_percentage,delta,steps) / 100. * 255);
+    // write to the PWM output
     analogWrite(_pin,value_to_write);
-    wait(step_duration);
+    // wait at the end of this step
+    wait(_step_duration);
   }
-  _percentage = value;
+  _percentage = target_percentage;
 }
 
 // for smooth transitions. t: current time, b: beginning value, c: change in value, d: duration

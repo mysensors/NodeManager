@@ -34,7 +34,10 @@ void before() {
    * Register below your sensors
   */
 
-nodeManager.registerSensor(SENSOR_DIMMER,5);
+int s = nodeManager.registerSensor(SENSOR_DIMMER,5);
+SensorDimmer* d = (SensorDimmer*) nodeManager.getSensor(s);
+d->setDuration(10);
+d->setEasing(SensorDimmer::EASE_INSINE);
 
 
   /*
