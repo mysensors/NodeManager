@@ -2764,7 +2764,7 @@ SensorPT100::SensorPT100(NodeManager* node_manager, int child_id, int pin): Sens
   setValueType(TYPE_FLOAT);
 }
 
-//// setter/getter
+// setter/getter
 void SensorPT100::setVoltageRef(float value) {
    _voltageRef = value;
 }
@@ -2809,6 +2809,85 @@ void SensorPT100::onProcess(Request & request) {
   }
   _send(_msg_service.set(function));
 }
+#endif
+
+/*
+   SensorDimmer
+*/
+
+#if MODULE_DIMMER == 1
+// contructor
+SensorDimmer::SensorDimmer(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
+  // set presentation, type and value type
+  setPresentation(S_DIMMER);
+  setType(V_PERCENTAGE);
+}
+
+// setter/getter
+void SensorDimmer::setEasing(int value) {
+  _easing = value;
+}
+void SensorDimmer::setDuration(int value) {
+  _duration = value;
+}
+
+// what to do during before
+void SensorDimmer::onBefore() {
+  pinMode(_pin, OUTPUT);
+}
+
+// what to do during setup
+void SensorDimmer::onSetup() {
+}
+
+// what to do during loop
+void SensorDimmer::onLoop() {
+}
+
+// what to do as the main task when receiving a message
+void SensorDimmer::onReceive(const MyMessage & message) {
+  if (message.getCommand() == C_SET) {
+    int percentage = message.getInt();
+    // normalize the provided percentage
+    if (percentage < 0) percentage = 0;
+    if (percentage > 100) percentage = 100;
+    fadeTo(percentage);
+    _value_int = percentage;
+  }
+  if (message.getCommand() == C_REQ) {
+    // return the current status
+    _value_int = _percentage;
+  }
+}
+
+// what to do when receiving a remote message
+void SensorDimmer::onProcess(Request & request) {
+   int function = request.getFunction();
+  switch(function) {
+    case 101: setEasing(request.getValueInt()); break;
+    case 102: setDuration(request.getValueInt()); break;
+    default: return;
+  }
+  _send(_msg_service.set(function));
+}
+
+// fade to the provided value
+void SensorDimmer::fadeTo(int value) {
+  for (int current = 0; current < _duration; current++) {
+    analogWrite(_pin,_getEasing(current,_percentage,value,_duration));
+    wait(15);
+  }
+  _percentage = value;
+}
+
+// for smooth transitions. t: current time, b: beginning value, c: change in value, d: duration
+float SensorDimmer::_getEasing(float t, float b, float c, float d) {
+  if (_easing == EASE_INSINE) return -c * cos(t/d * (M_PI/2)) + c + b;
+  else if (_easing == EASE_OUTSINE) return c * sin(t/d * (M_PI/2)) + b;
+  else if (_easing == EASE_INOUTSINE) return -c/2 * (cos(M_PI*t/d) - 1) + b;
+  else return c*t/d + b;
+}
+
 #endif
 
 /*******************************************

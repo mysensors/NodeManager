@@ -124,11 +124,11 @@
 #define SERVICE_MESSAGES 0
 
 // Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN_GAUGE, SENSOR_RAIN, SENSOR_SOIL_MOISTURE
-#define MODULE_ANALOG_INPUT 1
+#define MODULE_ANALOG_INPUT 0
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
-#define MODULE_DIGITAL_INPUT 1
+#define MODULE_DIGITAL_INPUT 0
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_OUTPUT, SENSOR_RELAY, SENSOR_LATCHING_RELAY
-#define MODULE_DIGITAL_OUTPUT 1
+#define MODULE_DIGITAL_OUTPUT 0
 // Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22, SENSOR_DHT21
 #define MODULE_DHT 0
 // Enable this module to use one of the following sensors: SENSOR_SHT21
@@ -164,7 +164,7 @@
 // Enable this module to use one of the following sensors: SENSOR_BMP280
 #define MODULE_BMP280 0
 // Enable this module to use one of the following sensors: SENSOR_DIMMER
-#define MODULE_DIMMER 0
+#define MODULE_DIMMER 1
 
 #endif
 

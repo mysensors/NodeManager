@@ -384,6 +384,9 @@ enum supported_sensors {
   #include <Adafruit_Sensor.h>
   #include <Adafruit_BMP280.h>
 #endif
+#if MODULE_DIMMER == 1
+  #include <math.h>
+#endif
 
 /*******************************************************************
    Classes
@@ -1327,6 +1330,38 @@ class SensorPT100: public Sensor {
   protected:
     DFRobotHighTemperature* _PT100;
     float _voltageRef = 3.3;
+};
+#endif
+
+/*
+    SensorPT100
+*/
+#if MODULE_DIMMER == 1
+class SensorDimmer: public Sensor {
+  public:
+    SensorDimmer(NodeManager* node_manager, int child_id, int pin);
+    // [101] set the effect to use for a smooth transition (default: EASE_LINEAR)
+    void setEasing(int value);
+    // [102] set the duration of the transition in seconds (default: 1)
+    void setDuration(int value);
+    void fadeTo(int value);
+    enum easing {
+      EASE_LINEAR,
+      EASE_INSINE,
+      EASE_OUTSINE,
+      EASE_INOUTSINE,
+    };
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
+  protected:
+    int _percentage = 0;
+    int _easing = EASE_LINEAR;
+    int _duration = 1;
+    float _getEasing(float t, float b, float c, float d);
 };
 #endif
 
