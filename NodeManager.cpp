@@ -2542,6 +2542,10 @@ void SensorMHZ19::onProcess(Request & request) {
   _send(_msg_service.set(function));
 }
 
+// what to do when receiving an interrupt
+void SensorMHZ19::onInterrupt() {
+}
+
 #endif
 
 /*
@@ -2619,6 +2623,10 @@ void SensorAM2320::onReceive(const MyMessage & message) {
 
 // what to do when receiving a remote message
 void SensorAM2320::onProcess(Request & request) {
+}
+
+// what to do when receiving an interrupt
+void SensorAM2320::onInterrupt() {
 }
 #endif
 
@@ -2750,6 +2758,10 @@ void SensorTSL2561::onProcess(Request & request) {
   }
   _send(_msg_service.set(function));
 }
+
+// what to do when receiving an interrupt
+void SensorTSL2561::onInterrupt() {
+}
 #endif
 
 /*
@@ -2764,7 +2776,7 @@ SensorPT100::SensorPT100(NodeManager* node_manager, int child_id, int pin): Sens
   setValueType(TYPE_FLOAT);
 }
 
-//// setter/getter
+// setter/getter
 void SensorPT100::setVoltageRef(float value) {
    _voltageRef = value;
 }
@@ -2784,7 +2796,6 @@ void SensorPT100::onSetup() {
 void SensorPT100::onLoop() {
   // read the PT100 sensor
   int temperature = _PT100->readTemperature(_pin);  
-  
   #if DEBUG == 1
     Serial.print(F("PT100 I="));
     Serial.print(_child_id);
@@ -2809,6 +2820,112 @@ void SensorPT100::onProcess(Request & request) {
   }
   _send(_msg_service.set(function));
 }
+
+// what to do when receiving an interrupt
+void SensorPT100::onInterrupt() {
+}
+#endif
+
+/*
+   SensorDimmer
+*/
+
+#if MODULE_DIMMER == 1
+// contructor
+SensorDimmer::SensorDimmer(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
+  // set presentation, type and value type
+  setPresentation(S_DIMMER);
+  setType(V_PERCENTAGE);
+}
+
+// setter/getter
+void SensorDimmer::setEasing(int value) {
+  _easing = value;
+}
+void SensorDimmer::setDuration(int value) {
+  _duration = value*1000;
+}
+void SensorDimmer::setStepDuration(int value) {
+  _duration = value;
+}
+
+// what to do during before
+void SensorDimmer::onBefore() {
+  pinMode(_pin, OUTPUT);
+}
+
+// what to do during setup
+void SensorDimmer::onSetup() {
+}
+
+// what to do during loop
+void SensorDimmer::onLoop() {
+}
+
+// what to do as the main task when receiving a message
+void SensorDimmer::onReceive(const MyMessage & message) {
+  if (message.getCommand() == C_SET) {
+    int percentage = message.getInt();
+    // normalize the provided percentage
+    if (percentage < 0) percentage = 0;
+    if (percentage > 100) percentage = 100;
+    fadeTo(percentage);
+    _value_int = percentage;
+  }
+  if (message.getCommand() == C_REQ) {
+    // return the current status
+    _value_int = _percentage;
+  }
+}
+
+// what to do when receiving a remote message
+void SensorDimmer::onProcess(Request & request) {
+   int function = request.getFunction();
+  switch(function) {
+    case 101: setEasing(request.getValueInt()); break;
+    case 102: setDuration(request.getValueInt()); break;
+    case 103: setStepDuration(request.getValueInt()); break;
+    default: return;
+  }
+  _send(_msg_service.set(function));
+}
+
+// what to do when receiving an interrupt
+void SensorDimmer::onInterrupt() {
+}
+
+// fade to the provided value
+void SensorDimmer::fadeTo(int target_percentage) {
+  #if DEBUG == 1
+    Serial.print(F("DIM I="));
+    Serial.print(_child_id);
+    Serial.print(F(" V="));
+    Serial.println(target_percentage);
+  #endif
+  // count how many steps we need to do
+  int steps = _duration / _step_duration;
+  // for each step
+  for (int current_step = 1; current_step <= steps; current_step++) {
+    // calculate the delta between the target value and the current
+    int delta = target_percentage - _percentage;
+    // calculate the smooth transition and adjust it in the 0-255 range
+    int value_to_write = (int)(_getEasing(current_step,_percentage,delta,steps) / 100. * 255);
+    // write to the PWM output
+    analogWrite(_pin,value_to_write);
+    // wait at the end of this step
+    wait(_step_duration);
+  }
+  _percentage = target_percentage;
+}
+
+// for smooth transitions. t: current time, b: beginning value, c: change in value, d: duration
+float SensorDimmer::_getEasing(float t, float b, float c, float d) {
+  if (_easing == EASE_INSINE) return -c * cos(t/d * (M_PI/2)) + c + b;
+  else if (_easing == EASE_OUTSINE) return c * sin(t/d * (M_PI/2)) + b;
+  else if (_easing == EASE_INOUTSINE) return -c/2 * (cos(M_PI*t/d) - 1) + b;
+  else return c*t/d + b;
+}
+
 #endif
 
 /*******************************************
@@ -3148,6 +3265,12 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     else if (sensor_type == SENSOR_PT100) {   
       // register temperature sensor
       return registerSensor(new SensorPT100(this,child_id,pin));
+    }
+  #endif
+   #if MODULE_DIMMER == 1 
+    else if (sensor_type == SENSOR_DIMMER) {
+      // register the dimmer sensor
+      return registerSensor(new SensorDimmer(this,child_id,pin));
     }
   #endif
   else {

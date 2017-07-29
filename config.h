@@ -163,6 +163,8 @@
 #define MODULE_PT100 0
 // Enable this module to use one of the following sensors: SENSOR_BMP280
 #define MODULE_BMP280 0
+// Enable this module to use one of the following sensors: SENSOR_DIMMER
+#define MODULE_DIMMER 0
 
 #endif
 
