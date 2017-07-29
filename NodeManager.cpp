@@ -383,7 +383,7 @@ void Sensor::loop(const MyMessage & message) {
     if (_value_type == TYPE_INTEGER) total += (float)_value_int;
     else if (_value_type == TYPE_FLOAT) total += _value_float;
     // wait between samples
-    if (_samples_interval > 0) wait(_samples_interval);
+    if (_samples_interval > 0) _node_manager->sleepOrWait(_samples_interval);
   }
   // process the result and send a response back
   if (_value_type == TYPE_INTEGER && total > -1) {
@@ -1117,7 +1117,7 @@ void SensorDigitalOutput::setStatus(int value) {
   }
   _setStatus(value);
   // wait if needed for relay drawing a lot of current
-  if (_wait_after_set > 0) wait(_wait_after_set);
+  if (_wait_after_set > 0) _node_manager->sleepOrWait(_wait_after_set);
   // store the new status so it will be sent to the controller
   _status = value;
   _value_int = value;
@@ -1225,7 +1225,7 @@ void SensorLatchingRelay::_setStatus(int value) {
   // set the value
   digitalWrite(pin, _on_value);
   // wait for the given time before restoring the value to the original value after the pulse
-  wait(_pulse_width);
+  _node_manager->sleepOrWait(_pulse_width);
   digitalWrite(pin, ! _on_value);
   #if DEBUG == 1
     Serial.print(F("LAT I="));
@@ -1278,7 +1278,7 @@ void SensorDHT::onSetup() {
 
 // what to do during loop
 void SensorDHT::onLoop() {
-  wait(_dht->getMinimumSamplingPeriod());
+  _node_manager->sleepOrWait(_dht->getMinimumSamplingPeriod());
   _dht->readSensor(true);
   // temperature sensor
   if (_sensor_type == SensorDHT::TEMPERATURE) {
@@ -1472,7 +1472,7 @@ void SensorSwitch::onProcess(Request & request) {
 // what to do when receiving an interrupt
 void SensorSwitch::onInterrupt() {
   // wait to ensure the the input is not floating
-  if (_debounce > 0) wait(_debounce);
+  if (_debounce > 0) _node_manager->sleepOrWait(_debounce);
   // read the value of the pin
   int value = digitalRead(_pin);
   // process the value
@@ -1487,7 +1487,7 @@ void SensorSwitch::onInterrupt() {
     #endif
     _value_int = value;
     // allow the signal to be restored to its normal value
-    if (_trigger_time > 0) wait(_trigger_time);
+    if (_trigger_time > 0) _node_manager->sleepOrWait(_trigger_time);
   } else {
     // invalid
     _value_int = -1;
@@ -3402,7 +3402,7 @@ long NodeManager::getTimestamp() {
     // request the time to the controller
     requestTime();
     // keep asking every 1 second
-    wait(1000);
+    sleepOrWait(1000);
     retries--;
   }  
   return _timestamp;
@@ -3475,6 +3475,7 @@ void NodeManager::process(Request & request) {
     case 26: unRegisterSensor(request.getValueInt()); break;
     case 27: saveToMemory(0,request.getValueInt()); break;
     case 28: setInterruptMinDelta(request.getValueInt()); break;
+    case 30: setSleepOrWait(request.getValueInt()); break;
     default: return; 
   }
   _send(_msg.set(function));
@@ -3627,6 +3628,18 @@ void NodeManager::setReportIntervalMinutes(int value) {
 // set the default interval in seconds all the sensors will report their measures
 void NodeManager::setReportIntervalSeconds(int value) {
   _report_interval_seconds = value;
+}
+
+// if set and when the board is battery powered, sleep() is always called instead of wait()
+void NodeManager::setSleepOrWait(bool value) {
+  _sleep_or_wait = value;
+}
+
+// sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 
+void NodeManager::sleepOrWait(long value) {
+  // if the node is sleeping, sleep-or-wait is enabled and we need to sleep for a decent amount of time, call sleep() otherwise wait()
+  if (isSleepingNode() && _sleep_or_wait && value > 200) sleep(value);
+  else wait(value);
 }
 
 // handle an interrupt

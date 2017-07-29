@@ -1421,6 +1421,10 @@ class NodeManager {
     // For sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
     void setReportIntervalMinutes(int value);
     void setReportIntervalSeconds(int value);
+    // [30] if set and when the board is battery powered, sleep() is always called instead of wait() (default: true)
+    void setSleepOrWait(bool value);
+    // sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 
+    void sleepOrWait(long value);
     // hook into the main sketch functions
     void before();
     void presentation();
@@ -1471,6 +1475,7 @@ class NodeManager {
     bool _get_controller_config = true;
     int _is_metric = 1;
     int _report_interval_seconds = 10*60;
+    bool _sleep_or_wait = true;
     void _loadConfig();
     void _saveConfig();
 };
