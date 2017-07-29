@@ -210,7 +210,7 @@ The next step is to enable NodeManager's additional functionalities and the modu
 // Enable this module to use one of the following sensors: SENSOR_BMP280
 #define MODULE_BMP280 0
 // Enable this module to use one of the following sensors: SENSOR_DIMMER
-#define MODULE_DIMMER 1
+#define MODULE_DIMMER 0
 ~~~
 
 ### Installing the dependencies
