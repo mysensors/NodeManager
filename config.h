@@ -15,12 +15,12 @@
 // General settings
 #define MY_BAUD_RATE 9600
 //#define MY_DEBUG
-//#define MY_NODE_ID 100
+#define MY_NODE_ID 100
 //#define MY_SMART_SLEEP_WAIT_DURATION_MS 500
 
 // NRF24 radio settings
 #define MY_RADIO_NRF24
-//#define MY_RF24_ENABLE_ENCRYPTION
+#define MY_RF24_ENABLE_ENCRYPTION
 //#define MY_RF24_CHANNEL 76
 //#define MY_RF24_PA_LEVEL RF24_PA_HIGH
 //#define MY_DEBUG_VERBOSE_RF24
@@ -163,6 +163,8 @@
 #define MODULE_PT100 0
 // Enable this module to use one of the following sensors: SENSOR_BMP280
 #define MODULE_BMP280 0
+// Enable this module to use one of the following sensors: SENSOR_DIMMER
+#define MODULE_DIMMER 0
 
 #endif
 

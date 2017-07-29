@@ -190,6 +190,10 @@
 #ifndef MODULE_BMP280
   #define MODULE_BMP280 0
 #endif
+// Enable this module to use one of the following sensors: SENSOR_DIMMER
+#ifndef MODULE_DIMMER
+  #define MODULE_DIMMER 0
+#endif
 
 /***********************************
    Supported Sensors
@@ -298,6 +302,10 @@ enum supported_sensors {
   #if MODULE_BMP280 == 1
     // BMP280 sensor, return temperature and pressure
     SENSOR_BMP280,
+  #endif
+  #if MODULE_DIMMER == 1
+    // Generic dimmer sensor, can set a pwm output
+    SENSOR_DIMMER,
   #endif
 };
  
