@@ -97,6 +97,14 @@
 #ifndef MAX_SENSORS
   #define MAX_SENSORS 10
 #endif
+// define default sketch name and version
+#ifndef SKETCH_NAME
+  #define SKETCH_NAME "NodeManager"
+#endif
+#ifndef SKETCH_VERSION
+  #define SKETCH_VERSION "1.0"
+#endif
+
 
 /***********************************
    Default module settings
