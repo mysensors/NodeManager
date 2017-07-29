@@ -1435,6 +1435,8 @@ class NodeManager {
     void sleepOrWait(long value);
     // [31] set which pin is connected to RST of the board to reboot the board when requested. If not set the software reboot is used instead (default: -1)
     void setRebootPin(int value);
+    // [32] turn the ADC off so to save 0.2 mA
+    void setADCOff();
     // hook into the main sketch functions
     void before();
     void presentation();
