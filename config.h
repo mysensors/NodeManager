@@ -15,11 +15,11 @@
 // General settings
 #define MY_BAUD_RATE 9600
 //#define MY_DEBUG
-//#define MY_NODE_ID 100
+#define MY_NODE_ID 100
 
 // NRF24 radio settings
 #define MY_RADIO_NRF24
-//#define MY_RF24_ENABLE_ENCRYPTION
+#define MY_RF24_ENABLE_ENCRYPTION
 //#define MY_RF24_CHANNEL 76
 //#define MY_RF24_PA_LEVEL RF24_PA_HIGH
 //#define MY_DEBUG_VERBOSE_RF24
@@ -111,13 +111,13 @@
 #define SERVICE_MESSAGES 0
 
 // Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN_GAUGE, SENSOR_RAIN, SENSOR_SOIL_MOISTURE
-#define MODULE_ANALOG_INPUT 1
+#define MODULE_ANALOG_INPUT 0
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
-#define MODULE_DIGITAL_INPUT 1
+#define MODULE_DIGITAL_INPUT 0
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_OUTPUT, SENSOR_RELAY, SENSOR_LATCHING_RELAY
-#define MODULE_DIGITAL_OUTPUT 1
+#define MODULE_DIGITAL_OUTPUT 0
 // Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22, SENSOR_DHT21
-#define MODULE_DHT 0
+#define MODULE_DHT 1
 // Enable this module to use one of the following sensors: SENSOR_SHT21
 #define MODULE_SHT21 0
 // Enable this module to use one of the following sensors: SENSOR_SWITCH, SENSOR_DOOR, SENSOR_MOTION

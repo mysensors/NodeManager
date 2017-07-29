@@ -1278,7 +1278,7 @@ void SensorDHT::onSetup() {
 
 // what to do during loop
 void SensorDHT::onLoop() {
-  wait(_dht->getMinimumSamplingPeriod());
+  _node_manager->sleepOrWait(_dht->getMinimumSamplingPeriod());
   _dht->readSensor(true);
   // temperature sensor
   if (_sensor_type == SensorDHT::TEMPERATURE) {
@@ -3475,6 +3475,7 @@ void NodeManager::process(Request & request) {
     case 26: unRegisterSensor(request.getValueInt()); break;
     case 27: saveToMemory(0,request.getValueInt()); break;
     case 28: setInterruptMinDelta(request.getValueInt()); break;
+    case 30: setSleepOrWait(request.getValueInt()); break;
     default: return; 
   }
   _send(_msg.set(function));
@@ -3627,6 +3628,17 @@ void NodeManager::setReportIntervalMinutes(int value) {
 // set the default interval in seconds all the sensors will report their measures
 void NodeManager::setReportIntervalSeconds(int value) {
   _report_interval_seconds = value;
+}
+
+// if set and when the board is battery powered, sleep() is always called instead of wait()
+void NodeManager::setSleepOrWait(bool value) {
+  _sleep_or_wait = value;
+}
+
+// sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 
+void NodeManager::sleepOrWait(long value) {
+  if (isSleepingNode() && _sleep_or_wait) sleep(value);
+  else wait(value);
 }
 
 // handle an interrupt
