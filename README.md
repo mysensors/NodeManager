@@ -315,6 +315,8 @@ The next step is to configure NodeManager with settings which will instruct how 
     // For sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
     void setReportIntervalMinutes(int value);
     void setReportIntervalSeconds(int value);
+    // [30] if set and when the board is battery powered, sleep() is always called instead of wait() (default: true)
+    void setSleepOrWait(bool value);
     // sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 
     void sleepOrWait(long value);
 ~~~
