@@ -196,7 +196,7 @@ Some of the modules above rely on third party libraries. Those libraries are not
 Module  | Required Library
  ------------- | -------------
 MODULE_SHT21 | https://github.com/SodaqMoja/Sodaq_SHT2x
-MODULE_DHT | https://github.com/adafruit/DHT-sensor-library
+MODULE_DHT | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/DHT
 MODULE_DS18B20 | https://github.com/milesburton/Arduino-Temperature-Control-Library
 MODULE_BH1750 | https://github.com/claws/BH1750
 MODULE_MLX90614 | https://github.com/adafruit/Adafruit-MLX90614-Library
@@ -1325,3 +1325,4 @@ v1.6:
 * SensorMQ now depends on its own module
 * Added automatic off capability (safeguard) to SensorDigitalOutput
 * Any sensor can now access all NodeManager's functions
+* DHT sensor now using MySensors' DHT library
