@@ -209,7 +209,8 @@ The next step is to enable NodeManager's additional functionalities and the modu
 #define MODULE_PT100 0
 // Enable this module to use one of the following sensors: SENSOR_BMP280
 #define MODULE_BMP280 0
-
+// Enable this module to use one of the following sensors: SENSOR_DIMMER
+#define MODULE_DIMMER 1
 ~~~
 
 ### Installing the dependencies
@@ -412,6 +413,7 @@ SENSOR_TSL2561 | TSL2561 sensor, return light in lux
 SENSOR_AM2320 | AM2320 sensors, return temperature/humidity based on the attached AM2320 sensor
 SENSOR_PT100 | High temperature sensor associated with DFRobot Driver, return the temperature in C° from the attached PT100 sensor
 SENSOR_BMP280 | BMP280 sensor, return temperature/pressure based on the attached BMP280 sensor
+SENSOR_DIMMER | Generic dimmer sensor used to drive a pwm output
 
 To register a sensor simply call the NodeManager instance with the sensory type and the pin the sensor is conncted to and optionally a child id. For example:
 ~~~c
@@ -686,6 +688,18 @@ Each sensor class can expose additional methods.
     void setSpectrum(int value);
     // [104] set the i2c address values are SensorTSL2561::ADDR_FLOAT, SensorTSL2561::ADDR_LOW, SensorTSL2561::ADDR_HIGH
     void setAddress(int value);
+~~~
+
+* SensorDimmer
+~~~c
+    // [101] set the effect to use for a smooth transition, can be one of SensorDimmer::EASE_LINEAR, SensorDimmer::EASE_INSINE, SensorDimmer::EASE_OUTSINE, SensorDimmer::EASE_INOUTSINE (default: EASE_LINEAR)
+    void setEasing(int value);
+    // [102] the duration of entire the transition in seconds (default: 1)
+    void setDuration(int value);
+    // [103] the duration of a single step of the transition in milliseconds (default: 100)
+    void setStepDuration(int value);
+    // fade the output from the current value to the target provided in the range 0-100
+    void fadeTo(int value);
 ~~~
 
 ### Upload your sketch

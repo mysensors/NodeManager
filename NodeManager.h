@@ -304,7 +304,7 @@ enum supported_sensors {
     SENSOR_BMP280,
   #endif
   #if MODULE_DIMMER == 1
-    // Generic dimmer sensor, can set a pwm output
+    // Generic dimmer sensor used to drive a pwm output
     SENSOR_DIMMER,
   #endif
 };
@@ -1344,12 +1344,13 @@ class SensorPT100: public Sensor {
 class SensorDimmer: public Sensor {
   public:
     SensorDimmer(NodeManager* node_manager, int child_id, int pin);
-    // [101] set the effect to use for a smooth transition (default: EASE_LINEAR)
+    // [101] set the effect to use for a smooth transition, can be one of SensorDimmer::EASE_LINEAR, SensorDimmer::EASE_INSINE, SensorDimmer::EASE_OUTSINE, SensorDimmer::EASE_INOUTSINE (default: EASE_LINEAR)
     void setEasing(int value);
     // [102] the duration of entire the transition in seconds (default: 1)
     void setDuration(int value);
     // [103] the duration of a single step of the transition in milliseconds (default: 100)
     void setStepDuration(int value);
+    // fade the output from the current value to the target provided in the range 0-100
     void fadeTo(int value);
     enum easing {
       EASE_LINEAR,

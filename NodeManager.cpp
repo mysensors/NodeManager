@@ -2884,6 +2884,7 @@ void SensorDimmer::onProcess(Request & request) {
   switch(function) {
     case 101: setEasing(request.getValueInt()); break;
     case 102: setDuration(request.getValueInt()); break;
+    case 103: setStepDuration(request.getValueInt()); break;
     default: return;
   }
   _send(_msg_service.set(function));
