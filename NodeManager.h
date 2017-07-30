@@ -93,6 +93,10 @@
 #ifndef BATTERY_CHILD_ID
   #define BATTERY_CHILD_ID 201
 #endif
+// the child id used to report the rssi level to the controller
+#ifndef RSSI_CHILD_ID
+  #define RSSI_CHILD_ID 202
+#endif
 // define the maximum number of sensors that can be managed
 #ifndef MAX_SENSORS
   #define MAX_SENSORS 10
@@ -324,6 +328,7 @@ enum supported_sensors {
 // include MySensors libraries
 #include <core/MySensorsCore.h>
 #include <core/MyCapabilities.h>
+#include <core/MyTransport.h>
 
 // include third party libraries
 #if MODULE_DHT == 1
