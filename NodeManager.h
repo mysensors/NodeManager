@@ -118,7 +118,7 @@
    Default module settings
 */
 
-// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN_GAUGE, SENSOR_RAIN, SENSOR_SOIL_MOISTURE
+// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN, SENSOR_SOIL_MOISTURE
 #ifndef MODULE_ANALOG_INPUT
   #define MODULE_ANALOG_INPUT 0
 #endif
@@ -202,6 +202,10 @@
 #ifndef MODULE_DIMMER
   #define MODULE_DIMMER 0
 #endif
+// Enable this module to use one of the following sensors: SENSOR_RAIN_GAUGE
+#ifndef MODULE_PULSE_METER
+  #define MODULE_PULSE_METER 0
+#endif
 
 /***********************************
    Supported Sensors
@@ -218,8 +222,6 @@ enum supported_sensors {
     SENSOR_ML8511,
     // Current sensor
     SENSOR_ACS712,
-    // rain gauge sensor
-    SENSOR_RAIN_GAUGE,
     // Rain sensor, return the percentage of rain from an attached analog sensor
     SENSOR_RAIN,
     // Soil moisture sensor, return the percentage of moisture from an attached analog sensor
@@ -314,6 +316,10 @@ enum supported_sensors {
   #if MODULE_DIMMER == 1
     // Generic dimmer sensor used to drive a pwm output
     SENSOR_DIMMER,
+  #endif
+  #if MODULE_PULSE_METER == 1
+    // rain gauge sensor
+    SENSOR_RAIN_GAUGE,
   #endif
 };
  
@@ -707,30 +713,6 @@ class SensorACS712: public Sensor {
   protected:
     int _ACS_offset = 2500;
     int _mv_per_amp = 185;
-};
-
-/*
-    SensorRainGauge
-*/
-
-class SensorRainGauge: public Sensor {
-  public:
-    SensorRainGauge(NodeManager* node_manager, int child_id, int pin);
-    // [102] set how many mm of rain to count for each tip (default: 0.11)
-    void setSingleTip(float value);
-    // set initial value - internal pull up (default: HIGH)
-    void setInitialValue(int value);
-    // define what to do at each stage of the sketch
-    void onBefore();
-    void onSetup();
-    void onLoop();
-    void onReceive(const MyMessage & message);
-    void onProcess(Request & request);
-    void onInterrupt();
-  protected:
-    long _count = 0;
-    float _single_tip = 0.11;
-    int _initial_value = HIGH;
 };
 
 /*
@@ -1385,6 +1367,36 @@ class SensorDimmer: public Sensor {
     int _duration = 1000;
     int _step_duration = 100;
     float _getEasing(float t, float b, float c, float d);
+};
+#endif
+
+/*
+    SensorPulseMeter
+*/
+#if MODULE_PULSE_METER == 1
+class SensorPulseMeter: public Sensor {
+  public:
+    SensorPulseMeter(NodeManager* node_manager, int child_id, int pin);
+    // [102] set how many mm of rain to count for each tip (default: 0.11)
+    void setSingleTip(float value);
+    // set initial value - internal pull up (default: HIGH)
+    void setInitialValue(int value);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
+    void onInterrupt();
+  protected:
+    long _count = 0;
+    float _single_tip = 0.11;
+    int _initial_value = HIGH;
+};
+
+class SensorRainGauge: public SensorPulseMeter {
+  public:
+    SensorRainGauge(NodeManager* node_manager, int child_id, int pin);
 };
 #endif
 

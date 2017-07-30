@@ -871,79 +871,6 @@ void SensorACS712::onInterrupt() {
 }
 
 /*
-   SensorRainGauge
-*/
-
-// contructor
-SensorRainGauge::SensorRainGauge(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id, pin) {
-  // set presentation, type and value type
-  setPresentation(S_RAIN);
-  setType(V_RAIN);
-  setValueType(TYPE_FLOAT);
-}
-
-// setter/getter
-void SensorRainGauge::setSingleTip(float value) {
-  _single_tip = value;
-}
-void SensorRainGauge::setInitialValue(int value) {
-  _initial_value = value;
-}
-
-// what to do during before
-void SensorRainGauge::onBefore() {
-  // configure the interrupt pin so onInterrupt() will be called on tip
-  setInterrupt(_pin,FALLING,_initial_value);
-}
-
-// what to do during setup
-void SensorRainGauge::onSetup() {
-}
-
-// what to do during loop
-void SensorRainGauge::onLoop() {
-  // do not report anything if called by an interrupt
-  if (_node_manager->getLastInterruptPin() == _interrupt_pin) return;
-  // time to report the rain so far
-  _value_float = _count * _single_tip;
-  #if DEBUG == 1
-    Serial.print(F("RAIN I="));
-    Serial.print(_child_id);
-    Serial.print(F(" T="));
-    Serial.println(_value_float);
-  #endif
-  // reset the counter
-  _count = 0;
-}
-
-// what to do as the main task when receiving a message
-void SensorRainGauge::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) {
-    // report the total amount of rain for the last period
-    _value_float = _count * _single_tip;
-  }
-}
-
-// what to do when receiving a remote message
-void SensorRainGauge::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 102: setSingleTip(request.getValueFloat()); break;
-    default: return;
-  }
-  _send(_msg_service.set(function));
-}
-
-// what to do when receiving an interrupt
-void SensorRainGauge::onInterrupt() {
-  // increase the counter
-  _count++;
-  #if DEBUG == 1
-    Serial.println(F("RAIN+"));
-  #endif
-}
-
-/*
    SensorRain
 */
 
@@ -2938,7 +2865,88 @@ float SensorDimmer::_getEasing(float t, float b, float c, float d) {
   else if (_easing == EASE_INOUTSINE) return -c/2 * (cos(M_PI*t/d) - 1) + b;
   else return c*t/d + b;
 }
+#endif
 
+/*
+   SensorPulseMeter
+*/
+#if MODULE_PULSE_METER == 1
+// contructor
+SensorPulseMeter::SensorPulseMeter(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id, pin) {
+  // set presentation, type and value type
+  setValueType(TYPE_FLOAT);
+}
+
+// setter/getter
+void SensorPulseMeter::setSingleTip(float value) {
+  _single_tip = value;
+}
+void SensorPulseMeter::setInitialValue(int value) {
+  _initial_value = value;
+}
+
+// what to do during before
+void SensorPulseMeter::onBefore() {
+  // configure the interrupt pin so onInterrupt() will be called on tip
+  setInterrupt(_pin,FALLING,_initial_value);
+}
+
+// what to do during setup
+void SensorPulseMeter::onSetup() {
+}
+
+// what to do during loop
+void SensorPulseMeter::onLoop() {
+  // do not report anything if called by an interrupt
+  if (_node_manager->getLastInterruptPin() == _interrupt_pin) return;
+  // time to report the rain so far
+  _value_float = _count * _single_tip;
+  #if DEBUG == 1
+    Serial.print(F("RAIN I="));
+    Serial.print(_child_id);
+    Serial.print(F(" T="));
+    Serial.println(_value_float);
+  #endif
+  // reset the counter
+  _count = 0;
+}
+
+// what to do as the main task when receiving a message
+void SensorPulseMeter::onReceive(const MyMessage & message) {
+  if (message.getCommand() == C_REQ) {
+    // report the total amount of rain for the last period
+    _value_float = _count * _single_tip;
+  }
+}
+
+// what to do when receiving a remote message
+void SensorPulseMeter::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 102: setSingleTip(request.getValueFloat()); break;
+    default: return;
+  }
+  _send(_msg_service.set(function));
+}
+
+// what to do when receiving an interrupt
+void SensorPulseMeter::onInterrupt() {
+  // increase the counter
+  _count++;
+  #if DEBUG == 1
+    Serial.println(F("RAIN+"));
+  #endif
+}
+
+/*
+   SensorRainGauge
+*/
+// contructor
+SensorRainGauge::SensorRainGauge(NodeManager* node_manager, int child_id, int pin): SensorPulseMeter(node_manager,child_id, pin) {
+  // set presentation, type
+  setPresentation(S_RAIN);
+  setType(V_RAIN);
+}
 #endif
 
 /*******************************************
@@ -3092,7 +3100,6 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     else if (sensor_type == SENSOR_THERMISTOR) return registerSensor(new SensorThermistor(this,child_id, pin));
     else if (sensor_type == SENSOR_ML8511) return registerSensor(new SensorML8511(this,child_id, pin));
     else if (sensor_type == SENSOR_ACS712) return registerSensor(new SensorACS712(this,child_id, pin));
-    else if (sensor_type == SENSOR_RAIN_GAUGE) return registerSensor(new SensorRainGauge(this,child_id, pin));
     else if (sensor_type == SENSOR_RAIN) return registerSensor(new SensorRain(this,child_id, pin));
     else if (sensor_type == SENSOR_SOIL_MOISTURE) return registerSensor(new SensorSoilMoisture(this,child_id, pin));
   #endif
@@ -3284,17 +3291,20 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
       return registerSensor(new SensorTSL2561(this,child_id));
     }
   #endif
-   #if MODULE_PT100 == 1 
+  #if MODULE_PT100 == 1 
     else if (sensor_type == SENSOR_PT100) {   
       // register temperature sensor
       return registerSensor(new SensorPT100(this,child_id,pin));
     }
   #endif
-   #if MODULE_DIMMER == 1 
+  #if MODULE_DIMMER == 1 
     else if (sensor_type == SENSOR_DIMMER) {
       // register the dimmer sensor
       return registerSensor(new SensorDimmer(this,child_id,pin));
     }
+  #endif
+  #if MODULE_PULSE_METER == 1 
+    else if (sensor_type == SENSOR_RAIN_GAUGE) return registerSensor(new SensorRainGauge(this,child_id,pin));
   #endif
   else {
     #if DEBUG == 1

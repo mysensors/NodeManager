@@ -33,7 +33,12 @@ void before() {
   /*
    * Register below your sensors
   */
+   pinMode(6, OUTPUT);
+   digitalWrite(6,LOW);
+   pinMode(7, OUTPUT);
+   digitalWrite(7,HIGH);
 
+nodeManager.registerSensor(SENSOR_RAIN_GAUGE,3);
 
 
   /*
