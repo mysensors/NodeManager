@@ -276,6 +276,9 @@ int Sensor::getValueType() {
 void Sensor::setFloatPrecision(int value) {
   _float_precision = value;
 }
+void Sensor::setDoublePrecision(int value) {
+  _double_precision = value;
+}
 #if POWER_MANAGER == 1
     void Sensor::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
       _powerManager.setPowerPins(ground_pin, vcc_pin, wait_time);
@@ -418,6 +421,17 @@ void Sensor::loop(const MyMessage & message) {
       _value_float = -1;
     }
   }
+  // process a double value
+  else if (_value_type == TYPE_DOUBLE && total > -1) {
+    // calculate the average value of the samples
+    double avg = total / _samples;
+    // report the value back
+    if (_isReceive(message) || _isWorthSending(avg != _last_value_double))  {
+      _last_value_double = avg;
+      _send(_msg.set(avg, _double_precision));
+      _value_double = -1;
+    }
+  }
   // process a string value
   else if (_value_type == TYPE_STRING) {
     // if track last value is disabled or if enabled and the current value is different then the old value, send it back
@@ -485,6 +499,7 @@ void Sensor::process(Request & request) {
     case 19: setReportIntervalHours(request.getValueInt()); break;
     case 20: setReportIntervalDays(request.getValueInt()); break;
     case 18: setForceUpdateHours(request.getValueInt()); break;
+    case 21: setDoublePrecision(request.getValueInt()); break;
     default: return;
   }
   _send(_msg_service.set(function));
@@ -2951,7 +2966,6 @@ float SensorPulseMeter::_getTotal() {
 */
 // contructor
 SensorRainGauge::SensorRainGauge(NodeManager* node_manager, int child_id, int pin): SensorPulseMeter(node_manager,child_id, pin) {
-  // set presentation, type
   setPresentation(S_RAIN);
   setType(V_RAIN);
   setPulseFactor(9.09);

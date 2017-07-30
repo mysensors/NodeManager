@@ -31,6 +31,7 @@
 #define TYPE_INTEGER 0
 #define TYPE_FLOAT 1
 #define TYPE_STRING 2
+#define TYPE_DOUBLE 2
 
 // define interrupt pins
 #define INTERRUPT_PIN_1 3
@@ -525,6 +526,8 @@ class Sensor {
     int getValueType();
     // [11] for float values, set the float precision (default: 2)
     void  setFloatPrecision(int value);
+    // [21] for double values, set the double precision (default: 4)
+    void  setDoublePrecision(int value);
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
       void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
@@ -583,8 +586,11 @@ class Sensor {
     bool _track_last_value = false;
     int _value_type = TYPE_INTEGER;
     int _float_precision = 2;
+    int _double_precision = 4;
     int _value_int = -1;
     float _value_float = -1;
+    double _value_double = -1;
+    double _last_value_double = -1;
     char * _value_string = "";
     int _last_value_int = -1;
     float _last_value_float = -1;
@@ -1398,9 +1404,28 @@ class SensorPulseMeter: public Sensor {
     float _getTotal();
 };
 
+/*
+    SensorRainGauge
+*/
 class SensorRainGauge: public SensorPulseMeter {
   public:
     SensorRainGauge(NodeManager* node_manager, int child_id, int pin);
+};
+
+/*
+    SensorPowerMeter
+*/
+class SensorPowerMeter: public SensorPulseMeter {
+  public:
+    SensorPowerMeter(NodeManager* node_manager, int child_id, int pin);
+};
+
+/*
+    SensorWaterMeter
+*/
+class SensorWaterMeter: public SensorPulseMeter {
+  public:
+    SensorWaterMeter(NodeManager* node_manager, int child_id, int pin);
 };
 #endif
 
