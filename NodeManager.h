@@ -203,7 +203,7 @@
 #ifndef MODULE_DIMMER
   #define MODULE_DIMMER 0
 #endif
-// Enable this module to use one of the following sensors: SENSOR_RAIN_GAUGE
+// Enable this module to use one of the following sensors: SENSOR_RAIN_GAUGE, SENSOR_POWER_METER, SENSOR_WATER_METER
 #ifndef MODULE_PULSE_METER
   #define MODULE_PULSE_METER 0
 #endif
@@ -321,6 +321,8 @@ enum supported_sensors {
   #if MODULE_PULSE_METER == 1
     // rain gauge sensor
     SENSOR_RAIN_GAUGE,
+    SENSOR_POWER_METER, 
+    SENSOR_WATER_METER,
   #endif
 };
  

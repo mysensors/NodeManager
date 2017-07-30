@@ -167,7 +167,7 @@
 #define MODULE_BMP280 0
 // Enable this module to use one of the following sensors: SENSOR_DIMMER
 #define MODULE_DIMMER 0
-// Enable this module to use one of the following sensors: SENSOR_RAIN_GAUGE
+// Enable this module to use one of the following sensors: SENSOR_RAIN_GAUGE, SENSOR_POWER_METER, SENSOR_WATER_METER
 #define MODULE_PULSE_METER 1
 
 #endif

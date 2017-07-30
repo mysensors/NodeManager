@@ -2970,6 +2970,28 @@ SensorRainGauge::SensorRainGauge(NodeManager* node_manager, int child_id, int pi
   setType(V_RAIN);
   setPulseFactor(9.09);
 }
+
+/*
+   SensorPowerMeter
+*/
+// contructor
+SensorPowerMeter::SensorPowerMeter(NodeManager* node_manager, int child_id, int pin): SensorPulseMeter(node_manager,child_id, pin) {
+  setPresentation(S_POWER);
+  setType(V_KWH);
+  setValueType(TYPE_DOUBLE);
+  setPulseFactor(1000);
+}
+
+/*
+   SensorWaterMeter
+*/
+// contructor
+SensorWaterMeter::SensorWaterMeter(NodeManager* node_manager, int child_id, int pin): SensorPulseMeter(node_manager,child_id, pin) {
+  setPresentation(S_WATER);
+  setType(V_VOLUME);
+  setValueType(TYPE_DOUBLE);
+  setPulseFactor(1000);
+}
 #endif
 
 /*******************************************
@@ -3190,9 +3212,7 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     }
   #endif
   #if MODULE_BH1750 == 1
-    else if (sensor_type == SENSOR_BH1750) {
-      return registerSensor(new SensorBH1750(this,child_id));
-    }
+    else if (sensor_type == SENSOR_BH1750) return registerSensor(new SensorBH1750(this,child_id));
   #endif
   #if MODULE_MLX90614 == 1
     else if (sensor_type == SENSOR_MLX90614) {
@@ -3247,9 +3267,7 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     }
   #endif
   #if MODULE_SONOFF == 1
-    else if (sensor_type == SENSOR_SONOFF) {
-      return registerSensor(new SensorSonoff(this,child_id));
-    }
+    else if (sensor_type == SENSOR_SONOFF) return registerSensor(new SensorSonoff(this,child_id));
   #endif
   #if MODULE_BMP085 == 1
     else if (sensor_type == SENSOR_BMP085) {
@@ -3271,9 +3289,7 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     }
   #endif
   #if MODULE_HCSR04 == 1
-    else if (sensor_type == SENSOR_HCSR04) {
-      return registerSensor(new SensorHCSR04(this,child_id, pin));
-    }
+    else if (sensor_type == SENSOR_HCSR04) return registerSensor(new SensorHCSR04(this,child_id, pin));
   #endif
   #if MODULE_MCP9808 == 1
     else if (sensor_type == SENSOR_MCP9808) {
@@ -3289,14 +3305,10 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     }
   #endif
   #if MODULE_MQ == 1
-    else if (sensor_type == SENSOR_MQ) {
-      return registerSensor(new SensorMQ(this,child_id, pin));
-    }
+    else if (sensor_type == SENSOR_MQ) return registerSensor(new SensorMQ(this,child_id, pin));
   #endif
   #if MODULE_MHZ19 == 1
-    else if (sensor_type == SENSOR_MHZ19) {
-      return registerSensor(new SensorMHZ19(this, child_id, pin));
-    }
+    else if (sensor_type == SENSOR_MHZ19) return registerSensor(new SensorMHZ19(this, child_id, pin));
   #endif
   #if MODULE_AM2320 == 1
     else if (sensor_type == SENSOR_AM2320) {
@@ -3309,25 +3321,18 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     }
   #endif
   #if MODULE_TSL2561 == 1 
-    else if (sensor_type == SENSOR_TSL2561) {    
-      // register light sensor
-      return registerSensor(new SensorTSL2561(this,child_id));
-    }
+    else if (sensor_type == SENSOR_TSL2561) return registerSensor(new SensorTSL2561(this,child_id));
   #endif
   #if MODULE_PT100 == 1 
-    else if (sensor_type == SENSOR_PT100) {   
-      // register temperature sensor
-      return registerSensor(new SensorPT100(this,child_id,pin));
-    }
+    else if (sensor_type == SENSOR_PT100) return registerSensor(new SensorPT100(this,child_id,pin));
   #endif
   #if MODULE_DIMMER == 1 
-    else if (sensor_type == SENSOR_DIMMER) {
-      // register the dimmer sensor
-      return registerSensor(new SensorDimmer(this,child_id,pin));
-    }
+    else if (sensor_type == SENSOR_DIMMER) return registerSensor(new SensorDimmer(this,child_id,pin));
   #endif
   #if MODULE_PULSE_METER == 1 
     else if (sensor_type == SENSOR_RAIN_GAUGE) return registerSensor(new SensorRainGauge(this,child_id,pin));
+    else if (sensor_type == SENSOR_POWER_METER) return registerSensor(new SensorPowerMeter(this,child_id,pin));
+    else if (sensor_type == SENSOR_WATER_METER) return registerSensor(new SensorWaterMeter(this,child_id,pin));
   #endif
   else {
     #if DEBUG == 1
