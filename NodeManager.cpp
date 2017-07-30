@@ -2878,17 +2878,20 @@ SensorPulseMeter::SensorPulseMeter(NodeManager* node_manager, int child_id, int 
 }
 
 // setter/getter
-void SensorPulseMeter::setSingleTip(float value) {
-  _single_tip = value;
+void SensorPulseMeter::setPulseFactor(float value) {
+  _pulse_factor = value;
 }
 void SensorPulseMeter::setInitialValue(int value) {
   _initial_value = value;
+}
+void SensorPulseMeter::setInterruptMode(int value) {
+  _interrupt_mode = value;
 }
 
 // what to do during before
 void SensorPulseMeter::onBefore() {
   // configure the interrupt pin so onInterrupt() will be called on tip
-  setInterrupt(_pin,FALLING,_initial_value);
+  setInterrupt(_pin,_interrupt_mode,_initial_value);
 }
 
 // what to do during setup
@@ -2900,9 +2903,9 @@ void SensorPulseMeter::onLoop() {
   // do not report anything if called by an interrupt
   if (_node_manager->getLastInterruptPin() == _interrupt_pin) return;
   // time to report the rain so far
-  _value_float = _count * _single_tip;
+  _value_float = _getTotal();
   #if DEBUG == 1
-    Serial.print(F("RAIN I="));
+    Serial.print(F("PLS I="));
     Serial.print(_child_id);
     Serial.print(F(" T="));
     Serial.println(_value_float);
@@ -2914,8 +2917,8 @@ void SensorPulseMeter::onLoop() {
 // what to do as the main task when receiving a message
 void SensorPulseMeter::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) {
-    // report the total amount of rain for the last period
-    _value_float = _count * _single_tip;
+    // report the total the last period
+    _value_float = _getTotal();
   }
 }
 
@@ -2923,7 +2926,7 @@ void SensorPulseMeter::onReceive(const MyMessage & message) {
 void SensorPulseMeter::onProcess(Request & request) {
   int function = request.getFunction();
   switch(function) {
-    case 102: setSingleTip(request.getValueFloat()); break;
+    case 102: setPulseFactor(request.getValueFloat()); break;
     default: return;
   }
   _send(_msg_service.set(function));
@@ -2934,8 +2937,13 @@ void SensorPulseMeter::onInterrupt() {
   // increase the counter
   _count++;
   #if DEBUG == 1
-    Serial.println(F("RAIN+"));
+    Serial.println(F("PLS+"));
   #endif
+}
+
+// return the total based on the pulses counted
+float SensorPulseMeter::_getTotal() {
+  return _count / _pulse_factor;
 }
 
 /*
@@ -2946,6 +2954,7 @@ SensorRainGauge::SensorRainGauge(NodeManager* node_manager, int child_id, int pi
   // set presentation, type
   setPresentation(S_RAIN);
   setType(V_RAIN);
+  setPulseFactor(9.09);
 }
 #endif
 

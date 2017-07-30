@@ -39,7 +39,7 @@ void before() {
    digitalWrite(7,HIGH);
 
 nodeManager.registerSensor(SENSOR_RAIN_GAUGE,3);
-
+nodeManager.setReportIntervalSeconds(30);
 
   /*
    * Register above your sensors

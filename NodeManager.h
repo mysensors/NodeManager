@@ -1377,10 +1377,12 @@ class SensorDimmer: public Sensor {
 class SensorPulseMeter: public Sensor {
   public:
     SensorPulseMeter(NodeManager* node_manager, int child_id, int pin);
-    // [102] set how many mm of rain to count for each tip (default: 0.11)
-    void setSingleTip(float value);
+    // [102] set how many pulses for each unit (e.g. 1000 pulses for 1 kwh of power, 9 pulses for 1 mm of rain, etc.)
+    void setPulseFactor(float value);
     // set initial value - internal pull up (default: HIGH)
     void setInitialValue(int value);
+    // set the interrupt mode to attach to (default: FALLING)
+    void setInterruptMode(int value);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
@@ -1390,8 +1392,10 @@ class SensorPulseMeter: public Sensor {
     void onInterrupt();
   protected:
     long _count = 0;
-    float _single_tip = 0.11;
+    float _pulse_factor;
     int _initial_value = HIGH;
+    int _interrupt_mode = FALLING;
+    float _getTotal();
 };
 
 class SensorRainGauge: public SensorPulseMeter {
