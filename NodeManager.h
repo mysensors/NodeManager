@@ -80,9 +80,13 @@
 #ifndef SERVICE_MESSAGES
   #define SERVICE_MESSAGES 0
 #endif
-// if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
+// if enabled, a battery sensor will be created at BATTERY_CHILD_ID (201 by default) and will report vcc voltage together with the battery level percentage
 #ifndef BATTERY_SENSOR
   #define BATTERY_SENSOR 1
+#endif
+// if enabled, a RSSI sensor will be created at SIGNAL_CHILD_ID (202 by default) and will report the signal quality of the transport layer
+#ifndef SIGNAL_SENSOR
+  #define SIGNAL_SENSOR 1
 #endif
 
 // the child id used to allow remote configuration
@@ -94,8 +98,8 @@
   #define BATTERY_CHILD_ID 201
 #endif
 // the child id used to report the rssi level to the controller
-#ifndef RSSI_CHILD_ID
-  #define RSSI_CHILD_ID 202
+#ifndef SIGNAL_CHILD_ID
+  #define SIGNAL_CHILD_ID 202
 #endif
 // define the maximum number of sensors that can be managed
 #ifndef MAX_SENSORS
@@ -1484,8 +1488,10 @@ class NodeManager {
     // set the default interval in minutes all the sensors will report their measures. 
     // If the same function is called on a specific sensor, this will not change the previously set value 
     // For sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
-    void setReportIntervalMinutes(int value);
     void setReportIntervalSeconds(int value);
+    void setReportIntervalMinutes(int value);
+    void setReportIntervalHours(int value);
+    void setReportIntervalDays(int value);
     // [30] if set and when the board is battery powered, sleep() is always called instead of wait() (default: true)
     void setSleepOrWait(bool value);
     // sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 
@@ -1494,6 +1500,14 @@ class NodeManager {
     void setRebootPin(int value);
     // [32] turn the ADC off so to save 0.2 mA
     void setADCOff();
+    #if SIGNAL_SENSOR == 1 && defined(MY_SIGNAL_REPORT_ENABLED)
+      // [33] How frequenly to send a signal report to the controller (default: 60)
+      void setSignalReportMinutes(int value);
+      // [34] define which signal report to send. Possible values are SR_UPLINK_QUALITY, SR_TX_POWER_LEVEL, SR_TX_POWER_PERCENT, SR_TX_RSSI, SR_RX_RSSI, SR_TX_SNR, SR_RX_SNR (default: SR_RX_RSSI)
+      void setSignalCommand(int value);
+      // [35] report the signal level to the controller
+      void signalReport();
+    #endif
     // hook into the main sketch functions
     void before();
     void presentation();
@@ -1518,6 +1532,10 @@ class NodeManager {
       // to optionally controller power pins
       PowerManager _powerManager;
       bool _auto_power_pins = true;
+    #endif
+    #if SIGNAL_SENSOR == 1 && defined(MY_SIGNAL_REPORT_ENABLED)
+      Timer _signal_report_timer = Timer(this);
+      int _signal_command = SR_RX_RSSI;
     #endif
     MyMessage _msg;
     void _send(MyMessage & msg);

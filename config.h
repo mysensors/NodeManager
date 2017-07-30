@@ -120,8 +120,8 @@
 #define PERSIST 0
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID (201 by default) and will report vcc voltage together with the battery level percentage
 #define BATTERY_SENSOR 1
-// if enabled, a RSSI sensor will be created at RSSI_CHILD_ID and will report the signal quality of the transport layer
-#define RSSI_SENSOR 1
+// if enabled, a signal sensor will be created at RSSI_CHILD_ID (202 by default) and will report the signal quality of the transport layer
+#define SIGNAL_SENSOR 1
 // if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle and STARTED when starting/rebooting
 #define SERVICE_MESSAGES 0
 
