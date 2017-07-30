@@ -303,15 +303,26 @@ char* Sensor::getValueString() {
   return _last_value_string;
 }
 
+// After how many seconds the sensor will report back its measure
+void Sensor::setReportIntervalSeconds(int value) {
+  _report_timer->start(value,SECONDS);
+}
+
 // After how many minutes the sensor will report back its measure 
 void Sensor::setReportIntervalMinutes(int value) {
   _report_timer->start(value,MINUTES);
 }
 
-// After how many seconds the sensor will report back its measure
-void Sensor::setReportIntervalSeconds(int value) {
-  _report_timer->start(value,SECONDS);
+// After how many minutes the sensor will report back its measure 
+void Sensor::setReportIntervalHours(int value) {
+  _report_timer->start(value,HOURS);
 }
+
+// After how many minutes the sensor will report back its measure 
+void Sensor::setReportIntervalDays(int value) {
+  _report_timer->start(value,DAYS);
+}
+
 
 // return true if the report interval has been already configured
 bool Sensor::isReportIntervalConfigured() {
@@ -471,6 +482,8 @@ void Sensor::process(Request & request) {
     #endif
     case 16: setReportIntervalMinutes(request.getValueInt()); break;
     case 17: setReportIntervalSeconds(request.getValueInt()); break;
+    case 19: setReportIntervalHours(request.getValueInt()); break;
+    case 20: setReportIntervalDays(request.getValueInt()); break;
     case 18: setForceUpdateHours(request.getValueInt()); break;
     default: return;
   }
@@ -2957,8 +2970,17 @@ int NodeManager::getRetries() {
   void NodeManager::setBatteryMax(float value) {
     _battery_max = value;
   }
+  void NodeManager::setBatteryReportSeconds(int value) {
+    _battery_report_timer.set(value,SECONDS);
+  }
   void NodeManager::setBatteryReportMinutes(int value) {
     _battery_report_timer.set(value,MINUTES);
+  }
+  void NodeManager::setBatteryReportHours(int value) {
+    _battery_report_timer.set(value,HOURS);
+  }
+  void NodeManager::setBatteryReportDays(int value) {
+    _battery_report_timer.set(value,DAYS);
   }
   void NodeManager::setBatteryInternalVcc(bool value) {
     _battery_internal_vcc = value;
@@ -2973,6 +2995,7 @@ int NodeManager::getRetries() {
     _battery_report_with_interrupt = value;
   }
 #endif
+
 void NodeManager::setSleepSeconds(int value) {
   // set the status to AWAKE if the time provided is 0, SLEEP otherwise
   if (value == 0) _status = AWAKE;
@@ -3354,7 +3377,9 @@ void NodeManager::before() {
   }
   // print out MySensors' library capabilities
   #if DEBUG == 1
-    Serial.print(F("LIB R="));
+    Serial.print(F("LIB V="));
+    Serial.print(MYSENSORS_LIBRARY_VERSION);
+    Serial.print(F(" R="));
     Serial.print(MY_CAP_RADIO);
     #ifdef MY_CAP_ENCR
       Serial.print(F(" E="));
@@ -3379,6 +3404,11 @@ void NodeManager::before() {
     // if not already configured, report battery level every 60 minutes
     if (! _battery_report_timer.isConfigured()) _battery_report_timer.set(60,MINUTES);
     _battery_report_timer.start();
+  #endif
+  #if SIGNAL_SENSOR == 1 && defined(MY_SIGNAL_REPORT_ENABLED)
+    // if not already configured, report signal level every 60 minutes
+    if (! _signal_report_timer.isConfigured()) _signal_report_timer.set(60,MINUTES);
+    _signal_report_timer.start();
   #endif
   // setup individual sensors
   for (int i = 1; i <= MAX_SENSORS; i++) {
@@ -3407,6 +3437,12 @@ void NodeManager::presentation() {
     _present(BATTERY_CHILD_ID, S_MULTIMETER);
     // report battery level
     batteryReport();
+  #endif
+  #if SIGNAL_SENSOR == 1 && defined(MY_SIGNAL_REPORT_ENABLED)
+    // present the signal service
+    _present(SIGNAL_CHILD_ID, S_SOUND);
+    // report battery level
+    signalReport();
   #endif
   // present each sensor
   for (int i = 1; i <= MAX_SENSORS; i++) {
@@ -3455,6 +3491,17 @@ void NodeManager::loop() {
       batteryReport();
       // restart the timer
       _battery_report_timer.restart();
+    }
+  #endif
+  #if SIGNAL_SENSOR == 1 && defined(MY_SIGNAL_REPORT_ENABLED)
+    // update the timer for signal report when not waking up from an interrupt
+    if (_signal_report_timer.isRunning() && _last_interrupt_pin == -1) _signal_report_timer.update();
+    // if it is time to report the signal level
+    if (_signal_report_timer.isOver()) {
+      // time to report the signal level again
+      signalReport();
+      // restart the timer
+      _signal_report_timer.restart();
     }
   #endif
   #if POWER_MANAGER == 1
@@ -3610,6 +3657,21 @@ void NodeManager::process(Request & request) {
     case 30: setSleepOrWait(request.getValueInt()); break;
     case 31: setRebootPin(request.getValueInt()); break;
     case 32: setADCOff(); break;
+    #if SIGNAL_SENSOR == 1 && defined(MY_SIGNAL_REPORT_ENABLED)
+      case 33: setSignalReportMinutes(request.getValueInt()); break;
+      case 43: setSignalReportSeconds(request.getValueInt()); break;
+      case 44: setSignalReportHours(request.getValueInt()); break;
+      case 45: setSignalReportDays(request.getValueInt()); break;
+      case 34: setSignalCommand(request.getValueInt()); break;
+      case 35: signalReport(); break;
+    #endif
+    case 36: setReportIntervalSeconds(request.getValueInt()); break;
+    case 37: setReportIntervalMinutes(request.getValueInt()); break;
+    case 38: setReportIntervalHours(request.getValueInt()); break;
+    case 39: setReportIntervalDays(request.getValueInt()); break;
+    case 40: setBatteryReportSeconds(request.getValueInt()); break;
+    case 41: setBatteryReportHours(request.getValueInt()); break;
+    case 42: setBatteryReportDays(request.getValueInt()); break;
     default: return; 
   }
   _send(_msg.set(function));
@@ -3759,14 +3821,24 @@ int NodeManager::getLastInterruptPin() {
   return _last_interrupt_pin;
 }
 
+// set the default interval in seconds all the sensors will report their measures
+void NodeManager::setReportIntervalSeconds(int value) {
+  _report_interval_seconds = value;
+}
+
 // set the default interval in minutes all the sensors will report their measures
 void NodeManager::setReportIntervalMinutes(int value) {
   _report_interval_seconds = value*60;
 }
 
-// set the default interval in seconds all the sensors will report their measures
-void NodeManager::setReportIntervalSeconds(int value) {
-  _report_interval_seconds = value;
+// set the default interval in hours all the sensors will report their measures
+void NodeManager::setReportIntervalHours(int value) {
+  _report_interval_seconds = value*60*60;
+}
+
+// set the default interval in days all the sensors will report their measures
+void NodeManager::setReportIntervalDays(int value) {
+  _report_interval_seconds = value*60*60*24;
 }
 
 // if set and when the board is battery powered, sleep() is always called instead of wait()
@@ -3793,6 +3865,34 @@ void NodeManager::sleepOrWait(long value) {
   if (isSleepingNode() && _sleep_or_wait && value > 200) sleep(value);
   else wait(value);
 }
+
+#if SIGNAL_SENSOR == 1 && defined(MY_SIGNAL_REPORT_ENABLED)
+  void NodeManager::setSignalReportSeconds(int value) {
+    _signal_report_timer.set(value,SECONDS);
+  }
+  void NodeManager::setSignalReportMinutes(int value) {
+    _signal_report_timer.set(value,MINUTES);
+  }
+  void NodeManager::setSignalReportHours(int value) {
+    _signal_report_timer.set(value,HOURS);
+  }
+  void NodeManager::setSignalReportDays(int value) {
+    _signal_report_timer.set(value,DAYS);
+  }
+  void NodeManager::setSignalCommand(int value) {
+    _signal_command = value;
+  }
+  void NodeManager::signalReport() {
+    int16_t value = transportGetSignalReport(_signal_command);
+    #if DEBUG == 1
+      Serial.print(F("SIG V="));
+      Serial.println(value);
+    #endif
+    // report signal level
+    MyMessage signal_msg(SIGNAL_CHILD_ID, V_LEVEL);
+    _send(signal_msg.set(value));
+  }
+#endif
 
 // handle an interrupt
 void NodeManager::_onInterrupt_1() {

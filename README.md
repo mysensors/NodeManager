@@ -15,6 +15,7 @@ NodeManager includes the following main components:
 * Allow waking up a sleeping node remotely at the end of a sleeping cycle
 * Allow powering on each connected sensor only while the node is awake to save battery
 * Report battery level periodically and automatically or on demand
+* Report signal level periodically and automatically or on demand
 * Calculate battery level without requiring an additional pin and the resistors
 * Allow rebooting the board remotely
 * Provide out-of-the-box sensors personalities and automatically execute their main task at each cycle
@@ -157,30 +158,32 @@ The next step is to enable NodeManager's additional functionalities and the modu
 #define DEBUG 1
 
 // if enabled, enable the capability to power on sensors with the arduino's pins to save battery while sleeping
-#define POWER_MANAGER 0
+#define POWER_MANAGER 1
 // if enabled, will load the battery manager library to allow the battery level to be reported automatically or on demand
-#define BATTERY_MANAGER 0
+#define BATTERY_MANAGER 1
 // if enabled, allow modifying the configuration remotely by interacting with the configuration child id
-#define REMOTE_CONFIGURATION 0
+#define REMOTE_CONFIGURATION 1
 // if enabled, persist the remote configuration settings on EEPROM
 #define PERSIST 0
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
-#define BATTERY_SENSOR 0
+#define BATTERY_SENSOR 1
+// if enabled, a signal sensor will be created at RSSI_CHILD_ID (202 by default) and will report the signal quality of the transport layer
+#define SIGNAL_SENSOR 1
 // if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle and STARTED when starting/rebooting
 #define SERVICE_MESSAGES 0
 
 // Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN_GAUGE, SENSOR_RAIN, SENSOR_SOIL_MOISTURE
 #define MODULE_ANALOG_INPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
-#define MODULE_DIGITAL_INPUT 0
+#define MODULE_DIGITAL_INPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_OUTPUT, SENSOR_RELAY, SENSOR_LATCHING_RELAY
-#define MODULE_DIGITAL_OUTPUT 0
+#define MODULE_DIGITAL_OUTPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
 #define MODULE_DHT 0
 // Enable this module to use one of the following sensors: SENSOR_SHT21
 #define MODULE_SHT21 0
 // Enable this module to use one of the following sensors: SENSOR_SWITCH, SENSOR_DOOR, SENSOR_MOTION
-#define MODULE_SWITCH 1
+#define MODULE_SWITCH 0
 // Enable this module to use one of the following sensors: SENSOR_DS18B20
 #define MODULE_DS18B20 0
 // Enable this module to use one of the following sensors: SENSOR_BH1750
@@ -246,8 +249,14 @@ The next step is to configure NodeManager with settings which will instruct how 
       void setBatteryMin(float value);
       // [12] the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
       void setBatteryMax(float value);
-      // [14] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60)
+      // [14] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60 minutes)
       void setBatteryReportMinutes(int value);
+      // [40] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60 minutes)
+      void setBatteryReportSeconds(int value);
+      // [41] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60 minutes)
+      void setBatteryReportHours(int value);
+      // [42] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60 minutes)
+      void setBatteryReportDays(int value);
       // [15] if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
       void setBatteryInternalVcc(bool value);
       // [16] if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
@@ -334,11 +343,14 @@ The next step is to configure NodeManager with settings which will instruct how 
     void setupInterrupts();
     // return the pin from which the last interrupt came
     int getLastInterruptPin();
-    // set the default interval in minutes all the sensors will report their measures. 
-    // If the same function is called on a specific sensor, this will not change the previously set value 
-    // For sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
-    void setReportIntervalMinutes(int value);
+    // [36] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
     void setReportIntervalSeconds(int value);
+    // [37] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
+    void setReportIntervalMinutes(int value);
+    // [38] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
+    void setReportIntervalHours(int value);
+    // [39] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
+    void setReportIntervalDays(int value);
     // [30] if set and when the board is battery powered, sleep() is always called instead of wait() (default: true)
     void setSleepOrWait(bool value);
     // sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 
@@ -347,17 +359,32 @@ The next step is to configure NodeManager with settings which will instruct how 
     void setRebootPin(int value);
     // [32] turn the ADC off so to save 0.2 mA
     void setADCOff();
+    #if SIGNAL_SENSOR == 1 && defined(MY_SIGNAL_REPORT_ENABLED)
+      // [33] How frequenly to send a signal report to the controller (default: 60 minutes)
+      void setSignalReportMinutes(int value);
+      // [43] How frequenly to send a signal report to the controller (default: 60 minutes)
+      void setSignalReportSeconds(int value);
+      // [44] How frequenly to send a signal report to the controller (default: 60 minutes)
+      void setSignalReportHours(int value);
+      // [45] How frequenly to send a signal report to the controller (default: 60 minutes)
+      void setSignalReportDays(int value);
+      // [34] define which signal report to send. Possible values are SR_UPLINK_QUALITY, SR_TX_POWER_LEVEL, SR_TX_POWER_PERCENT, SR_TX_RSSI, SR_RX_RSSI, SR_TX_SNR, SR_RX_SNR (default: SR_RX_RSSI)
+      void setSignalCommand(int value);
+      // [35] report the signal level to the controller
+      void signalReport();
+    #endif
 ~~~
 
 ### Set reporting intervals and sleeping cycles
 
-If not instructed differently, the node will stay in awake, all the sensors will report every 10 minutes and the battery level will be automatically reported every 60 minutes. To change those settings, you can call the following functions on the nodeManager object:
+If not instructed differently, the node will stay in awake, all the sensors will report every 10 minutes. Battery level and signal level will be automatically reported every 60 minutes. To change those settings, you can call the following functions on the nodeManager object:
 
 Function  | Description
 ------------ | -------------
 setSleepSeconds()/setSleepMinutes()/setSleepHours()/setSleepDays() | the time interval the node will spend in a (smart) sleep cycle
-setReportIntervalMinutes() / setReportIntervalSeconds() | the time interval the node will report the measures of all the attached sensors
-setBatteryReportMinutes() | the time interval the node will report the battery level
+setReportIntervalSeconds()/setReportIntervalMinutes()/setReportIntervalHours()/setReportIntervalDays() | the time interval the node will report the measures of all the attached sensors
+setBatteryReportSeconds()/setBatteryReportMinutes()/setBatteryReportHours()/setBatteryReportDays() | the time interval the node will report the battery level
+setSignalReportSeconds()/setSignalReportMinutes()/setSignalReportHours()/setSignalReportDays() | the time interval the node will report the radio signal level
 
 For example, to put the node to sleep in cycles of 10 minutes:
 
@@ -506,10 +533,14 @@ The following methods are available for all the sensors and can be called on the
     int getValueInt();
     float getValueFloat();
     char* getValueString();
-    // [16] After how many minutes the sensor will report back its measure (default: 10 minutes)
-    void setReportIntervalMinutes(int value);
     // [17] After how many minutes the sensor will report back its measure (default: 10 minutes)
     void setReportIntervalSeconds(int value);
+    // [16] After how many minutes the sensor will report back its measure (default: 10 minutes)
+    void setReportIntervalMinutes(int value);
+    // [19] After how many hours the sensor will report back its measure (default: 10 minutes)
+    void setReportIntervalHours(int value);
+    // [20] After how many days the sensor will report back its measure (default: 10 minutes)
+    void setReportIntervalDays(int value);
     // return true if the report interval has been already configured
     bool isReportIntervalConfigured();
     // process a remote request
@@ -1365,6 +1396,7 @@ v1.6:
 * Added support for MH-Z19 CO2 sensor
 * Added buil-in rain and soil moisture analog sensors
 * Added support for generic dimmer sensor (PWM output)
+* Radio signal level is reported automatically and on demand through child 202
 * SensorRainGauge now supports sleep mode
 * SensorSwitch now supports awake mode
 * SensorLatchingRealy now handles automatically both on and off commands
