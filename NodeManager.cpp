@@ -902,7 +902,7 @@ void SensorRainGauge::onSetup() {
 
 // what to do during loop
 void SensorRainGauge::onLoop() {
-  // do not execute loop if called by an interrupt
+  // do not report anything if called by an interrupt
   if (_node_manager->getLastInterruptPin() == _interrupt_pin) return;
   // time to report the rain so far
   _value_float = _count * _single_tip;
