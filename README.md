@@ -172,7 +172,7 @@ The next step is to enable NodeManager's additional functionalities and the modu
 // if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle and STARTED when starting/rebooting
 #define SERVICE_MESSAGES 0
 
-// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN_GAUGE, SENSOR_RAIN, SENSOR_SOIL_MOISTURE
+// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN, SENSOR_SOIL_MOISTURE
 #define MODULE_ANALOG_INPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
 #define MODULE_DIGITAL_INPUT 1
@@ -214,6 +214,8 @@ The next step is to enable NodeManager's additional functionalities and the modu
 #define MODULE_BMP280 0
 // Enable this module to use one of the following sensors: SENSOR_DIMMER
 #define MODULE_DIMMER 0
+// Enable this module to use one of the following sensors: SENSOR_RAIN_GAUGE, SENSOR_POWER_METER, SENSOR_WATER_METER
+#define MODULE_PULSE_METER 0
 ~~~
 
 ### Installing the dependencies
@@ -441,6 +443,8 @@ SENSOR_AM2320 | AM2320 sensors, return temperature/humidity based on the attache
 SENSOR_PT100 | High temperature sensor associated with DFRobot Driver, return the temperature in C° from the attached PT100 sensor
 SENSOR_BMP280 | BMP280 sensor, return temperature/pressure based on the attached BMP280 sensor
 SENSOR_DIMMER | Generic dimmer sensor used to drive a pwm output
+SENSOR_POWER_METER | Power meter pulse sensor
+SENSOR_WATER_METER | Water meter pulse sensor
 
 To register a sensor simply call the NodeManager instance with the sensory type and the pin the sensor is conncted to and optionally a child id. For example:
 ~~~c
@@ -519,6 +523,8 @@ The following methods are available for all the sensors and can be called on the
     int getValueType();
     // [11] for float values, set the float precision (default: 2)
     void  setFloatPrecision(int value);
+    // [21] for double values, set the double precision (default: 4)
+    void  setDoublePrecision(int value);
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
       void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
@@ -617,12 +623,14 @@ Each sensor class can expose additional methods.
     void setOffset(int value);
 ~~~
 
-* SensorRainGauge
+* SensorRainGauge / SensorPowerMeter / SensorWaterMeter
 ~~~c
-    // [102] set how many mm of rain to count for each tip (default: 0.11)
-    void setSingleTip(float value);
+    // [102] set how many pulses for each unit (e.g. 1000 pulses for 1 kwh of power, 9 pulses for 1 mm of rain, etc.)
+    void setPulseFactor(float value);
     // set initial value - internal pull up (default: HIGH)
     void setInitialValue(int value);
+    // set the interrupt mode to attach to (default: FALLING)
+    void setInterruptMode(int value);
 ~~~
 
 * SensorDigitalOutput / SensorRelay
@@ -1396,6 +1404,7 @@ v1.6:
 * Added support for MH-Z19 CO2 sensor
 * Added buil-in rain and soil moisture analog sensors
 * Added support for generic dimmer sensor (PWM output)
+* Added support for power and water meter pulse sensors
 * Radio signal level is reported automatically and on demand through child 202
 * SensorRainGauge now supports sleep mode
 * SensorSwitch now supports awake mode
