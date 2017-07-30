@@ -321,7 +321,9 @@ enum supported_sensors {
   #if MODULE_PULSE_METER == 1
     // rain gauge sensor
     SENSOR_RAIN_GAUGE,
+    // power meter pulse sensor
     SENSOR_POWER_METER, 
+    // water meter pulse sensor
     SENSOR_WATER_METER,
   #endif
 };
@@ -1399,11 +1401,11 @@ class SensorPulseMeter: public Sensor {
     void onProcess(Request & request);
     void onInterrupt();
   protected:
-    long _count = 0;
+    long _count = 20;
     float _pulse_factor;
     int _initial_value = HIGH;
     int _interrupt_mode = FALLING;
-    float _getTotal();
+    void _reportTotal();
 };
 
 /*

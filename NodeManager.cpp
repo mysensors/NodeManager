@@ -381,7 +381,7 @@ void Sensor::loop(const MyMessage & message) {
     if (_auto_power_pins) powerOn();
   #endif
   // for numeric sensor requiring multiple samples, keep track of the total
-  float total = 0;
+  double total = 0;
   // collect multiple samples if needed
   for (int i = 0; i < _samples; i++) {
     // call the sensor-specific implementation of the main task which will store the result in the _value variable
@@ -393,9 +393,10 @@ void Sensor::loop(const MyMessage & message) {
       // we'be been called from loop()
       onLoop();
     }
-    // for integers and floats, keep track of the total
+    // for integers, floats and doubles, keep track of the total
     if (_value_type == TYPE_INTEGER) total += (float)_value_int;
     else if (_value_type == TYPE_FLOAT) total += _value_float;
+    else if (_value_type == TYPE_DOUBLE) total += _value_double;
     // wait between samples
     if (_samples_interval > 0) _node_manager->sleepOrWait(_samples_interval);
   }
@@ -2918,7 +2919,7 @@ void SensorPulseMeter::onLoop() {
   // do not report anything if called by an interrupt
   if (_node_manager->getLastInterruptPin() == _interrupt_pin) return;
   // time to report the rain so far
-  _value_float = _getTotal();
+  _reportTotal();
   #if DEBUG == 1
     Serial.print(F("PLS I="));
     Serial.print(_child_id);
@@ -2933,7 +2934,7 @@ void SensorPulseMeter::onLoop() {
 void SensorPulseMeter::onReceive(const MyMessage & message) {
   if (message.getCommand() == C_REQ) {
     // report the total the last period
-    _value_float = _getTotal();
+    _reportTotal();
   }
 }
 
@@ -2957,8 +2958,9 @@ void SensorPulseMeter::onInterrupt() {
 }
 
 // return the total based on the pulses counted
-float SensorPulseMeter::_getTotal() {
-  return _count / _pulse_factor;
+void SensorPulseMeter::_reportTotal() {
+  if (_value_type == TYPE_DOUBLE) _value_double = _count / _pulse_factor;
+  else _value_float = _count / _pulse_factor;
 }
 
 /*
