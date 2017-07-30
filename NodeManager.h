@@ -571,7 +571,7 @@ class Sensor {
     int _child_id;
     int _presentation = S_CUSTOM;
     int _type = V_CUSTOM;
-    char* _description = "";
+    char* _description = (char *)"";
     int _samples = 1;
     int _samples_interval = 0;
     bool _track_last_value = false;
@@ -579,10 +579,10 @@ class Sensor {
     int _float_precision = 2;
     int _value_int = -1;
     float _value_float = -1;
-    char * _value_string = "";
+    char * _value_string = (char *)"";
     int _last_value_int = -1;
     float _last_value_float = -1;
-    char * _last_value_string = "";
+    char * _last_value_string = (char *)"";
     int _interrupt_pin = -1;
     #if POWER_MANAGER  == 1
       PowerManager _powerManager;
