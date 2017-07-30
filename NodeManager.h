@@ -333,6 +333,7 @@ enum supported_sensors {
 #include <core/MySensorsCore.h>
 #include <core/MyCapabilities.h>
 #include <core/MyTransport.h>
+#include <core/Version.h>
 
 // include third party libraries
 #if MODULE_DHT == 1
@@ -532,10 +533,14 @@ class Sensor {
     int getValueInt();
     float getValueFloat();
     char* getValueString();
-    // [16] After how many minutes the sensor will report back its measure (default: 10 minutes)
-    void setReportIntervalMinutes(int value);
     // [17] After how many minutes the sensor will report back its measure (default: 10 minutes)
     void setReportIntervalSeconds(int value);
+    // [16] After how many minutes the sensor will report back its measure (default: 10 minutes)
+    void setReportIntervalMinutes(int value);
+    // [19] After how many hours the sensor will report back its measure (default: 10 minutes)
+    void setReportIntervalHours(int value);
+    // [20] After how many days the sensor will report back its measure (default: 10 minutes)
+    void setReportIntervalDays(int value);
     // return true if the report interval has been already configured
     bool isReportIntervalConfigured();
     // process a remote request
@@ -1397,8 +1402,14 @@ class NodeManager {
       void setBatteryMin(float value);
       // [12] the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
       void setBatteryMax(float value);
-      // [14] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60)
+      // [14] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60 minutes)
       void setBatteryReportMinutes(int value);
+      // [40] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60 minutes)
+      void setBatteryReportSeconds(int value);
+      // [41] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60 minutes)
+      void setBatteryReportHours(int value);
+      // [42] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60 minutes)
+      void setBatteryReportDays(int value);
       // [15] if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
       void setBatteryInternalVcc(bool value);
       // [16] if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
@@ -1485,12 +1496,13 @@ class NodeManager {
     void setupInterrupts();
     // return the pin from which the last interrupt came
     int getLastInterruptPin();
-    // set the default interval in minutes all the sensors will report their measures. 
-    // If the same function is called on a specific sensor, this will not change the previously set value 
-    // For sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
+    // [36] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
     void setReportIntervalSeconds(int value);
+    // [37] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
     void setReportIntervalMinutes(int value);
+    // [38] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
     void setReportIntervalHours(int value);
+    // [39] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
     void setReportIntervalDays(int value);
     // [30] if set and when the board is battery powered, sleep() is always called instead of wait() (default: true)
     void setSleepOrWait(bool value);
@@ -1501,8 +1513,14 @@ class NodeManager {
     // [32] turn the ADC off so to save 0.2 mA
     void setADCOff();
     #if SIGNAL_SENSOR == 1 && defined(MY_SIGNAL_REPORT_ENABLED)
-      // [33] How frequenly to send a signal report to the controller (default: 60)
+      // [33] How frequenly to send a signal report to the controller (default: 60 minutes)
       void setSignalReportMinutes(int value);
+      // [43] How frequenly to send a signal report to the controller (default: 60 minutes)
+      void setSignalReportSeconds(int value);
+      // [44] How frequenly to send a signal report to the controller (default: 60 minutes)
+      void setSignalReportHours(int value);
+      // [45] How frequenly to send a signal report to the controller (default: 60 minutes)
+      void setSignalReportDays(int value);
       // [34] define which signal report to send. Possible values are SR_UPLINK_QUALITY, SR_TX_POWER_LEVEL, SR_TX_POWER_PERCENT, SR_TX_RSSI, SR_RX_RSSI, SR_TX_SNR, SR_RX_SNR (default: SR_RX_RSSI)
       void setSignalCommand(int value);
       // [35] report the signal level to the controller

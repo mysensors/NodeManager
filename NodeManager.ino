@@ -33,8 +33,7 @@ void before() {
   /*
    * Register below your sensors
   */
-  nodeManager.registerSensor(SENSOR_THERMISTOR,A1);
-  nodeManager.setReportIntervalSeconds(10);
+
 
 
   /*

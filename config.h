@@ -15,11 +15,11 @@
 // General settings
 #define MY_BAUD_RATE 9600
 //#define MY_DEBUG
-#define MY_NODE_ID 100
+//#define MY_NODE_ID 100
 //#define MY_SMART_SLEEP_WAIT_DURATION_MS 500
 
 // NRF24 radio settings
-//#define MY_RADIO_NRF24
+#define MY_RADIO_NRF24
 //#define MY_RF24_ENABLE_ENCRYPTION
 //#define MY_RF24_CHANNEL 76
 //#define MY_RF24_PA_LEVEL RF24_PA_HIGH
@@ -27,11 +27,11 @@
 //#define MY_RF24_DATARATE RF24_250KBPS
 
 // RFM69 radio settings
-#define MY_RADIO_RFM69
-#define MY_RFM69_FREQUENCY RFM69_868MHZ
-#define MY_IS_RFM69HW
+//#define MY_RADIO_RFM69
+//#define MY_RFM69_FREQUENCY RF69_868MHZ
+//#define MY_IS_RFM69HW
 //#define MY_DEBUG_VERBOSE_RFM69
-#define MY_RFM69_NEW_DRIVER
+//#define MY_RFM69_NEW_DRIVER
 //#define MY_RFM69_ENABLE_ENCRYPTION
 //#define MY_RFM69_NETWORKID 100
 //#define MY_RF69_IRQ_PIN D1
