@@ -972,7 +972,7 @@ class SensorDs18b20: public Sensor {
 class SensorBH1750: public Sensor {
   public:
     SensorBH1750(NodeManager* node_manager, int child_id);
-    // set sensor reading mode, e.g. BH1750_ONE_TIME_HIGH_RES_MODE
+    // [101] set sensor reading mode, e.g. BH1750_ONE_TIME_HIGH_RES_MODE
     void setMode(uint8_t mode);
     // define what to do at each stage of the sketch
     void onBefore();

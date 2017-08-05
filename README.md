@@ -687,7 +687,7 @@ Each sensor class can expose additional methods.
 
 *  SensorBH1750
 ~~~c
-    // set sensor reading mode, e.g. BH1750_ONE_TIME_HIGH_RES_MODE
+    // [101] set sensor reading mode, e.g. BH1750_ONE_TIME_HIGH_RES_MODE
     void setMode(uint8_t mode);
 ~~~
 
