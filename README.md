@@ -685,6 +685,12 @@ Each sensor class can expose additional methods.
     DeviceAddress* getDeviceAddress();
 ~~~
 
+*  SensorBH1750
+~~~c
+    // [101] set sensor reading mode, e.g. BH1750_ONE_TIME_HIGH_RES_MODE
+    void setMode(uint8_t mode);
+~~~
+
 *  SensorBME280 / SensorBMP085 / SensorBMP280
 ~~~c
     // [101] define how many pressure samples to keep track of for calculating the forecast (default: 5)

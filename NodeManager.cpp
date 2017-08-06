@@ -1568,6 +1568,10 @@ SensorBH1750::SensorBH1750(NodeManager* node_manager, int child_id): Sensor(node
   _lightSensor = new BH1750();
 }
 
+void SensorBH1750::setMode(uint8_t mode) {
+  _lightSensor->configure(mode);
+}
+
 // what to do during before
 void SensorBH1750::onBefore() {
   _lightSensor->begin();
@@ -1596,6 +1600,12 @@ void SensorBH1750::onReceive(const MyMessage & message) {
 
 // what to do when receiving a remote message
 void SensorBH1750::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 101: setMode(request.getValueInt()); break;
+    default: return;
+  }
+  _send(_msg_service.set(function));
 }
 
 
