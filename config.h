@@ -16,6 +16,7 @@
 #define MY_BAUD_RATE 9600
 //#define MY_DEBUG
 //#define MY_NODE_ID 100
+//#define MY_SMART_SLEEP_WAIT_DURATION_MS 500
 
 // NRF24 radio settings
 #define MY_RADIO_NRF24
@@ -23,6 +24,7 @@
 //#define MY_RF24_CHANNEL 76
 //#define MY_RF24_PA_LEVEL RF24_PA_HIGH
 //#define MY_DEBUG_VERBOSE_RF24
+//#define MY_RF24_DATARATE RF24_250KBPS
 
 // RFM69 radio settings
 //#define MY_RADIO_RFM69
@@ -35,6 +37,25 @@
 //#define MY_RF69_IRQ_PIN D1
 //#define MY_RF69_IRQ_NUM MY_RF69_IRQ_PIN
 //#define MY_RF69_SPI_CS D2
+
+// RS485 serial transport settings
+//#define MY_RS485
+//#define MY_RS485_BAUD_RATE 9600
+//#define MY_RS485_DE_PIN 2
+//#define MY_RS485_MAX_MESSAGE_LENGTH 40
+//#define MY_RS485_HWSERIAL Serial1
+
+// Message signing settings
+//#define MY_SIGNING_SOFT
+//#define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
+//#define MY_SIGNING_REQUEST_SIGNATURES
+//#define MY_SIGNING_ATSHA204
+
+// OTA Firmware update settings
+//#define MY_OTA_FIRMWARE_FEATURE
+//#define OTA_WAIT_PERIOD 300
+//#define FIRMWARE_MAX_REQUESTS 2
+//#define MY_OTA_RETRY 2
 
 /**********************************
  * MySensors gateway configuration
@@ -97,18 +118,20 @@
 #define REMOTE_CONFIGURATION 1
 // if enabled, persist the remote configuration settings on EEPROM
 #define PERSIST 0
-// if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
+// if enabled, a battery sensor will be created at BATTERY_CHILD_ID (201 by default) and will report vcc voltage together with the battery level percentage
 #define BATTERY_SENSOR 1
+// if enabled, a signal sensor will be created at RSSI_CHILD_ID (202 by default) and will report the signal quality of the transport layer
+#define SIGNAL_SENSOR 1
 // if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle and STARTED when starting/rebooting
 #define SERVICE_MESSAGES 0
 
-// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_MQ, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN_GAUGE
+// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN, SENSOR_SOIL_MOISTURE
 #define MODULE_ANALOG_INPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
 #define MODULE_DIGITAL_INPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_OUTPUT, SENSOR_RELAY, SENSOR_LATCHING_RELAY
 #define MODULE_DIGITAL_OUTPUT 1
-// Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
+// Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22, SENSOR_DHT21
 #define MODULE_DHT 0
 // Enable this module to use one of the following sensors: SENSOR_SHT21
 #define MODULE_SHT21 0
@@ -130,5 +153,22 @@
 #define MODULE_HCSR04 0
 // Enable this module to use one of the following sensors: SENSOR_MCP9808
 #define MODULE_MCP9808 0
+// Enable this module to use one of the following sensors: SENSOR_MQ
+#define MODULE_MQ 0
+// Enable this module to use one of the following sensors: SENSOR_MHZ19
+#define MODULE_MHZ19 0
+// Enable this module to use one of the following sensors: SENSOR_AM2320    
+#define MODULE_AM2320 0
+// Enable this module to use one of the following sensors: SENSOR_TSL2561    
+#define MODULE_TSL2561 0
+// Enable this module to use one of the following sensors: SENSOR_PT100
+#define MODULE_PT100 0
+// Enable this module to use one of the following sensors: SENSOR_BMP280
+#define MODULE_BMP280 0
+// Enable this module to use one of the following sensors: SENSOR_DIMMER
+#define MODULE_DIMMER 0
+// Enable this module to use one of the following sensors: SENSOR_RAIN_GAUGE, SENSOR_POWER_METER, SENSOR_WATER_METER
+#define MODULE_PULSE_METER 0
+
 #endif
 
