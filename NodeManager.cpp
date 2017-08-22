@@ -3719,9 +3719,11 @@ void NodeManager::process(Request & request) {
     case 37: setReportIntervalMinutes(request.getValueInt()); break;
     case 38: setReportIntervalHours(request.getValueInt()); break;
     case 39: setReportIntervalDays(request.getValueInt()); break;
-    case 40: setBatteryReportSeconds(request.getValueInt()); break;
-    case 41: setBatteryReportHours(request.getValueInt()); break;
-    case 42: setBatteryReportDays(request.getValueInt()); break;
+    #if BATTERY_MANAGER == 1
+      case 40: setBatteryReportSeconds(request.getValueInt()); break;
+      case 41: setBatteryReportHours(request.getValueInt()); break;
+      case 42: setBatteryReportDays(request.getValueInt()); break;
+    #endif
     default: return; 
   }
   _send(_msg.set(function));
