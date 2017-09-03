@@ -70,14 +70,16 @@ Since NodeManager has to communicate with the MySensors gateway on your behalf, 
 // RFM69 radio settings
 //#define MY_RADIO_RFM69
 //#define MY_RFM69_FREQUENCY RF69_868MHZ
+//#define MY_RFM69_FREQUENCY RFM69_868MHZ
 //#define MY_IS_RFM69HW
-//#define MY_DEBUG_VERBOSE_RFM69
 //#define MY_RFM69_NEW_DRIVER
 //#define MY_RFM69_ENABLE_ENCRYPTION
 //#define MY_RFM69_NETWORKID 100
+//#define MY_DEBUG_VERBOSE_RFM69
 //#define MY_RF69_IRQ_PIN D1
 //#define MY_RF69_IRQ_NUM MY_RF69_IRQ_PIN
 //#define MY_RF69_SPI_CS D2
+//#define MY_RFM69_ATC_MODE_DISABLED
 
 // RS485 serial transport settings
 //#define MY_RS485
@@ -168,7 +170,7 @@ The next step is to enable NodeManager's additional functionalities and the modu
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID and will report vcc voltage together with the battery level percentage
 #define BATTERY_SENSOR 1
 // if enabled, a signal sensor will be created at RSSI_CHILD_ID (202 by default) and will report the signal quality of the transport layer
-#define SIGNAL_SENSOR 1
+#define SIGNAL_SENSOR 0
 // if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle and STARTED when starting/rebooting
 #define SERVICE_MESSAGES 0
 
@@ -180,7 +182,7 @@ The next step is to enable NodeManager's additional functionalities and the modu
 #define MODULE_DIGITAL_OUTPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
 #define MODULE_DHT 0
-// Enable this module to use one of the following sensors: SENSOR_SHT21
+// Enable this module to use one of the following sensors: SENSOR_SHT21, SENSOR_HTU21D
 #define MODULE_SHT21 0
 // Enable this module to use one of the following sensors: SENSOR_SWITCH, SENSOR_DOOR, SENSOR_MOTION
 #define MODULE_SWITCH 0
@@ -379,14 +381,14 @@ The next step is to configure NodeManager with settings which will instruct how 
 
 ### Set reporting intervals and sleeping cycles
 
-If not instructed differently, the node will stay in awake, all the sensors will report every 10 minutes. Battery level and signal level will be automatically reported every 60 minutes. To change those settings, you can call the following functions on the nodeManager object:
+If not instructed differently, the node will stay awake and all the sensors will report every 10 minutes, battery level and signal level will be automatically reported every 60 minutes. To change those settings, you can call the following functions on the nodeManager object:
 
 Function  | Description
 ------------ | -------------
-setSleepSeconds()/setSleepMinutes()/setSleepHours()/setSleepDays() | the time interval the node will spend in a (smart) sleep cycle
-setReportIntervalSeconds()/setReportIntervalMinutes()/setReportIntervalHours()/setReportIntervalDays() | the time interval the node will report the measures of all the attached sensors
-setBatteryReportSeconds()/setBatteryReportMinutes()/setBatteryReportHours()/setBatteryReportDays() | the time interval the node will report the battery level
-setSignalReportSeconds()/setSignalReportMinutes()/setSignalReportHours()/setSignalReportDays() | the time interval the node will report the radio signal level
+setSleepSeconds(), setSleepMinutes(), setSleepHours(), setSleepDays() | the time interval the node will spend in a (smart) sleep cycle
+setReportIntervalSeconds(), setReportIntervalMinutes(), setReportIntervalHours(), setReportIntervalDays() | the time interval the node will report the measures of all the attached sensors
+setBatteryReportSeconds(), setBatteryReportMinutes(), setBatteryReportHours(), setBatteryReportDays() | the time interval the node will report the battery level
+setSignalReportSeconds(), setSignalReportMinutes(), setSignalReportHours(), setSignalReportDays() | the time interval the node will report the radio signal level
 
 For example, to put the node to sleep in cycles of 10 minutes:
 
@@ -394,7 +396,7 @@ For example, to put the node to sleep in cycles of 10 minutes:
 	nodeManager.setSleepMinutes(10);
 ~~~
 
-If you need every sensor to report at a different time interval, you can call `setReportIntervalMinutes()` or `setReportIntervalSeconds()` on the sensor's object. For example to have a DHT sensor reporting every 60 seconds while all the other sensors every 20 minutes:
+If you need every sensor to report at a different time interval, you can call `setBatteryReportSeconds(), setBatteryReportMinutes(), setBatteryReportHours(), setBatteryReportDays()` on the sensor's object. For example to have a DHT sensor reporting every 60 seconds while all the other sensors every 20 minutes:
 ~~~c
 int id = nodeManager.registerSensor(SENSOR_DHT22,6);
 SensorDHT* dht = (SensorDHT*)nodeManager.get(id);
@@ -469,14 +471,14 @@ If you want to create a custom sensor and register it with NodeManager so it can
     // define what to do during receive() when the sensor receives a message
     void onReceive(const MyMessage & message);
 	// define what to do when receiving a remote configuration message
-	void onProcess(Request & request);
-	// define what to do when receiving an interrupt
-	void onInterrupt();
+    void onProcess(Request & request);
+    // define what to do when receiving an interrupt
+    void onInterrupt();
 ~~~
 
-You can then instantiate your newly created class and register with NodeManager:
+You can then instantiate your newly created class and register it with NodeManager:
 ~~~c
-	nodeManager.registerSensor(new SensorCustom(&nodeManager,child_id, pin));
+    nodeManager.registerSensor(new SensorCustom(&nodeManager,child_id, pin));
 ~~~
 
 ### Configuring the sensors
@@ -747,6 +749,12 @@ Each sensor class can expose additional methods.
     void fadeTo(int value);
 ~~~
 
+### Creating a gateway
+
+NodeManager can be also used to create a MySensors gateway. Open your config.h file and look for the gateway-specific defines under "MySensors gateway configuration". The most common settings are reported there, just uncomment those you need to use based on the network you are creating.
+
+Please note you don't necessarily need a NodeManager gateway to interact with a NodeManager node. The NodeManager node is fully compatible with any existing gateway you are currently operating with.
+
 ### Upload your sketch
 
 Upload your sketch to your arduino board as you are used to.
@@ -767,6 +775,7 @@ To activate a relay connected to the same node, child_id 100 we need to send a `
 No need to implement anything on your side since for built-in sensors this is handled automatically. 
 
 NodeManager exposes also a configuration service which is by default on child_id 200 so you can interact with it by sending `V_CUSTOM` type of messages and commands within the payload. For each `REQ` message, the node will respond with a `SET` message if successful. 
+
 Almost all the functions made available through the API can be called remotely. To do so, the payload must be in the format `<function_id>[,<value_to_set>]` where `function_id` is the number between square brackets you can find in the description above and, if the function takes and argument, this can be passed along in `value_to_set`. 
 For example, to request a battery report, find the function you need to call remotely within the documentation:
 ~~~c
@@ -806,11 +815,11 @@ If you want to decrease the temperature offset of a thermistor sensor to -2:
 ~~~
 `100;1;2;0;48;105,-2`
 
-Please note that anything set remotely will NOT persist a reboot apart from those setting the sleep interval which are saved to the EEPROM (provided `PERSIST` is enabled).
+Please note that anything set remotely will NOT persist a reboot apart from the sleep interval which is saved to the EEPROM (provided `PERSIST` is enabled).
 
 ## Understanding NodeManager: how it works
 
-A NodeManager object is created for you at the beginning of your sketch and its main functions must called from within `before()`, `presentation()`, `loop()` and `receive()` to work properly. NodeManager will do the following during each phase:
+A NodeManager object is created for you at the beginning of your sketch and its main functions must be called from within `before()`, `presentation()`, `loop()` and `receive()` to work properly. NodeManager will do the following during each phase:
 
 NodeManager::before():
 * Setup the interrupt pins to wake up the board based on the configured interrupts
@@ -1297,7 +1306,7 @@ Contributes to NodeManager are of course more than welcome.
 
 ### Reporting an issue or request an enhancement
 
-For reporting an issue, requesting support for a new sensor or any other kind of enhancement, please drop a message either on the project's main page (<https://www.mysensors.org/download/node-manager>) or directly on Github (<https://github.com/mysensors/NodeManager/issues>).
+For reporting an issue, requesting support for a new sensor or any other kind of enhancement, please drop a message either on the project's main page (<https://www.mysensors.org/download/node-manager>), on the MySensors Forum (<https://forum.mysensors.org/category/43/nodemanager>) or open an issue directly on Github (<https://github.com/mysensors/NodeManager/issues>).
 
 
 ### Contributing to the code
@@ -1398,8 +1407,9 @@ v1.5:
 * Added common gateway settings in config.h
 
 v1.6:
-* Introduced new remote API to allow calling all NodeManager's and sensors' functions remotely
-* Decoupled reporting intervals from sleeping cycles
+* Introduced new remote API to allow calling almost ALL NodeManager's and its sensors' functions remotely
+* Reporting interval configuration is now indipendent from the sleep cycle
+* Reporting interval can be customized per-sensor
 * All intervals (measure/battery reports) are now time-based
 * Added support for BMP280 temperature and pressure sensor
 * Added support for RS485 serial transport 
@@ -1408,14 +1418,14 @@ v1.6:
 * Added support for AM2320 temperature/humidity sensor
 * Added support for PT100 high temperature sensor
 * Added support for MH-Z19 CO2 sensor
-* Added buil-in rain and soil moisture analog sensors
+* Added support for analog rain and soil moisture sensors
 * Added support for generic dimmer sensor (PWM output)
 * Added support for power and water meter pulse sensors
-* Radio signal level is reported automatically and on demand through child 202
+* Radio signal level (RSSI) is now reported automatically like the battery level
 * SensorRainGauge now supports sleep mode
 * SensorSwitch now supports awake mode
 * SensorLatchingRealy now handles automatically both on and off commands
 * SensorMQ now depends on its own module
-* Added automatic off capability (safeguard) to SensorDigitalOutput
+* Added safeguard (automatic off) to SensorDigitalOutput
 * Any sensor can now access all NodeManager's functions
 * DHT sensor now using MySensors' DHT library

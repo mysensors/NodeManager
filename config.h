@@ -29,14 +29,16 @@
 // RFM69 radio settings
 //#define MY_RADIO_RFM69
 //#define MY_RFM69_FREQUENCY RF69_868MHZ
+//#define MY_RFM69_FREQUENCY RFM69_868MHZ
 //#define MY_IS_RFM69HW
-//#define MY_DEBUG_VERBOSE_RFM69
 //#define MY_RFM69_NEW_DRIVER
 //#define MY_RFM69_ENABLE_ENCRYPTION
 //#define MY_RFM69_NETWORKID 100
+//#define MY_DEBUG_VERBOSE_RFM69
 //#define MY_RF69_IRQ_PIN D1
 //#define MY_RF69_IRQ_NUM MY_RF69_IRQ_PIN
 //#define MY_RF69_SPI_CS D2
+//#define MY_RFM69_ATC_MODE_DISABLED
 
 // RS485 serial transport settings
 //#define MY_RS485
@@ -121,7 +123,7 @@
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID (201 by default) and will report vcc voltage together with the battery level percentage
 #define BATTERY_SENSOR 1
 // if enabled, a signal sensor will be created at RSSI_CHILD_ID (202 by default) and will report the signal quality of the transport layer
-#define SIGNAL_SENSOR 1
+#define SIGNAL_SENSOR 0
 // if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle and STARTED when starting/rebooting
 #define SERVICE_MESSAGES 0
 
@@ -131,9 +133,9 @@
 #define MODULE_DIGITAL_INPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_OUTPUT, SENSOR_RELAY, SENSOR_LATCHING_RELAY
 #define MODULE_DIGITAL_OUTPUT 1
-// Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22, SENSOR_DHT21
+// Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
 #define MODULE_DHT 0
-// Enable this module to use one of the following sensors: SENSOR_SHT21
+// Enable this module to use one of the following sensors: SENSOR_SHT21, SENSOR_HTU21D
 #define MODULE_SHT21 0
 // Enable this module to use one of the following sensors: SENSOR_SWITCH, SENSOR_DOOR, SENSOR_MOTION
 #define MODULE_SWITCH 0
