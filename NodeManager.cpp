@@ -164,23 +164,25 @@ float Timer::getElapsed() {
 */
 
 Request::Request(const char* string) {
-  char str[10];
-  char* ptr;
-  strcpy(str,string);
-  // tokenize the string and split function from value
-  strtok_r(str,",",&ptr);
-  _function = atoi(str);
-  strcpy(_value,ptr);
-  #if DEBUG == 1
-    Serial.print(F("REQ F="));
-    Serial.print(getFunction());
-    Serial.print(F(" I="));
-    Serial.print(getValueInt());
-    Serial.print(F(" F="));
-    Serial.print(getValueFloat());
-    Serial.print(F(" S="));
-    Serial.println(getValueString());
-  #endif
+	char* ptr;
+	// copy to working area
+	strcpy((char*)&_value, string);
+	// tokenize the string and split function from value
+	strtok_r(_value, ",", &ptr);
+	// get function code
+	_function = atoi(_value);
+	// move user data to working area
+	strcpy(_value, ptr);
+#if DEBUG == 1
+	Serial.print(F("REQ F="));
+	Serial.print(getFunction());
+	Serial.print(F(" I="));
+	Serial.print(getValueInt());
+	Serial.print(F(" F="));
+	Serial.print(getValueFloat());
+	Serial.print(F(" S="));
+	Serial.println(getValueString());
+#endif
 }
 
 // return the parsed function
@@ -4081,15 +4083,22 @@ int NodeManager::_getInterruptInitialValue(int mode) {
   return -1;
 }
 
+// Local union used to split _sleep_time into bytes
+typedef union {
+	long    long_value;
+	uint8_t byte_arrray[4];
+} tLongByteArrayCombo;
+
 // load the configuration stored in the eeprom
 void NodeManager::_loadConfig() {
   if (loadState(EEPROM_SLEEP_SAVED) == 1) {
-    // load sleep settings
-    int bit_1 = loadState(EEPROM_SLEEP_1);
-    int bit_2 = loadState(EEPROM_SLEEP_2);
-    int bit_3 = loadState(EEPROM_SLEEP_3);
-    _sleep_time = bit_3*255*255 + bit_2*255 + bit_1;
-    #if DEBUG == 1
+	tLongByteArrayCombo c;
+	c.byte_arrray[0] = loadState(EEPROM_SLEEP_1);
+	c.byte_arrray[1] = loadState(EEPROM_SLEEP_2);
+	c.byte_arrray[2] = loadState(EEPROM_SLEEP_3);
+	c.byte_arrray[3] = 0;
+	_sleep_time = c.long_value;
+	#if DEBUG == 1
       Serial.print(F("LOADSLP T="));
       Serial.println(_sleep_time);
     #endif
@@ -4099,20 +4108,10 @@ void NodeManager::_loadConfig() {
 // save the configuration in the eeprom
 void NodeManager::_saveConfig() {
   if (_sleep_time == 0) return;
-  // encode the sleep time in 3 bits
-  int bit_1, bit_2, bit_3 = 0;
-  bit_1 = _sleep_time;
-  if (bit_1 >= 255) {
-    bit_2 = (int)bit_1/255;
-    bit_1 = bit_1 - bit_2*255;
-  }
-  if (bit_2 >= 255) {
-    bit_3 = (int)bit_2/255;
-    bit_2 = bit_2 - bit_3*255;
-  }
-  // save the 3 bits
-  saveState(EEPROM_SLEEP_SAVED,1);
-  saveState(EEPROM_SLEEP_1,bit_1);
-  saveState(EEPROM_SLEEP_2,bit_2);
-  saveState(EEPROM_SLEEP_3,bit_3);
+  tLongByteArrayCombo c;
+  c.long_value = _sleep_time;
+  saveState(EEPROM_SLEEP_1, c.byte_arrray[0]);
+  saveState(EEPROM_SLEEP_2, c.byte_arrray[1]);
+  saveState(EEPROM_SLEEP_3, c.byte_arrray[2]);
+  saveState(EEPROM_SLEEP_SAVED, 1);
 }
