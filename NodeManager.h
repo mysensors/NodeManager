@@ -207,6 +207,10 @@
 #ifndef MODULE_PULSE_METER
   #define MODULE_PULSE_METER 0
 #endif
+// Enable this module to use one of the following sensors: SENSOR_SHT31
+#ifndef MODULE_SHT31
+  #define MODULE_SHT31 0
+#endif
 
 /***********************************
    Supported Sensors
@@ -326,6 +330,10 @@ enum supported_sensors {
     // water meter pulse sensor
     SENSOR_WATER_METER,
   #endif
+  #if MODULE_SHT31 == 1
+    // SHT31 temperature and humidity sensor
+    SENSOR_SHT31,
+  #endif
 };
  
 /***********************************
@@ -407,6 +415,11 @@ enum supported_sensors {
 #endif
 #if MODULE_DIMMER == 1
   #include <math.h>
+#endif
+#if MODULE_SHT31 == 1
+  #include <Arduino.h>
+  #include <Wire.h>
+  #include "Adafruit_SHT31.h"
 #endif
 
 /*******************************************************************
@@ -1432,6 +1445,30 @@ class SensorPowerMeter: public SensorPulseMeter {
 class SensorWaterMeter: public SensorPulseMeter {
   public:
     SensorWaterMeter(NodeManager* node_manager, int child_id, int pin);
+};
+#endif
+
+/*
+   SensorSHT31: temperature and humidity sensor
+*/
+#if MODULE_SHT31 == 1
+class SensorSHT31: public Sensor {
+  public:
+    SensorSHT31(NodeManager* node_manager, int child_id, Adafruit_SHT31* sht31, int sensor_type);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop();
+    void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
+    void onInterrupt();
+    // constants
+    const static int TEMPERATURE = 0;
+    const static int HUMIDITY = 1;
+  protected:
+    float _offset = 0;
+    int _sensor_type = 0;
+    Adafruit_SHT31* _sht31;
 };
 #endif
 

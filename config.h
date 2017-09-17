@@ -171,6 +171,8 @@
 #define MODULE_DIMMER 0
 // Enable this module to use one of the following sensors: SENSOR_RAIN_GAUGE, SENSOR_POWER_METER, SENSOR_WATER_METER
 #define MODULE_PULSE_METER 0
+// Enable this module to use one of the following sensors: SENSOR_SHT31
+#define MODULE_SHT31 0
 
 #endif
 

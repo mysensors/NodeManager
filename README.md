@@ -218,6 +218,8 @@ The next step is to enable NodeManager's additional functionalities and the modu
 #define MODULE_DIMMER 0
 // Enable this module to use one of the following sensors: SENSOR_RAIN_GAUGE, SENSOR_POWER_METER, SENSOR_WATER_METER
 #define MODULE_PULSE_METER 0
+// Enable this module to use one of the following sensors: SENSOR_SHT31
+#define MODULE_SHT31 0
 ~~~
 
 ### Installing the dependencies
@@ -239,6 +241,7 @@ MODULE_MCP9808 | https://github.com/adafruit/Adafruit_MCP9808_Library
 MODULE_AM2320 | https://github.com/thakshak/AM2320
 MODULE_TSL2561 | https://github.com/adafruit/TSL2561-Arduino-Library
 MODULE_BMP280 | https://github.com/adafruit/Adafruit_BMP280_Library
+MODULE_SHT31 | https://github.com/adafruit/Adafruit_SHT31
 
 ### Configure NodeManager
 
@@ -447,6 +450,7 @@ SENSOR_BMP280 | BMP280 sensor, return temperature/pressure based on the attached
 SENSOR_DIMMER | Generic dimmer sensor used to drive a pwm output
 SENSOR_POWER_METER | Power meter pulse sensor
 SENSOR_WATER_METER | Water meter pulse sensor
+SENSOR_SHT31 | SHT31 sensor, return temperature/humidity based on the attached SHT31 sensor
 
 To register a sensor simply call the NodeManager instance with the sensory type and the pin the sensor is conncted to and optionally a child id. For example:
 ~~~c
