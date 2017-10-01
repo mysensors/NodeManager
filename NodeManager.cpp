@@ -3443,7 +3443,12 @@ void NodeManager::before() {
   #endif
   #if BATTERY_MANAGER == 1 && !defined(MY_GATEWAY_ESP8266)
     // set analogReference to internal if measuring the battery through a pin
-    if (! _battery_internal_vcc && _battery_pin > -1) analogReference(INTERNAL);
+    if (! _battery_internal_vcc && _battery_pin > -1)
+    #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+      analogReference(INTERNAL1V1);
+    #else
+      analogReference(INTERNAL);
+    #endif
     // if not already configured, report battery level every 60 minutes
     if (! _battery_report_timer.isConfigured()) _battery_report_timer.set(60,MINUTES);
     _battery_report_timer.start();
