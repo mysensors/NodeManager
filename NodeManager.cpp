@@ -215,6 +215,9 @@ char* Request::getValueString() {
  Child class
  */
 
+Child::Child() {
+  
+}
 Child::Child(int child_id, int presentation, int type, int value_type, char* description) {
   _child_id = child_id;
   _presentation = presentation;
@@ -1287,8 +1290,10 @@ void SensorDHT::onInterrupt() {
 // contructor
 SensorSHT21::SensorSHT21(NodeManager* node_manager, int child_id, int sensor_type): Sensor(node_manager,child_id,A2) {
 //  _children = new Child[2];
-  _children[temperature] = new Child(1,S_TEMP,V_TEMP,TYPE_FLOAT,"");
-  _children[humidity] = new Child(2,S_HUM,V_HUM,TYPE_FLOAT,"");
+  //_children[temperature] = new Child(1,S_TEMP,V_TEMP,TYPE_FLOAT,"");
+  //_children[humidity] = new Child(2,S_HUM,V_HUM,TYPE_FLOAT,"");
+  myList.push_back(Child(1,S_TEMP,V_TEMP,TYPE_FLOAT,""));
+  myList.push_back(Child(2,S_HUM,V_HUM,TYPE_FLOAT,""));
   
   // store the sensor type (0: temperature, 1: humidity)
   _sensor_type = sensor_type;
