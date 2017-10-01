@@ -164,14 +164,12 @@ float Timer::getElapsed() {
 */
 
 Request::Request(const char* string) {
+  char str[10];
   char* ptr;
-  // copy to working area
-  strcpy((char*)&_value, string);
+  strcpy(str,string);
   // tokenize the string and split function from value
-  strtok_r(_value, ",", &ptr);
-  // get function code
-  _function = atoi(_value);
-  // move user data to working area
+  strtok_r(str,",",&ptr);
+  _function = atoi(str);
   strcpy(_value,ptr);
   #if DEBUG == 1
     Serial.print(F("REQ F="));
