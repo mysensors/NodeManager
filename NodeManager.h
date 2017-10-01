@@ -578,8 +578,7 @@ class Sensor {
     virtual void onProcess(Request & request) = 0;
     virtual void onInterrupt() = 0;
   protected:
-    MyMessage _msg;
-    MyMessage _msg_service;
+    MyMessage* _msg;
     NodeManager* _node_manager;
     int _pin = -1;
     int _child_id;
@@ -607,7 +606,8 @@ class Sensor {
     #endif
     Timer* _report_timer;
     Timer* _force_update_timer;
-    void _send(MyMessage & msg);
+    void _sendSensorMessage(MyMessage & msg);
+    void _sendServiceMessage(MyMessage & msg);
     bool _isReceive(const MyMessage & message);
     bool _isWorthSending(bool comparison);
 };
@@ -1584,6 +1584,8 @@ class NodeManager {
     // handle interrupts
     static void _onInterrupt_1();
     static void _onInterrupt_2();
+	MyMessage* getMessage();
+	void sendMessage();
   private:
     #if BATTERY_MANAGER == 1
       float _battery_min = 2.6;
@@ -1604,7 +1606,9 @@ class NodeManager {
       int _signal_command = SR_RX_RSSI;
     #endif
     MyMessage _msg;
-    void _send(MyMessage & msg);
+    void _sendUsingConfigChild(MyMessage & msg);
+    void _sendUsingBatteryChild(MyMessage & msg);
+    void _sendUsingSignalChild(MyMessage & msg);
     int _status = AWAKE;
     long _sleep_time = 0;
     int _sleep_interrupt_pin = -1;
