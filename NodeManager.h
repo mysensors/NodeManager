@@ -492,7 +492,8 @@ class Request {
    private:
     NodeManager* _node_manager;
     int _function;
-    char* _value;
+	// Size of buffer to prevent overrun 
+    char _value[MAX_PAYLOAD+1];
 };
 
 /***************************************
