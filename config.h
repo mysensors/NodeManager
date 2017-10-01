@@ -15,11 +15,11 @@
 // General settings
 #define MY_BAUD_RATE 9600
 //#define MY_DEBUG
-//#define MY_NODE_ID 100
+#define MY_NODE_ID 3
 //#define MY_SMART_SLEEP_WAIT_DURATION_MS 500
 
 // NRF24 radio settings
-#define MY_RADIO_NRF24
+//#define MY_RADIO_NRF24
 //#define MY_RF24_ENABLE_ENCRYPTION
 //#define MY_RF24_CHANNEL 76
 //#define MY_RF24_PA_LEVEL RF24_PA_HIGH
@@ -27,11 +27,11 @@
 //#define MY_RF24_DATARATE RF24_250KBPS
 
 // RFM69 radio settings
-//#define MY_RADIO_RFM69
+#define MY_RADIO_RFM69
 //#define MY_RFM69_FREQUENCY RF69_868MHZ
-//#define MY_RFM69_FREQUENCY RFM69_868MHZ
-//#define MY_IS_RFM69HW
-//#define MY_RFM69_NEW_DRIVER
+#define MY_RFM69_FREQUENCY RFM69_868MHZ
+#define MY_IS_RFM69HW
+#define MY_RFM69_NEW_DRIVER
 //#define MY_RFM69_ENABLE_ENCRYPTION
 //#define MY_RFM69_NETWORKID 100
 //#define MY_DEBUG_VERBOSE_RFM69
@@ -113,7 +113,7 @@
 #define DEBUG 1
 
 // if enabled, enable the capability to power on sensors with the arduino's pins to save battery while sleeping
-#define POWER_MANAGER 1
+#define POWER_MANAGER 0
 // if enabled, will load the battery manager library to allow the battery level to be reported automatically or on demand
 #define BATTERY_MANAGER 1
 // if enabled, allow modifying the configuration remotely by interacting with the configuration child id
@@ -123,20 +123,20 @@
 // if enabled, a battery sensor will be created at BATTERY_CHILD_ID (201 by default) and will report vcc voltage together with the battery level percentage
 #define BATTERY_SENSOR 1
 // if enabled, a signal sensor will be created at RSSI_CHILD_ID (202 by default) and will report the signal quality of the transport layer
-#define SIGNAL_SENSOR 0
+#define SIGNAL_SENSOR 1
 // if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle and STARTED when starting/rebooting
 #define SERVICE_MESSAGES 0
 
 // Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN, SENSOR_SOIL_MOISTURE
-#define MODULE_ANALOG_INPUT 1
+#define MODULE_ANALOG_INPUT 0
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
-#define MODULE_DIGITAL_INPUT 1
+#define MODULE_DIGITAL_INPUT 0
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_OUTPUT, SENSOR_RELAY, SENSOR_LATCHING_RELAY
-#define MODULE_DIGITAL_OUTPUT 1
+#define MODULE_DIGITAL_OUTPUT 0
 // Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
 #define MODULE_DHT 0
 // Enable this module to use one of the following sensors: SENSOR_SHT21, SENSOR_HTU21D
-#define MODULE_SHT21 0
+#define MODULE_SHT21 1
 // Enable this module to use one of the following sensors: SENSOR_SWITCH, SENSOR_DOOR, SENSOR_MOTION
 #define MODULE_SWITCH 0
 // Enable this module to use one of the following sensors: SENSOR_DS18B20

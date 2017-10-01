@@ -106,6 +106,10 @@
 #ifndef MAX_SENSORS
   #define MAX_SENSORS 10
 #endif
+// define the maximum number of children that a sensor can have
+#ifndef MAX_CHILDREN
+  #define MAX_CHILDREN 5
+#endif
 // define default sketch name and version
 #ifndef SKETCH_NAME
   #define SKETCH_NAME "NodeManager"
@@ -499,6 +503,17 @@ class Request {
 /***************************************
    Sensor: generic sensor class
 */
+
+class Child {
+  public:
+    Child(int child_id, int presentation, int type, int value_type, char* description);
+    int _child_id;
+    int _presentation = S_CUSTOM;
+    int _type = V_CUSTOM;
+    char* _description = "";
+    int _value_type = TYPE_INTEGER;
+};
+
 class Sensor {
   public:
     Sensor(NodeManager* node_manager, int child_id, int pin);
@@ -581,14 +596,9 @@ class Sensor {
     MyMessage* _msg;
     NodeManager* _node_manager;
     int _pin = -1;
-    int _child_id;
-    int _presentation = S_CUSTOM;
-    int _type = V_CUSTOM;
-    char* _description = "";
     int _samples = 1;
     int _samples_interval = 0;
     bool _track_last_value = false;
-    int _value_type = TYPE_INTEGER;
     int _float_precision = 2;
     int _double_precision = 4;
     int _value_int = -1;
@@ -610,6 +620,12 @@ class Sensor {
     void _sendServiceMessage(MyMessage & msg);
     bool _isReceive(const MyMessage & message);
     bool _isWorthSending(bool comparison);
+    int _child_id;
+    int _presentation = S_CUSTOM;
+    int _type = V_CUSTOM;
+    char* _description = "";
+    int _value_type = TYPE_INTEGER;
+    Child* _children[MAX_CHILDREN+1] = {0};
 };
 
 #if MODULE_ANALOG_INPUT == 1
@@ -875,6 +891,11 @@ class SensorSHT21: public Sensor {
     // constants
     const static int TEMPERATURE = 0;
     const static int HUMIDITY = 1;
+    enum children
+    {
+        temperature,
+        humidity,
+    };
   protected:
     float _offset = 0;
     int _sensor_type = 0;

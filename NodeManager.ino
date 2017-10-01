@@ -34,8 +34,8 @@ void before() {
    * Register below your sensors
   */
   
+  nodeManager.registerSensor(SENSOR_SHT21);
   
-
   
   /*
    * Register above your sensors

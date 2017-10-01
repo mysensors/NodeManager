@@ -212,6 +212,17 @@ char* Request::getValueString() {
 */
 
 /*
+ Child class
+ */
+
+Child::Child(int child_id, int presentation, int type, int value_type, char* description) {
+  _child_id = child_id;
+  _presentation = presentation;
+  _value_type = value_type;
+  _description = description;
+}
+
+/*
    Sensor class
 */
 // constructor
@@ -1275,6 +1286,10 @@ void SensorDHT::onInterrupt() {
 #if MODULE_SHT21 == 1
 // contructor
 SensorSHT21::SensorSHT21(NodeManager* node_manager, int child_id, int sensor_type): Sensor(node_manager,child_id,A2) {
+//  _children = new Child[2];
+  _children[temperature] = new Child(1,S_TEMP,V_TEMP,TYPE_FLOAT,"");
+  _children[humidity] = new Child(2,S_HUM,V_HUM,TYPE_FLOAT,"");
+  
   // store the sensor type (0: temperature, 1: humidity)
   _sensor_type = sensor_type;
   if (_sensor_type == SensorSHT21::TEMPERATURE) {
@@ -1303,6 +1318,14 @@ void SensorSHT21::onSetup() {
 
 // what to do during loop
 void SensorSHT21::onLoop() {
+  for (int i = 0; i < MAX_CHILDREN; i++) {
+    if (_children[i] == 0) break;
+    if (i == temperature) {
+      // read the temperature
+      float temperature = SHT2x.GetTemperature();
+    }
+  }
+  
   // temperature sensor
   if (_sensor_type == SensorSHT21::TEMPERATURE) {
     // read the temperature
@@ -3934,7 +3957,7 @@ void NodeManager::sleepOrWait(long value) {
       Serial.println(value);
     #endif
     // report signal level
-	_sendSignalChild(_msg.set(value));
+	//_sendSignalChild(_msg.set(value));
   }
 #endif
 
