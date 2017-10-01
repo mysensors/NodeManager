@@ -2996,6 +2996,84 @@ SensorWaterMeter::SensorWaterMeter(NodeManager* node_manager, int child_id, int 
 }
 #endif
 
+/*
+   SensorSHT31
+*/
+#if MODULE_SHT31 == 1
+// contructor
+SensorSHT31::SensorSHT31(NodeManager* node_manager, int child_id, Adafruit_SHT31* sht31, int sensor_type): Sensor(node_manager,child_id,A2) {
+  _sht31 = sht31;
+  // store the sensor type (0: temperature, 1: humidity)
+  _sensor_type = sensor_type;
+  if (_sensor_type == SensorSHT31::TEMPERATURE) {
+    // temperature sensor
+    setPresentation(S_TEMP);
+    setType(V_TEMP);
+    setValueType(TYPE_FLOAT);
+  }
+  else if (_sensor_type == SensorSHT31::HUMIDITY) {
+    // humidity sensor
+    setPresentation(S_HUM);
+    setType(V_HUM);
+    setValueType(TYPE_FLOAT);
+  }
+}
+
+// what to do during before
+void SensorSHT31::onBefore() {
+}
+
+// what to do during setup
+void SensorSHT31::onSetup() {
+}
+
+// what to do during loop
+void SensorSHT31::onLoop() {
+  // temperature sensor
+  if (_sensor_type == SensorSHT31::TEMPERATURE) {
+    // read the temperature
+    float temperature = _sht31->readTemperature();
+    // convert it
+    temperature = _node_manager->celsiusToFahrenheit(temperature);
+    #if DEBUG == 1
+      Serial.print(F("SHT I="));
+      Serial.print(_child_id);
+      Serial.print(F(" T="));
+      Serial.println(temperature);
+    #endif
+    // store the value
+    if (! isnan(temperature)) _value_float = temperature;
+  }
+  // Humidity Sensor
+  else if (_sensor_type == SensorSHT31::HUMIDITY) {
+    // read humidity
+    float humidity = _sht31->readHumidity();
+    if (isnan(humidity)) return;
+    #if DEBUG == 1
+      Serial.print(F("SHT I="));
+      Serial.print(_child_id);
+      Serial.print(F(" H="));
+      Serial.println(humidity);
+    #endif
+    // store the value
+    if (! isnan(humidity)) _value_float = humidity;
+  }
+}
+
+// what to do as the main task when receiving a message
+void SensorSHT31::onReceive(const MyMessage & message) {
+  if (message.getCommand() == C_REQ) onLoop();
+}
+
+// what to do when receiving a remote message
+void SensorSHT31::onProcess(Request & request) {
+}
+
+// what to do when receiving an interrupt
+void SensorSHT31::onInterrupt() {
+}
+#endif
+
 /*******************************************
    NodeManager
 */
@@ -3338,6 +3416,22 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     else if (sensor_type == SENSOR_RAIN_GAUGE) return registerSensor(new SensorRainGauge(this,child_id,pin));
     else if (sensor_type == SENSOR_POWER_METER) return registerSensor(new SensorPowerMeter(this,child_id,pin));
     else if (sensor_type == SENSOR_WATER_METER) return registerSensor(new SensorWaterMeter(this,child_id,pin));
+  #endif
+  #if MODULE_SHT31 == 1
+    else if (sensor_type == SENSOR_SHT31) {
+      Adafruit_SHT31* sht31 = new Adafruit_SHT31();
+      if (! sht31->begin(0x44)) { // Set to 0x45 for alternate i2c addr
+        #if DEBUG == 1
+          Serial.println(F("NO SHT31"));
+        #endif
+        return -1;
+      }
+      // register temperature sensor
+      registerSensor(new SensorSHT31(this,child_id,sht31,SensorSHT31::TEMPERATURE));
+      // register humidity sensor
+      child_id = _getAvailableChildId();
+      return registerSensor(new SensorSHT31(this,child_id,sht31,SensorSHT31::HUMIDITY));
+    }
   #endif
   else {
     #if DEBUG == 1
