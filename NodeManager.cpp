@@ -1292,8 +1292,8 @@ SensorSHT21::SensorSHT21(NodeManager* node_manager, int child_id, int sensor_typ
 //  _children = new Child[2];
   //_children[temperature] = new Child(1,S_TEMP,V_TEMP,TYPE_FLOAT,"");
   //_children[humidity] = new Child(2,S_HUM,V_HUM,TYPE_FLOAT,"");
-  myList.push_back(Child(1,S_TEMP,V_TEMP,TYPE_FLOAT,""));
-  myList.push_back(Child(2,S_HUM,V_HUM,TYPE_FLOAT,""));
+  myList.push(Child(1,S_TEMP,V_TEMP,TYPE_FLOAT,""));
+  myList.push(Child(2,S_HUM,V_HUM,TYPE_FLOAT,""));
   
   // store the sensor type (0: temperature, 1: humidity)
   _sensor_type = sensor_type;
@@ -4161,3 +4161,4 @@ void NodeManager::_saveConfig() {
   saveState(EEPROM_SLEEP_2,bit_2);
   saveState(EEPROM_SLEEP_3,bit_3);
 }
+
