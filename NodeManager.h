@@ -645,7 +645,7 @@ class Sensor {
     // abstract functions, subclasses need to implement
     virtual void onBefore() = 0;
     virtual void onSetup() = 0;
-    virtual void onLoop() = 0;
+    virtual void onLoop(Child child) = 0;
     virtual void onReceive(const MyMessage & message) = 0;
     virtual void onProcess(Request & request) = 0;
     virtual void onInterrupt() = 0;
@@ -705,7 +705,7 @@ class SensorAnalogInput: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -746,7 +746,7 @@ class SensorThermistor: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -768,7 +768,7 @@ class SensorML8511: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -790,7 +790,7 @@ class SensorACS712: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -827,7 +827,7 @@ class SensorDigitalInput: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -858,7 +858,7 @@ class SensorDigitalOutput: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -916,7 +916,7 @@ class SensorDHT: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -941,7 +941,7 @@ class SensorSHT21: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -986,7 +986,7 @@ class SensorSwitch: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1031,7 +1031,7 @@ class SensorDs18b20: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1056,7 +1056,7 @@ class SensorBH1750: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1075,7 +1075,7 @@ class SensorMLX90614: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1102,7 +1102,7 @@ class SensorBosch: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1134,7 +1134,7 @@ class SensorBosch: public Sensor {
 class SensorBME280: public SensorBosch {
   public:
     SensorBME280(NodeManager* node_manager, int child_id, Adafruit_BME280* bme, int sensor_type);
-    void onLoop();
+    void onLoop(Child child);
   protected:
     Adafruit_BME280* _bme;
 };
@@ -1147,7 +1147,7 @@ class SensorBME280: public SensorBosch {
 class SensorBMP085: public SensorBosch {
   public:
     SensorBMP085(NodeManager* node_manager, int child_id, Adafruit_BMP085* bmp, int sensor_type);
-    void onLoop();
+    void onLoop(Child child);
   protected:
     Adafruit_BMP085* _bmp;
 };
@@ -1160,7 +1160,7 @@ class SensorBMP085: public SensorBosch {
 class SensorBMP280: public SensorBosch {
   public:
     SensorBMP280(NodeManager* node_manager, int child_id, Adafruit_BMP280* bmp, int sensor_type);
-    void onLoop();
+    void onLoop(Child child);
   protected:
     Adafruit_BMP280* _bmp;
 };
@@ -1182,7 +1182,7 @@ class SensorHCSR04: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1210,7 +1210,7 @@ class SensorSonoff: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1240,7 +1240,7 @@ class SensorMCP9808: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1281,7 +1281,7 @@ class SensorMQ: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1324,7 +1324,7 @@ class SensorMHZ19: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1345,7 +1345,7 @@ class SensorAM2320: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1376,7 +1376,7 @@ class SensorTSL2561: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1414,7 +1414,7 @@ class SensorPT100: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1448,7 +1448,7 @@ class SensorDimmer: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1477,7 +1477,7 @@ class SensorPulseMeter: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop();
+    void onLoop(Child child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();

@@ -396,67 +396,69 @@ void Sensor::loop(const MyMessage & message) {
   #endif
   
   // FOR ALL CHILD
-  
-  // for numeric sensor requiring multiple samples, keep track of the total
-  double total = 0;
-  // collect multiple samples if needed
-  for (int i = 0; i < _samples; i++) {
-    // call the sensor-specific implementation of the main task which will store the result in the _value variable
-    if (_isReceive(message)) {
-      // we've been called from receive(), pass the message along
-      onReceive(message);
+  for (List<Child>::iterator itr = _children.begin(); itr != _children.end(); ++itr) {
+    Child child = (*itr);
+    // for numeric sensor requiring multiple samples, keep track of the total
+    double total = 0;
+    // collect multiple samples if needed
+    for (int i = 0; i < _samples; i++) {
+      // call the sensor-specific implementation of the main task which will store the result in the _value variable
+      if (_isReceive(message)) {
+        // we've been called from receive(), pass the message along
+        onReceive(message);
+      }
+      else {
+        // we'be been called from loop()
+        onLoop(child);
+      }
+      // for integers, floats and doubles, keep track of the total
+      if (_value_type == TYPE_INTEGER) total += (float)_value_int;
+      else if (_value_type == TYPE_FLOAT) total += _value_float;
+      else if (_value_type == TYPE_DOUBLE) total += _value_double;
+      // wait between samples
+      if (_samples_interval > 0) _node_manager->sleepOrWait(_samples_interval);
     }
-    else {
-      // we'be been called from loop()
-      onLoop();
+    // process the result and send a response back
+    if (_value_type == TYPE_INTEGER && total > -1) {
+      // if the value is an integer, calculate the average value of the samples
+      int avg = (int) (total / _samples);
+      // if track last value is disabled or if enabled and the current value is different then the old value, send it back
+      if (_isReceive(message) || _isWorthSending(avg != _last_value_int))  {
+        _last_value_int = avg;
+        _sendSensorMessage(_msg->set(avg));
+        _value_int = -1;
+      }
     }
-    // for integers, floats and doubles, keep track of the total
-    if (_value_type == TYPE_INTEGER) total += (float)_value_int;
-    else if (_value_type == TYPE_FLOAT) total += _value_float;
-    else if (_value_type == TYPE_DOUBLE) total += _value_double;
-    // wait between samples
-    if (_samples_interval > 0) _node_manager->sleepOrWait(_samples_interval);
-  }
-  // process the result and send a response back
-  if (_value_type == TYPE_INTEGER && total > -1) {
-    // if the value is an integer, calculate the average value of the samples
-    int avg = (int) (total / _samples);
-    // if track last value is disabled or if enabled and the current value is different then the old value, send it back
-    if (_isReceive(message) || _isWorthSending(avg != _last_value_int))  {
-      _last_value_int = avg;
-      _sendSensorMessage(_msg->set(avg));
-      _value_int = -1;
+    // process a float value
+    else if (_value_type == TYPE_FLOAT && total > -1) {
+      // calculate the average value of the samples
+      float avg = total / _samples;
+      // report the value back
+      if (_isReceive(message) || _isWorthSending(avg != _last_value_float))  {
+        _last_value_float = avg;
+        _sendSensorMessage(_msg->set(avg, _float_precision));
+        _value_float = -1;
+      }
     }
-  }
-  // process a float value
-  else if (_value_type == TYPE_FLOAT && total > -1) {
-    // calculate the average value of the samples
-    float avg = total / _samples;
-    // report the value back
-    if (_isReceive(message) || _isWorthSending(avg != _last_value_float))  {
-      _last_value_float = avg;
-      _sendSensorMessage(_msg->set(avg, _float_precision));
-      _value_float = -1;
+    // process a double value
+    else if (_value_type == TYPE_DOUBLE && total > -1) {
+      // calculate the average value of the samples
+      double avg = total / _samples;
+      // report the value back
+      if (_isReceive(message) || _isWorthSending(avg != _last_value_double))  {
+        _last_value_double = avg;
+        _sendSensorMessage(_msg->set(avg, _double_precision));
+        _value_double = -1;
+      }
     }
-  }
-  // process a double value
-  else if (_value_type == TYPE_DOUBLE && total > -1) {
-    // calculate the average value of the samples
-    double avg = total / _samples;
-    // report the value back
-    if (_isReceive(message) || _isWorthSending(avg != _last_value_double))  {
-      _last_value_double = avg;
-      _sendSensorMessage(_msg->set(avg, _double_precision));
-      _value_double = -1;
-    }
-  }
-  // process a string value
-  else if (_value_type == TYPE_STRING) {
-    // if track last value is disabled or if enabled and the current value is different then the old value, send it back
-    if (_isReceive(message) || _isWorthSending(strcmp(_value_string, _last_value_string) != 0))  {
-      _last_value_string = _value_string;
-      _sendSensorMessage(_msg->set(_value_string));
-      _value_string = "";
+    // process a string value
+    else if (_value_type == TYPE_STRING) {
+      // if track last value is disabled or if enabled and the current value is different then the old value, send it back
+      if (_isReceive(message) || _isWorthSending(strcmp(_value_string, _last_value_string) != 0))  {
+        _last_value_string = _value_string;
+        _sendSensorMessage(_msg->set(_value_string));
+        _value_string = "";
+      }
     }
   }
   // turn the sensor off
@@ -597,7 +599,7 @@ void SensorAnalogInput::onSetup() {
 }
 
 // what to do during loop
-void SensorAnalogInput::onLoop() {
+void SensorAnalogInput::onLoop(Child child) {
   // read the input
   int adc = _getAnalogRead();
   // calculate the percentage
@@ -617,7 +619,7 @@ void SensorAnalogInput::onLoop() {
 
 // what to do during loop
 void SensorAnalogInput::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
+  if (message.getCommand() == C_REQ) onLoop(NULL);
 }
 
 // what to do when receiving a remote message
@@ -718,7 +720,7 @@ void SensorThermistor::onSetup() {
 }
 
 // what to do during loop
-void SensorThermistor::onLoop() {
+void SensorThermistor::onLoop(Child child) {
   // read the voltage across the thermistor
   float adc = analogRead(_pin);
   // calculate the temperature
@@ -746,7 +748,7 @@ void SensorThermistor::onLoop() {
 
 // what to do as the main task when receiving a message
 void SensorThermistor::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
+  if (message.getCommand() == C_REQ) onLoop(NULL);
 }
 
 // what to do when receiving a remote message
@@ -790,7 +792,7 @@ void SensorML8511::onSetup() {
 }
 
 // what to do during loop
-void SensorML8511::onLoop() {
+void SensorML8511::onLoop(Child child) {
   // read the voltage 
   int uvLevel = analogRead(_pin);
   int refLevel = _node_manager->getVcc()*1024/3.3;
@@ -812,7 +814,7 @@ void SensorML8511::onLoop() {
 
 // what to do as the main task when receiving a message
 void SensorML8511::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
+  if (message.getCommand() == C_REQ) onLoop(NULL);
 }
 
 // what to do when receiving a remote message
@@ -859,7 +861,7 @@ void SensorACS712::onSetup() {
 }
 
 // what to do during loop
-void SensorACS712::onLoop() {
+void SensorACS712::onLoop(Child child) {
   int value = analogRead(_pin);
   // convert the analog read in mV
   double voltage = (value / 1024.0) * 5000; 
@@ -875,7 +877,7 @@ void SensorACS712::onLoop() {
 
 // what to do as the main task when receiving a message
 void SensorACS712::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
+  if (message.getCommand() == C_REQ) onLoop(NULL);
 }
 
 // what to do when receiving a remote message
@@ -945,7 +947,7 @@ void SensorDigitalInput::onSetup() {
 }
 
 // what to do during loop
-void SensorDigitalInput::onLoop() {
+void SensorDigitalInput::onLoop(Child child) {
   // read the value
   int value = digitalRead(_pin);
   #if DEBUG == 1
@@ -962,7 +964,7 @@ void SensorDigitalInput::onLoop() {
 
 // what to do as the main task when receiving a message
 void SensorDigitalInput::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
+  if (message.getCommand() == C_REQ) onLoop(NULL);
 }
 
 // what to do when receiving a remote message
@@ -1015,7 +1017,7 @@ void SensorDigitalOutput::setWaitAfterSet(int value) {
 }
 
 // main task
-void SensorDigitalOutput::onLoop() {
+void SensorDigitalOutput::onLoop(Child child) {
   // set the value to -1 so to avoid reporting to the gateway during loop
   _value_int = -1;
   _last_value_int = -1;
@@ -1240,7 +1242,7 @@ void SensorDHT::onSetup() {
 }
 
 // what to do during loop
-void SensorDHT::onLoop() {
+void SensorDHT::onLoop(Child child) {
   _node_manager->sleepOrWait(_dht->getMinimumSamplingPeriod());
   _dht->readSensor(true);
   // temperature sensor
@@ -1274,7 +1276,7 @@ void SensorDHT::onLoop() {
 
 // what to do as the main task when receiving a message
 void SensorDHT::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
+  if (message.getCommand() == C_REQ) onLoop(NULL);
 }
 
 // what to do when receiving a remote message
@@ -1294,21 +1296,6 @@ void SensorDHT::onInterrupt() {
 SensorSHT21::SensorSHT21(NodeManager* node_manager, int child_id, int sensor_type): Sensor(node_manager,child_id,A2) {
   _children.push(Child(1,S_TEMP,V_TEMP,TYPE_FLOAT,""));
   _children.push(Child(2,S_HUM,V_HUM,TYPE_FLOAT,""));
-  
-  // store the sensor type (0: temperature, 1: humidity)
-  _sensor_type = sensor_type;
-  if (_sensor_type == SensorSHT21::TEMPERATURE) {
-    // temperature sensor
-    setPresentation(S_TEMP);
-    setType(V_TEMP);
-    setValueType(TYPE_FLOAT);
-  }
-  else if (_sensor_type == SensorSHT21::HUMIDITY) {
-    // humidity sensor
-    setPresentation(S_HUM);
-    setType(V_HUM);
-    setValueType(TYPE_FLOAT);
-  }
 }
 
 // what to do during before
@@ -1322,44 +1309,44 @@ void SensorSHT21::onSetup() {
 }
 
 // what to do during loop
-void SensorSHT21::onLoop() {
-  for (List<Child>::iterator itr = _children.begin(); itr != _children.end(); ++itr) {
-    // temperature sensor
-    Child c = (*itr);
-    if (c.type == V_TEMP) {
-      // read the temperature
-      float temperature = SHT2x.GetTemperature();
-      // convert it
-      temperature = _node_manager->celsiusToFahrenheit(temperature);
-      #if DEBUG == 1
-        Serial.print(F("SHT I="));
-        Serial.print((*itr).child_id);
-        Serial.print(F(" T="));
-        Serial.println(temperature);
-      #endif
-      // store the value
-      if (! isnan(temperature)) _value_float = temperature;
-    }
-    // Humidity Sensor
-    else if ((*itr).type == V_HUM) {
-      // read humidity
-      float humidity = SHT2x.GetHumidity();
-      if (isnan(humidity)) return;
-      #if DEBUG == 1
-        Serial.print(F("SHT I="));
-        Serial.print((*itr).child_id);
-        Serial.print(F(" H="));
-        Serial.println(humidity);
-      #endif
-      // store the value
-      if (! isnan(humidity)) _value_float = humidity;
-    }
+void SensorSHT21::onLoop(Child child) {
+  // temperature sensor
+  if (child.type == V_TEMP) {
+    // read the temperature
+    float temperature = SHT2x.GetTemperature();
+    // convert it
+    temperature = _node_manager->celsiusToFahrenheit(temperature);
+    #if DEBUG == 1
+      Serial.print(F("SHT I="));
+      Serial.print(child.child_id);
+      Serial.print(F(" T="));
+      Serial.println(temperature);
+    #endif
+    // store the value
+    if (! isnan(temperature)) _value_float = temperature;
+  }
+  // Humidity Sensor
+  else if (child.type == V_HUM) {
+    // read humidity
+    float humidity = SHT2x.GetHumidity();
+    if (isnan(humidity)) return;
+    #if DEBUG == 1
+      Serial.print(F("SHT I="));
+      Serial.print(child.child_id);
+      Serial.print(F(" H="));
+      Serial.println(humidity);
+    #endif
+    // store the value
+   if (! isnan(humidity)) _value_float = humidity;
   }
 }
 
 // what to do as the main task when receiving a message
 void SensorSHT21::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
+  for (List<Child>::iterator itr = _children.begin(); itr != _children.end(); ++itr) {
+    Child child = (*itr);
+    if (message.getCommand() == C_REQ && child.child_id == message.sensor) onLoop(child);
+  }
 }
 
 // what to do when receiving a remote message
@@ -1415,7 +1402,7 @@ void SensorSwitch::onSetup() {
 }
 
 // what to do during loop
-void SensorSwitch::onLoop() {
+void SensorSwitch::onLoop(Child child) {
 }
 
 // what to do as the main task when receiving a message
@@ -1504,7 +1491,7 @@ void SensorDs18b20::onSetup() {
 }
 
 // what to do during loop
-void SensorDs18b20::onLoop() {
+void SensorDs18b20::onLoop(Child child) {
   // do not wait for conversion, will sleep manually during it
   if (_sleep_during_conversion) _sensors->setWaitForConversion(false);
   // request the temperature
@@ -1530,7 +1517,7 @@ void SensorDs18b20::onLoop() {
 
 // what to do as the main task when receiving a message
 void SensorDs18b20::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
+  if (message.getCommand() == C_REQ) onLoop(NULL);
 }
 
 // what to do when receiving a remote message
@@ -1595,7 +1582,7 @@ void SensorBH1750::onSetup() {
 }
 
 // what to do during loop
-void SensorBH1750::onLoop() {
+void SensorBH1750::onLoop(Child child) {
   // request the light level
   _value_int = _lightSensor->readLightLevel();
   #if DEBUG == 1
@@ -1608,7 +1595,7 @@ void SensorBH1750::onLoop() {
 
 // what to do as the main task when receiving a message
 void SensorBH1750::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
+  if (message.getCommand() == C_REQ) onLoop(NULL);
 }
 
 // what to do when receiving a remote message
@@ -1652,7 +1639,7 @@ void SensorMLX90614::onSetup() {
 }
 
 // what to do during loop
-void SensorMLX90614::onLoop() {
+void SensorMLX90614::onLoop(Child child) {
   float temperature = _sensor_type == SensorMLX90614::TEMPERATURE_OBJECT ? _mlx->readAmbientTempC() : _mlx->readObjectTempC();
   // convert it
   temperature = _node_manager->celsiusToFahrenheit(temperature);
@@ -1667,7 +1654,7 @@ void SensorMLX90614::onLoop() {
 
 // what to do as the main task when receiving a message
 void SensorMLX90614::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
+  if (message.getCommand() == C_REQ) onLoop(NULL);
 }
 
 // what to do when receiving a remote message
@@ -1729,12 +1716,12 @@ void SensorBosch::onSetup() {
 }
 
 // what to do during loop
-void SensorBosch::onLoop() {
+void SensorBosch::onLoop(Child child) {
 }
 
 // what to do as the main task when receiving a message
 void SensorBosch::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
+  if (message.getCommand() == C_REQ) onLoop(NULL);
 }
 
 // what to do when receiving a remote message
@@ -1868,7 +1855,7 @@ SensorBME280::SensorBME280(NodeManager* node_manager, int child_id, Adafruit_BME
   _bme = bme;
 }
 
-void SensorBME280::onLoop() {
+void SensorBME280::onLoop(Child child) {
   // temperature sensor
   if (_sensor_type == SensorBME280::TEMPERATURE) {
     // read the temperature
@@ -1932,7 +1919,7 @@ SensorBMP085::SensorBMP085(NodeManager* node_manager, int child_id, Adafruit_BMP
 }
 
 // what to do during loop
-void SensorBMP085::onLoop() {
+void SensorBMP085::onLoop(Child child) {
   // temperature sensor
   if (_sensor_type == SensorBMP085::TEMPERATURE) {
     // read the temperature
@@ -1979,7 +1966,7 @@ SensorBMP280::SensorBMP280(NodeManager* node_manager, int child_id, Adafruit_BMP
   _bmp = bmp;
 }
 
-void SensorBMP280::onLoop() {
+void SensorBMP280::onLoop(Child child) {
   // temperature sensor
   if (_sensor_type == SensorBMP280::TEMPERATURE) {
     // read the temperature
@@ -2054,7 +2041,7 @@ void SensorHCSR04::onSetup() {
 }
 
 // what to do during loop
-void SensorHCSR04::onLoop() {
+void SensorHCSR04::onLoop(Child child) {
   int distance = _node_manager->getIsMetric() ? _sonar->ping_cm() : _sonar->ping_in();
   #if DEBUG == 1
     Serial.print(F("HC I="));
@@ -2067,7 +2054,7 @@ void SensorHCSR04::onLoop() {
 
 // what to do as the main task when receiving a message
 void SensorHCSR04::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
+  if (message.getCommand() == C_REQ) onLoop(NULL);
 }
 
 // what to do when receiving a remote message
@@ -2129,7 +2116,7 @@ void SensorSonoff::onSetup() {
 }
 
 // what to do during loop
-void SensorSonoff::onLoop() {
+void SensorSonoff::onLoop(Child child) {
   _debouncer.update();
   // Get the update value from the button
   int value = _debouncer.read();
@@ -2222,7 +2209,7 @@ void SensorMCP9808::onSetup() {
 }
 
 // what to do during loop
-void SensorMCP9808::onLoop() {
+void SensorMCP9808::onLoop(Child child) {
   float temperature = _mcp->readTempC();
   // convert it
   temperature = _node_manager->celsiusToFahrenheit(temperature);
@@ -2238,7 +2225,7 @@ void SensorMCP9808::onLoop() {
 
 // what to do as the main task when receiving a message
 void SensorMCP9808::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
+  if (message.getCommand() == C_REQ) onLoop(NULL);
 }
 
 // what to do when receiving a remote message
@@ -2315,7 +2302,7 @@ void SensorMQ::onSetup() {
 }
 
 // what to do during loop
-void SensorMQ::onLoop() {
+void SensorMQ::onLoop(Child child) {
   if (_pin == -1) return;
   // calculate rs/ro
   float mq = _MQRead()/_ro;
@@ -2346,7 +2333,7 @@ void SensorMQ::onLoop() {
 
 // what to do as the main task when receiving a message
 void SensorMQ::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
+  if (message.getCommand() == C_REQ) onLoop(NULL);
 }
 
 // what to do when receiving a remote message
@@ -2455,7 +2442,7 @@ void SensorMHZ19::onSetup() {
 }
 
 // what to do during loop
-void SensorMHZ19::onLoop() {
+void SensorMHZ19::onLoop(Child child) {
   // Read the ppm value
   int co2ppm = readCO2(); // This is there the function gets called that talks to the Co2 sensor.
   #if DEBUG == 1
@@ -2509,7 +2496,7 @@ int SensorMHZ19::readCO2() {
 
 // what to do as the main task when receiving a message
 void SensorMHZ19::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
+  if (message.getCommand() == C_REQ) onLoop(NULL);
 }
 
 // what to do when receiving a remote message
@@ -2559,7 +2546,7 @@ void SensorAM2320::onSetup() {
 }
 
 // what do to during loop
-void SensorAM2320::onLoop() {
+void SensorAM2320::onLoop(Child child) {
   switch(_th->Read()) {
     case 0:
       // temperature sensor
@@ -2597,7 +2584,7 @@ void SensorAM2320::onLoop() {
 
 // what do to as the main task when receiving a message
 void SensorAM2320::onReceive(const MyMessage & message) {
-  onLoop();
+  onLoop(NULL);
 }
 
 // what to do when receiving a remote message
@@ -2677,7 +2664,7 @@ void SensorTSL2561::onSetup() {
 }
 
 // what do to during loop
-void SensorTSL2561::onLoop() {
+void SensorTSL2561::onLoop(Child child) {
   // request the light level
    switch (_tsl_spectrum) {
     case SensorTSL2561::VISIBLE:
@@ -2722,7 +2709,7 @@ void SensorTSL2561::onLoop() {
 
 // what do to as the main task when receiving a message
 void SensorTSL2561::onReceive(const MyMessage & message) {
-  onLoop();
+  onLoop(NULL);
 }
 
 // what to do when receiving a remote message
@@ -2772,7 +2759,7 @@ void SensorPT100::onSetup() {
 }
 
 // what to do during loop
-void SensorPT100::onLoop() {
+void SensorPT100::onLoop(Child child) {
   // read the PT100 sensor
   int temperature = _PT100->readTemperature(_pin);  
   #if DEBUG == 1
@@ -2787,7 +2774,7 @@ void SensorPT100::onLoop() {
 
 // what to do as the main task when receiving a message
 void SensorPT100::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop();
+  if (message.getCommand() == C_REQ) onLoop(NULL);
 }
 
 // what to do when receiving a remote message
@@ -2838,7 +2825,7 @@ void SensorDimmer::onSetup() {
 }
 
 // what to do during loop
-void SensorDimmer::onLoop() {
+void SensorDimmer::onLoop(Child child) {
 }
 
 // what to do as the main task when receiving a message
@@ -2938,7 +2925,7 @@ void SensorPulseMeter::onSetup() {
 }
 
 // what to do during loop
-void SensorPulseMeter::onLoop() {
+void SensorPulseMeter::onLoop(Child child) {
   // do not report anything if called by an interrupt
   if (_node_manager->getLastInterruptPin() == _interrupt_pin) return;
   // time to report the rain so far
@@ -3202,8 +3189,8 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
       // register temperature sensor
       registerSensor(new SensorSHT21(this,child_id,SensorSHT21::TEMPERATURE));
       // register humidity sensor
-      child_id = _getAvailableChildId();
-      return registerSensor(new SensorSHT21(this,child_id,SensorSHT21::HUMIDITY));
+      //child_id = _getAvailableChildId();
+      //return registerSensor(new SensorSHT21(this,child_id,SensorSHT21::HUMIDITY));
     }
     else if (sensor_type == SENSOR_HTU21D) {
       // register temperature sensor
