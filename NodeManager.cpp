@@ -218,11 +218,11 @@ char* Request::getValueString() {
 Child::Child() {
   
 }
-Child::Child(int child_id, int presentation, int type, int value_type, char* description) {
-  _child_id = child_id;
-  _presentation = presentation;
-  _value_type = value_type;
-  _description = description;
+Child::Child(int _child_id, int _presentation, int _type, int _value_type, char* _description) {
+  child_id = _child_id;
+  presentation = _presentation;
+  value_type = _value_type;
+  description = _description;
 }
 
 /*
@@ -394,6 +394,9 @@ void Sensor::loop(const MyMessage & message) {
     // turn the sensor on
     if (_auto_power_pins) powerOn();
   #endif
+  
+  // FOR ALL CHILD
+  
   // for numeric sensor requiring multiple samples, keep track of the total
   double total = 0;
   // collect multiple samples if needed
@@ -1289,11 +1292,8 @@ void SensorDHT::onInterrupt() {
 #if MODULE_SHT21 == 1
 // contructor
 SensorSHT21::SensorSHT21(NodeManager* node_manager, int child_id, int sensor_type): Sensor(node_manager,child_id,A2) {
-//  _children = new Child[2];
-  //_children[temperature] = new Child(1,S_TEMP,V_TEMP,TYPE_FLOAT,"");
-  //_children[humidity] = new Child(2,S_HUM,V_HUM,TYPE_FLOAT,"");
-  myList.push(Child(1,S_TEMP,V_TEMP,TYPE_FLOAT,""));
-  myList.push(Child(2,S_HUM,V_HUM,TYPE_FLOAT,""));
+  _children.push(Child(1,S_TEMP,V_TEMP,TYPE_FLOAT,""));
+  _children.push(Child(2,S_HUM,V_HUM,TYPE_FLOAT,""));
   
   // store the sensor type (0: temperature, 1: humidity)
   _sensor_type = sensor_type;
@@ -1323,42 +1323,37 @@ void SensorSHT21::onSetup() {
 
 // what to do during loop
 void SensorSHT21::onLoop() {
-  for (int i = 0; i < MAX_CHILDREN; i++) {
-    if (_children[i] == 0) break;
-    if (i == temperature) {
+  for (List<Child>::iterator itr = _children.begin(); itr != _children.end(); ++itr) {
+    // temperature sensor
+    Child c = (*itr);
+    if (c.type == V_TEMP) {
       // read the temperature
       float temperature = SHT2x.GetTemperature();
+      // convert it
+      temperature = _node_manager->celsiusToFahrenheit(temperature);
+      #if DEBUG == 1
+        Serial.print(F("SHT I="));
+        Serial.print((*itr).child_id);
+        Serial.print(F(" T="));
+        Serial.println(temperature);
+      #endif
+      // store the value
+      if (! isnan(temperature)) _value_float = temperature;
     }
-  }
-  
-  // temperature sensor
-  if (_sensor_type == SensorSHT21::TEMPERATURE) {
-    // read the temperature
-    float temperature = SHT2x.GetTemperature();
-    // convert it
-    temperature = _node_manager->celsiusToFahrenheit(temperature);
-    #if DEBUG == 1
-      Serial.print(F("SHT I="));
-      Serial.print(_child_id);
-      Serial.print(F(" T="));
-      Serial.println(temperature);
-    #endif
-    // store the value
-    if (! isnan(temperature)) _value_float = temperature;
-  }
-  // Humidity Sensor
-  else if (_sensor_type == SensorSHT21::HUMIDITY) {
-    // read humidity
-    float humidity = SHT2x.GetHumidity();
-    if (isnan(humidity)) return;
-    #if DEBUG == 1
-      Serial.print(F("SHT I="));
-      Serial.print(_child_id);
-      Serial.print(F(" H="));
-      Serial.println(humidity);
-    #endif
-    // store the value
-    if (! isnan(humidity)) _value_float = humidity;
+    // Humidity Sensor
+    else if ((*itr).type == V_HUM) {
+      // read humidity
+      float humidity = SHT2x.GetHumidity();
+      if (isnan(humidity)) return;
+      #if DEBUG == 1
+        Serial.print(F("SHT I="));
+        Serial.print((*itr).child_id);
+        Serial.print(F(" H="));
+        Serial.println(humidity);
+      #endif
+      // store the value
+      if (! isnan(humidity)) _value_float = humidity;
+    }
   }
 }
 

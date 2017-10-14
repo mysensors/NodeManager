@@ -107,9 +107,6 @@
   #define MAX_SENSORS 10
 #endif
 // define the maximum number of children that a sensor can have
-#ifndef MAX_CHILDREN
-  #define MAX_CHILDREN 5
-#endif
 // define default sketch name and version
 #ifndef SKETCH_NAME
   #define SKETCH_NAME "NodeManager"
@@ -567,11 +564,11 @@ class Child {
   public:
     Child();
     Child(int child_id, int presentation, int type, int value_type, char* description);
-    int _child_id;
-    int _presentation = S_CUSTOM;
-    int _type = V_CUSTOM;
-    char* _description = "";
-    int _value_type = TYPE_INTEGER;
+    int child_id;
+    int presentation = S_CUSTOM;
+    int type = V_CUSTOM;
+    char* description = "";
+    int value_type = TYPE_INTEGER;
 };
 
 class Sensor {
@@ -685,8 +682,7 @@ class Sensor {
     int _type = V_CUSTOM;
     char* _description = "";
     int _value_type = TYPE_INTEGER;
-    Child* _children[MAX_CHILDREN+1] = {0};
-    List<Child> myList;
+    List<Child> _children;
 };
 
 #if MODULE_ANALOG_INPUT == 1
