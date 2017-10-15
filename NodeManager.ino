@@ -24,6 +24,7 @@ Documentation available on: https://github.com/mysensors/NodeManager
 
 // create a NodeManager instance
 NodeManager nodeManager;
+SensorSHT21 sht(nodeManager);
 
 // before
 void before() {
@@ -37,8 +38,7 @@ void before() {
     digitalWrite(4, HIGH);
     pinMode(5, OUTPUT);
     digitalWrite(5, LOW);
-
-  nodeManager.registerSensor(SENSOR_SHT21);
+    
   nodeManager.setReportIntervalSeconds(20);
   
   

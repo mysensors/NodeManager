@@ -102,11 +102,6 @@
 #ifndef SIGNAL_CHILD_ID
   #define SIGNAL_CHILD_ID 202
 #endif
-// define the maximum number of sensors that can be managed
-#ifndef MAX_SENSORS
-  #define MAX_SENSORS 10
-#endif
-// define the maximum number of children that a sensor can have
 // define default sketch name and version
 #ifndef SKETCH_NAME
   #define SKETCH_NAME "NodeManager"
@@ -444,6 +439,10 @@ public:
     --_endPosition;
     if (_allocBlocks > _preAllocBlocks) _DeAllocOneBlock(false);
   }
+  T get(int position) {
+    if (position > _endPosition) position = _endPosition;
+    return _internalArray[position];
+  }
   inline iterator begin() { return _internalArray; }
   inline iterator end() { return _internalArray + _endPosition; }
   inline bool empty() { return (_endPosition == 0); }
@@ -557,10 +556,8 @@ class Request {
 };
 
 /***************************************
-   Sensor: generic sensor class
+   Child: child class
 */
-
-
 
 class Child {
   public:
@@ -586,11 +583,15 @@ class Child {
     char * _last_value_string = "";
 };
 
-
+/***************************************
+   Sensor: generic sensor class
+*/
 
 class Sensor {
   public:
-    Sensor(NodeManager* node_manager, int child_id, int pin);
+    Sensor();
+    Sensor(NodeManager& nodeManager, int pin);
+    void init(NodeManager* nodeManager);
     // [1] where the sensor is attached to (default: not set)
     void setPin(int value);
     int getPin();
@@ -656,12 +657,13 @@ class Sensor {
     virtual void interrupt();
     virtual void receive(const MyMessage & message);
     // abstract functions, subclasses need to implement
-    virtual void onBefore() = 0;
-    virtual void onSetup() = 0;
-    virtual void onLoop(Child child) = 0;
-    virtual void onReceive(const MyMessage & message) = 0;
-    virtual void onProcess(Request & request) = 0;
-    virtual void onInterrupt() = 0;
+    virtual void onBefore();
+    virtual void onSetup();
+    virtual void onLoop(Child* child);
+    virtual void onReceive(const MyMessage & message);
+    virtual void onProcess(Request & request);
+    virtual void onInterrupt();
+    List<Child> children;
   protected:
     MyMessage* _msg;
     NodeManager* _node_manager;
@@ -687,7 +689,6 @@ class Sensor {
     int _type = V_CUSTOM;
     char* _description = "";
     int _value_type = TYPE_INTEGER;
-    List<Child> _children;
 };
 
 #if MODULE_ANALOG_INPUT == 1
@@ -710,7 +711,7 @@ class SensorAnalogInput: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -751,7 +752,7 @@ class SensorThermistor: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -773,7 +774,7 @@ class SensorML8511: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -795,7 +796,7 @@ class SensorACS712: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -832,7 +833,7 @@ class SensorDigitalInput: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -863,7 +864,7 @@ class SensorDigitalOutput: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -921,7 +922,7 @@ class SensorDHT: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -942,22 +943,17 @@ class SensorDHT: public Sensor {
 #if MODULE_SHT21 == 1
 class SensorSHT21: public Sensor {
   public:
-    SensorSHT21(NodeManager* node_manager, int child_id, int sensor_type);
+    SensorSHT21(NodeManager& nodeManager);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
     // constants
     const static int TEMPERATURE = 0;
     const static int HUMIDITY = 1;
-    enum children
-    {
-        temperature,
-        humidity,
-    };
   protected:
     float _offset = 0;
     int _sensor_type = 0;
@@ -969,7 +965,7 @@ class SensorSHT21: public Sensor {
 
 class SensorHTU21D: public SensorSHT21 {
   public:
-    SensorHTU21D(NodeManager* node_manager, int child_id, int pin);
+    SensorHTU21D(NodeManager& nodeManager);
 };
 #endif
 
@@ -991,7 +987,7 @@ class SensorSwitch: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1036,7 +1032,7 @@ class SensorDs18b20: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1061,7 +1057,7 @@ class SensorBH1750: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1080,7 +1076,7 @@ class SensorMLX90614: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1107,7 +1103,7 @@ class SensorBosch: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1139,7 +1135,7 @@ class SensorBosch: public Sensor {
 class SensorBME280: public SensorBosch {
   public:
     SensorBME280(NodeManager* node_manager, int child_id, Adafruit_BME280* bme, int sensor_type);
-    void onLoop(Child child);
+    void onLoop(Child* child);
   protected:
     Adafruit_BME280* _bme;
 };
@@ -1152,7 +1148,7 @@ class SensorBME280: public SensorBosch {
 class SensorBMP085: public SensorBosch {
   public:
     SensorBMP085(NodeManager* node_manager, int child_id, Adafruit_BMP085* bmp, int sensor_type);
-    void onLoop(Child child);
+    void onLoop(Child* child);
   protected:
     Adafruit_BMP085* _bmp;
 };
@@ -1165,7 +1161,7 @@ class SensorBMP085: public SensorBosch {
 class SensorBMP280: public SensorBosch {
   public:
     SensorBMP280(NodeManager* node_manager, int child_id, Adafruit_BMP280* bmp, int sensor_type);
-    void onLoop(Child child);
+    void onLoop(Child* child);
   protected:
     Adafruit_BMP280* _bmp;
 };
@@ -1187,7 +1183,7 @@ class SensorHCSR04: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1215,7 +1211,7 @@ class SensorSonoff: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1245,7 +1241,7 @@ class SensorMCP9808: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1286,7 +1282,7 @@ class SensorMQ: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1329,7 +1325,7 @@ class SensorMHZ19: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1350,7 +1346,7 @@ class SensorAM2320: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1381,7 +1377,7 @@ class SensorTSL2561: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1419,7 +1415,7 @@ class SensorPT100: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1453,7 +1449,7 @@ class SensorDimmer: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1482,7 +1478,7 @@ class SensorPulseMeter: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void onLoop(Child child);
+    void onLoop(Child* child);
     void onReceive(const MyMessage & message);
     void onProcess(Request & request);
     void onInterrupt();
@@ -1573,14 +1569,7 @@ class NodeManager {
     // register a built-in sensor
     int registerSensor(int sensor_type, int pin = -1, int child_id = -1);
     // register a custom sensor
-    int registerSensor(Sensor* sensor);
-    // [26] un-register a sensor
-    void unRegisterSensor(int sensor_index);
-    // return a sensor by its index
-    Sensor* get(int sensor_index);
-    Sensor* getSensor(int sensor_index);
-    // assign a different child id to a sensor
-    bool renameSensor(int old_child_id, int new_child_id);
+    void registerSensor(Sensor* sensor);
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
       void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
@@ -1667,8 +1656,9 @@ class NodeManager {
     // handle interrupts
     static void _onInterrupt_1();
     static void _onInterrupt_2();
-	MyMessage* getMessage();
-	void sendMessage();
+	  MyMessage* getMessage();
+	  void sendMessage();
+    List<Sensor> sensors;
   private:
     #if BATTERY_MANAGER == 1
       float _battery_min = 2.6;
@@ -1706,7 +1696,6 @@ class NodeManager {
     static long _last_interrupt_1;
     static long _last_interrupt_2;
     long _timestamp = -1;
-    Sensor* _sensors[MAX_SENSORS+1] = {0};
     bool _ack = false;
     void _sleep();
     void _present(int child_id, int type);
@@ -1719,6 +1708,7 @@ class NodeManager {
     int _reboot_pin = -1;
     void _loadConfig();
     void _saveConfig();
+    int _child_id_counter = 0;
 };
 
 #endif
