@@ -560,6 +560,8 @@ class Request {
    Sensor: generic sensor class
 */
 
+
+
 class Child {
   public:
     Child();
@@ -569,7 +571,22 @@ class Child {
     int type = V_CUSTOM;
     char* description = "";
     int value_type = TYPE_INTEGER;
+    template<typename T> void setValue(T value);
+    template<typename T> T getValue();
+    template<typename T> void setLastValue(T value);
+    template<typename T> T getLastValue();
+  private:
+    int _value_int = -255;
+    float _value_float = -255;
+    double _value_double = -255;
+    char * _value_string = "";
+    int _last_value_int = -255;
+    float _last_value_float = -255;
+    double _last_value_double = -255;
+    char * _last_value_string = "";
 };
+
+
 
 class Sensor {
   public:
@@ -615,10 +632,6 @@ class Sensor {
       // [14] manually turn the power off
       void powerOff();
     #endif
-    // get the latest recorded value from the sensor
-    int getValueInt();
-    float getValueFloat();
-    char* getValueString();
     // [17] After how many minutes the sensor will report back its measure (default: 10 minutes)
     void setReportIntervalSeconds(int value);
     // [16] After how many minutes the sensor will report back its measure (default: 10 minutes)
@@ -658,14 +671,6 @@ class Sensor {
     bool _track_last_value = false;
     int _float_precision = 2;
     int _double_precision = 4;
-    int _value_int = -1;
-    float _value_float = -1;
-    double _value_double = -1;
-    double _last_value_double = -1;
-    char * _value_string = "";
-    int _last_value_int = -1;
-    float _last_value_float = -1;
-    char * _last_value_string = "";
     int _interrupt_pin = -1;
     #if POWER_MANAGER  == 1
       PowerManager _powerManager;

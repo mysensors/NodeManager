@@ -216,8 +216,10 @@ char* Request::getValueString() {
  */
 
 Child::Child() {
-  
+
 }
+
+// constructor
 Child::Child(int _child_id, int _presentation, int _type, int _value_type, char* _description) {
   child_id = _child_id;
   presentation = _presentation;
@@ -225,6 +227,57 @@ Child::Child(int _child_id, int _presentation, int _type, int _value_type, char*
   value_type = _value_type;
   description = _description;
 }
+
+// setter/getter
+template<> void Child::setValue(int value) {
+  _value_int = value;
+}
+template<> void Child::setValue(float value) {
+  _value_float = value;
+}
+template<> void Child::setValue(double value) {
+  _value_double = value;
+}
+template<> void Child::setValue(char* value) {
+  _value_string = value;
+}
+template<> int Child::getValue() {
+    return _value_int;
+}
+template<> float Child::getValue() {
+    return _value_float;
+}
+template<> double Child::getValue() {
+    return _value_double;
+}
+template<> char* Child::getValue() {
+    return _value_string;
+}
+template<> void Child::setLastValue(int value) {
+  _last_value_int = value;
+}
+template<> void Child::setLastValue(float value) {
+  _last_value_float = value;
+}
+template<> void Child::setLastValue(double value) {
+  _last_value_double = value;
+}
+template<> void Child::setLastValue(char* value) {
+  _last_value_string = value;
+}
+template<> int Child::getLastValue() {
+    return _last_value_int;
+}
+template<> float Child::getLastValue() {
+    return _last_value_float;
+}
+template<> double Child::getLastValue() {
+    return _last_value_double;
+}
+template<> char* Child::getLastValue() {
+    return _last_value_string;
+}
+
 
 /*
    Sensor class
@@ -311,15 +364,6 @@ void Sensor::setDoublePrecision(int value) {
 int Sensor::getInterruptPin() {
   return _interrupt_pin;
 }
-int Sensor::getValueInt() {
-  return _last_value_int;
-}
-float Sensor::getValueFloat() {
-  return _last_value_float;
-}
-char* Sensor::getValueString() {
-  return _last_value_string;
-}
 
 // After how many seconds the sensor will report back its measure
 void Sensor::setReportIntervalSeconds(int value) {
@@ -399,8 +443,7 @@ void Sensor::loop(const MyMessage & message) {
     // turn the sensor on
     if (_auto_power_pins) powerOn();
   #endif
-  
-  // FOR ALL CHILD
+  // iterates over all the children
   for (List<Child>::iterator itr = _children.begin(); itr != _children.end(); ++itr) {
     Child child = (*itr);
     // for numeric sensor requiring multiple samples, keep track of the total
@@ -417,32 +460,32 @@ void Sensor::loop(const MyMessage & message) {
         onLoop(child);
       }
       // for integers, floats and doubles, keep track of the total
-      if (_value_type == TYPE_INTEGER) total += (float)_value_int;
-      else if (_value_type == TYPE_FLOAT) total += _value_float;
-      else if (_value_type == TYPE_DOUBLE) total += _value_double;
+      if (child.value_type == TYPE_INTEGER) total += (float)child.getValue<int>();
+      else if (child.value_type == TYPE_FLOAT) total += child.getValue<float>();
+      else if (child.value_type == TYPE_DOUBLE) total += child.getValue<double>();
       // wait between samples
       if (_samples_interval > 0) _node_manager->sleepOrWait(_samples_interval);
     }
     // process the result and send a response back
-    if (_value_type == TYPE_INTEGER && total > -1) {
+    if (child.value_type == TYPE_INTEGER && total > -255) {
       // if the value is an integer, calculate the average value of the samples
       int avg = (int) (total / _samples);
       // if track last value is disabled or if enabled and the current value is different then the old value, send it back
-      if (_isReceive(message) || _isWorthSending(avg != _last_value_int))  {
-        _last_value_int = avg;
+      if (_isReceive(message) || _isWorthSending(avg != child.getLastValue<int>()))  {
+        child.setLastValue<int>(avg);
         _sendSensorMessage(_msg->set(avg));
-        _value_int = -1;
+        child.setValue<int>(-255);
       }
     }
     // process a float value
-    else if (_value_type == TYPE_FLOAT && total > -1) {
+    else if (_value_type == TYPE_FLOAT && total > -255) {
       // calculate the average value of the samples
       float avg = total / _samples;
       // report the value back
-      if (_isReceive(message) || _isWorthSending(avg != _last_value_float))  {
-        _last_value_float = avg;
+      if (_isReceive(message) || _isWorthSending(avg != child.getLastValue<float>()))  {
+        child.setLastValue<float>(avg);
         _sendSensorMessage(_msg->set(avg, _float_precision));
-        _value_float = -1;
+        child.setValue<float>(-255);
       }
     }
     // process a double value
@@ -450,19 +493,19 @@ void Sensor::loop(const MyMessage & message) {
       // calculate the average value of the samples
       double avg = total / _samples;
       // report the value back
-      if (_isReceive(message) || _isWorthSending(avg != _last_value_double))  {
-        _last_value_double = avg;
+      if (_isReceive(message) || _isWorthSending(avg != child.getLastValue<double>()))  {
+        child.setLastValue<double>(avg);
         _sendSensorMessage(_msg->set(avg, _double_precision));
-        _value_double = -1;
+        child.setValue<double>(-255);
       }
     }
     // process a string value
     else if (_value_type == TYPE_STRING) {
       // if track last value is disabled or if enabled and the current value is different then the old value, send it back
-      if (_isReceive(message) || _isWorthSending(strcmp(_value_string, _last_value_string) != 0))  {
-        _last_value_string = _value_string;
-        _sendSensorMessage(_msg->set(_value_string));
-        _value_string = "";
+      if (_isReceive(message) || _isWorthSending(strcmp(child.getValue<char*>(), child.getLastValue<char*>()) != 0))  {
+        child.setLastValue<char*>(child.getValue<char*>());
+        _sendSensorMessage(_msg->set(child.getValue<char*>()));
+        child.setValue<char*>("");
       }
     }
   }
@@ -1328,7 +1371,7 @@ void SensorSHT21::onLoop(Child child) {
       Serial.println(temperature);
     #endif
     // store the value
-    if (! isnan(temperature)) _value_float = temperature;
+    if (! isnan(temperature)) child.setValue<float>(temperature);
   }
   // Humidity Sensor
   else if (child.type == V_HUM) {
@@ -1342,7 +1385,7 @@ void SensorSHT21::onLoop(Child child) {
       Serial.println(humidity);
     #endif
     // store the value
-   if (! isnan(humidity)) _value_float = humidity;
+   if (! isnan(humidity)) child.setValue<float>(humidity);
   }
 }
 
