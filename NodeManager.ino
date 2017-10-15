@@ -33,8 +33,13 @@ void before() {
   /*
    * Register below your sensors
   */
-  
+      pinMode(4, OUTPUT);
+    digitalWrite(4, HIGH);
+    pinMode(5, OUTPUT);
+    digitalWrite(5, LOW);
+
   nodeManager.registerSensor(SENSOR_SHT21);
+  nodeManager.setReportIntervalSeconds(20);
   
   
   

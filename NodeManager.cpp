@@ -221,6 +221,7 @@ Child::Child() {
 Child::Child(int _child_id, int _presentation, int _type, int _value_type, char* _description) {
   child_id = _child_id;
   presentation = _presentation;
+  type = _type;
   value_type = _value_type;
   description = _description;
 }
@@ -354,13 +355,17 @@ void Sensor::setInterrupt(int pin, int mode, int initial) {
 
 // present the sensor to the gateway and controller
 void Sensor::presentation() {
+  for (List<Child>::iterator itr = _children.begin(); itr != _children.end(); ++itr) {
+    Child child = (*itr);
   #if DEBUG == 1
     Serial.print(F("PRES I="));
-    Serial.print(_child_id);
+    Serial.print(child.child_id);
     Serial.print(F(" T="));
-    Serial.println(_presentation);
+    Serial.println(child.presentation);
   #endif
-  present(_child_id, _presentation,_description,_node_manager->getAck());
+  present(child.child_id, child.presentation,child.description,_node_manager->getAck());
+  }
+
 }
 
 // call the sensor-specific implementation of before
@@ -377,7 +382,7 @@ void Sensor::setup() {
 
 // call the sensor-specific implementation of loop
 void Sensor::loop(const MyMessage & message) {
-  if (_pin == -1) return;
+//  if (_pin == -1) return;
   // update the timers if within a loop cycle
   if (! _isReceive(message)) {
     if (_report_timer->isRunning()) {
