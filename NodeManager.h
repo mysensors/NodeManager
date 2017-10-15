@@ -591,7 +591,6 @@ class Sensor {
   public:
     Sensor();
     Sensor(NodeManager& nodeManager, int pin);
-    void init(NodeManager* nodeManager);
     // [1] where the sensor is attached to (default: not set)
     void setPin(int value);
     int getPin();
@@ -650,12 +649,12 @@ class Sensor {
     // listen for interrupts on the given pin so interrupt() will be called when occurring
     void setInterrupt(int pin, int mode, int initial);
     // define what to do at each stage of the sketch
-    virtual void before();
-    virtual void presentation();
-    virtual void setup();
-    virtual void loop(const MyMessage & message);
-    virtual void interrupt();
-    virtual void receive(const MyMessage & message);
+    void before();
+    void presentation();
+    void setup();
+    void loop(const MyMessage & message);
+    void interrupt();
+    void receive(const MyMessage & message);
     // abstract functions, subclasses need to implement
     virtual void onBefore();
     virtual void onSetup();
@@ -1566,8 +1565,6 @@ class NodeManager {
     // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
     int getSleepBetweenSend();
-    // register a built-in sensor
-    int registerSensor(int sensor_type, int pin = -1, int child_id = -1);
     // register a custom sensor
     void registerSensor(Sensor* sensor);
     #if POWER_MANAGER == 1
@@ -1658,7 +1655,7 @@ class NodeManager {
     static void _onInterrupt_2();
 	  MyMessage* getMessage();
 	  void sendMessage();
-    List<Sensor> sensors;
+    List<Sensor*> sensors;
   private:
     #if BATTERY_MANAGER == 1
       float _battery_min = 2.6;

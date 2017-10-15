@@ -292,11 +292,7 @@ Sensor::Sensor(NodeManager& nodeManager, int pin) {
   _msg = _node_manager->getMessage();
   _report_timer = new Timer(_node_manager);
   _force_update_timer = new Timer(_node_manager);
-  _node_manager->registerSensor(this);
-}
-
-void Sensor::init(NodeManager* nodeManager) {
-  _node_manager = nodeManager;
+  //_node_manager->registerSensor(this);
 }
 
 // setter/getter
@@ -423,6 +419,17 @@ void Sensor::presentation() {
 void Sensor::before() {
   if (_pin == -1) return;
   onBefore();
+  for (List<Child>::iterator itr = children.begin(); itr != children.end(); ++itr) {
+    Child* child = itr;
+    #if DEBUG == 1
+      Serial.print(F("CHILD I="));
+      Serial.print(child->child_id);
+      Serial.print(F(" P="));
+      Serial.print(child->presentation);
+      Serial.print(F(" T="));
+      Serial.println(child->type);
+    #endif
+  }
 }
 
 // call the sensor-specific implementation of setup
@@ -581,7 +588,9 @@ void Sensor::process(Request & request) {
 }
 
 // virtual functions
-void Sensor::onBefore(){}
+void Sensor::onBefore(){
+  Serial.println("NO");
+}
 void Sensor::onSetup(){}
 void Sensor::onLoop(Child* child){}
 void Sensor::onReceive(const MyMessage & message){}
@@ -1357,11 +1366,14 @@ void SensorDHT::onInterrupt() {
 #if MODULE_SHT21 == 1
 // contructor
 SensorSHT21::SensorSHT21(NodeManager& nodeManager): Sensor(nodeManager,A2) {
-
+     children.push(Child(1,S_TEMP,V_TEMP,TYPE_FLOAT,""));
+  children.push(Child(2,S_HUM,V_HUM,TYPE_FLOAT,"")); 
+  _node_manager->registerSensor(this);
 }
 
 // what to do during before
 void SensorSHT21::onBefore() {
+  Serial.println("SHT");
   children.push(Child(1,S_TEMP,V_TEMP,TYPE_FLOAT,""));
   children.push(Child(2,S_HUM,V_HUM,TYPE_FLOAT,""));
   // initialize the library
@@ -3212,6 +3224,7 @@ bool NodeManager::isSleepingNode() {
   return false;
 }
 
+/*
 // register a sensor to this manager
 int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
   // get a child_id if not provided by the user
@@ -3421,10 +3434,9 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
     return -1;
   };
 }
+/*
 
-void NodeManager::registerSensor(Sensor* sensor) {
-  sensors.push(*sensor);
-}
+
 
 /*
 // attach a built-in or custom sensor to this manager
@@ -3450,6 +3462,10 @@ int NodeManager::registerSensorOLD(Sensor* sensor) {
   return sensor->getChildId();
 }
 */
+
+void NodeManager::registerSensor(Sensor* sensor) {
+  sensors.push(sensor);
+}
 
 // setup NodeManager
 void NodeManager::before() {
@@ -3648,7 +3664,7 @@ void NodeManager::receive(const MyMessage &message) {
     #endif
   }
   // dispatch the message to the registered sensor
-  for (List<Sensor>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
+  for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
     Sensor* sensor = itr;
     for (List<Child>::iterator itr1 = sensor->children.begin(); itr1 != sensor->children.end(); ++itr1) {
       Child* child = itr1;

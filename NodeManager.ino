@@ -1,4 +1,3 @@
-
 /*
 NodeManager is intended to take care on your behalf of all those common tasks a MySensors node has to accomplish, speeding up the development cycle of your projects.
 NodeManager includes the following main components:
@@ -24,12 +23,16 @@ Documentation available on: https://github.com/mysensors/NodeManager
 
 // create a NodeManager instance
 NodeManager nodeManager;
-SensorSHT21 sht(nodeManager);
+
 
 // before
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);  
+SensorSHT21 sht(nodeManager);
+
+
+
 
   /*
    * Register below your sensors
