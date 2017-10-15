@@ -664,6 +664,7 @@ class Sensor {
     virtual void onInterrupt();
     List<Child> children;
   protected:
+    char* _name = "";
     MyMessage* _msg;
     NodeManager* _node_manager;
     int _pin = -1;

@@ -292,7 +292,7 @@ Sensor::Sensor(NodeManager& nodeManager, int pin) {
   _msg = _node_manager->getMessage();
   _report_timer = new Timer(_node_manager);
   _force_update_timer = new Timer(_node_manager);
-  //_node_manager->registerSensor(this);
+  _node_manager->registerSensor(this);
 }
 
 // setter/getter
@@ -422,7 +422,8 @@ void Sensor::before() {
   for (List<Child>::iterator itr = children.begin(); itr != children.end(); ++itr) {
     Child* child = itr;
     #if DEBUG == 1
-      Serial.print(F("CHILD I="));
+      Serial.print(_name);
+      Serial.print(F(" I="));
       Serial.print(child->child_id);
       Serial.print(F(" P="));
       Serial.print(child->presentation);
@@ -1366,14 +1367,11 @@ void SensorDHT::onInterrupt() {
 #if MODULE_SHT21 == 1
 // contructor
 SensorSHT21::SensorSHT21(NodeManager& nodeManager): Sensor(nodeManager,A2) {
-     children.push(Child(1,S_TEMP,V_TEMP,TYPE_FLOAT,""));
-  children.push(Child(2,S_HUM,V_HUM,TYPE_FLOAT,"")); 
-  _node_manager->registerSensor(this);
+  _name = "SHT";
 }
 
 // what to do during before
 void SensorSHT21::onBefore() {
-  Serial.println("SHT");
   children.push(Child(1,S_TEMP,V_TEMP,TYPE_FLOAT,""));
   children.push(Child(2,S_HUM,V_HUM,TYPE_FLOAT,""));
   // initialize the library
@@ -1393,7 +1391,8 @@ void SensorSHT21::onLoop(Child* child) {
     // convert it
     temperature = _node_manager->celsiusToFahrenheit(temperature);
     #if DEBUG == 1
-      Serial.print(F("SHT I="));
+      Serial.print(_name);
+      Serial.print(F(" I="));
       Serial.print(child->child_id);
       Serial.print(F(" T="));
       Serial.println(temperature);
@@ -3519,8 +3518,8 @@ void NodeManager::before() {
     _signal_report_timer.start();
   #endif
   // setup individual sensors
-  for (List<Sensor>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
-    Sensor* sensor = itr;
+  for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
+    Sensor* sensor = *itr;
     // configure reporting interval
     if (! sensor->isReportIntervalConfigured()) sensor->setReportIntervalSeconds(_report_interval_seconds);
     // call each sensor's before()
@@ -3553,8 +3552,8 @@ void NodeManager::presentation() {
     signalReport();
   #endif
   // present each sensor
-  for (List<Sensor>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
-    Sensor* sensor = itr;
+  for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
+    Sensor* sensor = *itr;
     // call each sensor's presentation()
     if (_sleep_between_send > 0) sleep(_sleep_between_send);
     sensor->presentation();
@@ -3580,8 +3579,8 @@ void NodeManager::setup() {
 	_sendUsingConfigChild(_msg.set("STARTED"));
   #endif
   // run setup for all the registered sensors
-  for (List<Sensor>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
-    Sensor* sensor = itr;
+  for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
+    Sensor* sensor = *itr;
     // call each sensor's setup()
     sensor->setup();
   }
@@ -3616,8 +3615,8 @@ void NodeManager::loop() {
     if (_auto_power_pins) powerOn();
   #endif
   // run loop for all the registered sensors
-  for (List<Sensor>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
-    Sensor* sensor = itr;
+  for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
+    Sensor* sensor = *itr;
     if (_last_interrupt_pin != -1 && sensor->getInterruptPin() == _last_interrupt_pin) {
       // if there was an interrupt for this sensor, call the sensor's interrupt() and then loop()
       _msg.clear();
@@ -3665,7 +3664,7 @@ void NodeManager::receive(const MyMessage &message) {
   }
   // dispatch the message to the registered sensor
   for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
-    Sensor* sensor = itr;
+    Sensor* sensor = *itr;
     for (List<Child>::iterator itr1 = sensor->children.begin(); itr1 != sensor->children.end(); ++itr1) {
       Child* child = itr1;
       if (message.sensor == child->child_id) {
