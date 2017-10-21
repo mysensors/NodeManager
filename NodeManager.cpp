@@ -220,7 +220,7 @@ Child::Child() {
 }
 
 // constructor
-Child::Child(int _child_id, int _presentation, int _type, int _value_type, char* _description) {
+Child::Child(int _child_id, int _presentation, int _type, int _value_type = TYPE_INTEGER, char* _description = "") {
   child_id = _child_id;
   presentation = _presentation;
   type = _type;
@@ -286,6 +286,7 @@ template<> char* Child::getLastValue() {
 Sensor::Sensor() {
   
 }
+
 Sensor::Sensor(NodeManager& nodeManager, int pin) {
   _node_manager = &nodeManager;
   _pin = pin;
@@ -588,10 +589,17 @@ void Sensor::process(Request & request) {
   _sendServiceMessage(_msg->set(function));
 }
 
-// virtual functions
-void Sensor::onBefore(){
-  Serial.println("NO");
+// return the requested child 
+Child* Sensor::getChild(int child_id) {
+  for (List<Child>::iterator itr = children.begin(); itr != children.end(); ++itr) {
+    Child* child = itr;
+    if (child->child_id == child_id) return child;
+  }
+  return nullptr;
 }
+
+// virtual functions
+void Sensor::onBefore() {}
 void Sensor::onSetup(){}
 void Sensor::onLoop(Child* child){}
 void Sensor::onReceive(const MyMessage & message){}
@@ -1367,13 +1375,13 @@ void SensorDHT::onInterrupt() {
 #if MODULE_SHT21 == 1
 // contructor
 SensorSHT21::SensorSHT21(NodeManager& nodeManager): Sensor(nodeManager,A2) {
-  _name = "SHT";
+  _name = F("SHT");
 }
 
 // what to do during before
 void SensorSHT21::onBefore() {
-  children.push(Child(1,S_TEMP,V_TEMP,TYPE_FLOAT,""));
-  children.push(Child(2,S_HUM,V_HUM,TYPE_FLOAT,""));
+  children.push(Child(_node_manager->getAvailableChildId(),S_TEMP,V_TEMP,TYPE_FLOAT));
+  children.push(Child(_node_manager->getAvailableChildId(),S_HUM,V_HUM,TYPE_FLOAT));
   // initialize the library
   Wire.begin();
 }
@@ -1406,7 +1414,8 @@ void SensorSHT21::onLoop(Child* child) {
     float humidity = SHT2x.GetHumidity();
     if (isnan(humidity)) return;
     #if DEBUG == 1
-      Serial.print(F("SHT I="));
+      Serial.print(_name);
+      Serial.print(F(" I="));
       Serial.print(child->child_id);
       Serial.print(F(" H="));
       Serial.println(humidity);
@@ -1418,10 +1427,9 @@ void SensorSHT21::onLoop(Child* child) {
 
 // what to do as the main task when receiving a message
 void SensorSHT21::onReceive(const MyMessage & message) {
-  for (List<Child>::iterator itr = children.begin(); itr != children.end(); ++itr) {
-    Child* child = itr;
-    if (message.getCommand() == C_REQ && child->child_id == message.sensor) onLoop(child);
-  }
+  Child* child = getChild(message.sensor);
+  if (child == nullptr) return;
+  if (message.getCommand() == C_REQ) onLoop(child);
 }
 
 // what to do when receiving a remote message
@@ -3663,23 +3671,18 @@ void NodeManager::receive(const MyMessage &message) {
     #endif
   }
   // dispatch the message to the registered sensor
-  for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
-    Sensor* sensor = *itr;
-    for (List<Child>::iterator itr1 = sensor->children.begin(); itr1 != sensor->children.end(); ++itr1) {
-      Child* child = itr1;
-      if (message.sensor == child->child_id) {
-        #if POWER_MANAGER == 1
-          // turn on the pin powering all the sensors
-          if (_auto_power_pins) powerOn();
-        #endif
-        // call the sensor's receive()
-        sensor->receive(message);
-        #if POWER_MANAGER == 1
-          // turn off the pin powering all the sensors
-          if (_auto_power_pins) powerOff();
-        #endif
-      }
-    }
+  Sensor* sensor = getSensorWithChild(message.sensor);
+  if (sensor != nullptr) {
+    #if POWER_MANAGER == 1
+      // turn on the pin powering all the sensors
+      if (_auto_power_pins) powerOn();
+    #endif
+    // call the sensor's receive()
+    sensor->receive(message);
+    #if POWER_MANAGER == 1
+      // turn off the pin powering all the sensors
+      if (_auto_power_pins) powerOff();
+    #endif
   }
 }
 
@@ -4006,6 +4009,16 @@ void NodeManager::sleepOrWait(long value) {
   }
 #endif
 
+// return the next available child_id
+int NodeManager::getAvailableChildId() {
+  for (int i = 1; i < 255; i++) {
+    if (i == CONFIGURATION_CHILD_ID || i == BATTERY_CHILD_ID || i == SIGNAL_CHILD_ID) continue;
+    Child* child = getChild(i);
+    if (child == nullptr) return i;
+  }
+  return 255;
+}
+
 // handle an interrupt
 void NodeManager::_onInterrupt_1() {
   long now = millis();
@@ -4081,6 +4094,23 @@ void NodeManager::sendMessage() {
   }
 }
 
+// return the requested child 
+Child* NodeManager::getChild(int child_id) {
+  Sensor* sensor = getSensorWithChild(child_id);
+  if (sensor == nullptr) return nullptr;
+  return sensor->getChild(child_id);
+}
+
+// return the sensor with the requested child 
+Sensor* NodeManager::getSensorWithChild(int child_id) {
+  for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
+    Sensor* sensor = *itr;
+    Child* child = sensor->getChild(child_id);
+    if (child != nullptr) return sensor;
+  }
+  return nullptr;  
+}
+
 // wrapper of smart sleep
 void NodeManager::_sleep() {
   #if DEBUG == 1
@@ -4146,14 +4176,6 @@ void NodeManager::_present(int child_id, int type) {
   #endif
   if (_sleep_between_send > 0) sleep(_sleep_between_send);
   present(child_id,type,"",_ack);
-}
-
-// return the next available child_id
-int NodeManager::_getAvailableChildId() {
-  _child_id_counter++;
-  if (_child_id_counter == CONFIGURATION_CHILD_ID) _child_id_counter++;
-  if (_child_id_counter == BATTERY_CHILD_ID) _child_id_counter++;
-  return _child_id_counter;
 }
 
 // guess the initial value of a digital output based on the configured interrupt mode

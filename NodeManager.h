@@ -663,8 +663,9 @@ class Sensor {
     virtual void onProcess(Request & request);
     virtual void onInterrupt();
     List<Child> children;
+    Child* getChild(int child_id);
   protected:
-    char* _name = "";
+    const __FlashStringHelper* _name;
     MyMessage* _msg;
     NodeManager* _node_manager;
     int _pin = -1;
@@ -1656,7 +1657,10 @@ class NodeManager {
     static void _onInterrupt_2();
 	  MyMessage* getMessage();
 	  void sendMessage();
+    int getAvailableChildId();
     List<Sensor*> sensors;
+    Child* getChild(int child_id);
+    Sensor* getSensorWithChild(int child_id);
   private:
     #if BATTERY_MANAGER == 1
       float _battery_min = 2.6;
@@ -1697,7 +1701,6 @@ class NodeManager {
     bool _ack = false;
     void _sleep();
     void _present(int child_id, int type);
-    int _getAvailableChildId();
     int _getInterruptInitialValue(int mode);
     bool _get_controller_config = true;
     int _is_metric = 1;

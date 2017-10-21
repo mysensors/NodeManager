@@ -30,7 +30,8 @@ void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);  
 
-
+nodeManager.sensors.get(0)->setPin(5);
+nodeManager.sensors.get(0)->children.get(0).child_id = 5;
 
 
 
