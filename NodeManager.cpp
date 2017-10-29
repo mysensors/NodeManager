@@ -2233,9 +2233,9 @@ void SensorMCP9808::onInterrupt() {
  */
 #if MODULE_MQ == 1
 
-static float SensorMQ::_default_LPGCurve[3] = {2.3,0.21,-0.47};
-static float SensorMQ::_default_COCurve[3] = {2.3,0.72,-0.34};
-static float SensorMQ::_default_SmokeCurve[3] = {2.3,0.53,-0.44};
+float SensorMQ::_default_LPGCurve[3] = {2.3,0.21,-0.47};
+float SensorMQ::_default_COCurve[3] = {2.3,0.72,-0.34};
+float SensorMQ::_default_SmokeCurve[3] = {2.3,0.53,-0.44};
 
 SensorMQ::SensorMQ(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id,pin) {
   setPresentation(S_AIR_QUALITY);
