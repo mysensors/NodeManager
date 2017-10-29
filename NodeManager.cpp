@@ -3350,7 +3350,7 @@ int NodeManager::registerSensor(int sensor_type, int pin, int child_id) {
 
 // attach a built-in or custom sensor to this manager
 int NodeManager::registerSensor(Sensor* sensor) {
-  if (sensor->getChildId() > MAX_SENSORS) return;
+  if (sensor->getChildId() > MAX_SENSORS) return -1;
   #if DEBUG == 1
     Serial.print(F("REG I="));
     Serial.print(sensor->getChildId());
@@ -3390,7 +3390,7 @@ Sensor* NodeManager::getSensor(int child_id) {
 
 // assign a different child id to a sensor'
 bool NodeManager::renameSensor(int old_child_id, int new_child_id) {
-  if (old_child_id > MAX_SENSORS || new_child_id > MAX_SENSORS) return;
+  if (old_child_id > MAX_SENSORS || new_child_id > MAX_SENSORS) return false;
   // ensure the old id exists and the new is available
   if (_sensors[old_child_id] == 0 || _sensors[new_child_id] != 0) return false;
   // assign the sensor to new id
