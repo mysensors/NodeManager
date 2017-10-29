@@ -249,7 +249,7 @@ void Sensor::setType(int value) {
 int Sensor::getType() {
   return _type;
 }
-void Sensor::setDescription(char* value) {
+void Sensor::setDescription(const char* value) {
   _description = value;
 }
 void Sensor::setSamples(int value) {

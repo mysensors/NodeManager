@@ -515,7 +515,7 @@ class Sensor {
     void setType(int value);
     int getType();
     // [4] description of the sensor (default: '')
-    void setDescription(char *value);
+    void setDescription(const char *value);
     // [5] For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)
     void setSamples(int value);
     // [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
@@ -584,7 +584,7 @@ class Sensor {
     int _child_id;
     int _presentation = S_CUSTOM;
     int _type = V_CUSTOM;
-    char* _description = "";
+    const char* _description = "";
     int _samples = 1;
     int _samples_interval = 0;
     bool _track_last_value = false;
