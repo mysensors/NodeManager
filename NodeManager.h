@@ -64,10 +64,6 @@
 #ifndef POWER_MANAGER
   #define POWER_MANAGER 1
 #endif
-// if enabled, will load the battery manager library to allow the battery level to be reported automatically or on demand
-#ifndef BATTERY_MANAGER
-  #define BATTERY_MANAGER 1
-#endif
 // if enabled, allow modifying the configuration remotely by interacting with the configuration child id
 #ifndef REMOTE_CONFIGURATION
   #define REMOTE_CONFIGURATION 1
@@ -80,14 +76,6 @@
 // if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle
 #ifndef SERVICE_MESSAGES
   #define SERVICE_MESSAGES 0
-#endif
-// if enabled, a battery sensor will be created at BATTERY_CHILD_ID (201 by default) and will report vcc voltage together with the battery level percentage
-#ifndef BATTERY_SENSOR
-  #define BATTERY_SENSOR 1
-#endif
-// if enabled, a RSSI sensor will be created at SIGNAL_CHILD_ID (202 by default) and will report the signal quality of the transport layer
-#ifndef SIGNAL_SENSOR
-  #define SIGNAL_SENSOR 1
 #endif
 
 // the child id used to allow remote configuration
@@ -110,220 +98,6 @@
   #define SKETCH_VERSION "1.0"
 #endif
 
-
-/***********************************
-   Default module settings
-*/
-
-// Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN, SENSOR_SOIL_MOISTURE
-#ifndef MODULE_ANALOG_INPUT
-  #define MODULE_ANALOG_INPUT 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
-#ifndef MODULE_DIGITAL_INPUT
-  #define MODULE_DIGITAL_INPUT 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_DIGITAL_OUTPUT, SENSOR_RELAY, SENSOR_LATCHING_RELAY
-#ifndef MODULE_DIGITAL_OUTPUT
-  #define MODULE_DIGITAL_OUTPUT 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
-#ifndef MODULE_DHT
-  #define MODULE_DHT 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_SHT21, SENSOR_HTU21D
-#ifndef MODULE_SHT21
-  #define MODULE_SHT21 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_SWITCH, SENSOR_DOOR, SENSOR_MOTION
-#ifndef MODULE_SWITCH
-  #define MODULE_SWITCH 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_DS18B20
-#ifndef MODULE_DS18B20
-  #define MODULE_DS18B20 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_BH1750
-#ifndef MODULE_BH1750
-  #define MODULE_BH1750 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_MLX90614
-#ifndef MODULE_MLX90614
-  #define MODULE_MLX90614 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_BME280
-#ifndef MODULE_BME280
-  #define MODULE_BME280 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_SONOFF
-#ifndef MODULE_SONOFF
-  #define MODULE_SONOFF 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_BMP085
-#ifndef MODULE_BMP085
-  #define MODULE_BMP085 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_HCSR04
-#ifndef MODULE_HCSR04
-  #define MODULE_HCSR04 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_MCP9808
-#ifndef MODULE_MCP9808
-  #define MODULE_MCP9808 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_MQ
-#ifndef MODULE_MQ
-  #define MODULE_MQ 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_MHZ19
-#ifndef MODULE_MHZ19
-  #define MODULE_MHZ19 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_AM2320
-#ifndef MODULE_AM2320
-  #define MODULE_AM2320 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_TSL2561
-#ifndef MODULE_TSL2561
-  #define MODULE_TSL2561 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_PT100
-#ifndef MODULE_PT100
-  #define SENSOR_PT100 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_BMP280
-#ifndef MODULE_BMP280
-  #define MODULE_BMP280 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_DIMMER
-#ifndef MODULE_DIMMER
-  #define MODULE_DIMMER 0
-#endif
-// Enable this module to use one of the following sensors: SENSOR_RAIN_GAUGE, SENSOR_POWER_METER, SENSOR_WATER_METER
-#ifndef MODULE_PULSE_METER
-  #define MODULE_PULSE_METER 0
-#endif
-
-/***********************************
-   Supported Sensors
-*/
-enum supported_sensors {
-  #if MODULE_ANALOG_INPUT == 1
-    // Generic analog sensor, return a pin's analog value or its percentage
-    SENSOR_ANALOG_INPUT,
-    // LDR sensor, return the light level of an attached light resistor in percentage
-    SENSOR_LDR,
-    // Thermistor sensor, return the temperature based on the attached thermistor
-    SENSOR_THERMISTOR,
-    // ML8511 UV sensor
-    SENSOR_ML8511,
-    // Current sensor
-    SENSOR_ACS712,
-    // Rain sensor, return the percentage of rain from an attached analog sensor
-    SENSOR_RAIN,
-    // Soil moisture sensor, return the percentage of moisture from an attached analog sensor
-    SENSOR_SOIL_MOISTURE,
-  #endif
-  #if MODULE_DIGITAL_INPUT == 1
-    // Generic digital sensor, return a pin's digital value
-    SENSOR_DIGITAL_INPUT,
-  #endif
-  #if MODULE_DIGITAL_OUTPUT == 1
-    // Generic digital output sensor, allows setting the digital output of a pin to the requested value
-    SENSOR_DIGITAL_OUTPUT,
-    // Relay sensor, allows activating the relay
-    SENSOR_RELAY,
-    // Latching Relay sensor, allows activating the relay with a pulse
-    SENSOR_LATCHING_RELAY,
-  #endif
-  #if MODULE_DHT == 1
-    // DHT11/DHT22 sensors, return temperature/humidity based on the attached DHT sensor
-    SENSOR_DHT11,
-    SENSOR_DHT22,
-  #endif
-  #if MODULE_SHT21 == 1
-    // SHT21 sensor, return temperature/humidity based on the attached SHT21 sensor
-    SENSOR_SHT21,
-    SENSOR_HTU21D,
-  #endif
-  #if MODULE_SWITCH == 1
-    // Generic switch, wake up the board when a pin changes status
-    SENSOR_SWITCH,
-    // Door sensor, wake up the board and report when an attached magnetic sensor has been opened/closed
-    SENSOR_DOOR,
-    // Motion sensor, wake up the board and report when an attached PIR has triggered
-    SENSOR_MOTION,
-  #endif
-  #if MODULE_DS18B20 == 1
-    // DS18B20 sensor, return the temperature based on the attached sensor
-    SENSOR_DS18B20,
-  #endif
-  #if MODULE_BH1750 == 1
-    // BH1750 sensor, return light in lux
-    SENSOR_BH1750,
-  #endif
-  #if MODULE_MLX90614 == 1
-    // MLX90614 sensor, contactless temperature sensor
-    SENSOR_MLX90614,
-  #endif
-  #if MODULE_BME280 == 1
-    // BME280 sensor, return temperature, humidity and pressure
-    SENSOR_BME280,
-  #endif
-  #if MODULE_SONOFF == 1
-    // Sonoff wireless smart switch
-    SENSOR_SONOFF,
-  #endif
-  #if MODULE_BMP085 == 1
-    // BMP085/BMP180 sensor, return temperature and pressure
-    SENSOR_BMP085,
-  #endif
-  #if MODULE_HCSR04 == 1
-    // HC-SR04 sensor, return the distance between the sensor and an object
-    SENSOR_HCSR04,
-  #endif
-  #if MODULE_MCP9808 == 1
-    // MCP9808 sensor, precision temperature sensor
-    SENSOR_MCP9808,
-  #endif
-  #if MODULE_MQ == 1
-    // MQ2 air quality sensor
-    SENSOR_MQ,
-  #endif
-  #if MODULE_MHZ19 == 1
-    // MH-Z19 CO2 sensor
-    SENSOR_MHZ19,
-  #endif
-  #if MODULE_TSL2561 == 1
-    // TSL2561 sensor, return light in lux
-    SENSOR_TSL2561,
-  #endif
-  #if MODULE_AM2320 == 1
-    // AM2320 sensors, return temperature/humidity based on the attached AM2320 sensor
-    SENSOR_AM2320,
-  #endif
-   #if MODULE_PT100 == 1
-    // High temperature sensor associated with DFRobot Driver, return the temperature in C° from the attached PT100 sensor
-    SENSOR_PT100,
-  #endif
-  #if MODULE_BMP280 == 1
-    // BMP280 sensor, return temperature and pressure
-    SENSOR_BMP280,
-  #endif
-  #if MODULE_DIMMER == 1
-    // Generic dimmer sensor used to drive a pwm output
-    SENSOR_DIMMER,
-  #endif
-  #if MODULE_PULSE_METER == 1
-    // rain gauge sensor
-    SENSOR_RAIN_GAUGE,
-    // power meter pulse sensor
-    SENSOR_POWER_METER, 
-    // water meter pulse sensor
-    SENSOR_WATER_METER,
-  #endif
-};
- 
 /***********************************
   Libraries
 */
@@ -690,6 +464,59 @@ class Sensor {
     int _type = V_CUSTOM;
     char* _description = "";
     int _value_type = TYPE_INTEGER;
+};
+
+/*
+   SensorBattery: report battery level
+*/
+class SensorBattery: public Sensor {
+  public:
+    SensorBattery(NodeManager& nodeManager);
+      // [11] the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
+      void setMinVoltage(float value);
+      // [12] the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
+      void setMaxVoltage(float value);
+      // [15] if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
+      void setBatteryInternalVcc(bool value);
+      // [16] if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
+      void setBatteryPin(int value);
+      // [17] if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
+      void setBatteryVoltsPerBit(float value);
+      // [18] If true, wake up by an interrupt counts as a valid cycle for battery reports otherwise only uninterrupted sleep cycles would contribute (default: true)
+      void setBatteryReportWithInterrupt(bool value);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
+    void onInterrupt();
+  protected:
+      float _battery_min = 2.6;
+      float _battery_max = 3.3;
+      bool _battery_report_with_interrupt = true;
+      bool _battery_internal_vcc = true;
+      int _battery_pin = -1;
+      float _battery_volts_per_bit = 0.003363075;
+};
+
+/*
+   SensorSignal: report RSSI signal strength from the radio
+*/
+class SensorSignal: public Sensor {
+  public:
+    SensorSignal(NodeManager& nodeManager);
+    // [101] define which signal report to send. Possible values are SR_UPLINK_QUALITY, SR_TX_POWER_LEVEL, SR_TX_POWER_PERCENT, SR_TX_RSSI, SR_RX_RSSI, SR_TX_SNR, SR_RX_SNR (default: SR_RX_RSSI)
+    void setSignalCommand(int value);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(const MyMessage & message);
+    void onProcess(Request & request);
+    void onInterrupt();
+  protected:
+    int _signal_command = SR_RX_RSSI;
 };
 
 #if MODULE_ANALOG_INPUT == 1
@@ -1525,30 +1352,6 @@ class NodeManager {
     // [10] send the same service message multiple times (default: 1)
     void setRetries(int value);
     int getRetries();
-    #if BATTERY_MANAGER == 1
-      // [11] the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
-      void setBatteryMin(float value);
-      // [12] the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
-      void setBatteryMax(float value);
-      // [14] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60 minutes)
-      void setBatteryReportMinutes(int value);
-      // [40] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60 minutes)
-      void setBatteryReportSeconds(int value);
-      // [41] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60 minutes)
-      void setBatteryReportHours(int value);
-      // [42] after how many minutes report the battery level to the controller. When reset the battery is always reported (default: 60 minutes)
-      void setBatteryReportDays(int value);
-      // [15] if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
-      void setBatteryInternalVcc(bool value);
-      // [16] if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
-      void setBatteryPin(int value);
-      // [17] if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
-      void setBatteryVoltsPerBit(float value);
-      // [18] If true, wake up by an interrupt counts as a valid cycle for battery reports otherwise only uninterrupted sleep cycles would contribute (default: true)
-      void setBatteryReportWithInterrupt(bool value);
-      // [2] Send a battery level report to the controller
-      void batteryReport();
-    #endif
     // [3] set the duration (in seconds) of a sleep cycle
     void setSleepSeconds(int value);
     long getSleepSeconds();
@@ -1631,20 +1434,6 @@ class NodeManager {
     void setRebootPin(int value);
     // [32] turn the ADC off so to save 0.2 mA
     void setADCOff();
-    #if SIGNAL_SENSOR == 1 && defined(MY_SIGNAL_REPORT_ENABLED)
-      // [33] How frequenly to send a signal report to the controller (default: 60 minutes)
-      void setSignalReportMinutes(int value);
-      // [43] How frequenly to send a signal report to the controller (default: 60 minutes)
-      void setSignalReportSeconds(int value);
-      // [44] How frequenly to send a signal report to the controller (default: 60 minutes)
-      void setSignalReportHours(int value);
-      // [45] How frequenly to send a signal report to the controller (default: 60 minutes)
-      void setSignalReportDays(int value);
-      // [34] define which signal report to send. Possible values are SR_UPLINK_QUALITY, SR_TX_POWER_LEVEL, SR_TX_POWER_PERCENT, SR_TX_RSSI, SR_RX_RSSI, SR_TX_SNR, SR_RX_SNR (default: SR_RX_RSSI)
-      void setSignalCommand(int value);
-      // [35] report the signal level to the controller
-      void signalReport();
-    #endif
     // hook into the main sketch functions
     void before();
     void presentation();
@@ -1662,23 +1451,10 @@ class NodeManager {
     Child* getChild(int child_id);
     Sensor* getSensorWithChild(int child_id);
   private:
-    #if BATTERY_MANAGER == 1
-      float _battery_min = 2.6;
-      float _battery_max = 3.3;
-      Timer _battery_report_timer = Timer(this);
-      bool _battery_report_with_interrupt = true;
-      bool _battery_internal_vcc = true;
-      int _battery_pin = -1;
-      float _battery_volts_per_bit = 0.003363075;
-    #endif
     #if POWER_MANAGER == 1
       // to optionally controller power pins
       PowerManager _powerManager;
       bool _auto_power_pins = true;
-    #endif
-    #if SIGNAL_SENSOR == 1 && defined(MY_SIGNAL_REPORT_ENABLED)
-      Timer _signal_report_timer = Timer(this);
-      int _signal_command = SR_RX_RSSI;
     #endif
     MyMessage _msg;
     void _sendUsingConfigChild(MyMessage & msg);

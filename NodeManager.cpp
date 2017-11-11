@@ -494,7 +494,7 @@ void Sensor::loop(const MyMessage & message) {
       }
     }
     // process a float value
-    else if (_value_type == TYPE_FLOAT && total > -255) {
+    else if (child->value_type == TYPE_FLOAT && total > -255) {
       // calculate the average value of the samples
       float avg = total / _samples;
       // report the value back
@@ -505,7 +505,7 @@ void Sensor::loop(const MyMessage & message) {
       }
     }
     // process a double value
-    else if (_value_type == TYPE_DOUBLE && total > -1) {
+    else if (child->value_type == TYPE_DOUBLE && total > -1) {
       // calculate the average value of the samples
       double avg = total / _samples;
       // report the value back
@@ -516,7 +516,7 @@ void Sensor::loop(const MyMessage & message) {
       }
     }
     // process a string value
-    else if (_value_type == TYPE_STRING) {
+    else if (child->value_type == TYPE_STRING) {
       // if track last value is disabled or if enabled and the current value is different then the old value, send it back
       if (_isReceive(message) || _isWorthSending(strcmp(child->getValue<char*>(), child->getLastValue<char*>()) != 0))  {
         child->setLastValue<char*>(child->getValue<char*>());
@@ -642,6 +642,149 @@ bool Sensor::_isWorthSending(bool comparison) {
   }
   return false;
 }
+
+/*
+   SensorBattery
+*/
+// contructor
+SensorBattery::SensorBattery(NodeManager& nodeManager): Sensor(nodeManager,A2) {
+  _name = F("BAT");
+  // report battery level every 60 minutes by default
+  setReportIntervalMinutes(60);
+}
+void SensorBattery::setMinVoltage(float value) {
+  _battery_min = value;
+}
+void SensorBattery::setMaxVoltage(float value) {
+  _battery_max = value;
+}
+void SensorBattery::setBatteryInternalVcc(bool value) {
+  _battery_internal_vcc = value;
+}
+void SensorBattery::setBatteryPin(int value) {
+  _battery_pin = value;
+}
+void SensorBattery::setBatteryVoltsPerBit(float value) {
+  _battery_volts_per_bit = value;
+}
+void SensorBattery::setBatteryReportWithInterrupt(bool value) {
+  _battery_report_with_interrupt = value;
+}
+
+// what to do during before
+void SensorBattery::onBefore() {
+  children.push(Child(BATTERY_CHILD_ID,S_MULTIMETER,V_VOLTAGE,TYPE_FLOAT));
+}
+
+// what to do during setup
+void SensorBattery::onSetup() {
+  if (! _battery_internal_vcc && _battery_pin > -1) analogReference(INTERNAL);
+}
+
+// what to do during loop
+void SensorBattery::onLoop(Child* child) {
+  // measure the board vcc
+  float volt = 0;
+  if (_battery_internal_vcc || _battery_pin == -1) volt = _node_manager->getVcc();
+  else volt = analogRead(_battery_pin) * _battery_volts_per_bit;
+  // calculate the percentage
+  int percentage = ((volt - _battery_min) / (_battery_max - _battery_min)) * 100;
+  if (percentage > 100) percentage = 100;
+  if (percentage < 0) percentage = 0;
+  #if DEBUG == 1
+    Serial.print(_name);
+    Serial.print(F(" V="));
+    Serial.print(volt);
+    Serial.print(F(" %="));
+    Serial.println(percentage);
+  #endif
+  child->setValue<float>(volt);
+  // report battery level percentage
+  sendBatteryLevel(percentage);
+}
+
+// what to do as the main task when receiving a message
+void SensorBattery::onReceive(const MyMessage & message) {
+  Child* child = getChild(message.sensor);
+  if (child == nullptr) return;
+  if (message.getCommand() == C_REQ) onLoop(child);
+}
+
+// what to do when receiving a remote message
+void SensorBattery::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 102: setMinVoltage(request.getValueFloat()); break;
+    case 103: setMaxVoltage(request.getValueFloat()); break;
+    case 104: setBatteryInternalVcc(request.getValueInt()); break;
+    case 105: setBatteryPin(request.getValueInt()); break;
+    case 106: setBatteryVoltsPerBit(request.getValueFloat()); break;
+    case 107: setBatteryReportWithInterrupt(request.getValueInt()); break;
+    default: return;
+  }
+  _sendServiceMessage(_msg->set(function));
+}
+
+// what to do when receiving an interrupt
+void SensorBattery::onInterrupt() {
+}
+
+/*
+   SensorSignal
+*/
+// contructor
+SensorSignal::SensorSignal(NodeManager& nodeManager): Sensor(nodeManager,A2) {
+  _name = F("SIG");
+  // report signal level every 60 minutes by default
+  setReportIntervalMinutes(60);
+}
+// setter/getter
+void SensorSignal::setSignalCommand(int value) {
+  _signal_command = value;
+}
+
+// what to do during before
+void SensorSignal::onBefore() {
+  children.push(Child(SIGNAL_CHILD_ID,S_SOUND,V_LEVEL));
+}
+
+// what to do during setup
+void SensorSignal::onSetup() {
+
+}
+
+// what to do during loop
+void SensorSignal::onLoop(Child* child) {
+  int16_t value = transportGetSignalReport(_signal_command);
+  #if DEBUG == 1
+    Serial.print(_name);
+    Serial.print(F(" V="));
+    Serial.println(value);
+  #endif
+  child->setValue<int>(value);
+}
+
+// what to do as the main task when receiving a message
+void SensorSignal::onReceive(const MyMessage & message) {
+  Child* child = getChild(message.sensor);
+  if (child == nullptr) return;
+  if (message.getCommand() == C_REQ) onLoop(child);
+}
+
+// what to do when receiving a remote message
+void SensorSignal::onProcess(Request & request) {
+  int function = request.getFunction();
+  switch(function) {
+    case 101: setSignalCommand(request.getValueInt()); break;
+    default: return;
+  }
+  _sendServiceMessage(_msg->set(function));
+}
+
+// what to do when receiving an interrupt
+void SensorSignal::onInterrupt() {
+}
+
 
 #if MODULE_ANALOG_INPUT == 1
 /*
@@ -3114,38 +3257,7 @@ int NodeManager::getRetries() {
 MyMessage* NodeManager::getMessage() {
 	return &_msg;
 }
-#if BATTERY_MANAGER == 1
-  void NodeManager::setBatteryMin(float value) {
-    _battery_min = value;
-  }
-  void NodeManager::setBatteryMax(float value) {
-    _battery_max = value;
-  }
-  void NodeManager::setBatteryReportSeconds(int value) {
-    _battery_report_timer.set(value,SECONDS);
-  }
-  void NodeManager::setBatteryReportMinutes(int value) {
-    _battery_report_timer.set(value,MINUTES);
-  }
-  void NodeManager::setBatteryReportHours(int value) {
-    _battery_report_timer.set(value,HOURS);
-  }
-  void NodeManager::setBatteryReportDays(int value) {
-    _battery_report_timer.set(value,DAYS);
-  }
-  void NodeManager::setBatteryInternalVcc(bool value) {
-    _battery_internal_vcc = value;
-  }
-  void NodeManager::setBatteryPin(int value) {
-    _battery_pin = value;
-  }
-  void NodeManager::setBatteryVoltsPerBit(float value) {
-    _battery_volts_per_bit = value;
-  }
-  void NodeManager::setBatteryReportWithInterrupt(bool value) {
-    _battery_report_with_interrupt = value;
-  }
-#endif
+
 
 void NodeManager::setSleepSeconds(int value) {
   // set the status to AWAKE if the time provided is 0, SLEEP otherwise
@@ -3513,18 +3625,6 @@ void NodeManager::before() {
     // restore the configuration saved in the eeprom
     _loadConfig();
   #endif
-  #if BATTERY_MANAGER == 1 && !defined(MY_GATEWAY_ESP8266)
-    // set analogReference to internal if measuring the battery through a pin
-    if (! _battery_internal_vcc && _battery_pin > -1) analogReference(INTERNAL);
-    // if not already configured, report battery level every 60 minutes
-    if (! _battery_report_timer.isConfigured()) _battery_report_timer.set(60,MINUTES);
-    _battery_report_timer.start();
-  #endif
-  #if SIGNAL_SENSOR == 1 && defined(MY_SIGNAL_REPORT_ENABLED)
-    // if not already configured, report signal level every 60 minutes
-    if (! _signal_report_timer.isConfigured()) _signal_report_timer.set(60,MINUTES);
-    _signal_report_timer.start();
-  #endif
   // setup individual sensors
   for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
     Sensor* sensor = *itr;
@@ -3547,18 +3647,6 @@ void NodeManager::presentation() {
   sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
   // present the service as a custom sensor to the controller
   _present(CONFIGURATION_CHILD_ID, S_CUSTOM);
-  #if BATTERY_MANAGER == 1 && BATTERY_SENSOR == 1
-    // present the battery service
-    _present(BATTERY_CHILD_ID, S_MULTIMETER);
-    // report battery level
-    batteryReport();
-  #endif
-  #if SIGNAL_SENSOR == 1 && defined(MY_SIGNAL_REPORT_ENABLED)
-    // present the signal service
-    _present(SIGNAL_CHILD_ID, S_SOUND);
-    // report battery level
-    signalReport();
-  #endif
   // present each sensor
   for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
     Sensor* sensor = *itr;
@@ -3596,28 +3684,6 @@ void NodeManager::setup() {
 
 // run the main function for all the register sensors
 void NodeManager::loop() {
-  #if BATTERY_MANAGER == 1
-    // update the timer for battery report when not waking up from an interrupt
-    if (_battery_report_timer.isRunning() && _last_interrupt_pin == -1) _battery_report_timer.update();
-    // if it is time to report the battery level
-    if (_battery_report_timer.isOver()) {
-      // time to report the battery level again
-      batteryReport();
-      // restart the timer
-      _battery_report_timer.restart();
-    }
-  #endif
-  #if SIGNAL_SENSOR == 1 && defined(MY_SIGNAL_REPORT_ENABLED)
-    // update the timer for signal report when not waking up from an interrupt
-    if (_signal_report_timer.isRunning() && _last_interrupt_pin == -1) _signal_report_timer.update();
-    // if it is time to report the signal level
-    if (_signal_report_timer.isOver()) {
-      // time to report the signal level again
-      signalReport();
-      // restart the timer
-      _signal_report_timer.restart();
-    }
-  #endif
   #if POWER_MANAGER == 1
     // turn on the pin powering all the sensors
     if (_auto_power_pins) powerOn();
@@ -3717,16 +3783,6 @@ void NodeManager::process(Request & request) {
   int function = request.getFunction();
   switch(function) {
     case 1: hello(); break;
-    #if BATTERY_MANAGER == 1
-      case 2: batteryReport(); return;
-      case 11: setBatteryMin(request.getValueFloat()); break;
-      case 12: setBatteryMax(request.getValueFloat()); break;
-      case 14: setBatteryReportMinutes(request.getValueInt()); break;
-      case 15: setBatteryInternalVcc(request.getValueInt()); break;
-      case 16: setBatteryPin(request.getValueInt()); break;
-      case 17: setBatteryVoltsPerBit(request.getValueFloat()); break;
-      case 18: setBatteryReportWithInterrupt(request.getValueInt()); break;
-    #endif
     case 3:
       setSleepSeconds(request.getValueInt());
       #if PERSIST == 1
@@ -3772,23 +3828,10 @@ void NodeManager::process(Request & request) {
     case 30: setSleepOrWait(request.getValueInt()); break;
     case 31: setRebootPin(request.getValueInt()); break;
     case 32: setADCOff(); break;
-    #if SIGNAL_SENSOR == 1 && defined(MY_SIGNAL_REPORT_ENABLED)
-      case 33: setSignalReportMinutes(request.getValueInt()); break;
-      case 43: setSignalReportSeconds(request.getValueInt()); break;
-      case 44: setSignalReportHours(request.getValueInt()); break;
-      case 45: setSignalReportDays(request.getValueInt()); break;
-      case 34: setSignalCommand(request.getValueInt()); break;
-      case 35: signalReport(); break;
-    #endif
     case 36: setReportIntervalSeconds(request.getValueInt()); break;
     case 37: setReportIntervalMinutes(request.getValueInt()); break;
     case 38: setReportIntervalHours(request.getValueInt()); break;
     case 39: setReportIntervalDays(request.getValueInt()); break;
-    #if BATTERY_MANAGER == 1
-      case 40: setBatteryReportSeconds(request.getValueInt()); break;
-      case 41: setBatteryReportHours(request.getValueInt()); break;
-      case 42: setBatteryReportDays(request.getValueInt()); break;
-    #endif
     default: return; 
   }
   _sendUsingConfigChild(_msg.set(function));
@@ -3799,32 +3842,6 @@ void NodeManager::process(Request & request) {
 void NodeManager::hello() {
   // do nothing, the request will be echoed back
 }
-
-#if BATTERY_MANAGER == 1
-// Send a battery level report to the controller
-void NodeManager::batteryReport() {
-  // measure the board vcc
-  float volt = 0;
-  if (_battery_internal_vcc || _battery_pin == -1) volt = getVcc();
-  else volt = analogRead(_battery_pin) * _battery_volts_per_bit;
-  // calculate the percentage
-  int percentage = ((volt - _battery_min) / (_battery_max - _battery_min)) * 100;
-  if (percentage > 100) percentage = 100;
-  if (percentage < 0) percentage = 0;
-  #if DEBUG == 1
-    Serial.print(F("BATT V="));
-    Serial.print(volt);
-    Serial.print(F(" P="));
-    Serial.println(percentage);
-  #endif
-  #if BATTERY_SENSOR == 1
-    // report battery voltage
-	_sendUsingBatteryChild(_msg.set(volt, 2));
-  #endif
-  // report battery level percentage
-  sendBatteryLevel(percentage,_ack);
-}
-#endif
 
 // reboot the board
 void NodeManager::reboot() {
@@ -3981,33 +3998,6 @@ void NodeManager::sleepOrWait(long value) {
   if (isSleepingNode() && _sleep_or_wait && value > 200) sleep(value);
   else wait(value);
 }
-
-#if SIGNAL_SENSOR == 1 && defined(MY_SIGNAL_REPORT_ENABLED)
-  void NodeManager::setSignalReportSeconds(int value) {
-    _signal_report_timer.set(value,SECONDS);
-  }
-  void NodeManager::setSignalReportMinutes(int value) {
-    _signal_report_timer.set(value,MINUTES);
-  }
-  void NodeManager::setSignalReportHours(int value) {
-    _signal_report_timer.set(value,HOURS);
-  }
-  void NodeManager::setSignalReportDays(int value) {
-    _signal_report_timer.set(value,DAYS);
-  }
-  void NodeManager::setSignalCommand(int value) {
-    _signal_command = value;
-  }
-  void NodeManager::signalReport() {
-    int16_t value = transportGetSignalReport(_signal_command);
-    #if DEBUG == 1
-      Serial.print(F("SIG V="));
-      Serial.println(value);
-    #endif
-    // report signal level
-	//_sendSignalChild(_msg.set(value));
-  }
-#endif
 
 // return the next available child_id
 int NodeManager::getAvailableChildId() {
