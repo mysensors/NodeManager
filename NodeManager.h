@@ -73,11 +73,6 @@
   #define PERSIST 0
 #endif
 
-// if enabled, send a SLEEPING and AWAKE service messages just before entering and just after leaving a sleep cycle
-#ifndef SERVICE_MESSAGES
-  #define SERVICE_MESSAGES 0
-#endif
-
 // the child id used to allow remote configuration
 #ifndef CONFIGURATION_CHILD_ID
   #define CONFIGURATION_CHILD_ID 200

@@ -3671,9 +3671,6 @@ void NodeManager::setup() {
     Serial.print(F(" M="));
     Serial.println(_is_metric);
   #endif
-  #if SERVICE_MESSAGES == 1
-	_sendUsingConfigChild(_msg.set("STARTED"));
-  #endif
   // run setup for all the registered sensors
   for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
     Sensor* sensor = *itr;
@@ -4108,10 +4105,6 @@ void NodeManager::_sleep() {
     Serial.print(_sleep_time);
     Serial.println(F("s"));
   #endif
-  #if SERVICE_MESSAGES == 1
-    // notify the controller I'm going to sleep
-	_sendUsingConfigChild(_msg.set("SLEEPING"));
-  #endif
   #if DEBUG == 1
     // print a new line to separate the different cycles
     Serial.println("");
@@ -4149,10 +4142,6 @@ void NodeManager::_sleep() {
   // coming out of sleep
   #if DEBUG == 1
     Serial.println(F("AWAKE"));
-  #endif
-  #if SERVICE_MESSAGES == 1
-    // notify the controller I am awake
-	_sendUsingConfigChild(_msg.set("AWAKE"));
   #endif
 }
 
