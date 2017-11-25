@@ -178,6 +178,7 @@
    Classes
 */
 class NodeManager;
+class Sensor;
 
 /*
  * List
@@ -331,25 +332,59 @@ class Request {
 class Child {
   public:
     Child();
-    Child(int child_id, int presentation, int type, int value_type, char* description);
+    Child(Sensor* sensor, int child_id, int presentation, int type, char* description);
     int child_id;
     int presentation = S_CUSTOM;
     int type = V_CUSTOM;
     char* description = "";
-    int value_type = TYPE_INTEGER;
-    template<typename T> void setValue(T value);
-    template<typename T> T getValue();
-    template<typename T> void setLastValue(T value);
-    template<typename T> T getLastValue();
+    virtual void sendValue();
+  protected:
+    int _samples = 0;
+    Sensor* _sensor;
   private:
-    int _value_int = -255;
-    float _value_float = -255;
-    double _value_double = -255;
-    char * _value_string = "";
-    int _last_value_int = -255;
-    float _last_value_float = -255;
-    double _last_value_double = -255;
-    char * _last_value_string = "";
+};
+
+class ChildInt: public Child {
+  public:
+    ChildInt(Sensor* sensor, int child_id, int presentation, int type, char* description);
+    void setValueInt(int value);
+    void sendValue();
+  private:
+    int _value = -255;
+    int _last_value = -255;
+    int _total = 0;
+};
+
+class ChildFloat: public Child {
+  public:
+    ChildFloat(Sensor* sensor, int child_id, int presentation, int type, char* description);
+    void setValueFloat(float value);
+    void sendValue();
+  private:
+    float _value = -255;
+    float _last_value = -255;
+    float _total = 0;
+};
+
+class ChildString: public Child {
+  public:
+    ChildString(Sensor* sensor, int child_id, int presentation, int type, char* description);
+    void setValueString(char* value);
+    void sendValue();
+  private:
+    char* _value = "";
+    char* _last_value = "";
+};
+
+class ChildDouble: public Child {
+  public:
+    ChildDouble(Sensor* sensor, int child_id, int presentation, int type, char* description);
+    void setValueDouble(double value);
+    void sendValue();
+  private:
+    double _value = -255;
+    double _last_value = -255;
+    double _total = 0;
 };
 
 /***************************************
@@ -389,8 +424,10 @@ class Sensor {
     int getValueType();
     // [11] for float values, set the float precision (default: 2)
     void  setFloatPrecision(int value);
+    int getFloatPrecision();
     // [21] for double values, set the double precision (default: 4)
     void  setDoublePrecision(int value);
+    int getDoublePrecision();
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
       void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
@@ -421,27 +458,29 @@ class Sensor {
     void before();
     void presentation();
     void setup();
-    void loop(const MyMessage & message);
+    void loop(MyMessage* message);
     void interrupt();
     void receive(const MyMessage & message);
     // abstract functions, subclasses need to implement
     virtual void onBefore();
     virtual void onSetup();
     virtual void onLoop(Child* child);
-    virtual void onReceive(const MyMessage & message);
+    virtual void onReceive(MyMessage* message);
     virtual void onProcess(Request & request);
     virtual void onInterrupt();
-    List<Child> children;
+    List<Child*> children;
     Child* getChild(int child_id);
+    // register a child
+    void registerChild(Child* child);
+    NodeManager* _node_manager;
   protected:
     const __FlashStringHelper* _name;
     MyMessage* _msg;
-    NodeManager* _node_manager;
     int _pin = -1;
     int _samples = 1;
     int _samples_interval = 0;
-    bool _track_last_value = false;
     int _float_precision = 2;
+    bool _track_last_value = false;
     int _double_precision = 4;
     int _interrupt_pin = -1;
     #if POWER_MANAGER  == 1
@@ -483,7 +522,7 @@ class SensorBattery: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
   protected:
@@ -507,7 +546,7 @@ class SensorSignal: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
   protected:
@@ -535,7 +574,7 @@ class SensorAnalogInput: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
   protected:
@@ -576,7 +615,7 @@ class SensorThermistor: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
   protected:
@@ -598,7 +637,7 @@ class SensorML8511: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
   protected:
@@ -620,7 +659,7 @@ class SensorACS712: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
   protected:
@@ -657,7 +696,7 @@ class SensorDigitalInput: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
 };
@@ -688,7 +727,7 @@ class SensorDigitalOutput: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
   protected:
@@ -746,7 +785,7 @@ class SensorDHT: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
     // constants
@@ -771,7 +810,7 @@ class SensorSHT21: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
     // constants
@@ -811,7 +850,7 @@ class SensorSwitch: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
   protected:
@@ -856,7 +895,7 @@ class SensorDs18b20: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
   protected:
@@ -881,7 +920,7 @@ class SensorBH1750: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
   protected:
@@ -900,7 +939,7 @@ class SensorMLX90614: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
     // constants
@@ -927,7 +966,7 @@ class SensorBosch: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
     // constants
@@ -1007,7 +1046,7 @@ class SensorHCSR04: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
   protected:
@@ -1035,7 +1074,7 @@ class SensorSonoff: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
   protected:
@@ -1065,7 +1104,7 @@ class SensorMCP9808: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
   protected:
@@ -1106,7 +1145,7 @@ class SensorMQ: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
   protected:
@@ -1149,7 +1188,7 @@ class SensorMHZ19: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
   protected:
@@ -1170,7 +1209,7 @@ class SensorAM2320: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
     // constants
@@ -1201,7 +1240,7 @@ class SensorTSL2561: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
     // constants
@@ -1239,7 +1278,7 @@ class SensorPT100: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
   protected:
@@ -1273,7 +1312,7 @@ class SensorDimmer: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
   protected:
@@ -1302,7 +1341,7 @@ class SensorPulseMeter: public Sensor {
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
-    void onReceive(const MyMessage & message);
+    void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
   protected:
@@ -1365,7 +1404,7 @@ class NodeManager {
     // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
     int getSleepBetweenSend();
-    // register a custom sensor
+    // register a sensor
     void registerSensor(Sensor* sensor);
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
