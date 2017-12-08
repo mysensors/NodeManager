@@ -318,14 +318,11 @@ void ChildString::sendValue() {
    Sensor class
 */
 // constructor
-Sensor::Sensor() {
-  
+Sensor::Sensor() {  
 }
-
 Sensor::Sensor(NodeManager& nodeManager, int pin) {
   _node_manager = &nodeManager;
   _pin = pin;
-  _msg = _node_manager->getMessage();
   _report_timer = new Timer(_node_manager);
   _force_update_timer = new Timer(_node_manager);
   _node_manager->registerSensor(this);
@@ -3183,10 +3180,6 @@ void NodeManager::setRetries(int value) {
 int NodeManager::getRetries() {
   return _retries;
 }
-MyMessage* NodeManager::getMessage() {
-	return &_message;
-}
-
 
 void NodeManager::setSleepSeconds(int value) {
   // set the status to AWAKE if the time provided is 0, SLEEP otherwise

@@ -456,7 +456,6 @@ class Sensor {
     NodeManager* _node_manager;
   protected:
     const __FlashStringHelper* _name;
-    MyMessage* _msg;
     int _pin = -1;
     int _samples = 1;
     int _samples_interval = 0;
@@ -1444,7 +1443,6 @@ class NodeManager {
     // handle interrupts
     static void _onInterrupt_1();
     static void _onInterrupt_2();
-	  MyMessage* getMessage();
     // send a message by providing the source child, type of the message and value
 	  void sendMessage(int child_id, int type, int value);
     void sendMessage(int child_id, int type, float value);
