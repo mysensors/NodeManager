@@ -163,7 +163,8 @@ float Timer::getElapsed() {
     Request
 */
 
-Request::Request(const char* string) {
+Request::Request(int child_id, const char* string) {
+  _child_id = child_id;
   char* ptr;
   // copy to working area
   strcpy((char*)&_value, string);
@@ -183,6 +184,11 @@ Request::Request(const char* string) {
     Serial.print(F(" S="));
     Serial.println(getValueString());
   #endif
+}
+
+// return the child id
+int Request::getChildId() {
+  return _child_id;
 }
 
 // return the parsed function
@@ -248,11 +254,7 @@ void ChildInt::sendValue() {
   if (_total == -255) return;
   int avg = (int) (_total / _samples);
   _last_value = avg;
-  MyMessage* msg = _sensor->_node_manager->getMessage();
-  msg->setSensor(child_id);
-  msg->setType(type);
-  msg->set(avg);
-  _sensor->_node_manager->sendMessage();
+  _sensor->_node_manager->sendMessage(child_id,type,avg);
   _value = -255;
 }
 
@@ -272,11 +274,7 @@ void ChildFloat::sendValue() {
   if (_total == -255) return;
   float avg = _total / _samples;
   _last_value = avg;
-  MyMessage* msg = _sensor->_node_manager->getMessage();
-  msg->setSensor(child_id);
-  msg->setType(type);
-  msg->set(avg,_sensor->getFloatPrecision());
-  _sensor->_node_manager->sendMessage();
+  _sensor->_node_manager->sendMessage(child_id,type,avg);
   _value = -255;
 }
 
@@ -296,11 +294,7 @@ void ChildDouble::sendValue() {
   if (_total == -255) return;
   double avg = _total / _samples;
   _last_value = avg;
-  MyMessage* msg = _sensor->_node_manager->getMessage();
-  msg->setSensor(child_id);
-  msg->setType(type);
-  msg->set(avg,_sensor->getDoublePrecision());
-  _sensor->_node_manager->sendMessage();
+  _sensor->_node_manager->sendMessage(child_id,type,avg);
   _value = -255;
 }
 
@@ -315,12 +309,8 @@ void ChildString::setValueString(char* value) {
 
 // send the value back to the controller
 void ChildString::sendValue() {
-  MyMessage* msg = _sensor->_node_manager->getMessage();
   _last_value = _value;
-  msg->setSensor(child_id);
-  msg->setType(type);
-  msg->set(_value);
-  _sensor->_node_manager->sendMessage();
+  _sensor->_node_manager->sendMessage(child_id,type,_value);
   _value = "";
 }
 
@@ -351,27 +341,6 @@ void Sensor::setPin(int value) {
 int Sensor::getPin() {
   return _pin;
 }
-void Sensor::setChildId(int value) {
-  _child_id = value;
-}
-int Sensor::getChildId() {
-  return _child_id;
-}
-void Sensor::setPresentation(int value) {
-  _presentation = value;
-}
-int Sensor::getPresentation() {
-  return _presentation;
-}
-void Sensor::setType(int value) {
-  _type = value;
-}
-int Sensor::getType() {
-  return _type;
-}
-void Sensor::setDescription(char* value) {
-  _description = value;
-}
 void Sensor::setSamples(int value) {
   _samples = value;
 }
@@ -387,25 +356,6 @@ void Sensor::setForceUpdateMinutes(int value) {
 void Sensor::setForceUpdateHours(int value) {
   _force_update_timer->start(value,HOURS);
 }
-void Sensor::setValueType(int value) {
-  _value_type = value;
-}
-int Sensor::getValueType() {
-  return _value_type;
-}
-void Sensor::setFloatPrecision(int value) {
-  _float_precision = value;
-}
-int Sensor::getFloatPrecision() {
-  return _float_precision;
-}
-void Sensor::setDoublePrecision(int value) {
-  _double_precision = value;
-}
-int Sensor::getDoublePrecision() {
-  return _double_precision;
-}
-
 #if POWER_MANAGER == 1
     void Sensor::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
       _powerManager.setPowerPins(ground_pin, vcc_pin, wait_time);
@@ -520,19 +470,14 @@ void Sensor::loop(MyMessage* message) {
   // iterates over all the children
   for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
     Child* child = *itr;
-    // for numeric sensor requiring multiple samples, keep track of the total
-    double total = 0;
+    // if a specific child is requested, skip all the others
+    if (message != nullptr && message->sensor != child->child_id) continue;
     // collect multiple samples if needed
     for (int i = 0; i < _samples; i++) {
-      // call the sensor-specific implementation of the main task which will store the result in the _value variable
-      if (message != nullptr) {
-        // we've been called from receive(), pass the message along
-        onReceive(message);
-      }
-      else {
-        // we'be been called from loop()
-        onLoop(child);
-      }
+      // we've been called from receive(), pass the message along
+      if (message != nullptr) onReceive(message);
+      // we'be been called from loop()
+      else onLoop(child);
       // wait between samples
       if (_samples_interval > 0) _node_manager->sleepOrWait(_samples_interval);
     }
@@ -555,22 +500,19 @@ void Sensor::interrupt() {
 
 // receive a message from the radio network
 void Sensor::receive(const MyMessage &message) {
-  // return if not for this sensor
-  if (message.sensor != _child_id) return;
   // check if it is a request for the API
   if (message.getCommand() == C_REQ && message.type == V_CUSTOM) {
     #if REMOTE_CONFIGURATION == 1
       // parse the request
-      Request request = Request(message.getString());
+      Request request = Request(message.sensor,message.getString());
       // if it is for a sensor-generic function, call process(), otherwise the sensor-specific onProcess();
       if (request.getFunction() < 100) process(request);
       else onProcess(request);
     #endif
+  } else {
+    // a request would make the sensor executing its main task passing along the message
+    loop(&message);
   }
-  // return if the type is not correct
-  if (message.type != _type) return;
-  // a request would make the sensor executing its main task passing along the message
-  loop(&message);
 }
 
 // process a remote configuration request message
@@ -578,15 +520,11 @@ void Sensor::process(Request & request) {
   int function = request.getFunction();
   switch(function) {
     case 1: setPin(request.getValueInt()); break;
-    case 2: setChildId(request.getValueInt()); break;
-    case 3: setType(request.getValueInt()); break;
-    case 4: setDescription(request.getValueString()); break;
     case 5: setSamples(request.getValueInt()); break;
     case 6: setSamplesInterval(request.getValueInt()); break;
     case 7: setTrackLastValue(request.getValueInt()); break;
     case 9: setForceUpdateMinutes(request.getValueInt()); break;
     case 10: setValueType(request.getValueInt()); break;
-    case 11: setFloatPrecision(request.getValueInt()); break;
     #if POWER_MANAGER == 1
       case 12: setAutoPowerPins(request.getValueInt()); break;
       case 13: powerOn(); break;
@@ -597,10 +535,9 @@ void Sensor::process(Request & request) {
     case 19: setReportIntervalHours(request.getValueInt()); break;
     case 20: setReportIntervalDays(request.getValueInt()); break;
     case 18: setForceUpdateHours(request.getValueInt()); break;
-    case 21: setDoublePrecision(request.getValueInt()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // return the requested child 
@@ -619,28 +556,6 @@ void Sensor::onLoop(Child* child){}
 void Sensor::onReceive(MyMessage* message){}
 void Sensor::onProcess(Request & request){}
 void Sensor::onInterrupt(){}
-
-// send a message to the network
-void Sensor::_sendSensorMessage(MyMessage & message) {
-	// setup the message
-	message.setSensor(_child_id);
-	message.setType(_type);
-	_node_manager->sendMessage();
-  }
-
-// send a message to the network
-void Sensor::_sendServiceMessage(MyMessage & message) {
-	// setup the message
-	message.setSensor(_child_id);
-	message.setType(V_CUSTOM);
-	_node_manager->sendMessage();
-}
-
-// return true if the message is coming from the radio network
-bool Sensor::_isReceive(const MyMessage & message) {
-  if (message.sender == 0 && message.sensor == 0 && message.getCommand() == 0 && message.type == 0) return false;
-  return true;
-}
 
 // determine if a value is worth sending back to the controller
 bool Sensor::_isWorthSending(bool comparison) {
@@ -687,7 +602,7 @@ void SensorBattery::setBatteryReportWithInterrupt(bool value) {
 
 // what to do during before
 void SensorBattery::onBefore() {
-  new ChildFloat(this,BATTERY_CHILD_ID,S_MULTIMETER,V_VOLTAGE);  
+  new ChildFloat(this,BATTERY_CHILD_ID,S_MULTIMETER,V_VOLTAGE);
 }
 
 // what to do during setup
@@ -736,7 +651,7 @@ void SensorBattery::onProcess(Request & request) {
     case 107: setBatteryReportWithInterrupt(request.getValueInt()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -792,7 +707,7 @@ void SensorSignal::onProcess(Request & request) {
     case 101: setSignalCommand(request.getValueInt()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -871,7 +786,7 @@ void SensorAnalogInput::onProcess(Request & request) {
     case 105: setRangeMax(request.getValueInt()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -1000,7 +915,7 @@ void SensorThermistor::onProcess(Request & request) {
     case 105: setOffset(request.getValueFloat()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -1126,7 +1041,7 @@ void SensorACS712::onProcess(Request & request) {
     case 102: setOffset(request.getValueInt()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -1292,7 +1207,7 @@ void SensorDigitalOutput::onProcess(Request & request) {
     case 107: setWaitAfterSet(request.getValueInt()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -1418,7 +1333,7 @@ void SensorLatchingRelay::onProcess(Request & request) {
     case 203: setPinOn(request.getValueInt()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // switch to the requested status
@@ -1662,7 +1577,7 @@ void SensorSwitch::onProcess(Request & request) {
     case 104: setInitial(request.getValueInt()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -1768,7 +1683,7 @@ void SensorDs18b20::onProcess(Request & request) {
     case 102: setSleepDuringConversion(request.getValueInt()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -1845,7 +1760,7 @@ void SensorBH1750::onProcess(Request & request) {
     case 101: setMode(request.getValueInt()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 
@@ -1971,7 +1886,7 @@ void SensorBosch::onProcess(Request & request) {
     case 101: setForecastSamplesCount(request.getValueInt()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -2306,7 +2221,7 @@ void SensorHCSR04::onProcess(Request & request) {
     case 103: setMaxDistance(request.getValueInt()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -2391,7 +2306,7 @@ void SensorSonoff::onProcess(Request & request) {
     case 103: setLedPin(request.getValueInt()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -2590,7 +2505,7 @@ void SensorMQ::onProcess(Request & request) {
     case 8: setReadSampleInterval(request.getValueInt()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -2745,7 +2660,7 @@ void SensorMHZ19::onProcess(Request & request) {
   switch(function) {
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -2962,7 +2877,7 @@ void SensorTSL2561::onProcess(Request & request) {
     case 104: setAddress(request.getValueInt()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -3024,7 +2939,7 @@ void SensorPT100::onProcess(Request & request) {
     case 101: setVoltageRef(request.getValueFloat()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -3093,7 +3008,7 @@ void SensorDimmer::onProcess(Request & request) {
     case 103: setStepDuration(request.getValueInt()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -3195,7 +3110,7 @@ void SensorPulseMeter::onProcess(Request & request) {
     case 102: setPulseFactor(request.getValueFloat()); break;
     default: return;
   }
-  _sendServiceMessage(_msg->set(function));
+  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -3253,7 +3168,7 @@ SensorWaterMeter::SensorWaterMeter(NodeManager* node_manager, int child_id, int 
 // initialize the node manager
 NodeManager::NodeManager() {
   // setup the message container
-  _msg = MyMessage();
+  _message = MyMessage();
 }
 
 int NodeManager::_last_interrupt_pin = -1;
@@ -3269,7 +3184,7 @@ int NodeManager::getRetries() {
   return _retries;
 }
 MyMessage* NodeManager::getMessage() {
-	return &_msg;
+	return &_message;
 }
 
 
@@ -3704,7 +3619,7 @@ void NodeManager::loop() {
     Sensor* sensor = *itr;
     if (_last_interrupt_pin != -1 && sensor->getInterruptPin() == _last_interrupt_pin) {
       // if there was an interrupt for this sensor, call the sensor's interrupt() and then loop()
-      _msg.clear();
+      _message.clear();
       sensor->interrupt();
       sensor->loop(nullptr);
         // reset the last interrupt pin
@@ -3712,7 +3627,7 @@ void NodeManager::loop() {
     }
     else if (_last_interrupt_pin == -1) {
       // if just at the end of a cycle, call the sensor's loop() 
-      _msg.clear();
+      _message.clear();
       sensor->loop(nullptr);
     }
   }
@@ -3742,7 +3657,7 @@ void NodeManager::receive(const MyMessage &message) {
   if (message.sensor == CONFIGURATION_CHILD_ID && message.getCommand() == C_REQ && message.type == V_CUSTOM) {
     #if REMOTE_CONFIGURATION == 1
       // parse the request
-      Request request = Request(message.getString());
+      Request request = Request(message.sensor,message.getString());
       // process the request
       process(request);
     #endif
@@ -3822,7 +3737,7 @@ void NodeManager::process(Request & request) {
       case 6: reboot(); return;
     #endif
     case 7: clearEeprom(); break;
-    case 8: version(); return;
+    case 8: sendMessage(request.getChildId(),V_CUSTOM,VERSION); return;
     case 9: wakeup(); break;
     case 10: setRetries(request.getValueInt()); break;
     case 19: setSleepInterruptPin(request.getValueInt()); break;
@@ -3845,7 +3760,7 @@ void NodeManager::process(Request & request) {
     case 39: setReportIntervalDays(request.getValueInt()); break;
     default: return; 
   }
-  _sendUsingConfigChild(_msg.set(function));
+  sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 
@@ -3870,11 +3785,6 @@ void NodeManager::reboot() {
     // Infinite loop until watchdog reset after 16 ms
     while(true){}
   }
-}
-
-// send NodeManager's the version back to the controller
-void NodeManager::version() {
-	_sendUsingConfigChild(_msg.set(VERSION));
 }
 
 // clear the EEPROM
@@ -4044,54 +3954,54 @@ void NodeManager::_onInterrupt_2() {
   }
 }
 
-// send a message to the network using CONFIGURATION_CHILD_ID, V_CUSTOM
-void NodeManager::_sendUsingConfigChild(MyMessage & message) {
-	// setup the message
-	message.setSensor(CONFIGURATION_CHILD_ID);
-	message.setType(V_CUSTOM);
-	sendMessage();
+// send a message by providing the source child, type of the message and value
+void NodeManager::sendMessage(int child_id, int type, int value) {
+  _message.clear();
+  _message.set(value);
+  _sendMessage(child_id,type);
 }
-
-// send a message to the network using BATTERY_CHILD_ID, V_VOLTAGE
-void NodeManager::_sendUsingBatteryChild(MyMessage & message) {
-	// setup the message
-	message.setSensor(BATTERY_CHILD_ID);
-	message.setType(V_VOLTAGE);
-	sendMessage();
+void NodeManager::sendMessage(int child_id, int type, float value) {
+  _message.clear();
+  _message.set(value,2);
+  _sendMessage(child_id,type);
 }
-
-// send a message to the network using SIGNAL_CHILD_ID, V_LEVEL
-void NodeManager::_sendUsingSignalChild(MyMessage & message) {
-	// setup the message
-	message.setSensor(SIGNAL_CHILD_ID);
-	message.setType(V_LEVEL);
-	sendMessage();
+void NodeManager::sendMessage(int child_id, int type, double value) {
+  _message.clear();
+  _message.set(value,4);
+  _sendMessage(child_id,type);
 }
-
+void NodeManager::sendMessage(int child_id, int type, const char* value) {
+  _message.clear();
+  _message.set(value);
+  _sendMessage(child_id,type);
+}
 
 // send a message to the network
-void NodeManager::sendMessage() {
+void NodeManager::_sendMessage(int child_id, int type) {
+  // prepare the message
+  _message.setSensor(child_id);
+  _message.setType(type);
   // send the message, multiple times if requested
   for (int i = 0; i < _retries; i++) {
     // if configured, sleep beetween each send
     if (_sleep_between_send > 0) sleep(_sleep_between_send);
     #if DEBUG == 1
       Serial.print(F("SEND D="));
-		Serial.print(_msg.destination);
+		  Serial.print(_message.destination);
       Serial.print(F(" I="));
-		Serial.print(_msg.sensor);
+		  Serial.print(_message.sensor);
       Serial.print(F(" C="));
-		Serial.print(_msg.getCommand());
+		  Serial.print(_message.getCommand());
       Serial.print(F(" T="));
-		Serial.print(_msg.type);
+		  Serial.print(_message.type);
       Serial.print(F(" S="));
-		Serial.print(_msg.getString());
+		  Serial.print(_message.getString());
       Serial.print(F(" I="));
-		Serial.print(_msg.getInt());
+		  Serial.print(_message.getInt());
       Serial.print(F(" F="));
-		Serial.println(_msg.getFloat());
+		  Serial.println(_message.getFloat());
     #endif
-		send(_msg, _ack);
+		send(_message, _ack);
   }
 }
 

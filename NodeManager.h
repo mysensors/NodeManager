@@ -309,7 +309,9 @@ class Timer {
 
 class Request {
   public:
-    Request(const char* string);
+    Request(int child_id, const char* string);
+    // return the child id
+    int getChildId();
     // return the parsed function
     int getFunction();
     // return the value as an int
@@ -321,7 +323,8 @@ class Request {
    private:
     NodeManager* _node_manager;
     int _function;
-	// Size of buffer to prevent overrun 
+    int _child_id;
+	  // Size of buffer to prevent overrun 
     char _value[MAX_PAYLOAD+1];
 };
 
@@ -398,17 +401,6 @@ class Sensor {
     // [1] where the sensor is attached to (default: not set)
     void setPin(int value);
     int getPin();
-    // [2] child_id of this sensor (default: not set)
-    void setChildId(int value);
-    int getChildId();
-    // presentation of this sensor (default: S_CUSTOM)
-    void setPresentation(int value);
-    int getPresentation();
-    // [3] type of this sensor (default: V_CUSTOM)
-    void setType(int value);
-    int getType();
-    // [4] description of the sensor (default: '')
-    void setDescription(char *value);
     // [5] For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)
     void setSamples(int value);
     // [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
@@ -422,12 +414,6 @@ class Sensor {
     // [10] the value type of this sensor (default: TYPE_INTEGER)
     void setValueType(int value);
     int getValueType();
-    // [11] for float values, set the float precision (default: 2)
-    void  setFloatPrecision(int value);
-    int getFloatPrecision();
-    // [21] for double values, set the double precision (default: 4)
-    void  setDoublePrecision(int value);
-    int getDoublePrecision();
     #if POWER_MANAGER == 1
       // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
       void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
@@ -479,9 +465,7 @@ class Sensor {
     int _pin = -1;
     int _samples = 1;
     int _samples_interval = 0;
-    int _float_precision = 2;
     bool _track_last_value = false;
-    int _double_precision = 4;
     int _interrupt_pin = -1;
     #if POWER_MANAGER  == 1
       PowerManager _powerManager;
@@ -489,15 +473,7 @@ class Sensor {
     #endif
     Timer* _report_timer;
     Timer* _force_update_timer;
-    void _sendSensorMessage(MyMessage & msg);
-    void _sendServiceMessage(MyMessage & msg);
-    bool _isReceive(const MyMessage & message);
     bool _isWorthSending(bool comparison);
-    int _child_id;
-    int _presentation = S_CUSTOM;
-    int _type = V_CUSTOM;
-    char* _description = "";
-    int _value_type = TYPE_INTEGER;
 };
 
 /*
@@ -1434,8 +1410,6 @@ class NodeManager {
     void hello();
     // [6] reboot the board
     void reboot();
-    // [8] send NodeManager's the version back to the controller
-    void version();
     // [7] clear the EEPROM
     void clearEeprom();
     // [9] wake up the board
@@ -1479,7 +1453,11 @@ class NodeManager {
     static void _onInterrupt_1();
     static void _onInterrupt_2();
 	  MyMessage* getMessage();
-	  void sendMessage();
+    // send a message by providing the source child, type of the message and value
+	  void sendMessage(int child_id, int type, int value);
+    void sendMessage(int child_id, int type, float value);
+    void sendMessage(int child_id, int type, double value);
+    void sendMessage(int child_id, int type, const char* value);
     int getAvailableChildId();
     List<Sensor*> sensors;
     Child* getChild(int child_id);
@@ -1490,10 +1468,8 @@ class NodeManager {
       PowerManager _powerManager;
       bool _auto_power_pins = true;
     #endif
-    MyMessage _msg;
-    void _sendUsingConfigChild(MyMessage & msg);
-    void _sendUsingBatteryChild(MyMessage & msg);
-    void _sendUsingSignalChild(MyMessage & msg);
+    MyMessage _message;
+    void _sendMessage(int child_id, int type);
     int _status = AWAKE;
     long _sleep_time = 0;
     int _sleep_interrupt_pin = -1;
