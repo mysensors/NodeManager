@@ -68,11 +68,6 @@
 #ifndef REMOTE_CONFIGURATION
   #define REMOTE_CONFIGURATION 1
 #endif
-// if enabled, persist the configuration settings on EEPROM
-#ifndef PERSIST
-  #define PERSIST 0
-#endif
-
 // the child id used to allow remote configuration
 #ifndef CONFIGURATION_CHILD_ID
   #define CONFIGURATION_CHILD_ID 200
@@ -435,7 +430,7 @@ class Sensor {
     // return true if the report interval has been already configured
     bool isReportIntervalConfigured();
     // process a remote request
-    void process(Request & request);
+    void process(const Request & request);
     // return the pin the interrupt is attached to
     int getInterruptPin();
     // listen for interrupts on the given pin so interrupt() will be called when occurring
@@ -789,12 +784,7 @@ class SensorSHT21: public Sensor {
     void onReceive(MyMessage* message);
     void onProcess(Request & request);
     void onInterrupt();
-    // constants
-    const static int TEMPERATURE = 0;
-    const static int HUMIDITY = 1;
   protected:
-    float _offset = 0;
-    int _sensor_type = 0;
 };
 
 /*
@@ -1442,6 +1432,8 @@ class NodeManager {
     void setRebootPin(int value);
     // [32] turn the ADC off so to save 0.2 mA
     void setADCOff();
+    // [30] if set save the sleep settings in memory, also when changed remotely (default: false)
+    void setSaveSleepSettings(bool value);
     // hook into the main sketch functions
     void before();
     void presentation();
@@ -1493,8 +1485,9 @@ class NodeManager {
     int _report_interval_seconds = 10*60;
     bool _sleep_or_wait = true;
     int _reboot_pin = -1;
-    void _loadConfig();
-    void _saveConfig();
+    bool _save_sleep_settings = false;
+    void _loadSleepSettings();
+    void _saveSleepSettings();
     int _child_id_counter = 0;
 };
 

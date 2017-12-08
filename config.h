@@ -111,14 +111,12 @@
  */
 
 // if enabled, enable debug messages on serial port
-#define DEBUG 1
+#define DEBUG 0
 
 // if enabled, enable the capability to power on sensors with the arduino's pins to save battery while sleeping
 #define POWER_MANAGER 0
 // if enabled, allow modifying the configuration remotely by interacting with the configuration child id
 #define REMOTE_CONFIGURATION 0
-// if enabled, persist the remote configuration settings on EEPROM
-#define PERSIST 0
 
 // Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN, SENSOR_SOIL_MOISTURE
 #define MODULE_ANALOG_INPUT 0
@@ -129,7 +127,7 @@
 // Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
 #define MODULE_DHT 0
 // Enable this module to use one of the following sensors: SENSOR_SHT21, SENSOR_HTU21D
-#define MODULE_SHT21 1
+#define MODULE_SHT21 0
 // Enable this module to use one of the following sensors: SENSOR_SWITCH, SENSOR_DOOR, SENSOR_MOTION
 #define MODULE_SWITCH 0
 // Enable this module to use one of the following sensors: SENSOR_DS18B20

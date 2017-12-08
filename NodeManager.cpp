@@ -314,9 +314,6 @@ void ChildString::sendValue() {
   _value = "";
 }
 
-
-
-
 /*
    Sensor class
 */
@@ -415,13 +412,13 @@ void Sensor::registerChild(Child* child) {
 void Sensor::presentation() {
   for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
     Child* child = *itr;
-  #if DEBUG == 1
-    Serial.print(F("PRES I="));
-    Serial.print(child->child_id);
-    Serial.print(F(" T="));
-    Serial.println(child->presentation);
-  #endif
-  present(child->child_id, child->presentation,child->description,_node_manager->getAck());
+    #if DEBUG == 1
+      Serial.print(F("PRES I="));
+      Serial.print(child->child_id);
+      Serial.print(F(" T="));
+      Serial.println(child->presentation);
+    #endif
+    present(child->child_id, child->presentation,child->description,_node_manager->getAck());
   }
 
 }
@@ -516,7 +513,7 @@ void Sensor::receive(const MyMessage &message) {
 }
 
 // process a remote configuration request message
-void Sensor::process(Request & request) {
+void Sensor::process(const Request & request) {
   int function = request.getFunction();
   switch(function) {
     case 1: setPin(request.getValueInt()); break;
@@ -524,7 +521,6 @@ void Sensor::process(Request & request) {
     case 6: setSamplesInterval(request.getValueInt()); break;
     case 7: setTrackLastValue(request.getValueInt()); break;
     case 9: setForceUpdateMinutes(request.getValueInt()); break;
-    case 10: setValueType(request.getValueInt()); break;
     #if POWER_MANAGER == 1
       case 12: setAutoPowerPins(request.getValueInt()); break;
       case 13: powerOn(); break;
@@ -641,6 +637,7 @@ void SensorBattery::onReceive(MyMessage* message) {
 
 // what to do when receiving a remote message
 void SensorBattery::onProcess(Request & request) {
+#if REMOTE_CONFIGURATION == 1
   int function = request.getFunction();
   switch(function) {
     case 102: setMinVoltage(request.getValueFloat()); break;
@@ -652,6 +649,7 @@ void SensorBattery::onProcess(Request & request) {
     default: return;
   }
   _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+#endif
 }
 
 // what to do when receiving an interrupt
@@ -702,12 +700,14 @@ void SensorSignal::onReceive(MyMessage* message) {
 
 // what to do when receiving a remote message
 void SensorSignal::onProcess(Request & request) {
+#if REMOTE_CONFIGURATION == 1
   int function = request.getFunction();
   switch(function) {
     case 101: setSignalCommand(request.getValueInt()); break;
     default: return;
   }
   _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+#endif
 }
 
 // what to do when receiving an interrupt
@@ -3194,6 +3194,8 @@ void NodeManager::setSleepSeconds(int value) {
   else _status = SLEEP;
   // store the time
   _sleep_time = value;
+  // save sleep settings to eeprom
+  if (_save_sleep_settings) _saveSleepSettings();
 }
 void NodeManager::setSleepMinutes(int value) {
   setSleepSeconds(value*60);
@@ -3257,6 +3259,9 @@ void NodeManager::setIsMetric(bool value) {
 }
 bool NodeManager::getIsMetric() {
   return _is_metric;
+}
+void NodeManager::setSaveSleepSettings(bool value) {
+  _save_sleep_settings = value;
 }
 
 // Convert a temperature from celsius to fahrenheit depending on how isMetric is set
@@ -3550,10 +3555,8 @@ void NodeManager::before() {
     Serial.print(F(" B="));
     Serial.println(MY_CAP_RXBUF);
   #endif
-  #if PERSIST == 1
-    // restore the configuration saved in the eeprom
-    _loadConfig();
-  #endif
+  // restore the sleep settings saved in the eeprom
+  if (_save_sleep_settings) _loadSleepSettings();
   // setup individual sensors
   for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
     Sensor* sensor = *itr;
@@ -3711,27 +3714,15 @@ void NodeManager::process(Request & request) {
     case 1: hello(); break;
     case 3:
       setSleepSeconds(request.getValueInt());
-      #if PERSIST == 1
-        _saveConfig();
-      #endif
       break;
     case 4:
       setSleepMinutes(request.getValueInt());
-      #if PERSIST == 1
-        _saveConfig();
-      #endif
       break;
     case 5:
       setSleepHours(request.getValueInt());
-      #if PERSIST == 1
-        _saveConfig();
-      #endif
       break;
     case 29:
       setSleepDays(request.getValueInt());
-      #if PERSIST == 1
-        _saveConfig();
-      #endif
       break;
     #ifndef MY_GATEWAY_ESP8266
       case 6: reboot(); return;
@@ -4089,7 +4080,7 @@ int NodeManager::_getInterruptInitialValue(int mode) {
 }
 
 // load the configuration stored in the eeprom
-void NodeManager::_loadConfig() {
+void NodeManager::_loadSleepSettings() {
   if (loadState(EEPROM_SLEEP_SAVED) == 1) {
     // load sleep settings
     int bit_1 = loadState(EEPROM_SLEEP_1);
@@ -4104,7 +4095,7 @@ void NodeManager::_loadConfig() {
 }
 
 // save the configuration in the eeprom
-void NodeManager::_saveConfig() {
+void NodeManager::_saveSleepSettings() {
   if (_sleep_time == 0) return;
   // encode the sleep time in 3 bits
   int bit_1, bit_2, bit_3 = 0;

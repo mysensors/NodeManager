@@ -24,14 +24,14 @@ Documentation available on: https://github.com/mysensors/NodeManager
 // create a NodeManager instance
 NodeManager nodeManager;
 //SensorSHT21 sht(nodeManager);
-SensorBattery battery(nodeManager);
+//SensorBattery battery(nodeManager);
 //SensorSignal signal(nodeManager);
 
 // before
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);  
-  battery.setReportIntervalSeconds(10);
+  //battery.setReportIntervalSeconds(10);
 
 //nodeManager.sensors.get(0)->setPin(5);
 //nodeManager.sensors.get(0)->children.get(0).child_id = 5;
