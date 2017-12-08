@@ -233,9 +233,14 @@ Child::Child(Sensor* __sensor, int _child_id, int _presentation, int _type, char
   description = _description;
   _sensor = __sensor;
   _sensor->registerChild(this);
+  force_update_timer = new Timer(_sensor->_node);
 }
 // set a value, implemented by the subclasses
 void Child::sendValue() {
+}
+
+// check if it is an updated value, implemented by the subclasses
+bool Child::isNewValue() {
 }
 
 // ChildInt class
@@ -244,20 +249,24 @@ ChildInt::ChildInt(Sensor* sensor, int child_id, int presentation, int type, cha
 
 // store a new value and update the total
 void ChildInt::setValueInt(int value) {
-  _samples++;
   _total = _total + value;
-  _value = value;
+  _samples++;
+  _value = (int) (_total / _samples);
 }
 
 // send the value back to the controller
 void ChildInt::sendValue() {
-  if (_total == -255) return;
-  int avg = (int) (_total / _samples);
-  _last_value = avg;
-  _sensor->_node->sendMessage(child_id,type,avg);
+  if (_value == -255) return;
+  _sensor->_node->sendMessage(child_id,type,_value);
+  _last_value = _value;
   _value = -255;
   _total = -255;
   _samples = 0;
+}
+
+// check if it is an updated value
+bool ChildInt::isNewValue() {
+  return _last_value != _value;
 }
 
 // ChildFloat class
@@ -266,20 +275,24 @@ ChildFloat::ChildFloat(Sensor* sensor, int child_id, int presentation, int type,
 
 // store a new value and update the total
 void ChildFloat::setValueFloat(float value) {
-  _samples++;
   _total = _total + value;
-  _value = value;
+  _samples++;
+  _value = _total / _samples;
 }
 
 // send the value back to the controller
 void ChildFloat::sendValue() {
-  if (_total == -255) return;
-  float avg = _total / _samples;
-  _last_value = avg;
-  _sensor->_node->sendMessage(child_id,type,avg);
+  if (_value == -255) return;
+  _sensor->_node->sendMessage(child_id,type,_value);
+  _last_value = _value;
   _value = -255;
   _total = -255;
   _samples = 0;
+}
+
+// check if it is an updated value
+bool ChildFloat::isNewValue() {
+  return _last_value != _value;
 }
 
 // ChildDouble class
@@ -288,20 +301,24 @@ ChildDouble::ChildDouble(Sensor* sensor, int child_id, int presentation, int typ
 
 // store a new value and update the total
 void ChildDouble::setValueDouble(double value) {
-  _samples++;
   _total = _total + value;
-  _value = value;
+  _samples++;
+  _value = _total / _samples;
 }
 
 // send the value back to the controller
 void ChildDouble::sendValue() {
-  if (_total == -255) return;
-  double avg = _total / _samples;
-  _last_value = avg;
-  _sensor->_node->sendMessage(child_id,type,avg);
+  if (_value == -255) return;
+  _sensor->_node->sendMessage(child_id,type,_value);
+  _last_value = _value;
   _value = -255;
   _total = -255;
   _samples = 0;
+}
+
+// check if it is an updated value
+bool ChildDouble::isNewValue() {
+  return _last_value != _value;
 }
 
 // ChildString class
@@ -315,9 +332,14 @@ void ChildString::setValueString(char* value) {
 
 // send the value back to the controller
 void ChildString::sendValue() {
-  _last_value = _value;
   _sensor->_node->sendMessage(child_id,type,_value);
+  _last_value = _value;
   _value = "";
+}
+
+// check if it is an updated value
+bool ChildString::isNewValue() {
+  return strcmp(_value, _last_value) != 0;
 }
 
 /*
@@ -330,7 +352,6 @@ Sensor::Sensor(NodeManager& nodeManager, int pin = -1) {
   _node = &nodeManager;
   _pin = pin;
   _report_timer = new Timer(_node);
-  _force_update_timer = new Timer(_node);
   _node->registerSensor(this);
 }
 
@@ -351,10 +372,13 @@ void Sensor::setTrackLastValue(bool value) {
   _track_last_value = value;
 }
 void Sensor::setForceUpdateMinutes(int value) {
-  _force_update_timer->start(value,MINUTES);
+  for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
+    Child* child = *itr;
+    child->force_update_timer->start(value,MINUTES);
+  }
 }
 void Sensor::setForceUpdateHours(int value) {
-  _force_update_timer->start(value,HOURS);
+  setForceUpdateMinutes(value*60);
 }
 #if POWER_MANAGER == 1
     void Sensor::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
@@ -460,7 +484,6 @@ void Sensor::loop(MyMessage* message) {
       // if it is not the time yet to report a new measure, just return (unless it is the first time)
       if (! _report_timer->isOver() && ! first_run) return;
     }
-    if (_force_update_timer->isRunning()) _force_update_timer->update();
   }
   #if POWER_MANAGER == 1
     // turn the sensor on
@@ -469,6 +492,8 @@ void Sensor::loop(MyMessage* message) {
   // iterates over all the children
   for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
     Child* child = *itr;
+    // update the force update timer if running
+    if (child->force_update_timer->isRunning()) child->force_update_timer->update();
     // if a specific child is requested, skip all the others
     if (message != nullptr && message->sensor != child->child_id) continue;
     // collect multiple samples if needed
@@ -480,8 +505,13 @@ void Sensor::loop(MyMessage* message) {
       // wait between samples
       if (_samples_interval > 0) _node->sleepOrWait(_samples_interval);
     }
-    // process the result and send a response back
-    child->sendValue();
+    // process the result and send a response back if 1) is not a loop 2) not tracking last value 3) tracking last value and there is a new value 4) tracking last value and timer is over
+    if (
+      message != nullptr || 
+      ! _track_last_value || 
+      _track_last_value && child->isNewValue() || 
+      _track_last_value && child->force_update_timer->isRunning() && child->force_update_timer->isOver()) 
+        child->sendValue();
   }
   // turn the sensor off
   #if POWER_MANAGER == 1
@@ -554,21 +584,6 @@ void Sensor::onLoop(Child* child){}
 void Sensor::onReceive(MyMessage* message){}
 void Sensor::onProcess(Request & request){}
 void Sensor::onInterrupt(){}
-
-// determine if a value is worth sending back to the controller
-bool Sensor::_isWorthSending(bool comparison) {
-  // track last value is disabled
-  if (! _track_last_value) return true;
-  // track value is enabled and the current value is different then the old value
-  if (_track_last_value && comparison) return true;
-  // track value is enabled and the timer is over
-  if (_track_last_value && _force_update_timer->isRunning() && _force_update_timer->isOver()) {
-    // restart the timer
-    _force_update_timer->restart();
-    return true;
-  }
-  return false;
-}
 
 /*
    SensorBattery

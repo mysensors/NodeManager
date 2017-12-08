@@ -336,11 +336,12 @@ class Child {
     int presentation = S_CUSTOM;
     int type = V_CUSTOM;
     char* description = "";
+    Timer* force_update_timer;
     virtual void sendValue();
+    virtual bool isNewValue();
   protected:
     int _samples = 0;
     Sensor* _sensor;
-  private:
 };
 
 class ChildInt: public Child {
@@ -348,6 +349,7 @@ class ChildInt: public Child {
     ChildInt(Sensor* sensor, int child_id, int presentation, int type, char* description);
     void setValueInt(int value);
     void sendValue();
+    bool isNewValue();
   private:
     int _value = -255;
     int _last_value = -255;
@@ -359,6 +361,7 @@ class ChildFloat: public Child {
     ChildFloat(Sensor* sensor, int child_id, int presentation, int type, char* description);
     void setValueFloat(float value);
     void sendValue();
+    bool isNewValue();
   private:
     float _value = -255;
     float _last_value = -255;
@@ -370,6 +373,7 @@ class ChildString: public Child {
     ChildString(Sensor* sensor, int child_id, int presentation, int type, char* description);
     void setValueString(char* value);
     void sendValue();
+    bool isNewValue();
   private:
     char* _value = "";
     char* _last_value = "";
@@ -380,6 +384,7 @@ class ChildDouble: public Child {
     ChildDouble(Sensor* sensor, int child_id, int presentation, int type, char* description);
     void setValueDouble(double value);
     void sendValue();
+    bool isNewValue();
   private:
     double _value = -255;
     double _last_value = -255;
@@ -467,8 +472,6 @@ class Sensor {
       bool _auto_power_pins = true;
     #endif
     Timer* _report_timer;
-    Timer* _force_update_timer;
-    bool _isWorthSending(bool comparison);
 };
 
 /*
