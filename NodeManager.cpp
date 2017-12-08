@@ -62,7 +62,7 @@ void PowerManager::powerOff() {
 */
 
 Timer::Timer(NodeManager* node_manager) {
-  _node_manager = node_manager;
+  _node = node_manager;
 }
 
 // start the timer
@@ -92,7 +92,7 @@ void Timer::restart() {
   stop();
   reset();
   // if using millis(), keep track of the current timestamp for calculating the difference
-  if (! _node_manager->isSleepingNode()) _last_millis = millis();
+  if (! _node->isSleepingNode()) _last_millis = millis();
   start();
 }
 
@@ -117,9 +117,9 @@ void Timer::unset() {
 // update the timer at every cycle
 void Timer::update() {
   if (! isRunning()) return;
-  if (_node_manager->isSleepingNode()) {
+  if (_node->isSleepingNode()) {
     // millis() is not reliable while sleeping so calculate how long a sleep cycle would last in seconds and update the elapsed time
-    _elapsed += _node_manager->getSleepSeconds();
+    _elapsed += _node->getSleepSeconds();
   } else {
     // use millis() to calculate the elapsed time in seconds
     _elapsed = (long)((millis() - _last_millis)/1000);
@@ -254,7 +254,7 @@ void ChildInt::sendValue() {
   if (_total == -255) return;
   int avg = (int) (_total / _samples);
   _last_value = avg;
-  _sensor->_node_manager->sendMessage(child_id,type,avg);
+  _sensor->_node->sendMessage(child_id,type,avg);
   _value = -255;
 }
 
@@ -274,7 +274,7 @@ void ChildFloat::sendValue() {
   if (_total == -255) return;
   float avg = _total / _samples;
   _last_value = avg;
-  _sensor->_node_manager->sendMessage(child_id,type,avg);
+  _sensor->_node->sendMessage(child_id,type,avg);
   _value = -255;
 }
 
@@ -294,7 +294,7 @@ void ChildDouble::sendValue() {
   if (_total == -255) return;
   double avg = _total / _samples;
   _last_value = avg;
-  _sensor->_node_manager->sendMessage(child_id,type,avg);
+  _sensor->_node->sendMessage(child_id,type,avg);
   _value = -255;
 }
 
@@ -310,7 +310,7 @@ void ChildString::setValueString(char* value) {
 // send the value back to the controller
 void ChildString::sendValue() {
   _last_value = _value;
-  _sensor->_node_manager->sendMessage(child_id,type,_value);
+  _sensor->_node->sendMessage(child_id,type,_value);
   _value = "";
 }
 
@@ -320,12 +320,12 @@ void ChildString::sendValue() {
 // constructor
 Sensor::Sensor() {  
 }
-Sensor::Sensor(NodeManager& nodeManager, int pin) {
-  _node_manager = &nodeManager;
+Sensor::Sensor(NodeManager& nodeManager, int pin = -1) {
+  _node = &nodeManager;
   _pin = pin;
-  _report_timer = new Timer(_node_manager);
-  _force_update_timer = new Timer(_node_manager);
-  _node_manager->registerSensor(this);
+  _report_timer = new Timer(_node);
+  _force_update_timer = new Timer(_node);
+  _node->registerSensor(this);
 }
 
 // setter/getter
@@ -397,7 +397,7 @@ bool Sensor::isReportIntervalConfigured() {
 // listen for interrupts on the given pin so interrupt() will be called when occurring
 void Sensor::setInterrupt(int pin, int mode, int initial) {
   _interrupt_pin = pin;
-  _node_manager->setInterrupt(pin,mode,initial);
+  _node->setInterrupt(pin,mode,initial);
 }
 
 // register a child
@@ -415,14 +415,13 @@ void Sensor::presentation() {
       Serial.print(F(" T="));
       Serial.println(child->presentation);
     #endif
-    present(child->child_id, child->presentation,child->description,_node_manager->getAck());
+    present(child->child_id, child->presentation,child->description,_node->getAck());
   }
 
 }
 
 // call the sensor-specific implementation of before
 void Sensor::before() {
-  if (_pin == -1) return;
   onBefore();
   for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
     Child* child = *itr;
@@ -440,7 +439,6 @@ void Sensor::before() {
 
 // call the sensor-specific implementation of setup
 void Sensor::setup() {
-  if (_pin == -1) return;
   onSetup();
 }
 
@@ -473,7 +471,7 @@ void Sensor::loop(MyMessage* message) {
       // we'be been called from loop()
       else onLoop(child);
       // wait between samples
-      if (_samples_interval > 0) _node_manager->sleepOrWait(_samples_interval);
+      if (_samples_interval > 0) _node->sleepOrWait(_samples_interval);
     }
     // process the result and send a response back
     child->sendValue();
@@ -530,7 +528,7 @@ void Sensor::process(const Request & request) {
     case 18: setForceUpdateHours(request.getValueInt()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // return the requested child 
@@ -607,7 +605,7 @@ void SensorBattery::onSetup() {
 void SensorBattery::onLoop(Child* child) {
   // measure the board vcc
   float volt = 0;
-  if (_battery_internal_vcc || _battery_pin == -1) volt = _node_manager->getVcc();
+  if (_battery_internal_vcc || _battery_pin == -1) volt = _node->getVcc();
   else volt = analogRead(_battery_pin) * _battery_volts_per_bit;
   // calculate the percentage
   int percentage = ((volt - _battery_min) / (_battery_max - _battery_min)) * 100;
@@ -645,7 +643,7 @@ void SensorBattery::onProcess(Request & request) {
     case 107: setBatteryReportWithInterrupt(request.getValueInt()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 #endif
 }
 
@@ -703,7 +701,7 @@ void SensorSignal::onProcess(Request & request) {
     case 101: setSignalCommand(request.getValueInt()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 #endif
 }
 
@@ -783,7 +781,7 @@ void SensorAnalogInput::onProcess(Request & request) {
     case 105: setRangeMax(request.getValueInt()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -883,7 +881,7 @@ void SensorThermistor::onLoop(Child* child) {
   temperature += 1.0 / (_nominal_temperature + 273.15); // + (1/To)
   temperature = 1.0 / temperature;                 // Invert
   temperature -= 273.15;                         // convert to C
-  temperature = _node_manager->celsiusToFahrenheit(temperature);
+  temperature = _node->celsiusToFahrenheit(temperature);
   #if DEBUG == 1
     Serial.print(F("THER I="));
     Serial.print(_child_id);
@@ -912,7 +910,7 @@ void SensorThermistor::onProcess(Request & request) {
     case 105: setOffset(request.getValueFloat()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -945,7 +943,7 @@ void SensorML8511::onSetup() {
 void SensorML8511::onLoop(Child* child) {
   // read the voltage 
   int uvLevel = analogRead(_pin);
-  int refLevel = _node_manager->getVcc()*1024/3.3;
+  int refLevel = _node->getVcc()*1024/3.3;
   //Use the 3.3V power pin as a reference to get a very accurate output value from sensor
   float outputVoltage = 3.3 / refLevel * uvLevel;
   //Convert the voltage to a UV intensity level
@@ -1038,7 +1036,7 @@ void SensorACS712::onProcess(Request & request) {
     case 102: setOffset(request.getValueInt()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -1204,7 +1202,7 @@ void SensorDigitalOutput::onProcess(Request & request) {
     case 107: setWaitAfterSet(request.getValueInt()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -1232,7 +1230,7 @@ void SensorDigitalOutput::setStatus(int value) {
   }
   _setStatus(value);
   // wait if needed for relay drawing a lot of current
-  if (_wait_after_set > 0) _node_manager->sleepOrWait(_wait_after_set);
+  if (_wait_after_set > 0) _node->sleepOrWait(_wait_after_set);
   // store the new status so it will be sent to the controller
   _status = value;
   _value_int = value;
@@ -1330,7 +1328,7 @@ void SensorLatchingRelay::onProcess(Request & request) {
     case 203: setPinOn(request.getValueInt()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // switch to the requested status
@@ -1340,7 +1338,7 @@ void SensorLatchingRelay::_setStatus(int value) {
   // set the value
   digitalWrite(pin, _on_value);
   // wait for the given time before restoring the value to the original value after the pulse
-  _node_manager->sleepOrWait(_pulse_width);
+  _node->sleepOrWait(_pulse_width);
   digitalWrite(pin, ! _on_value);
   #if DEBUG == 1
     Serial.print(F("LAT I="));
@@ -1393,13 +1391,13 @@ void SensorDHT::onSetup() {
 
 // what to do during loop
 void SensorDHT::onLoop(Child* child) {
-  _node_manager->sleepOrWait(_dht->getMinimumSamplingPeriod());
+  _node->sleepOrWait(_dht->getMinimumSamplingPeriod());
   _dht->readSensor(true);
   // temperature sensor
   if (_sensor_type == SensorDHT::TEMPERATURE) {
     // read the temperature
     float temperature = _dht->getTemperature();
-    if (! _node_manager->getIsMetric()) temperature = _dht->toFahrenheit(temperature);
+    if (! _node->getIsMetric()) temperature = _dht->toFahrenheit(temperature);
     #if DEBUG == 1
       Serial.print(F("DHT I="));
       Serial.print(_child_id);
@@ -1443,14 +1441,14 @@ void SensorDHT::onInterrupt() {
 */
 #if MODULE_SHT21 == 1
 // contructor
-SensorSHT21::SensorSHT21(NodeManager& nodeManager): Sensor(nodeManager,A2) {
+SensorSHT21::SensorSHT21(NodeManager& nodeManager): Sensor(nodeManager) {
   _name = F("SHT");
 }
 
 // what to do during before
 void SensorSHT21::onBefore() {
-  new ChildFloat(this,_node_manager->getAvailableChildId(),S_TEMP,V_TEMP);
-  new ChildFloat(this,_node_manager->getAvailableChildId(),S_HUM,V_HUM);
+  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
+  new ChildFloat(this,_node->getAvailableChildId(),S_HUM,V_HUM);
   // initialize the library
   Wire.begin();
 }
@@ -1466,7 +1464,7 @@ void SensorSHT21::onLoop(Child* child) {
     // read the temperature
     float temperature = SHT2x.GetTemperature();
     // convert it
-    temperature = _node_manager->celsiusToFahrenheit(temperature);
+    temperature = _node->celsiusToFahrenheit(temperature);
     #if DEBUG == 1
       Serial.print(_name);
       Serial.print(F(" I="));
@@ -1574,13 +1572,13 @@ void SensorSwitch::onProcess(Request & request) {
     case 104: setInitial(request.getValueInt()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
 void SensorSwitch::onInterrupt() {
   // wait to ensure the the input is not floating
-  if (_debounce > 0) _node_manager->sleepOrWait(_debounce);
+  if (_debounce > 0) _node->sleepOrWait(_debounce);
   // read the value of the pin
   int value = digitalRead(_pin);
   // process the value
@@ -1595,7 +1593,7 @@ void SensorSwitch::onInterrupt() {
     #endif
     _value_int = value;
     // allow the signal to be restored to its normal value
-    if (_trigger_time > 0) _node_manager->sleepOrWait(_trigger_time);
+    if (_trigger_time > 0) _node->sleepOrWait(_trigger_time);
   } else {
     // invalid
     _value_int = -1;
@@ -1656,7 +1654,7 @@ void SensorDs18b20::onLoop(Child* child) {
   // read the temperature
   float temperature = _sensors->getTempCByIndex(_index);
   // convert it
-  temperature = _node_manager->celsiusToFahrenheit(temperature);
+  temperature = _node->celsiusToFahrenheit(temperature);
   #if DEBUG == 1
     Serial.print(F("DS18B20 I="));
     Serial.print(_child_id);
@@ -1680,7 +1678,7 @@ void SensorDs18b20::onProcess(Request & request) {
     case 102: setSleepDuringConversion(request.getValueInt()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -1757,7 +1755,7 @@ void SensorBH1750::onProcess(Request & request) {
     case 101: setMode(request.getValueInt()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 
@@ -1794,7 +1792,7 @@ void SensorMLX90614::onSetup() {
 void SensorMLX90614::onLoop(Child* child) {
   float temperature = _sensor_type == SensorMLX90614::TEMPERATURE_OBJECT ? _mlx->readAmbientTempC() : _mlx->readObjectTempC();
   // convert it
-  temperature = _node_manager->celsiusToFahrenheit(temperature);
+  temperature = _node->celsiusToFahrenheit(temperature);
   #if DEBUG == 1
     Serial.print(F("MLX I="));
     Serial.print(_child_id);
@@ -1883,7 +1881,7 @@ void SensorBosch::onProcess(Request & request) {
     case 101: setForecastSamplesCount(request.getValueInt()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -2013,7 +2011,7 @@ void SensorBME280::onLoop(Child* child) {
     // read the temperature
     float temperature = _bme->readTemperature();
     // convert it
-    temperature = _node_manager->celsiusToFahrenheit(temperature);
+    temperature = _node->celsiusToFahrenheit(temperature);
     #if DEBUG == 1
       Serial.print(F("BME I="));
       Serial.print(_child_id);
@@ -2077,7 +2075,7 @@ void SensorBMP085::onLoop(Child* child) {
     // read the temperature
     float temperature = _bmp->readTemperature();
     // convert it
-    temperature = _node_manager->celsiusToFahrenheit(temperature);
+    temperature = _node->celsiusToFahrenheit(temperature);
     #if DEBUG == 1
       Serial.print(F("BMP I="));
       Serial.print(_child_id);
@@ -2124,7 +2122,7 @@ void SensorBMP280::onLoop(Child* child) {
     // read the temperature
     float temperature = _bmp->readTemperature();
     // convert it
-    temperature = _node_manager->celsiusToFahrenheit(temperature);
+    temperature = _node->celsiusToFahrenheit(temperature);
     #if DEBUG == 1
       Serial.print(F("BMP I="));
       Serial.print(_child_id);
@@ -2194,7 +2192,7 @@ void SensorHCSR04::onSetup() {
 
 // what to do during loop
 void SensorHCSR04::onLoop(Child* child) {
-  int distance = _node_manager->getIsMetric() ? _sonar->ping_cm() : _sonar->ping_in();
+  int distance = _node->getIsMetric() ? _sonar->ping_cm() : _sonar->ping_in();
   #if DEBUG == 1
     Serial.print(F("HC I="));
     Serial.print(_child_id);
@@ -2218,7 +2216,7 @@ void SensorHCSR04::onProcess(Request & request) {
     case 103: setMaxDistance(request.getValueInt()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -2303,7 +2301,7 @@ void SensorSonoff::onProcess(Request & request) {
     case 103: setLedPin(request.getValueInt()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -2364,7 +2362,7 @@ void SensorMCP9808::onSetup() {
 void SensorMCP9808::onLoop(Child* child) {
   float temperature = _mcp->readTempC();
   // convert it
-  temperature = _node_manager->celsiusToFahrenheit(temperature);
+  temperature = _node->celsiusToFahrenheit(temperature);
   #if DEBUG == 1
     Serial.print(F("MCP I="));
     Serial.print(_child_id);
@@ -2455,7 +2453,6 @@ void SensorMQ::onSetup() {
 
 // what to do during loop
 void SensorMQ::onLoop(Child* child) {
-  if (_pin == -1) return;
   // calculate rs/ro
   float mq = _MQRead()/_ro;
   // calculate the ppm
@@ -2502,7 +2499,7 @@ void SensorMQ::onProcess(Request & request) {
     case 8: setReadSampleInterval(request.getValueInt()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -2657,7 +2654,7 @@ void SensorMHZ19::onProcess(Request & request) {
   switch(function) {
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -2874,7 +2871,7 @@ void SensorTSL2561::onProcess(Request & request) {
     case 104: setAddress(request.getValueInt()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -2936,7 +2933,7 @@ void SensorPT100::onProcess(Request & request) {
     case 101: setVoltageRef(request.getValueFloat()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -3005,7 +3002,7 @@ void SensorDimmer::onProcess(Request & request) {
     case 103: setStepDuration(request.getValueInt()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -3079,7 +3076,7 @@ void SensorPulseMeter::onSetup() {
 // what to do during loop
 void SensorPulseMeter::onLoop(Child* child) {
   // do not report anything if called by an interrupt
-  if (_node_manager->getLastInterruptPin() == _interrupt_pin) return;
+  if (_node->getLastInterruptPin() == _interrupt_pin) return;
   // time to report the rain so far
   _reportTotal();
   #if DEBUG == 1
@@ -3107,7 +3104,7 @@ void SensorPulseMeter::onProcess(Request & request) {
     case 102: setPulseFactor(request.getValueFloat()); break;
     default: return;
   }
-  _node_manager->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -3911,7 +3908,7 @@ int NodeManager::getAvailableChildId() {
     Child* child = getChild(i);
     if (child == nullptr) return i;
   }
-  return 255;
+  return 254;
 }
 
 // handle an interrupt
@@ -4063,13 +4060,6 @@ void NodeManager::_present(int child_id, int type) {
   #endif
   if (_sleep_between_send > 0) sleep(_sleep_between_send);
   present(child_id,type,"",_ack);
-}
-
-// guess the initial value of a digital output based on the configured interrupt mode
-int NodeManager::_getInterruptInitialValue(int mode) {
-  if (mode == RISING) return LOW; 
-  if (mode == FALLING) return HIGH; 
-  return -1;
 }
 
 // load the configuration stored in the eeprom

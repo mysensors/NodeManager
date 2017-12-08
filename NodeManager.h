@@ -205,6 +205,7 @@ public:
     if (_allocBlocks > _preAllocBlocks) _DeAllocOneBlock(false);
   }
   T get(int position) {
+    position = position -1;
     if (position > _endPosition) position = _endPosition;
     return _internalArray[position];
   }
@@ -289,7 +290,7 @@ class Timer {
     // return the current elapsed time
     float getElapsed();
    private:
-    NodeManager* _node_manager;
+    NodeManager* _node;
     int _target = 0;
     long _elapsed = 0;
     long _last_millis = 0;
@@ -316,7 +317,7 @@ class Request {
     // return the value as a string
     char* getValueString();
    private:
-    NodeManager* _node_manager;
+    NodeManager* _node;
     int _function;
     int _child_id;
 	  // Size of buffer to prevent overrun 
@@ -453,7 +454,7 @@ class Sensor {
     Child* getChild(int child_id);
     // register a child
     void registerChild(Child* child);
-    NodeManager* _node_manager;
+    NodeManager* _node;
   protected:
     const __FlashStringHelper* _name;
     int _pin = -1;
@@ -1477,7 +1478,6 @@ class NodeManager {
     bool _ack = false;
     void _sleep();
     void _present(int child_id, int type);
-    int _getInterruptInitialValue(int mode);
     bool _get_controller_config = true;
     int _is_metric = 1;
     int _report_interval_seconds = 10*60;
@@ -1486,7 +1486,6 @@ class NodeManager {
     bool _save_sleep_settings = false;
     void _loadSleepSettings();
     void _saveSleepSettings();
-    int _child_id_counter = 0;
 };
 
 #endif

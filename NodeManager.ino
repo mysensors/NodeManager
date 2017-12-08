@@ -22,19 +22,19 @@ Documentation available on: https://github.com/mysensors/NodeManager
 #include "NodeManager.h"
 
 // create a NodeManager instance
-NodeManager nodeManager;
-//SensorSHT21 sht(nodeManager);
-//SensorBattery battery(nodeManager);
-//SensorSignal signal(nodeManager);
+NodeManager node;
+SensorSHT21 sht(node);
+//SensorBattery battery(node);
+//SensorSignal signal(node);
 
 // before
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);  
   //battery.setReportIntervalSeconds(10);
-
-//nodeManager.sensors.get(0)->setPin(5);
-//nodeManager.sensors.get(0)->children.get(0).child_id = 5;
+//sht.children.get(1)->child_id = 5;
+//node.sensors.get(0)->setPin(5);
+//node.sensors.get(0)->children.get(0).child_id = 5;
 
 
 
@@ -47,42 +47,42 @@ void before() {
     pinMode(5, OUTPUT);
     digitalWrite(5, LOW);
     */
-  //nodeManager.setReportIntervalSeconds(20);
+  //node.setReportIntervalSeconds(20);
   
   
   
   /*
    * Register above your sensors
   */
-  nodeManager.before();
+  node.before();
 }
 
 // presentation
 void presentation() {
   // call NodeManager presentation routine
-  nodeManager.presentation();
+  node.presentation();
 }
 
 // setup
 void setup() {
   // call NodeManager setup routine
-  nodeManager.setup();
+  node.setup();
 }
 
 // loop
 void loop() {
   // call NodeManager loop routine
-  nodeManager.loop();
+  node.loop();
 }
 
 // receive
 void receive(const MyMessage &message) {
   // call NodeManager receive routine
-  nodeManager.receive(message);
+  node.receive(message);
 }
 
 // receiveTime
 void receiveTime(unsigned long ts) {
   // call NodeManager receiveTime routine
-  nodeManager.receiveTime(ts);
+  node.receiveTime(ts);
 }
