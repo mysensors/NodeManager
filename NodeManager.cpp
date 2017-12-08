@@ -256,6 +256,8 @@ void ChildInt::sendValue() {
   _last_value = avg;
   _sensor->_node->sendMessage(child_id,type,avg);
   _value = -255;
+  _total = -255;
+  _samples = 0;
 }
 
 // ChildFloat class
@@ -276,6 +278,8 @@ void ChildFloat::sendValue() {
   _last_value = avg;
   _sensor->_node->sendMessage(child_id,type,avg);
   _value = -255;
+  _total = -255;
+  _samples = 0;
 }
 
 // ChildDouble class
@@ -296,6 +300,8 @@ void ChildDouble::sendValue() {
   _last_value = avg;
   _sensor->_node->sendMessage(child_id,type,avg);
   _value = -255;
+  _total = -255;
+  _samples = 0;
 }
 
 // ChildString class
@@ -447,6 +453,7 @@ void Sensor::loop(MyMessage* message) {
   // update the timers if within a loop cycle
   if (message == nullptr) {
     if (_report_timer->isRunning()) {
+      // keep track if it is the first time
       bool first_run = _report_timer->isFirstRun();
       // update the timer
       _report_timer->update();
@@ -480,7 +487,7 @@ void Sensor::loop(MyMessage* message) {
   #if POWER_MANAGER == 1
     if (_auto_power_pins) powerOff();
   #endif
-  // restart the report timer if over
+  // if called from loop(), restart the report timer if over
   if (message == nullptr && _report_timer->isRunning() && _report_timer->isOver()) _report_timer->restart();
 }
 
