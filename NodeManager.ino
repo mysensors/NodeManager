@@ -8,7 +8,6 @@ NodeManager includes the following main components:
 - Built-in personalities: for the most common sensors, provide embedded code so to allow their configuration with a single line 
 Documentation available on: https://github.com/mysensors/NodeManager
 */
-
  
 // load user settings
 #include "config.h"
@@ -24,15 +23,18 @@ Documentation available on: https://github.com/mysensors/NodeManager
 // create a NodeManager instance
 NodeManager node;
 SensorSHT21 sht(node);
-PowerManager power(5,6);
-//SensorBattery battery(node);
-//SensorSignal signal(node);
+//PowerManager power(5,6);
+SensorBattery battery(node);
+SensorSignal signal(node);
 
 // before
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
-  node.setPowerManager(power);
+  node.setReportIntervalSeconds(20);
+  node.setSleepSeconds(20);
+  
+  //node.setPowerManager(power);
   //battery.setReportIntervalSeconds(10);
 //sht.children.get(1)->child_id = 5;
 //node.sensors.get(0)->setPin(5);

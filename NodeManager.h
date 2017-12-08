@@ -407,11 +407,6 @@ class Sensor {
     void setTrackLastValue(bool value);
     // [9] if track last value is enabled, force to send an update after the configured number of minutes
     void setForceUpdateMinutes(int value);
-    // [19] if track last value is enabled, force to send an update after the configured number of hours
-    void setForceUpdateHours(int value);
-    // [10] the value type of this sensor (default: TYPE_INTEGER)
-    void setValueType(int value);
-    int getValueType();
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
     void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
     // [13] manually turn the power on
@@ -481,8 +476,6 @@ class SensorBattery: public Sensor {
       void setBatteryPin(int value);
       // [17] if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
       void setBatteryVoltsPerBit(float value);
-      // [18] If true, wake up by an interrupt counts as a valid cycle for battery reports otherwise only uninterrupted sleep cycles would contribute (default: true)
-      void setBatteryReportWithInterrupt(bool value);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
@@ -493,7 +486,6 @@ class SensorBattery: public Sensor {
   protected:
       float _battery_min = 2.6;
       float _battery_max = 3.3;
-      bool _battery_report_with_interrupt = true;
       bool _battery_internal_vcc = true;
       int _battery_pin = -1;
       float _battery_volts_per_bit = 0.003363075;

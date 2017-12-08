@@ -380,9 +380,6 @@ void Sensor::setForceUpdateMinutes(int value) {
     child->force_update_timer->start(value,MINUTES);
   }
 }
-void Sensor::setForceUpdateHours(int value) {
-  setForceUpdateMinutes(value*60);
-}
 void Sensor::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
   if (_powerManager == nullptr) return;
   _powerManager->setPowerPins(ground_pin, vcc_pin, wait_time);
@@ -556,7 +553,6 @@ void Sensor::process(const Request & request) {
     case 17: setReportIntervalSeconds(request.getValueInt()); break;
     case 19: setReportIntervalHours(request.getValueInt()); break;
     case 20: setReportIntervalDays(request.getValueInt()); break;
-    case 18: setForceUpdateHours(request.getValueInt()); break;
     default: return;
   }
   _node->sendMessage(request.getChildId(),V_CUSTOM,function);
@@ -608,9 +604,6 @@ void SensorBattery::setBatteryPin(int value) {
 void SensorBattery::setBatteryVoltsPerBit(float value) {
   _battery_volts_per_bit = value;
 }
-void SensorBattery::setBatteryReportWithInterrupt(bool value) {
-  _battery_report_with_interrupt = value;
-}
 
 // what to do during before
 void SensorBattery::onBefore() {
@@ -619,6 +612,7 @@ void SensorBattery::onBefore() {
 
 // what to do during setup
 void SensorBattery::onSetup() {
+  // when measuring the battery from a pin, analog reference must be internal
   if (! _battery_internal_vcc && _battery_pin > -1) analogReference(INTERNAL);
 }
 
@@ -648,7 +642,7 @@ void SensorBattery::onLoop(Child* child) {
 void SensorBattery::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
 // what to do when receiving a remote message
@@ -661,7 +655,6 @@ void SensorBattery::onProcess(Request & request) {
     case 104: setBatteryInternalVcc(request.getValueInt()); break;
     case 105: setBatteryPin(request.getValueInt()); break;
     case 106: setBatteryVoltsPerBit(request.getValueFloat()); break;
-    case 107: setBatteryReportWithInterrupt(request.getValueInt()); break;
     default: return;
   }
   _node->sendMessage(request.getChildId(),V_CUSTOM,function);
@@ -711,7 +704,7 @@ void SensorSignal::onLoop(Child* child) {
 void SensorSignal::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
 // what to do when receiving a remote message
@@ -1468,6 +1461,7 @@ SensorSHT21::SensorSHT21(NodeManager& nodeManager): Sensor(nodeManager) {
 
 // what to do during before
 void SensorSHT21::onBefore() {
+  // register the child
   new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
   new ChildFloat(this,_node->getAvailableChildId(),S_HUM,V_HUM);
   // initialize the library
@@ -1517,7 +1511,7 @@ void SensorSHT21::onLoop(Child* child) {
 void SensorSHT21::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
 // what to do when receiving a remote message
@@ -3661,7 +3655,7 @@ void NodeManager::receive(const MyMessage &message) {
     Serial.print(F(" P="));
     Serial.println(message.getString());
   #endif
-  // process incoming configuration message
+  // process incoming messages to the configuration child
   if (message.sensor == CONFIGURATION_CHILD_ID && message.getCommand() == C_REQ && message.type == V_CUSTOM) {
     #if REMOTE_CONFIGURATION == 1
       // parse the request
