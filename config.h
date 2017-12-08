@@ -113,8 +113,6 @@
 // if enabled, enable debug messages on serial port
 #define DEBUG 0
 
-// if enabled, enable the capability to power on sensors with the arduino's pins to save battery while sleeping
-#define POWER_MANAGER 0
 // if enabled, allow modifying the configuration remotely by interacting with the configuration child id
 #define REMOTE_CONFIGURATION 0
 

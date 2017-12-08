@@ -60,10 +60,6 @@
   #define DEBUG 1
 #endif
 
-// if enabled, enable the capability to power on sensors with the arduino's pins to save battery while sleeping
-#ifndef POWER_MANAGER
-  #define POWER_MANAGER 1
-#endif
 // if enabled, allow modifying the configuration remotely by interacting with the configuration child id
 #ifndef REMOTE_CONFIGURATION
   #define REMOTE_CONFIGURATION 1
@@ -245,9 +241,10 @@ private:
 
 class PowerManager {
   public:
-    PowerManager() {};
+    PowerManager(int ground_pin, int vcc_pin, int wait_time = 50);
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
     void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
+    // if enabled the pins will be automatically powered on while awake and off during sleeping
     // turns the power pins on
     void powerOn();
     // turns the power pins on
@@ -415,16 +412,12 @@ class Sensor {
     // [10] the value type of this sensor (default: TYPE_INTEGER)
     void setValueType(int value);
     int getValueType();
-    #if POWER_MANAGER == 1
-      // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-      void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
-      // [12] if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
-      void setAutoPowerPins(bool value);
-      // [13] manually turn the power on
-      void powerOn();
-      // [14] manually turn the power off
-      void powerOff();
-    #endif
+    // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
+    void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
+    // [13] manually turn the power on
+    void powerOn();
+    // [14] manually turn the power off
+    void powerOff();
     // [17] After how many minutes the sensor will report back its measure (default: 10 minutes)
     void setReportIntervalSeconds(int value);
     // [16] After how many minutes the sensor will report back its measure (default: 10 minutes)
@@ -459,6 +452,7 @@ class Sensor {
     Child* getChild(int child_id);
     // register a child
     void registerChild(Child* child);
+    void setPowerManager(const PowerManager& powerManager);
     NodeManager* _node;
   protected:
     const __FlashStringHelper* _name;
@@ -467,10 +461,7 @@ class Sensor {
     int _samples_interval = 0;
     bool _track_last_value = false;
     int _interrupt_pin = -1;
-    #if POWER_MANAGER  == 1
-      PowerManager _powerManager;
-      bool _auto_power_pins = true;
-    #endif
+    PowerManager* _powerManager = nullptr;
     Timer* _report_timer;
 };
 
@@ -1375,16 +1366,12 @@ class NodeManager {
     int getSleepBetweenSend();
     // register a sensor
     void registerSensor(Sensor* sensor);
-    #if POWER_MANAGER == 1
-      // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-      void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
-      // [23] if enabled the pins will be automatically powered on while awake and off during sleeping (default: true)
-      void setAutoPowerPins(bool value);
-      // [24] manually turn the power on
-      void powerOn();
-      // [25] manually turn the power off
-      void powerOff();
-    #endif
+    // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
+    void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
+    // [24] manually turn the power on
+    void powerOn();
+    // [25] manually turn the power off
+    void powerOff();
     // [21] set this to true if you want destination node to send ack back to this node (default: false)
     void setAck(bool value);
     bool getAck();
@@ -1452,16 +1439,13 @@ class NodeManager {
     void sendMessage(int child_id, int type, float value);
     void sendMessage(int child_id, int type, double value);
     void sendMessage(int child_id, int type, const char* value);
+    void setPowerManager(const PowerManager& powerManager);
     int getAvailableChildId();
     List<Sensor*> sensors;
     Child* getChild(int child_id);
     Sensor* getSensorWithChild(int child_id);
   private:
-    #if POWER_MANAGER == 1
-      // to optionally controller power pins
-      PowerManager _powerManager;
-      bool _auto_power_pins = true;
-    #endif
+    PowerManager* _powerManager = nullptr;
     MyMessage _message;
     void _sendMessage(int child_id, int type);
     int _status = AWAKE;
