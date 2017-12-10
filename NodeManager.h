@@ -390,7 +390,7 @@ class ChildString: public Child {
 class Sensor {
   public:
     Sensor();
-    Sensor(NodeManager& nodeManager, int pin);
+    Sensor(const NodeManager& node_manager, int pin);
     // return the name of the sensor
     char* getName();
     // [1] where the sensor is attached to (default: not set)
@@ -459,7 +459,7 @@ class Sensor {
 */
 class SensorBattery: public Sensor {
   public:
-    SensorBattery(NodeManager& nodeManager);
+    SensorBattery(const NodeManager& nodeManager);
       // [11] the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
       void setMinVoltage(float value);
       // [12] the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
@@ -489,7 +489,7 @@ class SensorBattery: public Sensor {
 */
 class SensorSignal: public Sensor {
   public:
-    SensorSignal(NodeManager& nodeManager);
+    SensorSignal(const NodeManager& nodeManager);
     // [101] define which signal report to send. Possible values are SR_UPLINK_QUALITY, SR_TX_POWER_LEVEL, SR_TX_POWER_PERCENT, SR_TX_RSSI, SR_RX_RSSI, SR_TX_SNR, SR_RX_SNR (default: SR_RX_RSSI)
     void setSignalCommand(int value);
     // define what to do at each stage of the sketch
@@ -507,7 +507,7 @@ class SensorSignal: public Sensor {
 */
 class SensorConfiguration: public Sensor {
   public:
-    SensorConfiguration(NodeManager& nodeManager);
+    SensorConfiguration(const NodeManager& nodeManager);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
@@ -523,7 +523,7 @@ class SensorConfiguration: public Sensor {
 */
 class SensorAnalogInput: public Sensor {
   public:
-    SensorAnalogInput(NodeManager* node_manager, int child_id, int pin);
+    SensorAnalogInput(const NodeManager& node_manager, int pin);
     // [101] the analog reference to use (default: not set, can be either INTERNAL or DEFAULT)
     void setReference(int value);
     // [102] reverse the value or the percentage (e.g. 70% -> 30%) (default: false)
@@ -539,7 +539,6 @@ class SensorAnalogInput: public Sensor {
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
   protected:
     int _reference = -1;
@@ -556,7 +555,9 @@ class SensorAnalogInput: public Sensor {
 */
 class SensorLDR: public SensorAnalogInput {
   public:
-    SensorLDR(NodeManager* node_manager, int child_id, int pin);
+    SensorLDR(const NodeManager& node_manager, int pin);
+    // define what to do at each stage of the sketch
+    void onBefore();
 };
 
 /*
@@ -564,7 +565,7 @@ class SensorLDR: public SensorAnalogInput {
 */
 class SensorThermistor: public Sensor {
   public:
-    SensorThermistor(NodeManager* node_manager, int child_id, int pin);
+    SensorThermistor(const NodeManager& node_manager, int pin);
     // [101] resistance at 25 degrees C (default: 10000)
     void setNominalResistor(long value);
     // [102] temperature for nominal resistance (default: 25)
@@ -580,7 +581,6 @@ class SensorThermistor: public Sensor {
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
   protected:
     long _nominal_resistor = 10000;
@@ -769,13 +769,12 @@ class SensorDHT: public Sensor {
 #if MODULE_SHT21 == 1
 class SensorSHT21: public Sensor {
   public:
-    SensorSHT21(NodeManager& nodeManager);
+    SensorSHT21(const NodeManager& node_manager);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
   protected:
 };

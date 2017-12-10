@@ -344,8 +344,8 @@ bool ChildString::isNewValue() {
 // constructor
 Sensor::Sensor() {  
 }
-Sensor::Sensor(NodeManager& nodeManager, int pin = -1) {
-  _node = &nodeManager;
+Sensor::Sensor(const NodeManager& node_manager, int pin = -1) {
+  _node = &node_manager;
   _pin = pin;
   _report_timer = new Timer(_node);
   _node->registerSensor(this);
@@ -550,7 +550,7 @@ void Sensor::onInterrupt(){}
    SensorBattery
 */
 // contructor
-SensorBattery::SensorBattery(NodeManager& nodeManager): Sensor(nodeManager) {
+SensorBattery::SensorBattery(const NodeManager& node_manager): Sensor(node_manager) {
   _name = "BAT";
   // report battery level every 60 minutes by default
   setReportIntervalMinutes(60);
@@ -619,7 +619,7 @@ void SensorBattery::onInterrupt() {
    SensorSignal
 */
 // contructor
-SensorSignal::SensorSignal(NodeManager& nodeManager): Sensor(nodeManager) {
+SensorSignal::SensorSignal(const NodeManager& node_manager): Sensor(node_manager) {
   _name = "SIG";
   // report signal level every 60 minutes by default
   setReportIntervalMinutes(60);
@@ -665,7 +665,7 @@ void SensorSignal::onInterrupt() {
    SensorConfiguration
 */
 // contructor
-SensorConfiguration::SensorConfiguration(NodeManager& nodeManager): Sensor(nodeManager) {
+SensorConfiguration::SensorConfiguration(const NodeManager& node_manager): Sensor(node_manager) {
   _name = "CONF";
 }
 
@@ -772,6 +772,19 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
+      #if MODULE_ANALOG_INPUT == 1
+      if (strcmp(sensor->getName(),"A-IN") == 0 || strcmp(sensor->getName(),"LDR") == 0) {
+        SensorAnalogInput* custom_sensor = (SensorAnalogInput*)sensor;
+        switch(function) {
+          case 101: custom_sensor->setReference(request.getValueInt()); break;
+          case 102: custom_sensor->setReverse(request.getValueInt()); break;
+          case 103: custom_sensor->setOutputPercentage(request.getValueInt()); break;
+          case 104: custom_sensor->setRangeMin(request.getValueInt()); break;
+          case 105: custom_sensor->setRangeMax(request.getValueInt()); break;
+          default: return;
+        }
+      }
+      #endif
     }
   }
   _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,function);
@@ -788,7 +801,8 @@ void SensorConfiguration::onInterrupt() {
 */
 
 // contructor
-SensorAnalogInput::SensorAnalogInput(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
+SensorAnalogInput::SensorAnalogInput(const NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+  _name = "A-IN";
 }
 
 // setter/getter
@@ -810,12 +824,13 @@ void SensorAnalogInput::setRangeMax(int value) {
 
 // what to do during before
 void SensorAnalogInput::onBefore() {
-  // prepare the pin for input
-  pinMode(_pin, INPUT);
+  new ChildInt(this,_node->getAvailableChildId(),S_CUSTOM,V_CUSTOM);
 }
 
 // what to do during setup
 void SensorAnalogInput::onSetup() {
+  // prepare the pin for input
+  pinMode(_pin, INPUT);
 }
 
 // what to do during loop
@@ -826,34 +841,23 @@ void SensorAnalogInput::onLoop(Child* child) {
   int percentage = 0;
   if (_output_percentage) percentage = _getPercentage(adc);
   #if DEBUG == 1
-    Serial.print(F("A-IN I="));
-    Serial.print(_child_id);
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
     Serial.print(F(" V="));
     Serial.print(adc);
     Serial.print(F(" %="));
     Serial.println(percentage);
   #endif
   // store the result
-  _value_int = _output_percentage ? percentage : adc;
+  ((ChildInt*)child)->setValueInt(_output_percentage ? percentage : adc);
 }
 
 // what to do during loop
-void SensorAnalogInput::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop(NULL);
-}
-
-// what to do when receiving a remote message
-void SensorAnalogInput::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setReference(request.getValueInt()); break;
-    case 102: setReverse(request.getValueInt()); break;
-    case 103: setOutputPercentage(request.getValueInt()); break;
-    case 104: setRangeMin(request.getValueInt()); break;
-    case 105: setRangeMax(request.getValueInt()); break;
-    default: return;
-  }
-  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
+void SensorAnalogInput::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
 // what to do when receiving an interrupt
@@ -893,13 +897,17 @@ int SensorAnalogInput::_getPercentage(int adc) {
 */
 
 // contructor
-SensorLDR::SensorLDR(NodeManager* node_manager, int child_id, int pin): SensorAnalogInput(node_manager, child_id, pin) {
-  // set presentation and type and reverse (0: no light, 100: max light)
-  setPresentation(S_LIGHT_LEVEL);
-  setType(V_LIGHT_LEVEL);
-  setReverse(true);
+SensorLDR::SensorLDR(const NodeManager& node_manager, int pin): SensorAnalogInput(node_manager, pin) {
+  _name = "LDR";
 }
 
+// what to do during before
+void SensorLDR::onBefore() {
+  new ChildInt(this,_node->getAvailableChildId(),S_LIGHT_LEVEL,V_LIGHT_LEVEL);
+  setReverse(true);
+}
+#endif
+#if MODULE_ANALOG_INPUT2 == 1
 /*
    SensorThermistor
 */
@@ -1513,7 +1521,7 @@ void SensorDHT::onInterrupt() {
 */
 #if MODULE_SHT21 == 1
 // contructor
-SensorSHT21::SensorSHT21(NodeManager& nodeManager): Sensor(nodeManager) {
+SensorSHT21::SensorSHT21(const NodeManager& node_manager): Sensor(node_manager) {
   _name = "SHT21";
 }
 
@@ -1522,12 +1530,12 @@ void SensorSHT21::onBefore() {
   // register the child
   new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
   new ChildFloat(this,_node->getAvailableChildId(),S_HUM,V_HUM);
-  // initialize the library
-  Wire.begin();
 }
 
 // what to do during setup
 void SensorSHT21::onSetup() {
+  // initialize the library
+  Wire.begin();
 }
 
 // what to do during loop
@@ -1570,10 +1578,6 @@ void SensorSHT21::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
   if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
-}
-
-// what to do when receiving a remote message
-void SensorSHT21::onProcess(Request & request) {
 }
 
 // what to do when receiving an interrupt

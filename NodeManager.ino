@@ -22,9 +22,14 @@ Documentation available on: https://github.com/mysensors/NodeManager
 
 // create a NodeManager instance
 NodeManager node;
+//SensorAnalogInput analog(node,A0);
+//SensorLDR ldr(node,A0);
+
+
+
 //SensorSHT21 sht(node);
 //PowerManager power(5,6);
-SensorBattery battery(node);
+//SensorBattery battery(node);
 SensorConfiguration configuration(node);
 //SensorSignal signal(node);
 
@@ -32,7 +37,7 @@ SensorConfiguration configuration(node);
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
-  battery.setReportIntervalSeconds(10);
+//  battery.setReportIntervalSeconds(10);
   node.setReportIntervalSeconds(20);
   //node.setSleepSeconds(20);
   
