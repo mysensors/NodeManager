@@ -344,8 +344,8 @@ class ChildInt: public Child {
     void sendValue();
     bool isNewValue();
   private:
-    int _value = -255;
-    int _last_value = -255;
+    int _value;
+    int _last_value;
     int _total = 0;
 };
 
@@ -356,9 +356,21 @@ class ChildFloat: public Child {
     void sendValue();
     bool isNewValue();
   private:
-    float _value = -255;
-    float _last_value = -255;
+    float _value;
+    float _last_value;
     float _total = 0;
+};
+
+class ChildDouble: public Child {
+  public:
+    ChildDouble(Sensor* sensor, int child_id, int presentation, int type, char* description);
+    void setValueDouble(double value);
+    void sendValue();
+    bool isNewValue();
+  private:
+    double _value;
+    double _last_value;
+    double _total = 0;
 };
 
 class ChildString: public Child {
@@ -371,19 +383,6 @@ class ChildString: public Child {
     char* _value = "";
     char* _last_value = "";
 };
-
-class ChildDouble: public Child {
-  public:
-    ChildDouble(Sensor* sensor, int child_id, int presentation, int type, char* description);
-    void setValueDouble(double value);
-    void sendValue();
-    bool isNewValue();
-  private:
-    double _value = -255;
-    double _last_value = -255;
-    double _total = 0;
-};
-
 /***************************************
    Sensor: generic sensor class
 */

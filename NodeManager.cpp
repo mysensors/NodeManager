@@ -178,11 +178,11 @@ Request::Request(int recipient_child_id, const char* string) {
   _value = atof(strtok_r(NULL, ",", &ptr));
   #if DEBUG == 1
     Serial.print(F("REQ C="));
-    Serial.print(getChildId());
+    Serial.print(_child_id);
     Serial.print(F(" F="));
-    Serial.print(getFunction());
+    Serial.print(_function);
     Serial.print(F(" V="));
-    Serial.print(getValueFloat());
+    Serial.println(_value);
   #endif
 }
 
@@ -203,7 +203,7 @@ int Request::getFunction() {
 
 // return the value as an int
 int Request::getValueInt() {
-  return _value;
+  return (int)_value;
   
 }
 
@@ -255,11 +255,10 @@ void ChildInt::setValueInt(int value) {
 
 // send the value back to the controller
 void ChildInt::sendValue() {
-  if (_value == -255) return;
+  if (_samples == 0) return;
   _sensor->_node->sendMessage(child_id,type,_value);
   _last_value = _value;
-  _value = -255;
-  _total = -255;
+  _total = 0;
   _samples = 0;
 }
 
@@ -281,11 +280,10 @@ void ChildFloat::setValueFloat(float value) {
 
 // send the value back to the controller
 void ChildFloat::sendValue() {
-  if (_value == -255) return;
+  if (_samples == 0) return;
   _sensor->_node->sendMessage(child_id,type,_value);
   _last_value = _value;
-  _value = -255;
-  _total = -255;
+  _total = 0;
   _samples = 0;
 }
 
@@ -307,11 +305,10 @@ void ChildDouble::setValueDouble(double value) {
 
 // send the value back to the controller
 void ChildDouble::sendValue() {
-  if (_value == -255) return;
+  if (_samples == 0) return;
   _sensor->_node->sendMessage(child_id,type,_value);
   _last_value = _value;
-  _value = -255;
-  _total = -255;
+  _total = 0;
   _samples = 0;
 }
 

@@ -32,6 +32,7 @@ SensorConfiguration configuration(node);
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
+  battery.setReportIntervalSeconds(10);
   node.setReportIntervalSeconds(20);
   //node.setSleepSeconds(20);
   
