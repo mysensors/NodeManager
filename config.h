@@ -114,14 +114,14 @@
 #define DEBUG 1
 
 // Enable this module to use one of the following sensors: SensorAnalogInput, SensorLDR, SensorRain, SensorSoilMoisture
-#define MODULE_ANALOG_INPUT 1
+#define MODULE_ANALOG_INPUT 0
 // Enable this module to use one of the following sensors: SensorThermistor
 #define MODULE_THERMISTOR 0
 // Enable this module to use one of the following sensors: SensorML8511
 #define MODULE_ML8511 0
 // Enable this module to use one of the following sensors: SensorACS712
 #define MODULE_ACS712 0
-// Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
+// Enable this module to use one of the following sensors: SensorDigitalInput
 #define MODULE_DIGITAL_INPUT 0
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_OUTPUT, SENSOR_RELAY, SENSOR_LATCHING_RELAY
 #define MODULE_DIGITAL_OUTPUT 0

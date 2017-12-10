@@ -1182,17 +1182,20 @@ void SensorACS712::onInterrupt() {
 */
 
 // contructor
-SensorDigitalInput::SensorDigitalInput(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id, pin) {
+SensorDigitalInput::SensorDigitalInput(const NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+  _name = "D-IN";
 }
 
 // what to do during before
 void SensorDigitalInput::onBefore() {
-  // set the pin for input
-  pinMode(_pin, INPUT);
+  // register the child
+  new ChildInt(this,_node->getAvailableChildId(),S_CUSTOM,V_CUSTOM);
 }
 
 // what to do during setup
 void SensorDigitalInput::onSetup() {
+  // set the pin for input
+  pinMode(_pin, INPUT);
 }
 
 // what to do during loop
@@ -1200,24 +1203,23 @@ void SensorDigitalInput::onLoop(Child* child) {
   // read the value
   int value = digitalRead(_pin);
   #if DEBUG == 1
-    Serial.print(F("D-IN I="));
-    Serial.print(_child_id);
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
     Serial.print(F(" P="));
     Serial.print(_pin);
     Serial.print(F(" V="));
     Serial.println(value);
   #endif
   // store the value
-  _value_int = value;
+  ((ChildInt*)child)->setValueInt(value);
 }
 
 // what to do as the main task when receiving a message
-void SensorDigitalInput::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop(NULL);
-}
-
-// what to do when receiving a remote message
-void SensorDigitalInput::onProcess(Request & request) {
+void SensorDigitalInput::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
 // what to do when receiving an interrupt

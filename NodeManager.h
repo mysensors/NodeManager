@@ -665,13 +665,12 @@ class SensorACS712: public Sensor {
 */
 class SensorDigitalInput: public Sensor {
   public:
-    SensorDigitalInput(NodeManager* node_manager, int child_id, int pin);
+    SensorDigitalInput(const NodeManager& node_manager, int pin);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
 };
 #endif

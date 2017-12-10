@@ -23,12 +23,13 @@ Documentation available on: https://github.com/mysensors/NodeManager
 // create a NodeManager instance
 NodeManager node;
 //SensorAnalogInput analog(node,A0);
-SensorLDR ldr(node,A0);
+//SensorLDR ldr(node,A0);
 //SensorRain rain(node,A0);
 //SensorSoilMoisture soil(node,A0);
 //SensorThermistor thermistor(node,A0);
 //SensorML8511 ml8511(node,A0);
 //SensorACS712 acs712(node,A0);
+SensorDigitalInput digital(node,6);
 
 
 
