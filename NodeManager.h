@@ -558,6 +558,29 @@ class SensorLDR: public SensorAnalogInput {
     SensorLDR(const NodeManager& node_manager, int pin);
     // define what to do at each stage of the sketch
     void onBefore();
+    void onSetup();
+};
+
+/*
+   SensorRain
+*/
+class SensorRain: public SensorAnalogInput {
+  public:
+    SensorRain(const NodeManager& node_manager, int pin);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+};
+
+/*
+   SensorSoilMoisture
+*/
+class SensorSoilMoisture: public SensorAnalogInput {
+  public:
+    SensorSoilMoisture(const NodeManager& node_manager, int pin);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
 };
 #endif
 
@@ -611,15 +634,15 @@ class SensorML8511: public Sensor {
     float _mapfloat(float x, float in_min, float in_max, float out_min, float out_max);
 };
 #endif
-#if MODULE_ANALOG_INPUT2 == 1
 
+#if MODULE_ACS712 == 1
 /*
     SensorACS712
 */
 
 class SensorACS712: public Sensor {
   public:
-    SensorACS712(NodeManager* node_manager, int child_id, int pin);
+    SensorACS712(const NodeManager& node_manager, int pin);
     // [101] set how many mV are equivalent to 1 Amp. The value depends on the module (100 for 20A Module, 66 for 30A Module) (default: 185);
     void setmVPerAmp(int value);
     // [102] set ACS offset (default: 2500);
@@ -629,30 +652,12 @@ class SensorACS712: public Sensor {
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
   protected:
     int _ACS_offset = 2500;
     int _mv_per_amp = 185;
 };
-
-/*
-   SensorRain
-*/
-class SensorRain: public SensorAnalogInput {
-  public:
-    SensorRain(NodeManager* node_manager, int child_id, int pin);
-};
-
-/*
-   SensorSoilMoisture
-*/
-class SensorSoilMoisture: public SensorAnalogInput {
-  public:
-    SensorSoilMoisture(NodeManager* node_manager, int child_id, int pin);
-};
 #endif
-
 
 #if MODULE_DIGITAL_INPUT == 1
 /*

@@ -773,7 +773,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       }
       #endif
       #if MODULE_ANALOG_INPUT == 1
-      if (strcmp(sensor->getName(),"A-IN") == 0 || strcmp(sensor->getName(),"LDR") == 0) {
+      if (strcmp(sensor->getName(),"A-IN") == 0 || strcmp(sensor->getName(),"LDR") == 0 || strcmp(sensor->getName(),"RAIN") == 0 || strcmp(sensor->getName(),"SOIL") == 0) {
         SensorAnalogInput* custom_sensor = (SensorAnalogInput*)sensor;
         switch(function) {
           case 101: custom_sensor->setReference(request.getValueInt()); break;
@@ -794,6 +794,16 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           case 103: custom_sensor->setBCoefficient(request.getValueInt()); break;
           case 104: custom_sensor->setSeriesResistor((long)request.getValueInt()); break;
           case 105: custom_sensor->setOffset(request.getValueFloat()); break;
+          default: return;
+        }
+      }
+      #endif
+      #if MODULE_ACS712 == 1
+      if (strcmp(sensor->getName(),"ACS") == 0) {
+        SensorACS712* custom_sensor = (SensorACS712*)sensor;
+        switch(function) {
+          case 100: custom_sensor->setmVPerAmp(request.getValueInt()); break;
+          case 102: custom_sensor->setOffset(request.getValueInt()); break;
           default: return;
         }
       }
@@ -917,7 +927,56 @@ SensorLDR::SensorLDR(const NodeManager& node_manager, int pin): SensorAnalogInpu
 // what to do during before
 void SensorLDR::onBefore() {
   new ChildInt(this,_node->getAvailableChildId(),S_LIGHT_LEVEL,V_LIGHT_LEVEL);
+}
+
+// what to do during setup
+void SensorLDR::onSetup() {
   setReverse(true);
+}
+
+/*
+   SensorRain
+*/
+
+// contructor
+SensorRain::SensorRain(const NodeManager& node_manager, int pin): SensorAnalogInput(node_manager, pin) {
+  _name = "RAIN";
+}
+
+// what to do during before
+void SensorRain::onBefore() {
+  new ChildInt(this,_node->getAvailableChildId(),S_RAIN,V_RAINRATE);
+}
+
+// what to do during setup
+void SensorRain::onSetup() {
+  setReference(DEFAULT);
+  setOutputPercentage(true);
+  setReverse(true);
+  setRangeMin(100);
+}
+
+/*
+   SensorSoilMoisture
+*/
+
+// contructor
+SensorSoilMoisture::SensorSoilMoisture(const NodeManager& node_manager, int pin): SensorAnalogInput(node_manager, pin) {
+  _name = "SOIL";
+}
+
+// what to do during before
+void SensorSoilMoisture::onBefore() {
+  new ChildInt(this,_node->getAvailableChildId(),S_MOISTURE,V_LEVEL);
+}
+
+// what to do during setup
+void SensorSoilMoisture::onSetup() {
+  setReverse(true);
+  setReference(DEFAULT);
+  setOutputPercentage(true);
+  setReverse(true);
+  setRangeMin(100);
 }
 #endif
 
@@ -1059,17 +1118,14 @@ float SensorML8511::_mapfloat(float x, float in_min, float in_max, float out_min
 }
 #endif
 
-#if MODULE_ANALOG_INPUT2 == 1
+#if MODULE_ACS712 == 1
 /*
    SensorACS712
 */
 
 // contructor
-SensorACS712::SensorACS712(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
-  // set presentation, type and value type
-  setPresentation(S_MULTIMETER);
-  setType(V_CURRENT);
-  setValueType(TYPE_FLOAT);
+SensorACS712::SensorACS712(const NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+  _name = "ACS";
 }
 
 // setter/getter
@@ -1082,12 +1138,13 @@ void SensorACS712::setOffset(int value) {
 
 // what to do during before
 void SensorACS712::onBefore() {
-  // set the pin as input
-  pinMode(_pin, INPUT);
+  new ChildFloat(this,_node->getAvailableChildId(),S_MULTIMETER,V_CURRENT);
 }
 
 // what to do during setup
 void SensorACS712::onSetup() {
+  // set the pin as input
+  pinMode(_pin, INPUT);
 }
 
 // what to do during loop
@@ -1096,65 +1153,27 @@ void SensorACS712::onLoop(Child* child) {
   // convert the analog read in mV
   double voltage = (value / 1024.0) * 5000; 
   // convert voltage in amps
-  _value_float = ((voltage - _ACS_offset) / _mv_per_amp);
+  float value_float = ((voltage - _ACS_offset) / _mv_per_amp);
   #if DEBUG == 1
-    Serial.print(F("ACS I="));
-    Serial.print(_child_id);
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
     Serial.print(F(" A="));
-    Serial.println(_value_float);
+    Serial.println(value_float);
   #endif
+  ((ChildFloat*)child)->setValueFloat(value_float);
 }
 
 // what to do as the main task when receiving a message
-void SensorACS712::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop(NULL);
-}
-
-// what to do when receiving a remote message
-void SensorACS712::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 100: setmVPerAmp(request.getValueInt()); break;
-    case 102: setOffset(request.getValueInt()); break;
-    default: return;
-  }
-  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
+void SensorACS712::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
 // what to do when receiving an interrupt
 void SensorACS712::onInterrupt() {
 }
-
-/*
-   SensorRain
-*/
-
-// contructor
-SensorRain::SensorRain(NodeManager* node_manager, int child_id, int pin): SensorAnalogInput(node_manager,child_id, pin) {
-  // set presentation and type and reverse
-  setPresentation(S_RAIN);
-  setType(V_RAINRATE);
-  setReference(DEFAULT);
-  setOutputPercentage(true);
-  setReverse(true);
-  setRangeMin(100);
-}
-
-/*
-   SensorSoilMoisture
-*/
-
-// contructor
-SensorSoilMoisture::SensorSoilMoisture(NodeManager* node_manager, int child_id, int pin): SensorAnalogInput(node_manager, child_id, pin) {
-  // set presentation and type and reverse
-  setPresentation(S_MOISTURE);
-  setType(V_LEVEL);
-  setReference(DEFAULT);
-  setOutputPercentage(true);
-  setReverse(true);
-  setRangeMin(100);
-}
-
 #endif
 
 #if MODULE_DIGITAL_INPUT == 1
