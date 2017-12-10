@@ -815,7 +815,7 @@ class SensorHTU21D: public SensorSHT21 {
 #if MODULE_SWITCH == 1
 class SensorSwitch: public Sensor {
   public:
-    SensorSwitch(NodeManager* node_manager, int child_id, int pin);
+    SensorSwitch(const NodeManager& node_manager, int pin);
     // [101] set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
     void setMode(int value);
     // [102] milliseconds to wait before reading the input (default: 0)
@@ -829,7 +829,6 @@ class SensorSwitch: public Sensor {
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
   protected:
     int _debounce = 0;
@@ -843,7 +842,8 @@ class SensorSwitch: public Sensor {
  */
 class SensorDoor: public SensorSwitch {
   public:
-    SensorDoor(NodeManager* node_manager, int child_id, int pin);
+    SensorDoor(const NodeManager& node_manager, int pin);
+    void onBefore();
 };
 
 /*
@@ -851,7 +851,9 @@ class SensorDoor: public SensorSwitch {
  */
 class SensorMotion: public SensorSwitch {
   public:
-    SensorMotion(NodeManager* node_manager, int child_id, int pin);
+    SensorMotion(const NodeManager& node_manager, int pin);
+    void onBefore();
+    void onSetup();
 };
 #endif
 /*

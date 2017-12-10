@@ -765,7 +765,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #if MODULE_SHT21 == 1
-      if (strcmp(sensor->getName(),"SHT21") == 0) {
+      if (strcmp(sensor->getName(),"SHT21") == 0 || strcmp(sensor->getName(),"HTU21") == 0) {
         SensorSHT21* custom_sensor = (SensorSHT21*)sensor;
         switch(function) {
           default: return;
@@ -827,6 +827,18 @@ void SensorConfiguration::onReceive(MyMessage* message) {
             case 203: custom_sensor_2->setPinOn(request.getValueInt()); break;
           default: return;
         }
+        }
+      }
+      #endif
+      #if MODULE_SWITCH == 1
+      if (strcmp(sensor->getName(),"SWITCH") == 0 || strcmp(sensor->getName(),"DOOR") == 0 || strcmp(sensor->getName(),"MOTION") == 0) {
+        SensorSwitch* custom_sensor = (SensorSwitch*)sensor;
+        switch(function) {
+          case 101: custom_sensor->setMode(request.getValueInt()); break;
+          case 102: custom_sensor->setDebounce(request.getValueInt()); break;
+          case 103: custom_sensor->setTriggerTime(request.getValueInt()); break;
+          case 104: custom_sensor->setInitial(request.getValueInt()); break;
+          default: return;
         }
       }
       #endif
@@ -1619,14 +1631,13 @@ void SensorSHT21::onReceive(MyMessage* message) {
 // what to do when receiving an interrupt
 void SensorSHT21::onInterrupt() {
 }
-#endif
 
 /*
  * SensorHTU21D
  */
- #if MODULE_SHT21 == 1
-// constructor
+ // constructor
 SensorHTU21D::SensorHTU21D(NodeManager& nodeManager): SensorSHT21(nodeManager) {
+  _name = "HTU21";
 }
 #endif 
 
@@ -1634,8 +1645,8 @@ SensorHTU21D::SensorHTU21D(NodeManager& nodeManager): SensorSHT21(nodeManager) {
 /*
  * SensorSwitch
  */
-SensorSwitch::SensorSwitch(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id,pin) {
-  setType(V_TRIPPED);
+SensorSwitch::SensorSwitch(const NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+  _name = "SWITCH";
 }
 
 // setter/getter
@@ -1654,12 +1665,13 @@ void SensorSwitch::setInitial(int value) {
 
 // what to do during before
 void SensorSwitch::onBefore() {
-  // set the interrupt pin so it will be called only when waking up from that interrupt
-  setInterrupt(_pin,_mode,_initial);
+  new ChildInt(this,_node->getAvailableChildId(),S_CUSTOM,V_TRIPPED);
 }
 
 // what to do during setup
 void SensorSwitch::onSetup() {
+  // set the interrupt pin so it will be called only when waking up from that interrupt
+  setInterrupt(_pin,_mode,_initial);
   // report immediately
   _report_timer->unset();
 }
@@ -1669,27 +1681,18 @@ void SensorSwitch::onLoop(Child* child) {
 }
 
 // what to do as the main task when receiving a message
-void SensorSwitch::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) {
-    _value_int = digitalRead(_pin);
+void SensorSwitch::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == V_STATUS) {
+    // return current status
+    ((ChildInt*)child)->setValueInt(digitalRead(_pin));
   }
-}
-
-// what to do when receiving a remote message
-void SensorSwitch::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setMode(request.getValueInt()); break;
-    case 102: setDebounce(request.getValueInt()); break;
-    case 103: setTriggerTime(request.getValueInt()); break;
-    case 104: setInitial(request.getValueInt()); break;
-    default: return;
-  }
-  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
 void SensorSwitch::onInterrupt() {
+  Child* child = children.get(1);
   // wait to ensure the the input is not floating
   if (_debounce > 0) _node->sleepOrWait(_debounce);
   // read the value of the pin
@@ -1697,34 +1700,49 @@ void SensorSwitch::onInterrupt() {
   // process the value
   if ( (_mode == RISING && value == HIGH ) || (_mode == FALLING && value == LOW) || (_mode == CHANGE) )  {
     #if DEBUG == 1
-      Serial.print(F("SWITCH I="));
-      Serial.print(_child_id);
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
       Serial.print(F(" P="));
       Serial.print(_pin);
       Serial.print(F(" V="));
       Serial.println(value);
     #endif
-    _value_int = value;
+    ((ChildInt*)child)->setValueInt(value);
     // allow the signal to be restored to its normal value
     if (_trigger_time > 0) _node->sleepOrWait(_trigger_time);
   } else {
     // invalid
-    _value_int = -1;
+    ((ChildInt*)child)->setValueInt(-1);
   }
 }
 
 /*
  * SensorDoor
  */
-SensorDoor::SensorDoor(NodeManager* node_manager, int child_id, int pin): SensorSwitch(node_manager,child_id,pin) {
-  setPresentation(S_DOOR);
+SensorDoor::SensorDoor(const NodeManager& node_manager, int pin): SensorSwitch(node_manager, pin) {
+  _name = "DOOR";
+}
+
+// what to do during before
+void SensorDoor::onBefore() {
+  new ChildInt(this,_node->getAvailableChildId(),S_DOOR,V_TRIPPED);
 }
 
 /*
  * SensorMotion
  */
-SensorMotion::SensorMotion(NodeManager* node_manager, int child_id, int pin): SensorSwitch(node_manager, child_id,pin) {
-  setPresentation(S_MOTION);
+SensorMotion::SensorMotion(const NodeManager& node_manager, int pin): SensorSwitch(node_manager, pin) {
+  _name = "MOTION";
+}
+
+// what to do during before
+void SensorMotion::onBefore() {
+  new ChildInt(this,_node->getAvailableChildId(),S_MOTION,V_TRIPPED);
+}
+
+// what to do during setup
+void SensorMotion::onSetup() {
   // set initial value to LOW
   setInitial(LOW);
 }

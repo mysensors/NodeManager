@@ -35,10 +35,14 @@ NodeManager node;
 //SensorLatchingRelay latching(node,6);
 //SensorDHT11 dht11(node,6);
 //SensorDHT22 dht22(node,6);
+//SensorSHT21 sht21(node);
+//SensorHTU21D htu21(node);
+//SensorSwitch sensorSwitch(node,3);
+//SensorDoor door(node,3);
+SensorMotion motion(node,3);
 
 
 
-//SensorSHT21 sht(node);
 //PowerManager power(5,6);
 //SensorBattery battery(node);
 SensorConfiguration configuration(node);
