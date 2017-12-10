@@ -361,12 +361,6 @@ class ChildFloat: public Child {
     float _total = 0;
 };
 
-class ChildDs18b20: public ChildFloat {
-  public:
-    ChildDs18b20(Sensor* sensor, int child_id, int presentation, int type, int _index, char* description);
-    int index;
-};
-
 class ChildDouble: public Child {
   public:
     ChildDouble(Sensor* sensor, int child_id, int presentation, int type, char* description);
@@ -938,7 +932,7 @@ class SensorMLX90614: public Sensor {
 #if MODULE_BME280 == 1 || MODULE_BMP085 == 1 || MODULE_BMP280 == 1
 class SensorBosch: public Sensor {
   public:
-    SensorBosch(NodeManager* node_manager, int child_id, int sensor_type);
+    SensorBosch(const NodeManager& node_manager);
     // [101] define how many pressure samples to keep track of for calculating the forecast (default: 5)
     void setForecastSamplesCount(int value);
     // define what to do at each stage of the sketch
@@ -946,16 +940,9 @@ class SensorBosch: public Sensor {
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
-    // constants
-    const static int TEMPERATURE = 0;
-    const static int HUMIDITY = 1;
-    const static int PRESSURE = 2;
-    const static int FORECAST = 3;
     static uint8_t GetI2CAddress(uint8_t chip_id);
   protected:
-    int _sensor_type;
     char* _weather[6] = { "stable", "sunny", "cloudy", "unstable", "thunderstorm", "unknown" };
     int _forecast_samples_count = 5;
     float* _forecast_samples;
@@ -965,7 +952,7 @@ class SensorBosch: public Sensor {
     float _dP_dt;
     bool _first_round = true;
     float _getLastPressureSamplesAverage();
-    void _forecast(float pressure);
+    char* _forecast(float pressure);
 };
 #endif
 
@@ -975,7 +962,7 @@ class SensorBosch: public Sensor {
 #if MODULE_BME280 == 1
 class SensorBME280: public SensorBosch {
   public:
-    SensorBME280(NodeManager* node_manager, int child_id, Adafruit_BME280* bme, int sensor_type);
+    SensorBME280(const NodeManager& node_manager);
     void onLoop(Child* child);
   protected:
     Adafruit_BME280* _bme;

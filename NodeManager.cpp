@@ -301,14 +301,6 @@ bool ChildFloat::isNewValue() {
 }
 
 /*
- ChildDs18b20 class
-*/
-
-ChildDs18b20::ChildDs18b20(Sensor* sensor, int child_id, int presentation, int type, int _index, char* description = ""): ChildFloat(sensor, child_id, presentation, type, description)  {
-  index = index;
-}
-
-/*
  ChildDouble class
 */
 
@@ -1809,7 +1801,7 @@ void SensorDs18b20::onBefore() {
   _sensors->begin();
   // register a new child for each sensor on the bus
   for(int i = 0; i < _sensors->getDeviceCount(); i++) {
-    new ChildDs18b20(this,_node->getAvailableChildId(),S_TEMP,V_TEMP,i);
+    new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
   }
 }
 
@@ -1819,6 +1811,11 @@ void SensorDs18b20::onSetup() {
 
 // what to do during loop
 void SensorDs18b20::onLoop(Child* child) {
+  int index = -1;
+  // get the index of the requested child
+  for (int i = 1; i <= children.size(); i++) {
+    if (children.get(i) == child) index = i-1;
+  }
   // do not wait for conversion, will sleep manually during it
   if (_sleep_during_conversion) _sensors->setWaitForConversion(false);
   // request the temperature
@@ -1829,7 +1826,7 @@ void SensorDs18b20::onLoop(Child* child) {
     sleep(conversion_time);
   }
   // read the temperature
-  float temperature = _sensors->getTempCByIndex(((ChildDs18b20*)child)->index);
+  float temperature = _sensors->getTempCByIndex(index);
   // convert it
   temperature = _node->celsiusToFahrenheit(temperature);
   #if DEBUG == 1
@@ -1977,32 +1974,8 @@ void SensorMLX90614::onInterrupt() {
 */
 #if MODULE_BME280 == 1 || MODULE_BMP085 == 1 || MODULE_BMP280 == 1
 // contructor
-SensorBosch::SensorBosch(NodeManager* node_manager, int child_id, int sensor_type): Sensor(node_manager, child_id,A4) {
-  _sensor_type = sensor_type;
-  if (_sensor_type == SensorBosch::TEMPERATURE) {
-    // temperature sensor
-    setPresentation(S_TEMP);
-    setType(V_TEMP);
-    setValueType(TYPE_FLOAT);
-  }
-  else if (_sensor_type == SensorBosch::HUMIDITY) {
-    // humidity sensor
-    setPresentation(S_HUM);
-    setType(V_HUM);
-    setValueType(TYPE_FLOAT);
-  }
-  else if (_sensor_type == SensorBosch::PRESSURE) {
-    // pressure sensor
-    setPresentation(S_BARO);
-    setType(V_PRESSURE);
-    setValueType(TYPE_FLOAT);
-  }
-  else if (_sensor_type == SensorBosch::FORECAST) {
-    // pressure sensor
-    setPresentation(S_BARO);
-    setType(V_FORECAST);
-    setValueType(TYPE_STRING);
-  }
+SensorBosch::SensorBosch(const NodeManager& node_manager): Sensor(node_manager) {
+  _name = "BOSH";
 }
 
 // setter/getter
@@ -2012,12 +1985,17 @@ void SensorBosch::setForecastSamplesCount(int value) {
 
 // what to do during before
 void SensorBosch::onBefore() {
-  // initialize the forecast samples array
-  _forecast_samples = new float[_forecast_samples_count];
+  // register the child
+  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
+  new ChildFloat(this,_node->getAvailableChildId(),S_HUM,V_HUM);
+  new ChildFloat(this,_node->getAvailableChildId(),S_BARO,V_PRESSURE);
+  new ChildString(this,_node->getAvailableChildId(),S_BARO,V_FORECAST);
 }
 
 // what to do during setup
 void SensorBosch::onSetup() {
+  // initialize the forecast samples array
+  _forecast_samples = new float[_forecast_samples_count];
 }
 
 // what to do during loop
@@ -2025,18 +2003,10 @@ void SensorBosch::onLoop(Child* child) {
 }
 
 // what to do as the main task when receiving a message
-void SensorBosch::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop(NULL);
-}
-
-// what to do when receiving a remote message
-void SensorBosch::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setForecastSamplesCount(request.getValueInt()); break;
-    default: return;
-  }
-  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
+void SensorBosch::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
 // what to do when receiving an interrupt
@@ -2044,7 +2014,7 @@ void SensorBosch::onInterrupt() {
 }
 
 // calculate and send the forecast back
-void SensorBosch::_forecast(float pressure) {
+char* SensorBosch::_forecast(float pressure) {
   if (isnan(pressure)) return;
   // Calculate the average of the last n minutes.
   int index = _minute_count % _forecast_samples_count;
@@ -2107,17 +2077,16 @@ void SensorBosch::_forecast(float pressure) {
   else if ((_dP_dt > 0.05) && (_dP_dt < 0.25)) forecast = 1;
   else if ((_dP_dt >(-0.05)) && (_dP_dt < 0.05)) forecast = 0;
   else forecast = 5;
-  _value_string = _weather[forecast];
   #if DEBUG == 1
-    Serial.print(F("BMP I="));
-    Serial.print(_child_id);
+    Serial.print(_name);
     Serial.print(F(" M="));
     Serial.print(_minute_count);
     Serial.print(F(" dP="));
     Serial.print(_dP_dt);
     Serial.print(F(" F="));
-    Serial.println(_value_string);
+    Serial.println(_weather[forecast]);
   #endif
+  return _weather[forecast];
 }
 
 // returns the average of the latest pressure samples
@@ -2156,58 +2125,57 @@ uint8_t SensorBosch::GetI2CAddress(uint8_t chip_id) {
  * SensorBME280
  */
 #if MODULE_BME280 == 1
-SensorBME280::SensorBME280(NodeManager* node_manager, int child_id, Adafruit_BME280* bme, int sensor_type): SensorBosch(node_manager, child_id,sensor_type) {
-  _bme = bme;
+SensorBME280::SensorBME280(const NodeManager& node_manager): SensorBosch(node_manager) {
+  _name = "BME280";
 }
 
 void SensorBME280::onLoop(Child* child) {
   // temperature sensor
-  if (_sensor_type == SensorBME280::TEMPERATURE) {
+  if (child->type == V_TEMP) {
     // read the temperature
     float temperature = _bme->readTemperature();
     // convert it
     temperature = _node->celsiusToFahrenheit(temperature);
     #if DEBUG == 1
-      Serial.print(F("BME I="));
-      Serial.print(_child_id);
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
       Serial.print(F(" T="));
       Serial.println(temperature);
     #endif
-    if (isnan(temperature)) return;
     // store the value
-    _value_float = temperature;
+    if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
   }
   // Humidity Sensor
-  else if (_sensor_type == SensorBME280::HUMIDITY) {
+  else if (child->type == V_HUM) {
     // read humidity
     float humidity = _bme->readHumidity();
     #if DEBUG == 1
-      Serial.print(F("BME I="));
-      Serial.print(_child_id);
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
       Serial.print(F(" H="));
       Serial.println(humidity);
     #endif
-    if (isnan(humidity)) return;
     // store the value
-    _value_float = humidity;
+    if (! isnan(humidity)) ((ChildFloat*)child)->setValueFloat(humidity);
   }
   // Pressure Sensor
-  else if (_sensor_type == SensorBME280::PRESSURE) {
+  else if (child->type == V_PRESSURE) {
     // read pressure
     float pressure = _bme->readPressure() / 100.0F;
-    if (isnan(pressure)) return;
     #if DEBUG == 1
-      Serial.print(F("BME I="));
-      Serial.print(_child_id);
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
       Serial.print(F(" P="));
       Serial.println(pressure);
     #endif
-    if (isnan(pressure)) return;
     // store the value
-    _value_float = pressure;
+    if (! isnan(pressure)) ((ChildFloat*)child)->setValueFloat(pressure);
   }
   // Forecast Sensor
-  else if (_sensor_type == SensorBME280::FORECAST) {
+  else if (child->type == V_FORECAST) {
     float pressure = _bme->readPressure() / 100.0F;
     _forecast(pressure);
   }
@@ -2258,7 +2226,7 @@ void SensorBMP085::onLoop(Child* child) {
   // Forecast Sensor
   else if (_sensor_type == SensorBMP085::FORECAST) {
     float pressure = _bmp->readPressure() / 100.0F;
-    _forecast(pressure);    
+    ((ChildString*)child)->setValueString(_forecast(pressure));
   }
 }
 #endif

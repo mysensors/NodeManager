@@ -42,7 +42,8 @@ NodeManager node;
 //SensorMotion motion(node,3);
 //SensorDs18b20 ds18b20(node,4);
 //SensorBH1750 bh1750(node);
-SensorMLX90614 mlx90614(node);
+//SensorMLX90614 mlx90614(node);
+SensorBME280 bme280(node);
 
 
 
