@@ -1458,36 +1458,29 @@ void SensorLatchingRelay::_setStatus(Child* child, int value) {
 }
 
 #endif
+
+#if MODULE_DHT == 1
 /*
    SensorDHT
 */
-#if MODULE_DHT == 1
+
 // contructor
-SensorDHT::SensorDHT(NodeManager* node_manager, int child_id, int pin, DHT* dht, int sensor_type, int dht_type): Sensor(node_manager, child_id, pin) {
-  // store the dht object
-  _dht = dht;
-  _sensor_type = sensor_type;
-  _dht_type = dht_type;
-  if (_sensor_type == SensorDHT::TEMPERATURE) {
-    // temperature sensor
-    setPresentation(S_TEMP);
-    setType(V_TEMP);
-    setValueType(TYPE_FLOAT);
-  }
-  else if (_sensor_type == SensorDHT::HUMIDITY) {
-    // humidity sensor
-    setPresentation(S_HUM);
-    setType(V_HUM);
-    setValueType(TYPE_FLOAT);
-  }
+SensorDHT::SensorDHT(const NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+  _name = "DHT";
+  _dht_type = DHT::DHT11;
 }
 
 // what to do during before
 void SensorDHT::onBefore() {
+  // register the child
+  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
+  new ChildFloat(this,_node->getAvailableChildId(),S_HUM,V_HUM);
 }
 
 // what to do during setup
 void SensorDHT::onSetup() {
+  // store the dht object
+  _dht = new DHT();
   // initialize the dht library
   _dht->setup(_pin,_dht_type);
 }
@@ -1497,45 +1490,65 @@ void SensorDHT::onLoop(Child* child) {
   _node->sleepOrWait(_dht->getMinimumSamplingPeriod());
   _dht->readSensor(true);
   // temperature sensor
-  if (_sensor_type == SensorDHT::TEMPERATURE) {
+  if (child->type == V_TEMP) {
     // read the temperature
     float temperature = _dht->getTemperature();
     if (! _node->getIsMetric()) temperature = _dht->toFahrenheit(temperature);
     #if DEBUG == 1
-      Serial.print(F("DHT I="));
-      Serial.print(_child_id);
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
       Serial.print(F(" T="));
       Serial.println(temperature);
     #endif
     // store the value
-    if (! isnan(temperature)) _value_float = temperature;
+    if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
   }
   // humidity sensor
-  else if (_sensor_type == SensorDHT::HUMIDITY) {
+  else if (child->type == V_HUM) {
     // read humidity
     float humidity = _dht->getHumidity();
     #if DEBUG == 1
-      Serial.print(F("DHT I="));
-      Serial.print(_child_id);
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
       Serial.print(F(" H="));
       Serial.println(humidity);
     #endif
     // store the value
-    if (! isnan(humidity)) _value_float = humidity;
+    if (! isnan(humidity)) ((ChildFloat*)child)->setValueFloat(humidity);
   }
 }
 
 // what to do as the main task when receiving a message
-void SensorDHT::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop(NULL);
-}
-
-// what to do when receiving a remote message
-void SensorDHT::onProcess(Request & request) {
+void SensorDHT::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
 // what to do when receiving an interrupt
 void SensorDHT::onInterrupt() {
+}
+
+/*
+   SensorDHT11
+*/
+
+// contructor
+SensorDHT11::SensorDHT11(const NodeManager& node_manager, int pin): SensorDHT(node_manager, pin) {
+  _name = "DHT11";
+  _dht_type = DHT::DHT11;
+}
+
+/*
+   SensorDHT11
+*/
+
+// contructor
+SensorDHT22::SensorDHT22(const NodeManager& node_manager, int pin): SensorDHT(node_manager, pin) {
+  _name = "DHT22";
+  _dht_type = DHT::DHT22;
 }
 #endif
 

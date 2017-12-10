@@ -124,9 +124,9 @@
 // Enable this module to use one of the following sensors: SensorDigitalInput
 #define MODULE_DIGITAL_INPUT 0
 // Enable this module to use one of the following sensors: SensorDigitalOutput, SensorRelay, SensorLatchingRelay
-#define MODULE_DIGITAL_OUTPUT 1
-// Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
-#define MODULE_DHT 0
+#define MODULE_DIGITAL_OUTPUT 0
+// Enable this module to use one of the following sensors: SensorDHT11, SensorDHT22
+#define MODULE_DHT 1
 // Enable this module to use one of the following sensors: SENSOR_SHT21, SENSOR_HTU21D
 #define MODULE_SHT21 0
 // Enable this module to use one of the following sensors: SENSOR_SWITCH, SENSOR_DOOR, SENSOR_MOTION

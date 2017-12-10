@@ -32,7 +32,9 @@ NodeManager node;
 //SensorDigitalInput digitalIn(node,6);
 //SensorDigitalOutput digitalOut(node,6);
 //SensorRelay relay(node,6);
-SensorLatchingRelay latching(node,6);
+//SensorLatchingRelay latching(node,6);
+//SensorDHT11 dht11(node,6);
+//SensorDHT22 dht22(node,6);
 
 
 

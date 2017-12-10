@@ -753,22 +753,33 @@ class SensorLatchingRelay: public SensorRelay {
 #if MODULE_DHT == 1
 class SensorDHT: public Sensor {
   public:
-    SensorDHT(NodeManager* node_manager, int child_id, int pin, DHT* dht, int sensor_type, int dht_type);
+    SensorDHT(const NodeManager& node_manager, int pin);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
-    // constants
-    const static int TEMPERATURE = 0;
-    const static int HUMIDITY = 1;
   protected:
     DHT* _dht;
     int _dht_type;
     float _offset = 0;
-    int _sensor_type = 0;
+};
+
+/*
+   SensorDHT11
+*/
+class SensorDHT11: public SensorDHT {
+  public:
+    SensorDHT11(const NodeManager& node_manager, int pin);
+};
+
+/*
+   SensorDHT22
+*/
+class SensorDHT22: public SensorDHT {
+  public:
+    SensorDHT22(const NodeManager& node_manager, int pin);
 };
 #endif
 
