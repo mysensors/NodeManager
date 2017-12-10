@@ -29,7 +29,10 @@ NodeManager node;
 //SensorThermistor thermistor(node,A0);
 //SensorML8511 ml8511(node,A0);
 //SensorACS712 acs712(node,A0);
-SensorDigitalInput digital(node,6);
+//SensorDigitalInput digitalIn(node,6);
+//SensorDigitalOutput digitalOut(node,6);
+//SensorRelay relay(node,6);
+SensorLatchingRelay latching(node,6);
 
 
 

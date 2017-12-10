@@ -681,7 +681,7 @@ class SensorDigitalInput: public Sensor {
 */
 class SensorDigitalOutput: public Sensor {
   public:
-    SensorDigitalOutput(NodeManager* node_manager, int child_id, int pin);
+    SensorDigitalOutput(const NodeManager& node_manager, int pin);
     // [103] define which value to set to the output when set to on (default: HIGH)
     void setOnValue(int value);
     // [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
@@ -693,7 +693,7 @@ class SensorDigitalOutput: public Sensor {
     // [107] optionally wait for the given number of milliseconds after changing the status (default: 0)
     void setWaitAfterSet(int value);
     // manually switch the output to the provided value
-    void setStatus(int value);
+    void setStatus(Child* child, int value);
     // get the current state
     int getStatus();
     // define what to do at each stage of the sketch
@@ -701,7 +701,6 @@ class SensorDigitalOutput: public Sensor {
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
   protected:
     int _on_value = HIGH;
@@ -710,18 +709,19 @@ class SensorDigitalOutput: public Sensor {
     bool _input_is_elapsed = false;
     int _wait_after_set = 0;
     Timer* _safeguard_timer;
-    void _setupPin(int pin);
-    virtual void _setStatus(int value);
+    void _setupPin(Child* child, int pin);
+    virtual void _setStatus(Child* child, int value);
     int _getValueToWrite(int value);
 };
-
 
 /*
    SensorRelay
 */
 class SensorRelay: public SensorDigitalOutput {
   public:
-    SensorRelay(NodeManager* node_manager, int child_id, int pin);
+    SensorRelay(const NodeManager& node_manager, int pin);
+    // define what to do at each stage of the sketch
+    void onBefore();
 };
 
 /*
@@ -729,7 +729,7 @@ class SensorRelay: public SensorDigitalOutput {
 */
 class SensorLatchingRelay: public SensorRelay {
   public:
-    SensorLatchingRelay(NodeManager* node_manager, int child_id, int pin);
+    SensorLatchingRelay(const NodeManager& node_manager, int pin);
     // [201] set the duration of the pulse to send in ms to activate the relay (default: 50)
     void setPulseWidth(int value);
     // [202] set the pin which turns the relay off (default: the pin provided while registering the sensor)
@@ -738,12 +738,12 @@ class SensorLatchingRelay: public SensorRelay {
     void setPinOn(int value);
     // define what to do at each stage of the sketch
     void onBefore();
-    void onProcess(Request & request);
+    void onSetup();
   protected:
     int _pin_on;
     int _pin_off;
     int _pulse_width = 50;
-    void _setStatus(int value);
+    void _setStatus(Child* child, int value);
 };
 #endif
 

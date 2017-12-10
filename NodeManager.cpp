@@ -808,6 +808,28 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
+      #if MODULE_DIGITAL_OUTPUT == 1
+      if (strcmp(sensor->getName(),"DOUT") == 0 || strcmp(sensor->getName(),"REL") == 0 || strcmp(sensor->getName(),"LATC") == 0) {
+        SensorDigitalOutput* custom_sensor = (SensorDigitalOutput*)sensor;
+        switch(function) {
+            case 103: custom_sensor->setOnValue(request.getValueInt()); break;
+            case 104: custom_sensor->setLegacyMode(request.getValueInt()); break;
+            case 105: custom_sensor->setSafeguard(request.getValueInt()); break;
+            case 106: custom_sensor->setInputIsElapsed(request.getValueInt()); break;
+            case 107: custom_sensor->setWaitAfterSet(request.getValueInt()); break;
+          default: return;
+        }
+        if (function > 200 && strcmp(sensor->getName(),"LATC") == 0) {
+          SensorLatchingRelay* custom_sensor_2 = (SensorLatchingRelay*)sensor;
+          switch(function) {
+            case 201: custom_sensor_2->setPulseWidth(request.getValueInt()); break;
+            case 202: custom_sensor_2->setPinOff(request.getValueInt()); break;
+            case 203: custom_sensor_2->setPinOn(request.getValueInt()); break;
+          default: return;
+        }
+        }
+      }
+      #endif
     }
   }
   _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,function);
@@ -1233,18 +1255,19 @@ void SensorDigitalInput::onInterrupt() {
    SensorDigitalOutput
 */
 
-SensorDigitalOutput::SensorDigitalOutput(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id, pin) {
-  _safeguard_timer = new Timer(node_manager);
+SensorDigitalOutput::SensorDigitalOutput(const NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+  _name = "DOUT";
 }
 
 // what to do during before
 void SensorDigitalOutput::onBefore() {
-  _setupPin(_pin);
-
+  new ChildInt(this,_node->getAvailableChildId(),S_CUSTOM,V_CUSTOM);
 }
 
 // what to do during setup
 void SensorDigitalOutput::onSetup() {
+  _setupPin(children.get(1), _pin);
+  _safeguard_timer = new Timer(_node);
 }
 
 // setter/getter
@@ -1270,42 +1293,29 @@ void SensorDigitalOutput::setWaitAfterSet(int value) {
 // main task
 void SensorDigitalOutput::onLoop(Child* child) {
   // set the value to -1 so to avoid reporting to the gateway during loop
-  _value_int = -1;
-  _last_value_int = -1;
+  ((ChildInt*)child)->setValueInt(-1);
   // if a safeguard is set, check if it is time for it
   if (_safeguard_timer->isRunning()) {
     // update the timer
     _safeguard_timer->update();
     // if the time is over, turn the output off
-    if (_safeguard_timer->isOver()) setStatus(OFF);
+    if (_safeguard_timer->isOver()) setStatus(child->child_id,OFF);
   }
 }
 
 // what to do as the main task when receiving a message
-void SensorDigitalOutput::onReceive(const MyMessage & message) {
+void SensorDigitalOutput::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
   // by default handle a SET message but when legacy mode is set when a REQ message is expected instead
-  if ( (message.getCommand() == C_SET && ! _legacy_mode) || (message.getCommand() == C_REQ && _legacy_mode)) {
+  if ( (message->getCommand() == C_SET && ! _legacy_mode) || (message->getCommand() == C_REQ && _legacy_mode)) {
     // switch the output
-    setStatus(message.getInt());
+    setStatus(child, message->getInt());
   }
-  if (message.getCommand() == C_REQ && ! _legacy_mode) {
-    // return the current status
-    _value_int = _status;
+  if (message->getCommand() == C_REQ && ! _legacy_mode) {
+    // just return the current status
+    ((ChildInt*)child)->setValueInt(_status);
   }
-}
-
-// what to do when receiving a remote message
-void SensorDigitalOutput::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 103: setOnValue(request.getValueInt()); break;
-    case 104: setLegacyMode(request.getValueInt()); break;
-    case 105: setSafeguard(request.getValueInt()); break;
-    case 106: setInputIsElapsed(request.getValueInt()); break;
-    case 107: setWaitAfterSet(request.getValueInt()); break;
-    default: return;
-  }
-  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -1313,7 +1323,7 @@ void SensorDigitalOutput::onInterrupt() {
 }
 
 // write the value to the output
-void SensorDigitalOutput::setStatus(int value) {
+void SensorDigitalOutput::setStatus(Child* child, int value) {
   // pre-process the input value
   if (_input_is_elapsed) {
     // the input provided is an elapsed time
@@ -1331,33 +1341,34 @@ void SensorDigitalOutput::setStatus(int value) {
     // if turning the output on and a safeguard timer is configured, start it
     if (value == ON && _safeguard_timer->isConfigured() && ! _safeguard_timer->isRunning()) _safeguard_timer->start();
   }
-  _setStatus(value);
+  _setStatus(child, value);
   // wait if needed for relay drawing a lot of current
   if (_wait_after_set > 0) _node->sleepOrWait(_wait_after_set);
   // store the new status so it will be sent to the controller
   _status = value;
-  _value_int = value;
+  ((ChildInt*)child)->setValueInt(value);
 }
 
 // setup the provided pin for output
-void SensorDigitalOutput::_setupPin(int pin) {
+void SensorDigitalOutput::_setupPin(Child* child, int pin) {
   // set the pin as output and initialize it accordingly
   pinMode(pin, OUTPUT);
   // setup the pin in a off status
   _status = ! _on_value;
   digitalWrite(pin, _status);
   // the initial value is now the current value
-  _value_int = _status;
+  ((ChildInt*)child)->setValueInt(_status);
 }
 
 // switch to the requested status
-void SensorDigitalOutput::_setStatus(int value) {
+void SensorDigitalOutput::_setStatus(Child* child, int value) {
   int value_to_write = _getValueToWrite(value);
   // set the value to the pin
   digitalWrite(_pin, value_to_write);
   #if DEBUG == 1
-    Serial.print(F("DOUT I="));
-    Serial.print(_child_id);
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
     Serial.print(F(" P="));
     Serial.print(_pin);
     Serial.print(F(" V="));
@@ -1376,16 +1387,18 @@ int SensorDigitalOutput::_getValueToWrite(int value) {
   return value_to_write;
 }
 
-
 /*
    SensorRelay
 */
 
 // contructor
-SensorRelay::SensorRelay(NodeManager* node_manager, int child_id, int pin): SensorDigitalOutput(node_manager, child_id, pin) {
-  // set presentation and type
-  setPresentation(S_BINARY);
-  setType(V_STATUS);
+SensorRelay::SensorRelay(const NodeManager& node_manager, int pin): SensorDigitalOutput(node_manager, pin) {
+  _name = "REL";
+}
+
+// what to do during before
+void SensorRelay::onBefore() {
+  new ChildInt(this,_node->getAvailableChildId(),S_BINARY,V_STATUS);
 }
 
 /*
@@ -1393,11 +1406,10 @@ SensorRelay::SensorRelay(NodeManager* node_manager, int child_id, int pin): Sens
 */
 
 // contructor
-SensorLatchingRelay::SensorLatchingRelay(NodeManager* node_manager, int child_id, int pin): SensorRelay(node_manager, child_id, pin) {
-  // set the "off" pin to the provided pin
-  setPinOff(pin);
-  // set the "on" pin to the provided pin + 1
-  setPinOn(pin + 1);
+SensorLatchingRelay::SensorLatchingRelay(const NodeManager& node_manager, int pin): SensorRelay(node_manager, pin) {
+  // set the "off" pin to the provided pin and the "on" pin to the provided pin + 1
+  _pin_on = pin;
+  _pin_off = pin + 1;
 }
 
 // setter/getter
@@ -1413,29 +1425,17 @@ void SensorLatchingRelay::setPinOff(int value) {
 
 // what to do during before
 void SensorLatchingRelay::onBefore() {
-  _setupPin(_pin_on);
-  _setupPin(_pin_off);
+  new ChildInt(this,_node->getAvailableChildId(),S_BINARY,V_STATUS);
 }
 
-// what to do when receiving a remote message
-void SensorLatchingRelay::onProcess(Request & request) {
-  int function = request.getFunction();
-  if (function < 200) {
-    // if this is for SensorDigitalOutput call its onProcess()
-    SensorDigitalOutput::onProcess(request);
-    return;
-  }
-  switch(function) {
-    case 201: setPulseWidth(request.getValueInt()); break;
-    case 202: setPinOff(request.getValueInt()); break;
-    case 203: setPinOn(request.getValueInt()); break;
-    default: return;
-  }
-  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
+// what to do during setup
+void SensorLatchingRelay::onSetup() {
+  _setupPin(children.get(1),_pin_on);
+  _setupPin(children.get(1),_pin_off);
 }
 
 // switch to the requested status
-void SensorLatchingRelay::_setStatus(int value) {
+void SensorLatchingRelay::_setStatus(Child* child, int value) {
   // select the right pin to send the pulse to
   int pin = value == OFF ? _pin_off : _pin_on;
   // set the value
@@ -1445,7 +1445,7 @@ void SensorLatchingRelay::_setStatus(int value) {
   digitalWrite(pin, ! _on_value);
   #if DEBUG == 1
     Serial.print(F("LAT I="));
-    Serial.print(_child_id);
+    Serial.print(child->child_id);
     Serial.print(F(" P="));
     Serial.print(pin);
     Serial.print(F(" S="));

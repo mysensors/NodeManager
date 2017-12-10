@@ -123,8 +123,8 @@
 #define MODULE_ACS712 0
 // Enable this module to use one of the following sensors: SensorDigitalInput
 #define MODULE_DIGITAL_INPUT 0
-// Enable this module to use one of the following sensors: SENSOR_DIGITAL_OUTPUT, SENSOR_RELAY, SENSOR_LATCHING_RELAY
-#define MODULE_DIGITAL_OUTPUT 0
+// Enable this module to use one of the following sensors: SensorDigitalOutput, SensorRelay, SensorLatchingRelay
+#define MODULE_DIGITAL_OUTPUT 1
 // Enable this module to use one of the following sensors: SENSOR_DHT11, SENSOR_DHT22
 #define MODULE_DHT 0
 // Enable this module to use one of the following sensors: SENSOR_SHT21, SENSOR_HTU21D
