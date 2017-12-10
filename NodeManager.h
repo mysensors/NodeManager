@@ -559,7 +559,9 @@ class SensorLDR: public SensorAnalogInput {
     // define what to do at each stage of the sketch
     void onBefore();
 };
+#endif
 
+#if MODULE_THERMISTOR == 1
 /*
    SensorThermistor: read the temperature from a thermistor
 */
@@ -589,24 +591,27 @@ class SensorThermistor: public Sensor {
     long _series_resistor = 10000;
     float _offset = 0;
 };
+#endif
 
+#if MODULE_ML8511 == 1
 /*
     SensorML8511
 */
 
 class SensorML8511: public Sensor {
   public:
-    SensorML8511(NodeManager* node_manager, int child_id, int pin);
+    SensorML8511(const NodeManager& node_Manager, int pin);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
   protected:
     float _mapfloat(float x, float in_min, float in_max, float out_min, float out_max);
 };
+#endif
+#if MODULE_ANALOG_INPUT2 == 1
 
 /*
     SensorACS712

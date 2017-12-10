@@ -113,8 +113,12 @@
 // if enabled, enable debug messages on serial port
 #define DEBUG 1
 
-// Enable this module to use one of the following sensors: SensorAnalogInput, SensorLDR, SENSOR_THERMISTOR, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN, SENSOR_SOIL_MOISTURE
+// Enable this module to use one of the following sensors: SensorAnalogInput, SensorLDR, SENSOR_ACS712, SENSOR_RAIN, SENSOR_SOIL_MOISTURE
 #define MODULE_ANALOG_INPUT 0
+// Enable this module to use one of the following sensors: SensorThermistor
+#define MODULE_THERMISTOR 0
+// Enable this module to use one of the following sensors: SensorML8511
+#define MODULE_ML8511 1
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
 #define MODULE_DIGITAL_INPUT 0
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_OUTPUT, SENSOR_RELAY, SENSOR_LATCHING_RELAY

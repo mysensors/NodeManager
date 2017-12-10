@@ -24,6 +24,8 @@ Documentation available on: https://github.com/mysensors/NodeManager
 NodeManager node;
 //SensorAnalogInput analog(node,A0);
 //SensorLDR ldr(node,A0);
+//SensorThermistor thermistor(node,A0);
+SensorML8511 ml8511(node,A0);
 
 
 

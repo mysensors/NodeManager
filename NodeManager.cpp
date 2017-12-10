@@ -785,6 +785,19 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
+      #if MODULE_THERMISTOR == 1
+      if (strcmp(sensor->getName(),"THER") == 0) {
+        SensorThermistor* custom_sensor = (SensorThermistor*)sensor;
+        switch(function) {
+          case 101: custom_sensor->setNominalResistor((long)request.getValueInt()); break;
+          case 102: custom_sensor->setNominalTemperature(request.getValueInt()); break;
+          case 103: custom_sensor->setBCoefficient(request.getValueInt()); break;
+          case 104: custom_sensor->setSeriesResistor((long)request.getValueInt()); break;
+          case 105: custom_sensor->setOffset(request.getValueFloat()); break;
+          default: return;
+        }
+      }
+      #endif
     }
   }
   _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,function);
@@ -907,17 +920,15 @@ void SensorLDR::onBefore() {
   setReverse(true);
 }
 #endif
-#if MODULE_ANALOG_INPUT2 == 1
+
+#if MODULE_THERMISTOR == 1
 /*
    SensorThermistor
 */
 
 // contructor
-SensorThermistor::SensorThermistor(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
-  // set presentation, type and value type
-  setPresentation(S_TEMP);
-  setType(V_TEMP);
-  setValueType(TYPE_FLOAT);
+SensorThermistor::SensorThermistor(const NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+  _name = "THER";
 }
 
 // setter/getter
@@ -939,12 +950,13 @@ void SensorThermistor::setOffset(float value) {
 
 // what to do during before
 void SensorThermistor::onBefore() {
-  // set the pin as input
-  pinMode(_pin, INPUT);
+  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
 }
 
 // what to do during setup
 void SensorThermistor::onSetup() {
+  // set the pin as input
+  pinMode(_pin, INPUT);
 }
 
 // what to do during loop
@@ -963,60 +975,49 @@ void SensorThermistor::onLoop(Child* child) {
   temperature -= 273.15;                         // convert to C
   temperature = _node->celsiusToFahrenheit(temperature);
   #if DEBUG == 1
-    Serial.print(F("THER I="));
-    Serial.print(_child_id);
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
     Serial.print(F(" V="));
     Serial.print(adc);
     Serial.print(F(" T="));
     Serial.println(temperature);
   #endif
   // store the value
-  _value_float = temperature;
+  if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
 }
 
 // what to do as the main task when receiving a message
-void SensorThermistor::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop(NULL);
-}
-
-// what to do when receiving a remote message
-void SensorThermistor::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setNominalResistor((long)request.getValueInt()); break;
-    case 102: setNominalTemperature(request.getValueInt()); break;
-    case 103: setBCoefficient(request.getValueInt()); break;
-    case 104: setSeriesResistor((long)request.getValueInt()); break;
-    case 105: setOffset(request.getValueFloat()); break;
-    default: return;
-  }
-  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
+void SensorThermistor::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
 // what to do when receiving an interrupt
 void SensorThermistor::onInterrupt() {
 }
+#endif
 
+#if MODULE_ML8511 == 1
 /*
    SensorML8511
 */
 
 // contructor
-SensorML8511::SensorML8511(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
-  // set presentation, type and value type
-  setPresentation(S_UV);
-  setType(V_UV);
-  setValueType(TYPE_FLOAT);
+SensorML8511::SensorML8511(const NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+  _name = "UV";
 }
 
 // what to do during before
 void SensorML8511::onBefore() {
-  // set the pin as input
-  pinMode(_pin, INPUT);
+  new ChildFloat(this,_node->getAvailableChildId(),S_UV,V_UV);
 }
 
 // what to do during setup
 void SensorML8511::onSetup() {
+  // set the pin as input
+  pinMode(_pin, INPUT);
 }
 
 // what to do during loop
@@ -1029,24 +1030,23 @@ void SensorML8511::onLoop(Child* child) {
   //Convert the voltage to a UV intensity level
   float uvIntensity = _mapfloat(outputVoltage, 0.99, 2.8, 0.0, 15.0); 
   #if DEBUG == 1
-    Serial.print(F("UV I="));
-    Serial.print(_child_id);
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
     Serial.print(F(" V="));
     Serial.print(outputVoltage);
     Serial.print(F(" I="));
     Serial.println(uvIntensity);
   #endif
   // store the value
-  _value_float = uvIntensity;
+  ((ChildFloat*)child)->setValueFloat(uvIntensity);
 }
 
 // what to do as the main task when receiving a message
-void SensorML8511::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop(NULL);
-}
-
-// what to do when receiving a remote message
-void SensorML8511::onProcess(Request & request) {
+void SensorML8511::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
 // what to do when receiving an interrupt
@@ -1057,7 +1057,9 @@ void SensorML8511::onInterrupt() {
 float SensorML8511::_mapfloat(float x, float in_min, float in_max, float out_min, float out_max) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
+#endif
 
+#if MODULE_ANALOG_INPUT2 == 1
 /*
    SensorACS712
 */
