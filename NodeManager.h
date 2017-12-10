@@ -361,6 +361,12 @@ class ChildFloat: public Child {
     float _total = 0;
 };
 
+class ChildDs18b20: public ChildFloat {
+  public:
+    ChildDs18b20(Sensor* sensor, int child_id, int presentation, int type, int _index, char* description);
+    int index;
+};
+
 class ChildDouble: public Child {
   public:
     ChildDouble(Sensor* sensor, int child_id, int presentation, int type, char* description);
@@ -383,6 +389,7 @@ class ChildString: public Child {
     char* _value = "";
     char* _last_value = "";
 };
+
 /***************************************
    Sensor: generic sensor class
 */
@@ -862,28 +869,22 @@ class SensorMotion: public SensorSwitch {
 #if MODULE_DS18B20 == 1
 class SensorDs18b20: public Sensor {
   public:
-    SensorDs18b20(NodeManager* node_manager, int child_id, int pin, DallasTemperature* sensors, int index);
+    SensorDs18b20(const NodeManager& node_manager, int pin);
     // returns the sensor's resolution in bits
     int getResolution();
     // [101] set the sensor's resolution in bits
     void setResolution(int value);
     // [102] sleep while DS18B20 calculates temperature (default: false)
     void setSleepDuringConversion(bool value);
-    // return the sensors' device address
-    DeviceAddress* getDeviceAddress();
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
   protected:
-    float _offset = 0;
-    int _index;
     bool _sleep_during_conversion = false;
     DallasTemperature* _sensors;
-    DeviceAddress _device_address;
 };
 #endif
 

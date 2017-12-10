@@ -130,9 +130,9 @@
 // Enable this module to use one of the following sensors: SensorSHT21, SensorHTU21D
 #define MODULE_SHT21 0
 // Enable this module to use one of the following sensors: SensorSwitch, SensorDoor, SensorMotion
-#define MODULE_SWITCH 1
-// Enable this module to use one of the following sensors: SENSOR_DS18B20
-#define MODULE_DS18B20 0
+#define MODULE_SWITCH 0
+// Enable this module to use one of the following sensors: SensorDs18b20
+#define MODULE_DS18B20 1
 // Enable this module to use one of the following sensors: SENSOR_BH1750
 #define MODULE_BH1750 0
 // Enable this module to use one of the following sensors: SENSOR_MLX90614

@@ -242,6 +242,10 @@ void Child::sendValue() {
 bool Child::isNewValue() {
 }
 
+/*
+ ChildInt class
+*/
+
 // ChildInt class
 ChildInt::ChildInt(Sensor* sensor, int child_id, int presentation, int type, char* description = ""): Child(sensor, child_id, presentation, type, description)  {
 }
@@ -266,6 +270,10 @@ void ChildInt::sendValue() {
 bool ChildInt::isNewValue() {
   return _last_value != _value;
 }
+
+/*
+ ChildFloat class
+*/
 
 // ChildFloat class
 ChildFloat::ChildFloat(Sensor* sensor, int child_id, int presentation, int type, char* description = ""): Child(sensor, child_id, presentation, type, description)  {
@@ -292,6 +300,18 @@ bool ChildFloat::isNewValue() {
   return _last_value != _value;
 }
 
+/*
+ ChildDs18b20 class
+*/
+
+ChildDs18b20::ChildDs18b20(Sensor* sensor, int child_id, int presentation, int type, int _index, char* description = ""): ChildFloat(sensor, child_id, presentation, type, description)  {
+  index = index;
+}
+
+/*
+ ChildDouble class
+*/
+
 // ChildDouble class
 ChildDouble::ChildDouble(Sensor* sensor, int child_id, int presentation, int type, char* description = ""): Child(sensor, child_id, presentation, type, description)  {
 }
@@ -316,6 +336,10 @@ void ChildDouble::sendValue() {
 bool ChildDouble::isNewValue() {
   return _last_value != _value;
 }
+
+/*
+ ChildString class
+*/
 
 // ChildString class
 ChildString::ChildString(Sensor* sensor, int child_id, int presentation, int type, char* description = ""): Child(sensor, child_id, presentation, type, description)  {
@@ -838,6 +862,16 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           case 102: custom_sensor->setDebounce(request.getValueInt()); break;
           case 103: custom_sensor->setTriggerTime(request.getValueInt()); break;
           case 104: custom_sensor->setInitial(request.getValueInt()); break;
+          default: return;
+        }
+      }
+      #endif
+      #if MODULE_DS18B20 == 1
+      if (strcmp(sensor->getName(),"DS18B20") == 0) {
+        SensorDs18b20* custom_sensor = (SensorDs18b20*)sensor;
+        switch(function) {
+          case 101: custom_sensor->setResolution(request.getValueInt()); break;
+          case 102: custom_sensor->setSleepDuringConversion(request.getValueInt()); break;
           default: return;
         }
       }
@@ -1753,18 +1787,21 @@ void SensorMotion::onSetup() {
 */
 #if MODULE_DS18B20 == 1
 // contructor
-SensorDs18b20::SensorDs18b20(NodeManager* node_manager, int child_id, int pin, DallasTemperature* sensors, int index): Sensor(node_manager,child_id, pin) {
-  setPresentation(S_TEMP);
-  setType(V_TEMP);
-  setValueType(TYPE_FLOAT);
-  _index = index;
-  _sensors = sensors;
-  // retrieve and store the address from the index
-  _sensors->getAddress(_device_address, index);
+SensorDs18b20::SensorDs18b20(const NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+  _name = "DS18B20";
 }
 
 // what to do during before
 void SensorDs18b20::onBefore() {
+  // initialize the library
+  OneWire* oneWire = new OneWire(_pin);
+  DallasTemperature* _sensors = new DallasTemperature(oneWire);
+  // initialize the sensors
+  _sensors->begin();
+  // register a new child for each sensor on the bus
+  for(int i = 0; i < _sensors->getDeviceCount(); i++) {
+    new ChildDs18b20(this,_node->getAvailableChildId(),S_TEMP,V_TEMP,i);
+  }
 }
 
 // what to do during setup
@@ -1783,52 +1820,39 @@ void SensorDs18b20::onLoop(Child* child) {
     sleep(conversion_time);
   }
   // read the temperature
-  float temperature = _sensors->getTempCByIndex(_index);
+  float temperature = _sensors->getTempCByIndex(((ChildDs18b20*)child)->index);
   // convert it
   temperature = _node->celsiusToFahrenheit(temperature);
   #if DEBUG == 1
-    Serial.print(F("DS18B20 I="));
-    Serial.print(_child_id);
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
     Serial.print(F(" T="));
     Serial.println(temperature);
   #endif
   // store the value
-  _value_float = temperature;
+  if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
 }
 
 // what to do as the main task when receiving a message
-void SensorDs18b20::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop(NULL);
-}
-
-// what to do when receiving a remote message
-void SensorDs18b20::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setResolution(request.getValueInt()); break;
-    case 102: setSleepDuringConversion(request.getValueInt()); break;
-    default: return;
-  }
-  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
+void SensorDs18b20::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
 // what to do when receiving an interrupt
 void SensorDs18b20::onInterrupt() {
 }
 
-// function to print a device address
-DeviceAddress* SensorDs18b20::getDeviceAddress() {
-  return &_device_address;
-}
-
 // returns the sensor's resolution in bits
 int SensorDs18b20::getResolution() {
-  return _sensors->getResolution(_device_address);
+  return _sensors->getResolution();
 }
 
 // set the sensor's resolution in bits
 void SensorDs18b20::setResolution(int value) {
-   _sensors->setResolution(_device_address, value);
+  _sensors->setResolution(value);
 }
 
 // sleep while DS18B20 calculates temperature
