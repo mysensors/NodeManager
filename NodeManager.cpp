@@ -166,20 +166,26 @@ float Timer::getElapsed() {
     Request
 */
 
-Request::Request(int child_id, const char* string) {
-  _child_id = child_id;
+// contructor, tokenize a request in the format "child_id,function,value"
+Request::Request(int recipient_child_id, const char* string) {
+  _recipient_child_id = recipient_child_id;
   char* ptr;
   // copy to working area
   strcpy((char*)&_value, string);
   // tokenize the string and split function from value
   strtok_r(_value, ",", &ptr);
-  // get function code
+  // get child id
+  _child_id = atoi(_value);
+  // get the function id
+  strtok_r(NULL, ",", &ptr);
   _function = atoi(_value);
   // move user data to working area
   strcpy(_value,ptr);
   #if DEBUG == 1
     Serial.print(F("REQ F="));
     Serial.print(getFunction());
+    Serial.print(F(" C="));
+    Serial.print(getChildId());
     Serial.print(F(" I="));
     Serial.print(getValueInt());
     Serial.print(F(" F="));
@@ -187,6 +193,11 @@ Request::Request(int child_id, const char* string) {
     Serial.print(F(" S="));
     Serial.println(getValueString());
   #endif
+}
+
+// return the child id
+int Request::getRecipientChildId() {
+  return _recipient_child_id;
 }
 
 // return the child id
@@ -358,6 +369,11 @@ Sensor::Sensor(NodeManager& nodeManager, int pin = -1) {
   _node->registerSensor(this);
 }
 
+// return the name of the sensor
+char* Sensor::getName() {
+  return _name;
+}
+
 // setter/getter
 void Sensor::setPin(int value) {
   _pin = value;
@@ -523,39 +539,8 @@ void Sensor::interrupt() {
 
 // receive a message from the radio network
 void Sensor::receive(const MyMessage &message) {
-  // check if it is a request for the API
-  if (message.getCommand() == C_REQ && message.type == V_CUSTOM) {
-    #if REMOTE_CONFIGURATION == 1
-      // parse the request
-      Request request = Request(message.sensor,message.getString());
-      // if it is for a sensor-generic function, call process(), otherwise the sensor-specific onProcess();
-      if (request.getFunction() < 100) process(request);
-      else onProcess(request);
-    #endif
-  } else {
-    // a request would make the sensor executing its main task passing along the message
-    loop(&message);
-  }
-}
-
-// process a remote configuration request message
-void Sensor::process(const Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 1: setPin(request.getValueInt()); break;
-    case 5: setSamples(request.getValueInt()); break;
-    case 6: setSamplesInterval(request.getValueInt()); break;
-    case 7: setTrackLastValue(request.getValueInt()); break;
-    case 9: setForceUpdateMinutes(request.getValueInt()); break;
-    case 13: powerOn(); break;
-    case 14: powerOff(); break;
-    case 16: setReportIntervalMinutes(request.getValueInt()); break;
-    case 17: setReportIntervalSeconds(request.getValueInt()); break;
-    case 19: setReportIntervalHours(request.getValueInt()); break;
-    case 20: setReportIntervalDays(request.getValueInt()); break;
-    default: return;
-  }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
+  // a request would make the sensor executing its main task passing along the message
+  loop(&message);
 }
 
 // return the requested child 
@@ -577,15 +562,14 @@ void Sensor::onBefore() {}
 void Sensor::onSetup(){}
 void Sensor::onLoop(Child* child){}
 void Sensor::onReceive(MyMessage* message){}
-void Sensor::onProcess(Request & request){}
 void Sensor::onInterrupt(){}
 
 /*
    SensorBattery
 */
 // contructor
-SensorBattery::SensorBattery(NodeManager& nodeManager): Sensor(nodeManager,A2) {
-  _name = F("BAT");
+SensorBattery::SensorBattery(NodeManager& nodeManager): Sensor(nodeManager) {
+  _name = "BAT";
   // report battery level every 60 minutes by default
   setReportIntervalMinutes(60);
 }
@@ -645,22 +629,6 @@ void SensorBattery::onReceive(MyMessage* message) {
   if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
-// what to do when receiving a remote message
-void SensorBattery::onProcess(Request & request) {
-#if REMOTE_CONFIGURATION == 1
-  int function = request.getFunction();
-  switch(function) {
-    case 102: setMinVoltage(request.getValueFloat()); break;
-    case 103: setMaxVoltage(request.getValueFloat()); break;
-    case 104: setBatteryInternalVcc(request.getValueInt()); break;
-    case 105: setBatteryPin(request.getValueInt()); break;
-    case 106: setBatteryVoltsPerBit(request.getValueFloat()); break;
-    default: return;
-  }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
-#endif
-}
-
 // what to do when receiving an interrupt
 void SensorBattery::onInterrupt() {
 }
@@ -669,8 +637,8 @@ void SensorBattery::onInterrupt() {
    SensorSignal
 */
 // contructor
-SensorSignal::SensorSignal(NodeManager& nodeManager): Sensor(nodeManager,A2) {
-  _name = F("SIG");
+SensorSignal::SensorSignal(NodeManager& nodeManager): Sensor(nodeManager) {
+  _name = "SIG";
   // report signal level every 60 minutes by default
   setReportIntervalMinutes(60);
 }
@@ -707,20 +675,126 @@ void SensorSignal::onReceive(MyMessage* message) {
   if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
-// what to do when receiving a remote message
-void SensorSignal::onProcess(Request & request) {
-#if REMOTE_CONFIGURATION == 1
+// what to do when receiving an interrupt
+void SensorSignal::onInterrupt() {
+}
+
+/*
+   SensorConfiguration
+*/
+// contructor
+SensorConfiguration::SensorConfiguration(NodeManager& nodeManager): Sensor(nodeManager) {
+  _name = "CONF";
+}
+
+// what to do during before
+void SensorConfiguration::onBefore() {
+  new ChildInt(this,CONFIGURATION_CHILD_ID,S_CUSTOM,V_CUSTOM);
+}
+
+// what to do during setup
+void SensorConfiguration::onSetup() {
+
+}
+
+// what to do during loop
+void SensorConfiguration::onLoop(Child* child) {
+}
+
+// what to do as the main task when receiving a message
+void SensorConfiguration::onReceive(MyMessage* message) {
+  // parse the request
+  Request request = Request(message->sensor,message->getString());
   int function = request.getFunction();
-  switch(function) {
-    case 101: setSignalCommand(request.getValueInt()); break;
-    default: return;
+  int child_id = request.getChildId();
+  // if the message is for the board itself
+  if (child_id == 0) {
+    switch(function) {
+      case 1: _node->hello(); break;
+      case 3: _node->setSleepSeconds(request.getValueInt()); break;
+      case 4: _node->setSleepMinutes(request.getValueInt()); break;
+      case 5: _node->setSleepHours(request.getValueInt()); break;
+      case 29: _node->setSleepDays(request.getValueInt()); break;
+      #ifndef MY_GATEWAY_ESP8266
+        case 6: _node->reboot(); return;
+      #endif
+      case 7: _node->clearEeprom(); break;
+      case 8: _node->sendMessage(request.getChildId(),V_CUSTOM,VERSION); return;
+      case 9: _node->wakeup(); break;
+      case 10: _node->setRetries(request.getValueInt()); break;
+      case 19: _node->setSleepInterruptPin(request.getValueInt()); break;
+      case 20: _node->setSleepBetweenSend(request.getValueInt()); break;
+      case 21: _node->setAck(request.getValueInt()); break;
+      case 22: _node->setIsMetric(request.getValueInt()); break;
+      case 24: _node->powerOn(); break;
+      case 25: _node->powerOff(); break;
+      case 27: _node->saveToMemory(0,request.getValueInt()); break;
+      case 28: _node->setInterruptMinDelta(request.getValueInt()); break;
+      case 30: _node->setSleepOrWait(request.getValueInt()); break;
+      case 31: _node->setRebootPin(request.getValueInt()); break;
+      case 32: _node->setADCOff(); break;
+      case 36: _node->setReportIntervalSeconds(request.getValueInt()); break;
+      case 37: _node->setReportIntervalMinutes(request.getValueInt()); break;
+      case 38: _node->setReportIntervalHours(request.getValueInt()); break;
+      case 39: _node->setReportIntervalDays(request.getValueInt()); break;
+      default: return; 
+    }
+  // the request is for a sensor
+  } else {
+    // retrieve the sensor the child is belonging to
+    Sensor* sensor = _node->getSensorWithChild(child_id);
+    if (sensor == nullptr) return;
+    // if the message is for a function common to all the sensors
+    if (request.getFunction() < 100) {
+      switch(function) {
+        case 1: sensor->setPin(request.getValueInt()); break;
+        case 5: sensor->setSamples(request.getValueInt()); break;
+        case 6: sensor->setSamplesInterval(request.getValueInt()); break;
+        case 7: sensor->setTrackLastValue(request.getValueInt()); break;
+        case 9: sensor->setForceUpdateMinutes(request.getValueInt()); break;
+        case 13: sensor->powerOn(); break;
+        case 14: sensor->powerOff(); break;
+        case 16: sensor->setReportIntervalMinutes(request.getValueInt()); break;
+        case 17: sensor->setReportIntervalSeconds(request.getValueInt()); break;
+        case 19: sensor->setReportIntervalHours(request.getValueInt()); break;
+        case 20: sensor->setReportIntervalDays(request.getValueInt()); break;
+        default: return;
+      }
+    } else {
+      // the message is for a function specific to a sensor
+      if (strcmp(sensor->getName(),"BAT") == 0) {
+        SensorBattery* custom_sensor = (SensorBattery*)sensor;
+        switch(function) {
+          case 102: custom_sensor->setMinVoltage(request.getValueFloat()); break;
+          case 103: custom_sensor->setMaxVoltage(request.getValueFloat()); break;
+          case 104: custom_sensor->setBatteryInternalVcc(request.getValueInt()); break;
+          case 105: custom_sensor->setBatteryPin(request.getValueInt()); break;
+          case 106: custom_sensor->setBatteryVoltsPerBit(request.getValueFloat()); break;
+          default: return;
+        }
+      }
+      if (strcmp(sensor->getName(),"SIG") == 0) {
+        SensorSignal* custom_sensor = (SensorSignal*)sensor;
+        switch(function) {
+          case 101: custom_sensor->setSignalCommand(request.getValueInt()); break;
+          default: return;
+        }
+      }
+      #if MODULE_SHT21 == 1
+      if (strcmp(sensor->getName(),"SHT21") == 0) {
+        SensorSHT21* custom_sensor = (SensorSHT21*)sensor;
+        switch(function) {
+          default: return;
+        }
+      }
+      #endif
+    }
   }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
-#endif
+  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
-void SensorSignal::onInterrupt() {
+void SensorConfiguration::onInterrupt() {
 }
 
 
@@ -795,7 +869,7 @@ void SensorAnalogInput::onProcess(Request & request) {
     case 105: setRangeMax(request.getValueInt()); break;
     default: return;
   }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -924,7 +998,7 @@ void SensorThermistor::onProcess(Request & request) {
     case 105: setOffset(request.getValueFloat()); break;
     default: return;
   }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -1050,7 +1124,7 @@ void SensorACS712::onProcess(Request & request) {
     case 102: setOffset(request.getValueInt()); break;
     default: return;
   }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -1216,7 +1290,7 @@ void SensorDigitalOutput::onProcess(Request & request) {
     case 107: setWaitAfterSet(request.getValueInt()); break;
     default: return;
   }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -1342,7 +1416,7 @@ void SensorLatchingRelay::onProcess(Request & request) {
     case 203: setPinOn(request.getValueInt()); break;
     default: return;
   }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // switch to the requested status
@@ -1456,7 +1530,7 @@ void SensorDHT::onInterrupt() {
 #if MODULE_SHT21 == 1
 // contructor
 SensorSHT21::SensorSHT21(NodeManager& nodeManager): Sensor(nodeManager) {
-  _name = F("SHT");
+  _name = "SHT21";
 }
 
 // what to do during before
@@ -1587,7 +1661,7 @@ void SensorSwitch::onProcess(Request & request) {
     case 104: setInitial(request.getValueInt()); break;
     default: return;
   }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -1693,7 +1767,7 @@ void SensorDs18b20::onProcess(Request & request) {
     case 102: setSleepDuringConversion(request.getValueInt()); break;
     default: return;
   }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -1770,7 +1844,7 @@ void SensorBH1750::onProcess(Request & request) {
     case 101: setMode(request.getValueInt()); break;
     default: return;
   }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 
@@ -1896,7 +1970,7 @@ void SensorBosch::onProcess(Request & request) {
     case 101: setForecastSamplesCount(request.getValueInt()); break;
     default: return;
   }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -2231,7 +2305,7 @@ void SensorHCSR04::onProcess(Request & request) {
     case 103: setMaxDistance(request.getValueInt()); break;
     default: return;
   }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -2316,7 +2390,7 @@ void SensorSonoff::onProcess(Request & request) {
     case 103: setLedPin(request.getValueInt()); break;
     default: return;
   }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -2514,7 +2588,7 @@ void SensorMQ::onProcess(Request & request) {
     case 8: setReadSampleInterval(request.getValueInt()); break;
     default: return;
   }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -2669,7 +2743,7 @@ void SensorMHZ19::onProcess(Request & request) {
   switch(function) {
     default: return;
   }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -2886,7 +2960,7 @@ void SensorTSL2561::onProcess(Request & request) {
     case 104: setAddress(request.getValueInt()); break;
     default: return;
   }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -2948,7 +3022,7 @@ void SensorPT100::onProcess(Request & request) {
     case 101: setVoltageRef(request.getValueFloat()); break;
     default: return;
   }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -3017,7 +3091,7 @@ void SensorDimmer::onProcess(Request & request) {
     case 103: setStepDuration(request.getValueInt()); break;
     default: return;
   }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -3119,7 +3193,7 @@ void SensorPulseMeter::onProcess(Request & request) {
     case 102: setPulseFactor(request.getValueFloat()); break;
     default: return;
   }
-  _node->sendMessage(request.getChildId(),V_CUSTOM,function);
+  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -3580,8 +3654,6 @@ void NodeManager::presentation() {
   // Send the sketch version information to the gateway and Controller
   if (_sleep_between_send > 0) sleep(_sleep_between_send);
   sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
-  // present the service as a custom sensor to the controller
-  _present(CONFIGURATION_CHILD_ID, S_CUSTOM);
   // present each sensor
   for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
     Sensor* sensor = *itr;
@@ -3655,15 +3727,6 @@ void NodeManager::receive(const MyMessage &message) {
     Serial.print(F(" P="));
     Serial.println(message.getString());
   #endif
-  // process incoming messages to the configuration child
-  if (message.sensor == CONFIGURATION_CHILD_ID && message.getCommand() == C_REQ && message.type == V_CUSTOM) {
-    #if REMOTE_CONFIGURATION == 1
-      // parse the request
-      Request request = Request(message.sensor,message.getString());
-      // process the request
-      process(request);
-    #endif
-  }
   // dispatch the message to the registered sensor
   Sensor* sensor = getSensorWithChild(message.sensor);
   if (sensor != nullptr) {
@@ -3701,51 +3764,6 @@ void NodeManager::receiveTime(unsigned long ts) {
     Serial.print(_timestamp);
   #endif
 }
-
-// process a request message
-void NodeManager::process(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 1: hello(); break;
-    case 3:
-      setSleepSeconds(request.getValueInt());
-      break;
-    case 4:
-      setSleepMinutes(request.getValueInt());
-      break;
-    case 5:
-      setSleepHours(request.getValueInt());
-      break;
-    case 29:
-      setSleepDays(request.getValueInt());
-      break;
-    #ifndef MY_GATEWAY_ESP8266
-      case 6: reboot(); return;
-    #endif
-    case 7: clearEeprom(); break;
-    case 8: sendMessage(request.getChildId(),V_CUSTOM,VERSION); return;
-    case 9: wakeup(); break;
-    case 10: setRetries(request.getValueInt()); break;
-    case 19: setSleepInterruptPin(request.getValueInt()); break;
-    case 20: setSleepBetweenSend(request.getValueInt()); break;
-    case 21: setAck(request.getValueInt()); break;
-    case 22: setIsMetric(request.getValueInt()); break;
-    case 24: powerOn(); break;
-    case 25: powerOff(); break;
-    case 27: saveToMemory(0,request.getValueInt()); break;
-    case 28: setInterruptMinDelta(request.getValueInt()); break;
-    case 30: setSleepOrWait(request.getValueInt()); break;
-    case 31: setRebootPin(request.getValueInt()); break;
-    case 32: setADCOff(); break;
-    case 36: setReportIntervalSeconds(request.getValueInt()); break;
-    case 37: setReportIntervalMinutes(request.getValueInt()); break;
-    case 38: setReportIntervalHours(request.getValueInt()); break;
-    case 39: setReportIntervalDays(request.getValueInt()); break;
-    default: return; 
-  }
-  sendMessage(request.getChildId(),V_CUSTOM,function);
-}
-
 
 // Send a hello message back to the controller
 void NodeManager::hello() {

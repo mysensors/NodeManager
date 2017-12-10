@@ -25,6 +25,7 @@ NodeManager node;
 SensorSHT21 sht(node);
 //PowerManager power(5,6);
 SensorBattery battery(node);
+SensorConfiguration configuration(node);
 SensorSignal signal(node);
 
 // before

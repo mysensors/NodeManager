@@ -61,9 +61,6 @@
 #endif
 
 // if enabled, allow modifying the configuration remotely by interacting with the configuration child id
-#ifndef REMOTE_CONFIGURATION
-  #define REMOTE_CONFIGURATION 1
-#endif
 // the child id used to allow remote configuration
 #ifndef CONFIGURATION_CHILD_ID
   #define CONFIGURATION_CHILD_ID 200
@@ -303,7 +300,9 @@ class Timer {
 class Request {
   public:
     Request(int child_id, const char* string);
-    // return the child id
+    // return the child id the message has been requested to
+    int getRecipientChildId();
+    // return the child id the request is for
     int getChildId();
     // return the parsed function
     int getFunction();
@@ -314,9 +313,9 @@ class Request {
     // return the value as a string
     char* getValueString();
    private:
-    NodeManager* _node;
-    int _function;
-    int _child_id;
+    int _function = -1;
+    int _child_id = -1;
+    int _recipient_child_id = -1;
 	  // Size of buffer to prevent overrun 
     char _value[MAX_PAYLOAD+1];
 };
@@ -396,6 +395,8 @@ class Sensor {
   public:
     Sensor();
     Sensor(NodeManager& nodeManager, int pin);
+    // return the name of the sensor
+    char* getName();
     // [1] where the sensor is attached to (default: not set)
     void setPin(int value);
     int getPin();
@@ -423,8 +424,6 @@ class Sensor {
     void setReportIntervalDays(int value);
     // return true if the report interval has been already configured
     bool isReportIntervalConfigured();
-    // process a remote request
-    void process(const Request & request);
     // return the pin the interrupt is attached to
     int getInterruptPin();
     // listen for interrupts on the given pin so interrupt() will be called when occurring
@@ -441,7 +440,6 @@ class Sensor {
     virtual void onSetup();
     virtual void onLoop(Child* child);
     virtual void onReceive(MyMessage* message);
-    virtual void onProcess(Request & request);
     virtual void onInterrupt();
     List<Child*> children;
     Child* getChild(int child_id);
@@ -450,7 +448,7 @@ class Sensor {
     void setPowerManager(const PowerManager& powerManager);
     NodeManager* _node;
   protected:
-    const __FlashStringHelper* _name;
+    const char* _name = "";
     int _pin = -1;
     int _samples = 1;
     int _samples_interval = 0;
@@ -481,7 +479,6 @@ class SensorBattery: public Sensor {
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
   protected:
       float _battery_min = 2.6;
@@ -504,10 +501,24 @@ class SensorSignal: public Sensor {
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
   protected:
     int _signal_command = SR_RX_RSSI;
+};
+
+/*
+   SensorConfiguration: allow remote configuration of the board and any configured sensor
+*/
+class SensorConfiguration: public Sensor {
+  public:
+    SensorConfiguration(NodeManager& nodeManager);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(MyMessage* message);
+    void onInterrupt();
+  protected:
 };
 
 #if MODULE_ANALOG_INPUT == 1
@@ -1386,8 +1397,6 @@ class NodeManager {
     void clearEeprom();
     // [9] wake up the board
     void wakeup();
-    // process a remote request
-    void process(Request & request);
     // return the value stored at the requested index from the EEPROM
     int loadFromMemory(int index);
     // [27] save the given index of the EEPROM the provided value

@@ -113,9 +113,6 @@
 // if enabled, enable debug messages on serial port
 #define DEBUG 1
 
-// if enabled, allow modifying the configuration remotely by interacting with the configuration child id
-#define REMOTE_CONFIGURATION 1
-
 // Enable this module to use one of the following sensors: SENSOR_ANALOG_INPUT, SENSOR_LDR, SENSOR_THERMISTOR, SENSOR_ML8511, SENSOR_ACS712, SENSOR_RAIN, SENSOR_SOIL_MOISTURE
 #define MODULE_ANALOG_INPUT 0
 // Enable this module to use one of the following sensors: SENSOR_DIGITAL_INPUT
