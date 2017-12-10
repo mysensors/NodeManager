@@ -877,6 +877,16 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
+      #if MODULE_BME280 == 1 || MODULE_BMP085 == 1 || MODULE_BMP280 == 1
+      if (strcmp(sensor->getName(),"BME280") == 0) {
+        SensorBosch* custom_sensor = (SensorBosch*)sensor;
+        switch(function) {
+          case 101: custom_sensor->setForecastSamplesCount(request.getValueInt()); break;
+          default: return;
+        }
+      }
+      #endif
+      
     }
   }
   _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,function);
@@ -1985,11 +1995,6 @@ void SensorBosch::setForecastSamplesCount(int value) {
 
 // what to do during before
 void SensorBosch::onBefore() {
-  // register the child
-  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
-  new ChildFloat(this,_node->getAvailableChildId(),S_HUM,V_HUM);
-  new ChildFloat(this,_node->getAvailableChildId(),S_BARO,V_PRESSURE);
-  new ChildString(this,_node->getAvailableChildId(),S_BARO,V_FORECAST);
 }
 
 // what to do during setup
@@ -2129,11 +2134,20 @@ SensorBME280::SensorBME280(const NodeManager& node_manager): SensorBosch(node_ma
   _name = "BME280";
 }
 
+// what to do during before
+void SensorBME280::onBefore() {
+  // register the child
+  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
+  new ChildFloat(this,_node->getAvailableChildId(),S_HUM,V_HUM);
+  new ChildFloat(this,_node->getAvailableChildId(),S_BARO,V_PRESSURE);
+  new ChildString(this,_node->getAvailableChildId(),S_BARO,V_FORECAST);
+}
+
 void SensorBME280::onLoop(Child* child) {
   // temperature sensor
   if (child->type == V_TEMP) {
     // read the temperature
-    float temperature = _bme->readTemperature();
+    float temperature = _bm->readTemperature();
     // convert it
     temperature = _node->celsiusToFahrenheit(temperature);
     #if DEBUG == 1
@@ -2149,7 +2163,7 @@ void SensorBME280::onLoop(Child* child) {
   // Humidity Sensor
   else if (child->type == V_HUM) {
     // read humidity
-    float humidity = _bme->readHumidity();
+    float humidity = _bm->readHumidity();
     #if DEBUG == 1
       Serial.print(_name);
       Serial.print(F(" I="));
@@ -2163,7 +2177,7 @@ void SensorBME280::onLoop(Child* child) {
   // Pressure Sensor
   else if (child->type == V_PRESSURE) {
     // read pressure
-    float pressure = _bme->readPressure() / 100.0F;
+    float pressure = _bm->readPressure() / 100.0F;
     #if DEBUG == 1
       Serial.print(_name);
       Serial.print(F(" I="));
@@ -2176,7 +2190,7 @@ void SensorBME280::onLoop(Child* child) {
   }
   // Forecast Sensor
   else if (child->type == V_FORECAST) {
-    float pressure = _bme->readPressure() / 100.0F;
+    float pressure = _bm->readPressure() / 100.0F;
     _forecast(pressure);
   }
 }
@@ -2187,46 +2201,54 @@ void SensorBME280::onLoop(Child* child) {
 */
 #if MODULE_BMP085 == 1
 // contructor
-SensorBMP085::SensorBMP085(NodeManager* node_manager, int child_id, Adafruit_BMP085* bmp, int sensor_type): SensorBosch(node_manager, child_id,sensor_type) {
-  _bmp = bmp;
+SensorBMP085::SensorBMP085(const NodeManager& node_manager): SensorBosch(node_manager) {
+  _name = "BMP085";
+}
+
+// what to do during before
+void SensorBMP085::onBefore() {
+  // register the child
+  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
+  new ChildFloat(this,_node->getAvailableChildId(),S_BARO,V_PRESSURE);
+  new ChildString(this,_node->getAvailableChildId(),S_BARO,V_FORECAST);
 }
 
 // what to do during loop
 void SensorBMP085::onLoop(Child* child) {
   // temperature sensor
-  if (_sensor_type == SensorBMP085::TEMPERATURE) {
+  if (child->type == V_TEMP) {
     // read the temperature
-    float temperature = _bmp->readTemperature();
+    float temperature = _bm->readTemperature();
     // convert it
     temperature = _node->celsiusToFahrenheit(temperature);
     #if DEBUG == 1
-      Serial.print(F("BMP I="));
-      Serial.print(_child_id);
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
       Serial.print(F(" T="));
       Serial.println(temperature);
     #endif
-    if (isnan(temperature)) return;
     // store the value
-    _value_float = temperature;
+    if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
   }
   // Pressure Sensor
-  else if (_sensor_type == SensorBMP085::PRESSURE) {
+  else if (child->type == V_PRESSURE) {
     // read pressure
-    float pressure = _bmp->readPressure() / 100.0F;
+    float pressure = _bm->readPressure() / 100.0F;
     #if DEBUG == 1
-      Serial.print(F("BMP I="));
-      Serial.print(_child_id);
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
       Serial.print(F(" P="));
       Serial.println(pressure);
     #endif
-    if (isnan(pressure)) return;
     // store the value
-    _value_float = pressure;
+    if (! isnan(pressure)) ((ChildFloat*)child)->setValueFloat(pressure);
   }
   // Forecast Sensor
-  else if (_sensor_type == SensorBMP085::FORECAST) {
-    float pressure = _bmp->readPressure() / 100.0F;
-    ((ChildString*)child)->setValueString(_forecast(pressure));
+  else if (child->type == V_FORECAST) {
+    float pressure = _bm->readPressure() / 100.0F;
+    _forecast(pressure);
   }
 }
 #endif
@@ -2235,45 +2257,52 @@ void SensorBMP085::onLoop(Child* child) {
  * SensorBMP280
  */
 #if MODULE_BMP280 == 1
-SensorBMP280::SensorBMP280(NodeManager* node_manager, int child_id, Adafruit_BMP280* bmp, int sensor_type): SensorBosch(node_manager, child_id,sensor_type) {
-  _bmp = bmp;
+SensorBMP280::SensorBMP280(const NodeManager& node_manager): SensorBosch(node_manager) {
+  _name = "BMP280";
+}
+
+  // what to do during before
+void SensorBMP280::onBefore() {
+  // register the child
+  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
+  new ChildFloat(this,_node->getAvailableChildId(),S_BARO,V_PRESSURE);
+  new ChildString(this,_node->getAvailableChildId(),S_BARO,V_FORECAST);
 }
 
 void SensorBMP280::onLoop(Child* child) {
   // temperature sensor
-  if (_sensor_type == SensorBMP280::TEMPERATURE) {
+  if (child->type == V_TEMP) {
     // read the temperature
-    float temperature = _bmp->readTemperature();
+    float temperature = _bm->readTemperature();
     // convert it
     temperature = _node->celsiusToFahrenheit(temperature);
     #if DEBUG == 1
-      Serial.print(F("BMP I="));
-      Serial.print(_child_id);
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
       Serial.print(F(" T="));
       Serial.println(temperature);
     #endif
-    if (isnan(temperature)) return;
     // store the value
-    _value_float = temperature;
+    if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
   }
   // Pressure Sensor
-  else if (_sensor_type == SensorBMP280::PRESSURE) {
+  else if (child->type == V_PRESSURE) {
     // read pressure
-    float pressure = _bmp->readPressure() / 100.0F;
-    if (isnan(pressure)) return;
+    float pressure = _bm->readPressure() / 100.0F;
     #if DEBUG == 1
-      Serial.print(F("BMP I="));
-      Serial.print(_child_id);
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
       Serial.print(F(" P="));
       Serial.println(pressure);
     #endif
-    if (isnan(pressure)) return;
     // store the value
-    _value_float = pressure;
+    if (! isnan(pressure)) ((ChildFloat*)child)->setValueFloat(pressure);
   }
   // Forecast Sensor
-  else if (_sensor_type == SensorBMP280::FORECAST) {
-    float pressure = _bmp->readPressure() / 100.0F;
+  else if (child->type == V_FORECAST) {
+    float pressure = _bm->readPressure() / 100.0F;
     _forecast(pressure);
   }
 }

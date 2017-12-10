@@ -138,11 +138,13 @@
 // Enable this module to use one of the following sensors: SensorMLX90614
 #define MODULE_MLX90614 0
 // Enable this module to use one of the following sensors: SensorBME280
-#define MODULE_BME280 1
+#define MODULE_BME280 0
+// Enable this module to use one of the following sensors: SensorBMP085
+#define MODULE_BMP085 0
+// Enable this module to use one of the following sensors: SensorBMP280
+#define MODULE_BMP280 1
 // Enable this module to use one of the following sensors: SENSOR_SONOFF
 #define MODULE_SONOFF 0
-// Enable this module to use one of the following sensors: SENSOR_BMP085
-#define MODULE_BMP085 0
 // Enable this module to use one of the following sensors: SENSOR_HCSR04
 #define MODULE_HCSR04 0
 // Enable this module to use one of the following sensors: SENSOR_MCP9808
@@ -157,8 +159,6 @@
 #define MODULE_TSL2561 0
 // Enable this module to use one of the following sensors: SENSOR_PT100
 #define MODULE_PT100 0
-// Enable this module to use one of the following sensors: SENSOR_BMP280
-#define MODULE_BMP280 0
 // Enable this module to use one of the following sensors: SENSOR_DIMMER
 #define MODULE_DIMMER 0
 // Enable this module to use one of the following sensors: SENSOR_RAIN_GAUGE, SENSOR_POWER_METER, SENSOR_WATER_METER

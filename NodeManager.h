@@ -963,9 +963,11 @@ class SensorBosch: public Sensor {
 class SensorBME280: public SensorBosch {
   public:
     SensorBME280(const NodeManager& node_manager);
+    // define what to do at each stage of the sketch
+    void onBefore();
     void onLoop(Child* child);
   protected:
-    Adafruit_BME280* _bme;
+    Adafruit_BME280* _bm;
 };
 #endif
 
@@ -975,10 +977,12 @@ class SensorBME280: public SensorBosch {
 #if MODULE_BMP085 == 1
 class SensorBMP085: public SensorBosch {
   public:
-    SensorBMP085(NodeManager* node_manager, int child_id, Adafruit_BMP085* bmp, int sensor_type);
+    SensorBMP085(const NodeManager& node_manager);
+    // define what to do at each stage of the sketch
+    void onBefore();
     void onLoop(Child* child);
   protected:
-    Adafruit_BMP085* _bmp;
+    Adafruit_BMP085* _bm;
 };
 #endif
 
@@ -988,10 +992,12 @@ class SensorBMP085: public SensorBosch {
 #if MODULE_BMP280 == 1
 class SensorBMP280: public SensorBosch {
   public:
-    SensorBMP280(NodeManager* node_manager, int child_id, Adafruit_BMP280* bmp, int sensor_type);
+    SensorBMP280(const NodeManager& node_manager);
+    // define what to do at each stage of the sketch
+    void onBefore();
     void onLoop(Child* child);
   protected:
-    Adafruit_BMP280* _bmp;
+    Adafruit_BMP280* _bm;
 };
 #endif
 
