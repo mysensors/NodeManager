@@ -40,7 +40,8 @@ NodeManager node;
 //SensorSwitch sensorSwitch(node,3);
 //SensorDoor door(node,3);
 //SensorMotion motion(node,3);
-SensorDs18b20 ds18b20(node,4);
+//SensorDs18b20 ds18b20(node,4);
+SensorBH1750 bh1750(node);
 
 
 

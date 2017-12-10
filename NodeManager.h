@@ -894,7 +894,7 @@ class SensorDs18b20: public Sensor {
 #if MODULE_BH1750 == 1
 class SensorBH1750: public Sensor {
   public:
-    SensorBH1750(NodeManager* node_manager, int child_id);
+    SensorBH1750(const NodeManager& node_manager);
     // [101] set sensor reading mode, e.g. BH1750_ONE_TIME_HIGH_RES_MODE
     void setMode(uint8_t mode);
     // define what to do at each stage of the sketch
@@ -902,7 +902,6 @@ class SensorBH1750: public Sensor {
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
   protected:
     BH1750* _lightSensor;

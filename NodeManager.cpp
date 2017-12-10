@@ -876,6 +876,15 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
+      #if MODULE_BH1750 == 1
+      if (strcmp(sensor->getName(),"BH1750") == 0) {
+        SensorBH1750* custom_sensor = (SensorBH1750*)sensor;
+        switch(function) {
+          case 101: custom_sensor->setMode(request.getValueInt()); break;
+          default: return;
+        }
+      }
+      #endif
     }
   }
   _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,function);
@@ -1867,52 +1876,45 @@ void SensorDs18b20::setSleepDuringConversion(bool value) {
 */
 #if MODULE_BH1750 == 1
 // contructor
-SensorBH1750::SensorBH1750(NodeManager* node_manager, int child_id): Sensor(node_manager,child_id,A4) {
-  setPresentation(S_LIGHT_LEVEL);
-  setType(V_LEVEL);
-  _lightSensor = new BH1750();
+SensorBH1750::SensorBH1750(const NodeManager& node_manager): Sensor(node_manager) {
+  _name = "BH1750";
 }
-
+// setter/getter
 void SensorBH1750::setMode(uint8_t mode) {
   _lightSensor->configure(mode);
 }
 
 // what to do during before
 void SensorBH1750::onBefore() {
-  _lightSensor->begin();
+  new ChildInt(this,_node->getAvailableChildId(),S_LIGHT_LEVEL,V_LEVEL);
 }
 
 // what to do during setup
 void SensorBH1750::onSetup() {
+  _lightSensor = new BH1750();
+  _lightSensor->begin();
 }
 
 // what to do during loop
 void SensorBH1750::onLoop(Child* child) {
   // request the light level
-  _value_int = _lightSensor->readLightLevel();
+  int value = _lightSensor->readLightLevel();
   #if DEBUG == 1
-    Serial.print(F("BH1 I="));
-    Serial.print(_child_id);
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
     Serial.print(F(" L="));
-    Serial.println(_value_int);
+    Serial.println(value);
   #endif
+  ((ChildInt*)child)->setValueInt(value);
 }
 
 // what to do as the main task when receiving a message
-void SensorBH1750::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop(NULL);
+void SensorBH1750::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
-
-// what to do when receiving a remote message
-void SensorBH1750::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setMode(request.getValueInt()); break;
-    default: return;
-  }
-  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
-}
-
 
 // what to do when receiving an interrupt
 void SensorBH1750::onInterrupt() {
