@@ -310,14 +310,11 @@ class Request {
     int getValueInt();
     // return the value as a float
     float getValueFloat();
-    // return the value as a string
-    char* getValueString();
    private:
     int _function = -1;
     int _child_id = -1;
     int _recipient_child_id = -1;
-	  // Size of buffer to prevent overrun 
-    char _value[MAX_PAYLOAD+1];
+    float _value;
 };
 
 /***************************************

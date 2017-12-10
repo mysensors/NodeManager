@@ -170,28 +170,19 @@ float Timer::getElapsed() {
 Request::Request(int recipient_child_id, const char* string) {
   _recipient_child_id = recipient_child_id;
   char* ptr;
-  // copy to working area
-  strcpy((char*)&_value, string);
-  // tokenize the string and split function from value
-  strtok_r(_value, ",", &ptr);
-  // get child id
-  _child_id = atoi(_value);
-  // get the function id
-  strtok_r(NULL, ",", &ptr);
-  _function = atoi(_value);
-  // move user data to working area
-  strcpy(_value,ptr);
+  // tokenize the string and get child id
+  _child_id = atoi(strtok_r(string, ",", &ptr));
+  // tokenize the string and get function id
+  _function = atoi(strtok_r(NULL, ",", &ptr));
+  // tokenize the string and get the value
+  _value = atof(strtok_r(NULL, ",", &ptr));
   #if DEBUG == 1
-    Serial.print(F("REQ F="));
-    Serial.print(getFunction());
-    Serial.print(F(" C="));
+    Serial.print(F("REQ C="));
     Serial.print(getChildId());
-    Serial.print(F(" I="));
-    Serial.print(getValueInt());
     Serial.print(F(" F="));
+    Serial.print(getFunction());
+    Serial.print(F(" V="));
     Serial.print(getValueFloat());
-    Serial.print(F(" S="));
-    Serial.println(getValueString());
   #endif
 }
 
@@ -212,20 +203,14 @@ int Request::getFunction() {
 
 // return the value as an int
 int Request::getValueInt() {
-  return atoi(_value);
+  return _value;
   
 }
 
 // return the value as a float
 float Request::getValueFloat() {
-  return atof(_value);
-}
-
-// return the value as a string
-char* Request::getValueString() {
   return _value;
 }
-
 
 /******************************************
     Sensors
@@ -703,6 +688,8 @@ void SensorConfiguration::onLoop(Child* child) {
 
 // what to do as the main task when receiving a message
 void SensorConfiguration::onReceive(MyMessage* message) {
+  // expect a REQ, V_CUSTOM message
+  if (message->getCommand() != C_REQ && message->type != V_CUSTOM) return;
   // parse the request
   Request request = Request(message->sensor,message->getString());
   int function = request.getFunction();
@@ -719,7 +706,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         case 6: _node->reboot(); return;
       #endif
       case 7: _node->clearEeprom(); break;
-      case 8: _node->sendMessage(request.getChildId(),V_CUSTOM,VERSION); return;
+      case 8: _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,VERSION); return;
       case 9: _node->wakeup(); break;
       case 10: _node->setRetries(request.getValueInt()); break;
       case 19: _node->setSleepInterruptPin(request.getValueInt()); break;
@@ -790,7 +777,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       #endif
     }
   }
-  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
+  _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -994,7 +981,7 @@ void SensorThermistor::onProcess(Request & request) {
     case 101: setNominalResistor((long)request.getValueInt()); break;
     case 102: setNominalTemperature(request.getValueInt()); break;
     case 103: setBCoefficient(request.getValueInt()); break;
-    case 104: setSeriesResistor((long)request.getValueString()); break;
+    case 104: setSeriesResistor((long)request.getValueInt()); break;
     case 105: setOffset(request.getValueFloat()); break;
     default: return;
   }

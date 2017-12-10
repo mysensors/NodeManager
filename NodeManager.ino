@@ -22,18 +22,18 @@ Documentation available on: https://github.com/mysensors/NodeManager
 
 // create a NodeManager instance
 NodeManager node;
-SensorSHT21 sht(node);
+//SensorSHT21 sht(node);
 //PowerManager power(5,6);
 SensorBattery battery(node);
 SensorConfiguration configuration(node);
-SensorSignal signal(node);
+//SensorSignal signal(node);
 
 // before
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
   node.setReportIntervalSeconds(20);
-  node.setSleepSeconds(20);
+  //node.setSleepSeconds(20);
   
   //node.setPowerManager(power);
   //battery.setReportIntervalSeconds(10);
