@@ -914,13 +914,12 @@ class SensorBH1750: public Sensor {
 #if MODULE_MLX90614 == 1
 class SensorMLX90614: public Sensor {
   public:
-    SensorMLX90614(NodeManager* node_manager, int child_id, Adafruit_MLX90614* mlx, int sensor_type);
+    SensorMLX90614(const NodeManager& node_manager);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
     // constants
     const static int TEMPERATURE_AMBIENT = 0;

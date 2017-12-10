@@ -1926,46 +1926,44 @@ void SensorBH1750::onInterrupt() {
 */
 #if MODULE_MLX90614 == 1
 // contructor
-SensorMLX90614::SensorMLX90614(NodeManager* node_manager, int child_id, Adafruit_MLX90614* mlx, int sensor_type): Sensor(node_manager,child_id,A4) {
-  _sensor_type = sensor_type;
-  _mlx = mlx;
-  // set presentation and type
-  setPresentation(S_TEMP);
-  setType(V_TEMP);
-  setValueType(TYPE_FLOAT);
+SensorMLX90614::SensorMLX90614(const NodeManager& node_manager): Sensor(node_manager) {
+  _name = "MLX90614";
 }
 
 // what to do during before
 void SensorMLX90614::onBefore() {
-  // initialize the library
-  _mlx->begin();
+  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
+  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
 }
 
 // what to do during setup
 void SensorMLX90614::onSetup() {
+  // initialize the library
+  _mlx->begin();
 }
 
 // what to do during loop
 void SensorMLX90614::onLoop(Child* child) {
-  float temperature = _sensor_type == SensorMLX90614::TEMPERATURE_OBJECT ? _mlx->readAmbientTempC() : _mlx->readObjectTempC();
+  float temperature;
+  // the first child is the ambient temperature, the second the object temperature
+  if (children.get(1) == child) temperature = _mlx->readAmbientTempC();
+  else temperature = _mlx->readObjectTempC();
   // convert it
   temperature = _node->celsiusToFahrenheit(temperature);
   #if DEBUG == 1
     Serial.print(F("MLX I="));
-    Serial.print(_child_id);
+    Serial.print(child->child_id);
     Serial.print(F(" T="));
     Serial.println(temperature);
   #endif
-  if (! isnan(temperature)) _value_float = temperature;
+  if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
 }
 
 // what to do as the main task when receiving a message
-void SensorMLX90614::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop(NULL);
-}
-
-// what to do when receiving a remote message
-void SensorMLX90614::onProcess(Request & request) {
+void SensorMLX90614::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
 // what to do when receiving an interrupt
