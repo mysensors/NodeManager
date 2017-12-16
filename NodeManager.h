@@ -1236,7 +1236,7 @@ class SensorTSL2561: public Sensor {
 #if MODULE_PT100 == 1
 class SensorPT100: public Sensor {
   public:
-    SensorPT100(NodeManager* node_manager, int child_id, int pin);
+    SensorPT100(const NodeManager& node_manager, int pin);
     // [101] set the voltageRef used to compare with analog measures
     void setVoltageRef(float value);
     // define what to do at each stage of the sketch
@@ -1244,7 +1244,6 @@ class SensorPT100: public Sensor {
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
   protected:
     DFRobotHighTemperature* _PT100;

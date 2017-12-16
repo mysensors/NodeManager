@@ -955,7 +955,16 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           default: return;
         }
       }
-      #endif      
+      #endif
+      #if MODULE_PT100 == 1
+      if (strcmp(sensor->getName(),"PT100") == 0) {
+        SensorPT100* custom_sensor = (SensorPT100*)sensor;
+        switch(function) {
+          case 101: custom_sensor->setVoltageRef(request.getValueFloat()); break;
+          default: return;
+        }
+      }
+      #endif
     }
   }
   _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,function);
@@ -3034,11 +3043,8 @@ void SensorTSL2561::onInterrupt() {
 */
 #if MODULE_PT100 == 1
 // contructor
-SensorPT100::SensorPT100(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
-  // set presentation, type and value type
-  setPresentation(S_TEMP);
-  setType(V_TEMP);
-  setValueType(TYPE_FLOAT);
+SensorPT100::SensorPT100(const NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+  _name = "PT100";
 }
 
 // setter/getter
@@ -3048,13 +3054,16 @@ void SensorPT100::setVoltageRef(float value) {
 
 // what to do during before
 void SensorPT100::onBefore() {
-  _PT100 = new DFRobotHighTemperature(_voltageRef); 
-  // set the pin as input
-  pinMode(_pin, INPUT);
+  // register the child
+  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
 }
 
 // what to do during setup
 void SensorPT100::onSetup() {
+  _PT100 = new DFRobotHighTemperature(_voltageRef); 
+  // set the pin as input
+  pinMode(_pin, INPUT);
+
 }
 
 // what to do during loop
@@ -3062,28 +3071,21 @@ void SensorPT100::onLoop(Child* child) {
   // read the PT100 sensor
   int temperature = _PT100->readTemperature(_pin);  
   #if DEBUG == 1
-    Serial.print(F("PT100 I="));
-    Serial.print(_child_id);
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
     Serial.print(F(" T="));
     Serial.println(temperature);
   #endif
   // store the value
-  _value_float = temperature;
+  if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
 }
 
 // what to do as the main task when receiving a message
-void SensorPT100::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop(NULL);
-}
-
-// what to do when receiving a remote message
-void SensorPT100::onProcess(Request & request) {
-   int function = request.getFunction();
-  switch(function) {
-    case 101: setVoltageRef(request.getValueFloat()); break;
-    default: return;
-  }
-  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
+void SensorPT100::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
 // what to do when receiving an interrupt
