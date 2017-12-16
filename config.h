@@ -150,9 +150,9 @@
 // Enable this module to use one of the following sensors: SensorMCP9808
 #define MODULE_MCP9808 0
 // Enable this module to use one of the following sensors: SensorMQ
-#define MODULE_MQ 1
-// Enable this module to use one of the following sensors: SENSOR_MHZ19
-#define MODULE_MHZ19 0
+#define MODULE_MQ 0
+// Enable this module to use one of the following sensors: SensorMHZ19
+#define MODULE_MHZ19 1
 // Enable this module to use one of the following sensors: SENSOR_AM2320    
 #define MODULE_AM2320 0
 // Enable this module to use one of the following sensors: SENSOR_TSL2561    

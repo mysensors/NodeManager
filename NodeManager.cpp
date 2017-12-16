@@ -2723,21 +2723,16 @@ int SensorMQ::_MQGetPercentage(float rs_ro_ratio, float *pcurve) {
 */
 #if MODULE_MHZ19 == 1
 // contructor
-SensorMHZ19::SensorMHZ19(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
-  // set presentation, type and value type
-  setPresentation(S_AIR_QUALITY);
-  setType(V_LEVEL);
-  setRxTx(pin, pin+1);
+SensorMHZ19::SensorMHZ19(const NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+  _name = "MHZ19";
+  _rx_pin = pin;
+  _tx_pin = pin+1;
 }
-
-void SensorMHZ19::setRxTx(int rxpin, int txpin) {
-  _rx_pin = rxpin;
-  _tx_pin = txpin;
-}
-
 
 // what to do during before
 void SensorMHZ19::onBefore() {
+  // register the child
+  new ChildInt(this,_node->getAvailableChildId(),S_AIR_QUALITY,V_LEVEL);
 }
 
 // what to do during setup
@@ -2745,36 +2740,46 @@ void SensorMHZ19::onSetup() {
   _ser = new SoftwareSerial(_rx_pin, _tx_pin);
   _ser->begin(9600);
   delay(2000);
-  while (_ser->read()!=-1) {};  // clear CO2 buffer.
+  // clear CO2 buffer
+  while (_ser->read()!=-1) {};  
 }
 
 // what to do during loop
 void SensorMHZ19::onLoop(Child* child) {
   // Read the ppm value
-  int co2ppm = readCO2(); // This is there the function gets called that talks to the Co2 sensor.
+  int co2ppm = _readCO2(); 
   #if DEBUG == 1
-    Serial.print(F("CO2 I="));
-    Serial.print(_child_id);
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
     Serial.print(F(" ppm="));
     Serial.println(co2ppm);
   #endif
   // store the value
-  _value_int = co2ppm;
+  ((ChildInt*)child)->setValueInt(co2ppm);
+}
+
+
+// what to do as the main task when receiving a message
+void SensorMHZ19::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+}
+
+// what to do when receiving an interrupt
+void SensorMHZ19::onInterrupt() {
 }
 
 // Read out the CO2 data
-int SensorMHZ19::readCO2() {
+int SensorMHZ19::_readCO2() {
   while (_ser->read() != -1) {};  //clear serial buffer
-
   unsigned char response[9]; // for answer
   byte cmd[9] = {0xFF, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79};
-
   // Command to ask for data.
   _ser->write(cmd, 9); //request PPM CO2
-
   // Then for 1 second listen for 9 bytes of data.
   _ser->readBytes(response, 9);
-
   #if DEBUG == 1
   for (int i=0; i<9; i++) {
     Serial.print(response[i], HEX);
@@ -2782,41 +2787,18 @@ int SensorMHZ19::readCO2() {
   }
   Serial.println(F("END"));
   #endif
-
   if (response[0] != 0xFF) {
-    Serial.println(F("Wrong starting byte from co2 sensor! (should be FF)"));
+    Serial.println(F("ERR byte"));
     return -1;
   }
-
   if (response[1] != 0x86) {
-    Serial.println(F("Wrong command from co2 sensor! (should be 86)"));
+    Serial.println(F("ERR command"));
     return -1;
   }
-
   int responseHigh = (int) response[2];
   int responseLow = (int) response[3];
   int ppm = (256 * responseHigh) + responseLow;
-  
   return ppm;
-}
-
-
-// what to do as the main task when receiving a message
-void SensorMHZ19::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop(NULL);
-}
-
-// what to do when receiving a remote message
-void SensorMHZ19::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    default: return;
-  }
-  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
-}
-
-// what to do when receiving an interrupt
-void SensorMHZ19::onInterrupt() {
 }
 
 #endif

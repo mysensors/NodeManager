@@ -1149,18 +1149,15 @@ class SensorMQ: public Sensor {
 #if MODULE_MHZ19 == 1
 class SensorMHZ19: public Sensor {
   public:
-    SensorMHZ19(NodeManager* node_manager, int child_id, int pin);
-    // set the pins for RX and TX of the SoftwareSerial (default: Rx=6, Tx=7)
-    void setRxTx(int rxpin, int txpin);
-    int readCO2();
+    SensorMHZ19(const NodeManager& node_manager, int pin);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
   protected:
+    int _readCO2();
     SoftwareSerial* _ser;
     int _tx_pin = 6;
     int _rx_pin = 7;
