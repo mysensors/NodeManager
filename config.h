@@ -160,9 +160,9 @@
 // Enable this module to use one of the following sensors: SensorPT100
 #define MODULE_PT100 0
 // Enable this module to use one of the following sensors: SensorDimmer
-#define MODULE_DIMMER 1
-// Enable this module to use one of the following sensors: SENSOR_RAIN_GAUGE, SENSOR_POWER_METER, SENSOR_WATER_METER
-#define MODULE_PULSE_METER 0
+#define MODULE_DIMMER 0
+// Enable this module to use one of the following sensors: SensorRainGauge, SensorPowerMeter, SensorWaterMeter
+#define MODULE_PULSE_METER 1
 
 #endif
 

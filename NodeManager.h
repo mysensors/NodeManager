@@ -1293,7 +1293,7 @@ class SensorDimmer: public Sensor {
 #if MODULE_PULSE_METER == 1
 class SensorPulseMeter: public Sensor {
   public:
-    SensorPulseMeter(NodeManager* node_manager, int child_id, int pin);
+    SensorPulseMeter(const NodeManager& node_manager, int pin);
     // [102] set how many pulses for each unit (e.g. 1000 pulses for 1 kwh of power, 9 pulses for 1 mm of rain, etc.)
     void setPulseFactor(float value);
     // set initial value - internal pull up (default: HIGH)
@@ -1312,7 +1312,7 @@ class SensorPulseMeter: public Sensor {
     float _pulse_factor;
     int _initial_value = HIGH;
     int _interrupt_mode = FALLING;
-    void _reportTotal();
+    virtual void _reportTotal(Child* child);
 };
 
 /*
@@ -1320,7 +1320,9 @@ class SensorPulseMeter: public Sensor {
 */
 class SensorRainGauge: public SensorPulseMeter {
   public:
-    SensorRainGauge(NodeManager* node_manager, int child_id, int pin);
+    SensorRainGauge(const NodeManager& node_manager, int pin);
+    // define what to do at each stage of the sketch
+    void onBefore();
 };
 
 /*
@@ -1328,7 +1330,11 @@ class SensorRainGauge: public SensorPulseMeter {
 */
 class SensorPowerMeter: public SensorPulseMeter {
   public:
-    SensorPowerMeter(NodeManager* node_manager, int child_id, int pin);
+    SensorPowerMeter(const NodeManager& node_manager, int pin);
+    // define what to do at each stage of the sketch
+    void onBefore();
+  protected:
+    void _reportTotal(Child* child);
 };
 
 /*
@@ -1336,7 +1342,11 @@ class SensorPowerMeter: public SensorPulseMeter {
 */
 class SensorWaterMeter: public SensorPulseMeter {
   public:
-    SensorWaterMeter(NodeManager* node_manager, int child_id, int pin);
+    SensorWaterMeter(const NodeManager& node_manager, int pin);
+    // define what to do at each stage of the sketch
+    void onBefore();
+  protected:
+    void _reportTotal(Child* child);
 };
 #endif
 

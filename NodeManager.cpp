@@ -3190,9 +3190,8 @@ float SensorDimmer::_getEasing(float t, float b, float c, float d) {
 */
 #if MODULE_PULSE_METER == 1
 // contructor
-SensorPulseMeter::SensorPulseMeter(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id, pin) {
-  // set presentation, type and value type
-  setValueType(TYPE_FLOAT);
+SensorPulseMeter::SensorPulseMeter(const NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+  _name = "PULSE";
 }
 
 // setter/getter
@@ -3208,12 +3207,14 @@ void SensorPulseMeter::setInterruptMode(int value) {
 
 // what to do during before
 void SensorPulseMeter::onBefore() {
-  // configure the interrupt pin so onInterrupt() will be called on tip
-  setInterrupt(_pin,_interrupt_mode,_initial_value);
+  // register the child
+  new ChildFloat(this,_node->getAvailableChildId(),S_CUSTOM,V_CUSTOM);
 }
 
 // what to do during setup
 void SensorPulseMeter::onSetup() {
+  // configure the interrupt pin so onInterrupt() will be called on tip
+  setInterrupt(_pin,_interrupt_mode,_initial_value);
 }
 
 // what to do during loop
@@ -3221,33 +3222,26 @@ void SensorPulseMeter::onLoop(Child* child) {
   // do not report anything if called by an interrupt
   if (_node->getLastInterruptPin() == _interrupt_pin) return;
   // time to report the rain so far
-  _reportTotal();
+  _reportTotal(child);
   #if DEBUG == 1
-    Serial.print(F("PLS I="));
-    Serial.print(_child_id);
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
     Serial.print(F(" T="));
-    Serial.println(_value_float);
+    Serial.println(((ChildFloat*)child)->getValueFloat());
   #endif
   // reset the counter
   _count = 0;
 }
 
 // what to do as the main task when receiving a message
-void SensorPulseMeter::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) {
+void SensorPulseMeter::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) {
     // report the total the last period
-    _reportTotal();
+    _reportTotal(child);
   }
-}
-
-// what to do when receiving a remote message
-void SensorPulseMeter::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 102: setPulseFactor(request.getValueFloat()); break;
-    default: return;
-  }
-  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -3255,23 +3249,28 @@ void SensorPulseMeter::onInterrupt() {
   // increase the counter
   _count++;
   #if DEBUG == 1
-    Serial.println(F("PLS+"));
+    Serial.print(_name);
+    Serial.println(F("+"));
   #endif
 }
 
 // return the total based on the pulses counted
-void SensorPulseMeter::_reportTotal() {
-  if (_value_type == TYPE_DOUBLE) _value_double = _count / _pulse_factor;
-  else _value_float = _count / _pulse_factor;
+void SensorPulseMeter::_reportTotal(Child* child) {
+  ((ChildFloat*)child)->setValueFloat(_count / _pulse_factor);
 }
 
 /*
    SensorRainGauge
 */
 // contructor
-SensorRainGauge::SensorRainGauge(NodeManager* node_manager, int child_id, int pin): SensorPulseMeter(node_manager,child_id, pin) {
-  setPresentation(S_RAIN);
-  setType(V_RAIN);
+SensorRainGauge::SensorRainGauge(const NodeManager& node_manager, int pin): SensorPulseMeter(node_manager, pin) {
+  _name = "RAING";
+}
+
+// what to do during before
+void SensorRainGauge::onBefore() {
+  // register the child
+  new ChildFloat(this,_node->getAvailableChildId(),S_RAIN,V_RAIN);
   setPulseFactor(9.09);
 }
 
@@ -3279,22 +3278,40 @@ SensorRainGauge::SensorRainGauge(NodeManager* node_manager, int child_id, int pi
    SensorPowerMeter
 */
 // contructor
-SensorPowerMeter::SensorPowerMeter(NodeManager* node_manager, int child_id, int pin): SensorPulseMeter(node_manager,child_id, pin) {
-  setPresentation(S_POWER);
-  setType(V_KWH);
-  setValueType(TYPE_DOUBLE);
+SensorPowerMeter::SensorPowerMeter(const NodeManager& node_manager, int pin): SensorPulseMeter(node_manager, pin) {
+  _name = "POWER";
+}
+
+// what to do during before
+void SensorPowerMeter::onBefore() {
+  // register the child
+  new ChildDouble(this,_node->getAvailableChildId(),S_POWER,V_KWH);
   setPulseFactor(1000);
+}
+
+// return the total based on the pulses counted
+void SensorPowerMeter::_reportTotal(Child* child) {
+  ((ChildDouble*)child)->setValueDouble(_count / _pulse_factor);
 }
 
 /*
    SensorWaterMeter
 */
 // contructor
-SensorWaterMeter::SensorWaterMeter(NodeManager* node_manager, int child_id, int pin): SensorPulseMeter(node_manager,child_id, pin) {
-  setPresentation(S_WATER);
-  setType(V_VOLUME);
-  setValueType(TYPE_DOUBLE);
+SensorWaterMeter::SensorWaterMeter(const NodeManager& node_manager, int pin): SensorPulseMeter(node_manager, pin) {
+  _name = "WATER";
+}
+
+// what to do during before
+void SensorWaterMeter::onBefore() {
+  // register the child
+  new ChildDouble(this,_node->getAvailableChildId(),S_WATER,V_VOLUME);
   setPulseFactor(1000);
+}
+
+// return the total based on the pulses counted
+void SensorWaterMeter::_reportTotal(Child* child) {
+  ((ChildDouble*)child)->setValueDouble(_count / _pulse_factor);
 }
 #endif
 
