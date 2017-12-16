@@ -47,7 +47,8 @@ NodeManager node;
 //SensorBMP085 bmp085(node);
 //SensorBMP280 bmp280(node);
 //SensorSonoff sonoff(node);
-SensorHCSR04 hcsr04(node,4);
+//SensorHCSR04 hcsr04(node,4);
+SensorMCP9808 mcp9808(node);
 
 
 

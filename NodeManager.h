@@ -1070,7 +1070,7 @@ class SensorHCSR04: public Sensor {
 #if MODULE_MCP9808 == 1
 class SensorMCP9808: public Sensor {
   public:
-    SensorMCP9808(NodeManager* node_manager, int child_id, Adafruit_MCP9808* mcp);
+    SensorMCP9808(const NodeManager& node_manager);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();

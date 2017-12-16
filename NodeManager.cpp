@@ -1968,6 +1968,7 @@ void SensorMLX90614::onBefore() {
 // what to do during setup
 void SensorMLX90614::onSetup() {
   // initialize the library
+  _mlx = new Adafruit_MLX90614();
   _mlx->begin();
 }
 
@@ -2499,19 +2500,18 @@ void SensorHCSR04::onInterrupt() {
 */
 #if MODULE_MCP9808 == 1
 // contructor
-SensorMCP9808::SensorMCP9808(NodeManager* node_manager, int child_id, Adafruit_MCP9808* mcp): Sensor(node_manager, child_id,A2) {
-  _mcp = mcp;
-  setPresentation(S_TEMP);
-  setType(V_TEMP);
-  setValueType(TYPE_FLOAT);
+SensorMCP9808::SensorMCP9808(const NodeManager& node_manager): Sensor(node_manager) {
+  _name = "MCP9808";
 }
 
 // what to do during before
 void SensorMCP9808::onBefore() {
+  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
 }
 
 // what to do during setup
 void SensorMCP9808::onSetup() {
+  _mcp = new Adafruit_MCP9808();
 }
 
 // what to do during loop
@@ -2520,22 +2520,21 @@ void SensorMCP9808::onLoop(Child* child) {
   // convert it
   temperature = _node->celsiusToFahrenheit(temperature);
   #if DEBUG == 1
-    Serial.print(F("MCP I="));
-    Serial.print(_child_id);
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
     Serial.print(F(" T="));
     Serial.println(temperature);
   #endif
   // store the value
-  if (! isnan(temperature)) _value_float = temperature;
+  if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
 }
 
 // what to do as the main task when receiving a message
-void SensorMCP9808::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop(NULL);
-}
-
-// what to do when receiving a remote message
-void SensorMCP9808::onProcess(Request & request) {
+void SensorMCP9808::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
 // what to do when receiving an interrupt
