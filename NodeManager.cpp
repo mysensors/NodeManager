@@ -3099,10 +3099,8 @@ void SensorPT100::onInterrupt() {
 
 #if MODULE_DIMMER == 1
 // contructor
-SensorDimmer::SensorDimmer(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
-  // set presentation, type and value type
-  setPresentation(S_DIMMER);
-  setType(V_PERCENTAGE);
+SensorDimmer::SensorDimmer(const NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+  _name = "DIMMER";
 }
 
 // setter/getter
@@ -3118,11 +3116,13 @@ void SensorDimmer::setStepDuration(int value) {
 
 // what to do during before
 void SensorDimmer::onBefore() {
-  pinMode(_pin, OUTPUT);
+  // register the child
+  new ChildInt(this,_node->getAvailableChildId(),S_DIMMER,V_PERCENTAGE);
 }
 
 // what to do during setup
 void SensorDimmer::onSetup() {
+  pinMode(_pin, OUTPUT);
 }
 
 // what to do during loop
@@ -3130,31 +3130,21 @@ void SensorDimmer::onLoop(Child* child) {
 }
 
 // what to do as the main task when receiving a message
-void SensorDimmer::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_SET) {
-    int percentage = message.getInt();
+void SensorDimmer::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_SET && message->type == child->type) {
+    int percentage = message->getInt();
     // normalize the provided percentage
     if (percentage < 0) percentage = 0;
     if (percentage > 100) percentage = 100;
-    fadeTo(percentage);
-    _value_int = percentage;
+    _fadeTo(child,percentage);
+    ((ChildInt*)child)->setValueInt(_percentage);
   }
-  if (message.getCommand() == C_REQ) {
+  if (message->getCommand() == C_REQ) {
     // return the current status
-    _value_int = _percentage;
+    ((ChildInt*)child)->setValueInt(_percentage);
   }
-}
-
-// what to do when receiving a remote message
-void SensorDimmer::onProcess(Request & request) {
-   int function = request.getFunction();
-  switch(function) {
-    case 101: setEasing(request.getValueInt()); break;
-    case 102: setDuration(request.getValueInt()); break;
-    case 103: setStepDuration(request.getValueInt()); break;
-    default: return;
-  }
-  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -3162,10 +3152,11 @@ void SensorDimmer::onInterrupt() {
 }
 
 // fade to the provided value
-void SensorDimmer::fadeTo(int target_percentage) {
+void SensorDimmer::_fadeTo(Child* child, int target_percentage) {
   #if DEBUG == 1
-    Serial.print(F("DIM I="));
-    Serial.print(_child_id);
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
     Serial.print(F(" V="));
     Serial.println(target_percentage);
   #endif

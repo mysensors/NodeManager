@@ -1257,29 +1257,28 @@ class SensorPT100: public Sensor {
 #if MODULE_DIMMER == 1
 class SensorDimmer: public Sensor {
   public:
-    SensorDimmer(NodeManager* node_manager, int child_id, int pin);
+    SensorDimmer(const NodeManager& node_manager, int pin);
     // [101] set the effect to use for a smooth transition, can be one of SensorDimmer::EASE_LINEAR, SensorDimmer::EASE_INSINE, SensorDimmer::EASE_OUTSINE, SensorDimmer::EASE_INOUTSINE (default: EASE_LINEAR)
     void setEasing(int value);
     // [102] the duration of entire the transition in seconds (default: 1)
     void setDuration(int value);
     // [103] the duration of a single step of the transition in milliseconds (default: 100)
     void setStepDuration(int value);
-    // fade the output from the current value to the target provided in the range 0-100
-    void fadeTo(int value);
-    enum easing {
-      EASE_LINEAR,
-      EASE_INSINE,
-      EASE_OUTSINE,
-      EASE_INOUTSINE,
-    };
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
   protected:
+    // fade the output from the current value to the target provided in the range 0-100
+    void _fadeTo(Child* child, int value);
+    enum _easing_list {
+      EASE_LINEAR,
+      EASE_INSINE,
+      EASE_OUTSINE,
+      EASE_INOUTSINE,
+    };
     int _percentage = 0;
     int _easing = EASE_LINEAR;
     int _duration = 1000;

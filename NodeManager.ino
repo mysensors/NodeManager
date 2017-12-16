@@ -53,7 +53,8 @@ NodeManager node;
 //SensorMHZ19 mhz19(node,6);
 //SensorAM2320 am2320(node);
 //SensorTSL2561 tsl2561(node);
-SensorPT100 pt100(node,4);
+//SensorPT100 pt100(node,4);
+SensorDimmer dimmer(node,A0);
 
 
 
