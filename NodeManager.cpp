@@ -2381,10 +2381,9 @@ void SensorHCSR04::onInterrupt() {
 */
 #if MODULE_SONOFF == 1
 // contructor
-SensorSonoff::SensorSonoff(NodeManager* node_manager, int child_id): Sensor(node_manager, child_id,1) {
-  setPresentation(S_BINARY);
-  setType(V_STATUS);
-}
+SensorSonoff::SensorSonoff(const NodeManager& node_manager): Sensor(node_manager) {
+  _name = "SONOFF";
+} 
 
 // setter/getter
 void SensorSonoff::setButtonPin(int value) {
@@ -2399,6 +2398,8 @@ void SensorSonoff::setLedPin(int value) {
 
 // what to do during before
 void SensorSonoff::onBefore() {
+  // register the child
+  new ChildInt(this,_node->getAvailableChildId(),S_BINARY,V_STATUS);
 }
 
 // what to do during setup
@@ -2424,36 +2425,26 @@ void SensorSonoff::onLoop(Child* child) {
   int value = _debouncer.read();
   if (value != _old_value && value == 0) {
     // button pressed, toggle the state
-    _toggle();
+    _toggle(child);
   }
   _old_value = value;
 }
 
 // what to do as the main task when receiving a message
-void SensorSonoff::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_SET) {
+void SensorSonoff::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_SET) {
     // retrieve from the message the value to set
-    int value = message.getInt();
+    int value = message->getInt();
     if (value != 0 && value != 1 || value == _state) return;
     // toggle the state
-    _toggle();
+    _toggle(child);
   }
-  if (message.getCommand() == C_REQ) {
+  if (message->getCommand() == C_REQ) {
     // return the current state
-    _value_int = _state;
+    ((ChildInt*)child)->setValueInt(_state);
   }
-}
-
-// what to do when receiving a remote message
-void SensorSonoff::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setButtonPin(request.getValueInt()); break;
-    case 102: setRelayPin(request.getValueInt()); break;
-    case 103: setLedPin(request.getValueInt()); break;
-    default: return;
-  }
-  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
 }
 
 // what to do when receiving an interrupt
@@ -2461,7 +2452,7 @@ void SensorSonoff::onInterrupt() {
 }
 
 // toggle the state
-void SensorSonoff::_toggle() {
+void SensorSonoff::_toggle(Child* child) {
   // toggle the state
   _state = _state ? false : true;
   // Change relay state
@@ -2469,12 +2460,13 @@ void SensorSonoff::_toggle() {
   // Change LED state
   digitalWrite(_led_pin, _state? _led_on: _led_off);
   #if DEBUG == 1
-    Serial.print(F("SONOFF I="));
-    Serial.print(_child_id);
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
     Serial.print(F(" V="));
     Serial.println(_state);
   #endif
-  _value_int = _state;
+  ((ChildInt*)child)->setValueInt(_state);
 }
 
 // blink the led

@@ -45,7 +45,8 @@ NodeManager node;
 //SensorMLX90614 mlx90614(node);
 //SensorBME280 bme280(node);
 //SensorBMP085 bmp085(node);
-SensorBMP280 bmp280(node);
+//SensorBMP280 bmp280(node);
+SensorSonoff sonoff(node);
 
 
 
@@ -120,3 +121,4 @@ void receiveTime(unsigned long ts) {
   // call NodeManager receiveTime routine
   node.receiveTime(ts);
 }
+

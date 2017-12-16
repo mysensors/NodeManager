@@ -1035,7 +1035,7 @@ class SensorHCSR04: public Sensor {
 #if MODULE_SONOFF == 1
 class SensorSonoff: public Sensor {
   public:
-    SensorSonoff(NodeManager* node_manager, int child_id);
+    SensorSonoff(const NodeManager& node_manager);
     // [101] set the button's pin (default: 0)
     void setButtonPin(int value);
     // [102] set the relay's pin (default: 12)
@@ -1047,7 +1047,6 @@ class SensorSonoff: public Sensor {
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
   protected:
     Bounce _debouncer = Bounce();
@@ -1061,7 +1060,7 @@ class SensorSonoff: public Sensor {
     int _led_on = 0;
     int _led_off = 1;
     void _blink();
-    void _toggle();
+    void _toggle(Child* child);
 };
 #endif
 
