@@ -886,6 +886,28 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
+      #if MODULE_SONOFF == 1
+      if (strcmp(sensor->getName(),"SONOFF") == 0) {
+        SensorSonoff* custom_sensor = (SensorSonoff*)sensor;
+        switch(function) {
+          case 101: custom_sensor->setButtonPin(request.getValueInt()); break;
+          case 102: custom_sensor->setRelayPin(request.getValueInt()); break;
+          case 103: custom_sensor->setLedPin(request.getValueInt()); break;
+          default: return;
+        }
+      }
+      #endif
+      #if MODULE_HCSR04 == 1
+      if (strcmp(sensor->getName(),"HCSR04") == 0) {
+        SensorHCSR04* custom_sensor = (SensorHCSR04*)sensor;
+        switch(function) {
+          case 101: custom_sensor->setTriggerPin(request.getValueInt()); break;
+          case 102: custom_sensor->setEchoPin(request.getValueInt()); break;
+          case 103: custom_sensor->setMaxDistance(request.getValueInt()); break;
+          default: return;
+        }
+      }
+      #endif
       
     }
   }
@@ -2309,74 +2331,6 @@ void SensorBMP280::onLoop(Child* child) {
 #endif
 
 /*
-   SensorHCSR04
-*/
-#if MODULE_HCSR04 == 1
-// contructor
-SensorHCSR04::SensorHCSR04(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager, child_id, pin) {
-  // set presentation and type
-  setPresentation(S_DISTANCE);
-  setType(V_DISTANCE);
-  _trigger_pin = pin;
-  _echo_pin = pin;
-}
-
-// what to do during before
-void SensorHCSR04::onBefore() {
-  // initialize the library
-  _sonar = new NewPing(_trigger_pin,_echo_pin,_max_distance);
-}
-
-// setter/getter
-void SensorHCSR04::setTriggerPin(int value) {
-  _trigger_pin = value;
-}
-void SensorHCSR04::setEchoPin(int value) {
-  _echo_pin = value;
-}
-void SensorHCSR04::setMaxDistance(int value) {
-  _max_distance = value;
-}
-
-// what to do during setup
-void SensorHCSR04::onSetup() {
-}
-
-// what to do during loop
-void SensorHCSR04::onLoop(Child* child) {
-  int distance = _node->getIsMetric() ? _sonar->ping_cm() : _sonar->ping_in();
-  #if DEBUG == 1
-    Serial.print(F("HC I="));
-    Serial.print(_child_id);
-    Serial.print(F(" D="));
-    Serial.println(distance);
-  #endif
-  _value_int = distance;
-}
-
-// what to do as the main task when receiving a message
-void SensorHCSR04::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop(NULL);
-}
-
-// what to do when receiving a remote message
-void SensorHCSR04::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setTriggerPin(request.getValueInt()); break;
-    case 102: setEchoPin(request.getValueInt()); break;
-    case 103: setMaxDistance(request.getValueInt()); break;
-    default: return;
-  }
-  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
-}
-
-// what to do when receiving an interrupt
-void SensorHCSR04::onInterrupt() {
-}
-#endif
-
-/*
    SensorSonoff
 */
 #if MODULE_SONOFF == 1
@@ -2481,6 +2435,64 @@ void SensorSonoff::_blink() {
 }
 #endif
 
+/*
+   SensorHCSR04
+*/
+#if MODULE_HCSR04 == 1
+// contructor
+SensorHCSR04::SensorHCSR04(const NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+  _name = "HCSR04";
+  _trigger_pin = pin;
+  _echo_pin = pin;
+}
+
+// setter/getter
+void SensorHCSR04::setTriggerPin(int value) {
+  _trigger_pin = value;
+}
+void SensorHCSR04::setEchoPin(int value) {
+  _echo_pin = value;
+}
+void SensorHCSR04::setMaxDistance(int value) {
+  _max_distance = value;
+}
+
+// what to do during before
+void SensorHCSR04::onBefore() {
+  // register the child
+  new ChildInt(this,_node->getAvailableChildId(),S_DISTANCE,V_DISTANCE);
+}
+
+// what to do during setup
+void SensorHCSR04::onSetup() {
+  // initialize the library
+  _sonar = new NewPing(_trigger_pin,_echo_pin,_max_distance);
+}
+
+// what to do during loop
+void SensorHCSR04::onLoop(Child* child) {
+  int distance = _node->getIsMetric() ? _sonar->ping_cm() : _sonar->ping_in();
+  #if DEBUG == 1
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
+    Serial.print(F(" D="));
+    Serial.println(distance);
+  #endif
+  ((ChildInt*)child)->setValueInt(distance);
+}
+
+// what to do as the main task when receiving a message
+void SensorHCSR04::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+}
+
+// what to do when receiving an interrupt
+void SensorHCSR04::onInterrupt() {
+}
+#endif
 
 /*
    SensorMCP9808

@@ -144,9 +144,9 @@
 // Enable this module to use one of the following sensors: SensorBMP280
 #define MODULE_BMP280 0
 // Enable this module to use one of the following sensors: SensorSonoff
-#define MODULE_SONOFF 1
-// Enable this module to use one of the following sensors: SENSOR_HCSR04
-#define MODULE_HCSR04 0
+#define MODULE_SONOFF 0
+// Enable this module to use one of the following sensors: SensorHCSR04
+#define MODULE_HCSR04 1
 // Enable this module to use one of the following sensors: SENSOR_MCP9808
 #define MODULE_MCP9808 0
 // Enable this module to use one of the following sensors: SENSOR_MQ

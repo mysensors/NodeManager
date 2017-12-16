@@ -1002,34 +1002,6 @@ class SensorBMP280: public SensorBosch {
 #endif
 
 /*
-   SensorHCSR04
-*/
-#if MODULE_HCSR04 == 1
-class SensorHCSR04: public Sensor {
-  public:
-    SensorHCSR04(NodeManager* node_manager, int child_id, int pin);
-    // [101] Arduino pin tied to trigger pin on the ultrasonic sensor (default: the pin set while registering the sensor)
-    void setTriggerPin(int value);
-    // [102] Arduino pin tied to echo pin on the ultrasonic sensor (default: the pin set while registering the sensor)
-    void setEchoPin(int value);
-    // [103] Maximum distance we want to ping for (in centimeters) (default: 300)
-    void setMaxDistance(int value);
-    // define what to do at each stage of the sketch
-    void onBefore();
-    void onSetup();
-    void onLoop(Child* child);
-    void onReceive(MyMessage* message);
-    void onProcess(Request & request);
-    void onInterrupt();
-  protected:
-    int _trigger_pin;
-    int _echo_pin;
-    int _max_distance = 300;
-    NewPing* _sonar;
-};
-#endif
-
-/*
    SensorSonoff
 */
 #if MODULE_SONOFF == 1
@@ -1061,6 +1033,34 @@ class SensorSonoff: public Sensor {
     int _led_off = 1;
     void _blink();
     void _toggle(Child* child);
+};
+#endif
+
+/*
+   SensorHCSR04
+*/
+#if MODULE_HCSR04 == 1
+class SensorHCSR04: public Sensor {
+  public:
+    SensorHCSR04(const NodeManager& node_manager, int pin);
+    // [101] Arduino pin tied to trigger pin on the ultrasonic sensor (default: the pin set while registering the sensor)
+    void setTriggerPin(int value);
+    // [102] Arduino pin tied to echo pin on the ultrasonic sensor (default: the pin set while registering the sensor)
+    void setEchoPin(int value);
+    // [103] Maximum distance we want to ping for (in centimeters) (default: 300)
+    void setMaxDistance(int value);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(MyMessage* message);
+    void onProcess(Request & request);
+    void onInterrupt();
+  protected:
+    int _trigger_pin;
+    int _echo_pin;
+    int _max_distance = 300;
+    NewPing* _sonar;
 };
 #endif
 
