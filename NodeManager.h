@@ -1076,7 +1076,6 @@ class SensorMCP9808: public Sensor {
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
   protected:
     Adafruit_MCP9808* _mcp;
@@ -1089,7 +1088,7 @@ class SensorMCP9808: public Sensor {
  #if MODULE_MQ == 1
 class SensorMQ: public Sensor {
   public:
-    SensorMQ(NodeManager* node_manager, int child_id, int pin);
+    SensorMQ(const NodeManager& node_manager, int pin);
     // [101] define the target gas whose ppm has to be returned. 0: LPG, 1: CO, 2: Smoke (default: 1);
     void setTargetGas(int value);
     // [102] define the load resistance on the board, in kilo ohms (default: 1);
@@ -1117,7 +1116,6 @@ class SensorMQ: public Sensor {
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
   protected:
     float _rl_value = 1.0;

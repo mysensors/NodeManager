@@ -908,6 +908,22 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
+      #if MODULE_MQ == 1
+      if (strcmp(sensor->getName(),"MQ") == 0) {
+        SensorMQ* custom_sensor = (SensorMQ*)sensor;
+        switch(function) {
+          case 101: custom_sensor->setTargetGas(request.getValueInt()); break;
+          case 102: custom_sensor->setRlValue(request.getValueFloat()); break;
+          case 103: custom_sensor->setRoValue(request.getValueFloat()); break;
+          case 104: custom_sensor->setCleanAirFactor(request.getValueFloat()); break;
+          case 105: custom_sensor->setCalibrationSampleTimes(request.getValueInt()); break;
+          case 106: custom_sensor->setCalibrationSampleInterval(request.getValueInt()); break;
+          case 107: custom_sensor->setReadSampleTimes(request.getValueInt()); break;
+          case 108: custom_sensor->setReadSampleInterval(request.getValueInt()); break;
+          default: return;
+        }
+      }
+      #endif
       
     }
   }
@@ -2552,9 +2568,8 @@ static float SensorMQ::_default_LPGCurve[3] = {2.3,0.21,-0.47};
 static float SensorMQ::_default_COCurve[3] = {2.3,0.72,-0.34};
 static float SensorMQ::_default_SmokeCurve[3] = {2.3,0.53,-0.44};
 
-SensorMQ::SensorMQ(NodeManager* node_manager, int child_id, int pin): Sensor(node_manager,child_id,pin) {
-  setPresentation(S_AIR_QUALITY);
-  setType(V_LEVEL);
+SensorMQ::SensorMQ(const NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+  _name = "MQ";
   _LPGCurve = SensorMQ::_default_LPGCurve;
   _COCurve = SensorMQ::_default_COCurve;
   _SmokeCurve = SensorMQ::_default_SmokeCurve;
@@ -2599,6 +2614,8 @@ void SensorMQ::setSmokeCurve(float *value) {
 void SensorMQ::onBefore() {
   // prepare the pin for input
   pinMode(_pin, INPUT);
+  // register the child
+  new ChildInt(this,_node->getAvailableChildId(),S_AIR_QUALITY,V_LEVEL);
 }
 
 // what to do during setup
@@ -2620,8 +2637,9 @@ void SensorMQ::onLoop(Child* child) {
   if (_target_gas == _gas_co) value = co;
   if (_target_gas == _gas_smoke) value = smoke;
   #if DEBUG == 1
-    Serial.print(F("MQ I="));
-    Serial.print(_child_id);
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
     Serial.print(F(" V="));
     Serial.print(value);
     Serial.print(F(" LPG="));
@@ -2632,29 +2650,14 @@ void SensorMQ::onLoop(Child* child) {
     Serial.println(smoke);
   #endif
   // store the value
-  _value_int = (int16_t)ceil(value);
+  ((ChildInt*)child)->setValueInt((int16_t)ceil(value));
 }
 
 // what to do as the main task when receiving a message
-void SensorMQ::onReceive(const MyMessage & message) {
-  if (message.getCommand() == C_REQ) onLoop(NULL);
-}
-
-// what to do when receiving a remote message
-void SensorMQ::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 1: setTargetGas(request.getValueInt()); break;
-    case 2: setRlValue(request.getValueFloat()); break;
-    case 3: setRoValue(request.getValueFloat()); break;
-    case 4: setCleanAirFactor(request.getValueFloat()); break;
-    case 5: setCalibrationSampleTimes(request.getValueInt()); break;
-    case 6: setCalibrationSampleInterval(request.getValueInt()); break;
-    case 7: setReadSampleTimes(request.getValueInt()); break;
-    case 8: setReadSampleInterval(request.getValueInt()); break;
-    default: return;
-  }
-  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
+void SensorMQ::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
 // what to do when receiving an interrupt
