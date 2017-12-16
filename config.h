@@ -152,11 +152,11 @@
 // Enable this module to use one of the following sensors: SensorMQ
 #define MODULE_MQ 0
 // Enable this module to use one of the following sensors: SensorMHZ19
-#define MODULE_MHZ19 1
-// Enable this module to use one of the following sensors: SENSOR_AM2320    
+#define MODULE_MHZ19 0
+// Enable this module to use one of the following sensors: SensorAM2320    
 #define MODULE_AM2320 0
-// Enable this module to use one of the following sensors: SENSOR_TSL2561    
-#define MODULE_TSL2561 0
+// Enable this module to use one of the following sensors: SensorTSL2561    
+#define MODULE_TSL2561 1
 // Enable this module to use one of the following sensors: SENSOR_PT100
 #define MODULE_PT100 0
 // Enable this module to use one of the following sensors: SENSOR_DIMMER

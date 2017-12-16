@@ -50,7 +50,9 @@ NodeManager node;
 //SensorHCSR04 hcsr04(node,4);
 //SensorMCP9808 mcp9808(node);
 //SensorMQ mq(node,A0);
-SensorMHZ19 mhz19(node,6);
+//SensorMHZ19 mhz19(node,6);
+//SensorAM2320 am2320(node);
+SensorTSL2561 tsl2561(node);
 
 
 

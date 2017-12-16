@@ -341,6 +341,7 @@ class ChildInt: public Child {
   public:
     ChildInt(Sensor* sensor, int child_id, int presentation, int type, char* description);
     void setValueInt(int value);
+    int getValueInt();
     void sendValue();
     bool isNewValue();
   private:
@@ -353,6 +354,7 @@ class ChildFloat: public Child {
   public:
     ChildFloat(Sensor* sensor, int child_id, int presentation, int type, char* description);
     void setValueFloat(float value);
+    float getValueFloat();
     void sendValue();
     bool isNewValue();
   private:
@@ -365,6 +367,7 @@ class ChildDouble: public Child {
   public:
     ChildDouble(Sensor* sensor, int child_id, int presentation, int type, char* description);
     void setValueDouble(double value);
+    double getValueDouble();
     void sendValue();
     bool isNewValue();
   private:
@@ -377,6 +380,7 @@ class ChildString: public Child {
   public:
     ChildString(Sensor* sensor, int child_id, int presentation, int type, char* description);
     void setValueString(char* value);
+    char* getValueString();
     void sendValue();
     bool isNewValue();
   private:
@@ -1170,20 +1174,15 @@ class SensorMHZ19: public Sensor {
 #if MODULE_AM2320 == 1
 class SensorAM2320: public Sensor {
   public:
-    SensorAM2320(NodeManager* node_manager, int child_id, AM2320* th, int sensor_type);
+    SensorAM2320(const NodeManager& node_manager);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
-    void onProcess(Request & request);
     void onInterrupt();
-    // constants
-    const static int TEMPERATURE = 0;
-    const static int HUMIDITY = 1;
   protected:
     AM2320* _th;
-    int _sensor_type = 0;
 };
 #endif
 
@@ -1193,7 +1192,7 @@ class SensorAM2320: public Sensor {
 #if MODULE_TSL2561 == 1
 class SensorTSL2561: public Sensor {
   public:
-    SensorTSL2561(NodeManager* node_manager, int child_id);
+    SensorTSL2561(const NodeManager& node_manager);
     // [101] set the gain, possible values are SensorTSL2561::GAIN_0X (0), SensorTSL2561::GAIN_16X (1) (default 16x)
     void setGain(int value);
     // [102] set the timing, possible values are SensorTSL2561::INTEGRATIONTIME_13MS (0), SensorTSL2561::INTEGRATIONTIME_101MS (1), SensorTSL2561::INTEGRATIONTIME_402MS (2) (default: 13ms)

@@ -257,6 +257,11 @@ void ChildInt::setValueInt(int value) {
   _value = (int) (_total / _samples);
 }
 
+// return the value
+int ChildInt::getValueInt() {
+  return _value;
+}
+
 // send the value back to the controller
 void ChildInt::sendValue() {
   if (_samples == 0) return;
@@ -284,6 +289,11 @@ void ChildFloat::setValueFloat(float value) {
   _total = _total + value;
   _samples++;
   _value = _total / _samples;
+}
+
+// return the value
+float ChildFloat::getValueFloat() {
+  return _value;
 }
 
 // send the value back to the controller
@@ -315,6 +325,11 @@ void ChildDouble::setValueDouble(double value) {
   _value = _total / _samples;
 }
 
+// return the value
+double ChildDouble::getValueDouble() {
+  return _value;
+}
+
 // send the value back to the controller
 void ChildDouble::sendValue() {
   if (_samples == 0) return;
@@ -340,6 +355,11 @@ ChildString::ChildString(Sensor* sensor, int child_id, int presentation, int typ
 // store a new value and update the total
 void ChildString::setValueString(char* value) {
   _value = value;
+}
+
+// return the value
+char* ChildString::getValueString() {
+  return _value;
 }
 
 // send the value back to the controller
@@ -924,7 +944,18 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      
+      #if MODULE_TSL2561 == 1
+      if (strcmp(sensor->getName(),"TSL2561") == 0) {
+        SensorTSL2561* custom_sensor = (SensorTSL2561*)sensor;
+        switch(function) {
+          case 101: custom_sensor->setGain(request.getValueInt()); break;
+          case 102: custom_sensor->setTiming(request.getValueInt()); break;
+          case 103: custom_sensor->setSpectrum(request.getValueInt()); break;
+          case 104: custom_sensor->setAddress(request.getValueInt()); break;
+          default: return;
+        }
+      }
+      #endif      
     }
   }
   _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,function);
@@ -2808,76 +2839,61 @@ int SensorMHZ19::_readCO2() {
 */
 #if MODULE_AM2320 == 1
 // constructor
-SensorAM2320::SensorAM2320(NodeManager* node_manager, int child_id, AM2320* th, int sensor_type): Sensor(node_manager, child_id,A2) {
-  _th = th;
-  _sensor_type = sensor_type;
-  if (_sensor_type == SensorAM2320::TEMPERATURE) {
-    // temperature sensor
-    setPresentation(S_TEMP);
-    setType(V_TEMP);
-    setValueType(TYPE_FLOAT);
-  }
-  else if (_sensor_type == SensorAM2320::HUMIDITY) {
-    // humidity sensor
-    setPresentation(S_HUM);
-    setType(V_HUM);
-    setValueType(TYPE_FLOAT);
-  }
+SensorAM2320::SensorAM2320(const NodeManager& node_manager): Sensor(node_manager) {
+  _name = "AM2320";
 }
 
 // what do to during before
 void SensorAM2320::onBefore() {
-
+  // register the child
+  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
+  new ChildFloat(this,_node->getAvailableChildId(),S_HUM,V_HUM);
 }
 
 // what do to during setup
 void SensorAM2320::onSetup() {
+  _th = new AM2320();
 }
 
 // what do to during loop
 void SensorAM2320::onLoop(Child* child) {
-  switch(_th->Read()) {
-    case 0:
-      // temperature sensor
-      if (_sensor_type == SensorAM2320::TEMPERATURE) {
-        // read the temperature
-        float temperature = _th->t;
-        #if DEBUG == 1
-          Serial.print(F("AM2320 I="));
-          Serial.print(_child_id);
-          Serial.print(F(" T="));
-          Serial.println(temperature);
-        #endif
-        // store the value
-        _value_float = temperature;
-      }
-      // humidity sensor
-      else if (_sensor_type == SensorAM2320::HUMIDITY) {
-        // read humidity
-        float humidity = _th->h;
-        if (isnan(humidity)) return;
-          #if DEBUG == 1
-            Serial.print(F("AM2320 I="));
-            Serial.print(_child_id);
-            Serial.print(F(" H="));
-            Serial.println(humidity);
-          #endif
-          // store the value
-          _value_float = humidity;
-        }
-        break;
-      case 1: Serial.println(F("AM2320 offline")); break;
-      case 2: Serial.println(F("AM2320 CRC failed")); break;
-    }
+  // read data from the sensor
+  int status = _th->Read();
+  if (status != 0) return;
+  // temperature sensor
+  if (child->type == V_TEMP) {
+    float temperature = _th->t;
+    #if DEBUG == 1
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
+      Serial.print(F(" T="));
+      Serial.println(temperature);
+    #endif
+    // store the value
+    if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
+  }
+  // Humidity Sensor
+  else if (child->type == V_HUM) {
+    // read humidity
+    float humidity = _th->h;
+    #if DEBUG == 1
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
+      Serial.print(F(" T="));
+      Serial.println(humidity);
+    #endif
+    // store the value
+    if (! isnan(humidity)) ((ChildFloat*)child)->setValueFloat(humidity);
+  }
 }
 
 // what do to as the main task when receiving a message
-void SensorAM2320::onReceive(const MyMessage & message) {
-  onLoop(NULL);
-}
-
-// what to do when receiving a remote message
-void SensorAM2320::onProcess(Request & request) {
+void SensorAM2320::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
 // what to do when receiving an interrupt
@@ -2890,9 +2906,8 @@ void SensorAM2320::onInterrupt() {
 */
 #if MODULE_TSL2561 == 1
 // contructor
-SensorTSL2561::SensorTSL2561(NodeManager* node_manager, int child_id): Sensor(node_manager, child_id,A2) {
-  setPresentation(S_LIGHT_LEVEL);
-  setType(V_LEVEL);
+SensorTSL2561::SensorTSL2561(const NodeManager& node_manager): Sensor(node_manager) {
+  _name = "TSL2561";
 }
 
 // setter/getter
@@ -2911,6 +2926,12 @@ void SensorTSL2561::setAddress(int value) {
 
 // what do to during before
 void SensorTSL2561::onBefore() {
+  // register the child
+  new ChildInt(this,_node->getAvailableChildId(),S_LIGHT_LEVEL,V_LEVEL);
+}
+
+// what do to during setup
+void SensorTSL2561::onSetup() {
    switch (_tsl_address) {
     case SensorTSL2561::ADDR_FLOAT:
       _tsl = new TSL2561(TSL2561_ADDR_FLOAT);
@@ -2922,11 +2943,7 @@ void SensorTSL2561::onBefore() {
       _tsl = new TSL2561(TSL2561_ADDR_HIGH);
       break;   
   }
-}
-
-// what do to during setup
-void SensorTSL2561::onSetup() {
-   if (_tsl->begin()) {
+  if (_tsl->begin()) {
     switch (_tsl_gain) {
       case SensorTSL2561::GAIN_0X:
         _tsl->setGain(TSL2561_GAIN_0X);
@@ -2948,7 +2965,9 @@ void SensorTSL2561::onSetup() {
     }
   }
   else {
-    Serial.println(F("TSL2561 offline"));
+    #if DEBUG == 1
+      Serial.println(F("ERROR"));
+    #endif
   } 
 }
 
@@ -2957,13 +2976,13 @@ void SensorTSL2561::onLoop(Child* child) {
   // request the light level
    switch (_tsl_spectrum) {
     case SensorTSL2561::VISIBLE:
-      _value_int = _tsl->getLuminosity(TSL2561_VISIBLE); 
+      ((ChildInt*)child)->setValueInt(_tsl->getLuminosity(TSL2561_VISIBLE));
       break; 
     case SensorTSL2561::FULLSPECTRUM:
-      _value_int = _tsl->getLuminosity(TSL2561_FULLSPECTRUM); 
+      ((ChildInt*)child)->setValueInt(_tsl->getLuminosity(TSL2561_FULLSPECTRUM));
       break; 
     case SensorTSL2561::INFRARED:
-      _value_int = _tsl->getLuminosity(TSL2561_INFRARED); 
+      ((ChildInt*)child)->setValueInt(_tsl->getLuminosity(TSL2561_INFRARED));
       break; 
     case SensorTSL2561::FULL:
       // request the full light level
@@ -2971,47 +2990,38 @@ void SensorTSL2561::onLoop(Child* child) {
       uint16_t ir, full;
       ir = lum >> 16;
       full = lum & 0xFFFF;
-      _value_int = _tsl->calculateLux(full, ir);
-  #if DEBUG == 1
-      Serial.print(F("TSL I="));
-      Serial.print(_child_id);
-      Serial.print(F(" LUX="));
-      Serial.print(_value_int);
-      Serial.print(F(" IR="));
-      Serial.print(ir);
-      Serial.print(F(" FULL="));
-      Serial.print(full);
-      Serial.print(F(" VIS="));
-      Serial.println(full-ir);
-   #endif
+      ((ChildInt*)child)->setValueInt(_tsl->calculateLux(full, ir));
+      #if DEBUG == 1
+        Serial.print(_name);
+        Serial.print(F(" I="));
+        Serial.print(child->child_id);
+        Serial.print(F(" LUX="));
+        Serial.print(((ChildInt*)child)->getValueInt());
+        Serial.print(F(" IR="));
+        Serial.print(ir);
+        Serial.print(F(" FULL="));
+        Serial.print(full);
+        Serial.print(F(" VIS="));
+        Serial.println(full-ir);
+      #endif
       break; 
   }
   #if DEBUG == 1
     if (_tsl_spectrum < 3) {
-      Serial.print(F("TSL I="));
-      Serial.print(_child_id);
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
       Serial.print(F(" L="));
-      Serial.println(_value_int);
+      Serial.println(((ChildInt*)child)->getValueInt());
     }
   #endif
 }
 
 // what do to as the main task when receiving a message
-void SensorTSL2561::onReceive(const MyMessage & message) {
-  onLoop(NULL);
-}
-
-// what to do when receiving a remote message
-void SensorTSL2561::onProcess(Request & request) {
-  int function = request.getFunction();
-  switch(function) {
-    case 101: setGain(request.getValueInt()); break;
-    case 102: setTiming(request.getValueInt()); break;
-    case 103: setSpectrum(request.getValueInt()); break;
-    case 104: setAddress(request.getValueInt()); break;
-    default: return;
-  }
-  _node->sendMessage(request.getRecipientChildId(),V_CUSTOM,function);
+void SensorTSL2561::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 
 // what to do when receiving an interrupt
