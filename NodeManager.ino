@@ -193,7 +193,7 @@
 NodeManager node;
 
 /***********************************
- * Add here your sensors
+ * Add your sensors below
  */
 
 //SensorBattery battery(node);

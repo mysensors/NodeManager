@@ -417,6 +417,10 @@ class Sensor {
     int getInterruptPin();
     // listen for interrupts on the given pin so interrupt() will be called when occurring
     void setInterrupt(int pin, int mode, int initial);
+    // set a previously configured PowerManager to the sensor so to powering it up with custom pins
+    void setPowerManager(const PowerManager& powerManager);
+    // list of configured child
+    List<Child*> children;
     // define what to do at each stage of the sketch
     void before();
     void presentation();
@@ -430,11 +434,9 @@ class Sensor {
     virtual void onLoop(Child* child);
     virtual void onReceive(MyMessage* message);
     virtual void onInterrupt();
-    List<Child*> children;
     Child* getChild(int child_id);
     // register a child
     void registerChild(Child* child);
-    void setPowerManager(const PowerManager& powerManager);
     NodeManager* _node;
   protected:
     const char* _name = "";
@@ -453,16 +455,16 @@ class Sensor {
 class SensorBattery: public Sensor {
   public:
     SensorBattery(const NodeManager& nodeManager);
-      // [11] the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
-      void setMinVoltage(float value);
-      // [12] the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
-      void setMaxVoltage(float value);
-      // [15] if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
-      void setBatteryInternalVcc(bool value);
-      // [16] if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
-      void setBatteryPin(int value);
-      // [17] if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
-      void setBatteryVoltsPerBit(float value);
+    // [102] the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
+    void setMinVoltage(float value);
+    // [103] the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
+    void setMaxVoltage(float value);
+    // [104] if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
+    void setBatteryInternalVcc(bool value);
+    // [105] if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
+    void setBatteryPin(int value);
+    // [106] if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
+    void setBatteryVoltsPerBit(float value);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
@@ -1344,7 +1346,7 @@ class SensorWaterMeter: public SensorPulseMeter {
 class NodeManager {
   public:
     NodeManager();
-    // [10] send the same service message multiple times (default: 1)
+    // [10] send the same message multiple times (default: 1)
     void setRetries(int value);
     int getRetries();
     // [3] set the duration (in seconds) of a sleep cycle
