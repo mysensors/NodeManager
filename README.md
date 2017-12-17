@@ -125,6 +125,7 @@ The sensor will be then registered automatically with NodeManager which will tak
 NodeManager will assign a child id automatically, present each sensor for you to the controller, query each sensor and report the measure back to the gateway/controller. For actuators (e.g. relays) those can be triggered by sending a `REQ` message with the expected type to their assigned child id.
 
 For your convenience, NodeManager makes available additional special sensors which can be added in the same way as other built-in sensors:
+
 Special Sensor  | Description
  ------------- | -------------
 SensorBattery | Add it to enable automatic battery reporting

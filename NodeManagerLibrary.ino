@@ -1425,8 +1425,6 @@ void SensorDigitalOutput::setWaitAfterSet(int value) {
 
 // main task
 void SensorDigitalOutput::onLoop(Child* child) {
-  // set the value to -1 so to avoid reporting to the gateway during loop
-  ((ChildInt*)child)->setValueInt(-1);
   // if a safeguard is set, check if it is time for it
   if (_safeguard_timer->isRunning()) {
     // update the timer
@@ -1834,7 +1832,7 @@ void SensorSwitch::onInterrupt() {
     if (_trigger_time > 0) _node->sleepOrWait(_trigger_time);
   } else {
     // invalid
-    ((ChildInt*)child)->setValueInt(-1);
+    ((ChildInt*)child)->setValueInt(-255);
   }
 }
 
@@ -1864,6 +1862,7 @@ void SensorMotion::onBefore() {
 
 // what to do during setup
 void SensorMotion::onSetup() {
+  SensorSwitch::onSetup();
   // set initial value to LOW
   setInitial(LOW);
 }
@@ -1882,7 +1881,7 @@ SensorDs18b20::SensorDs18b20(const NodeManager& node_manager, int pin): Sensor(n
 void SensorDs18b20::onBefore() {
   // initialize the library
   OneWire* oneWire = new OneWire(_pin);
-  DallasTemperature* _sensors = new DallasTemperature(oneWire);
+  _sensors = new DallasTemperature(oneWire);
   // initialize the sensors
   _sensors->begin();
   // register a new child for each sensor on the bus
@@ -2063,6 +2062,8 @@ void SensorMLX90614::onInterrupt() {
 // contructor
 SensorBosch::SensorBosch(const NodeManager& node_manager): Sensor(node_manager) {
   _name = "BOSH";
+  // initialize the forecast samples array
+  _forecast_samples = new float[_forecast_samples_count];
 }
 
 // setter/getter
@@ -2076,8 +2077,6 @@ void SensorBosch::onBefore() {
 
 // what to do during setup
 void SensorBosch::onSetup() {
-  // initialize the forecast samples array
-  _forecast_samples = new float[_forecast_samples_count];
 }
 
 // what to do during loop
@@ -2220,6 +2219,16 @@ void SensorBME280::onBefore() {
   new ChildString(this,_node->getAvailableChildId(),S_BARO,V_FORECAST);
 }
 
+// what to do during setup
+void SensorBME280::onSetup() {
+  _bm = new Adafruit_BME280();
+  if (! _bm->begin(SensorBosch::GetI2CAddress(0x60))) {
+    #if DEBUG == 1
+      Serial.println(F("ERR"));
+    #endif
+  }
+}
+
 void SensorBME280::onLoop(Child* child) {
   // temperature sensor
   if (child->type == V_TEMP) {
@@ -2290,6 +2299,16 @@ void SensorBMP085::onBefore() {
   new ChildString(this,_node->getAvailableChildId(),S_BARO,V_FORECAST);
 }
 
+// what to do during setup
+void SensorBMP085::onSetup() {
+  _bm = new Adafruit_BMP085();
+  if (! _bm->begin(SensorBosch::GetI2CAddress(0x55))) {
+    #if DEBUG == 1
+      Serial.println(F("ERR"));
+    #endif
+  }
+}
+
 // what to do during loop
 void SensorBMP085::onLoop(Child* child) {
   // temperature sensor
@@ -2344,6 +2363,16 @@ void SensorBMP280::onBefore() {
   new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
   new ChildFloat(this,_node->getAvailableChildId(),S_BARO,V_PRESSURE);
   new ChildString(this,_node->getAvailableChildId(),S_BARO,V_FORECAST);
+}
+
+// what to do during setup
+void SensorBMP280::onSetup() {
+  _bm = new Adafruit_BMP280();
+  if (! _bm->begin(SensorBosch::GetI2CAddress(0x58))) {
+    #if DEBUG == 1
+      Serial.println(F("ERR"));
+    #endif
+  }
 }
 
 void SensorBMP280::onLoop(Child* child) {
@@ -3711,8 +3740,6 @@ void NodeManager::before() {
     // call each sensor's before()
     sensor->before();
   }
-  // setup the interrupt pins
-  setupInterrupts();
 }
 
 // present NodeManager and its sensors
@@ -3753,6 +3780,8 @@ void NodeManager::setup() {
     // call each sensor's setup()
     sensor->setup();
   }
+  // setup the interrupt pins
+  setupInterrupts();
 }
 
 // run the main function for all the register sensors
@@ -4057,21 +4086,21 @@ void NodeManager::_sendMessage(int child_id, int type) {
     if (_sleep_between_send > 0) sleep(_sleep_between_send);
     #if DEBUG == 1
       Serial.print(F("SEND D="));
-		  Serial.print(_message.destination);
+      Serial.print(_message.destination);
       Serial.print(F(" I="));
-		  Serial.print(_message.sensor);
+      Serial.print(_message.sensor);
       Serial.print(F(" C="));
-		  Serial.print(_message.getCommand());
+      Serial.print(_message.getCommand());
       Serial.print(F(" T="));
-		  Serial.print(_message.type);
+      Serial.print(_message.type);
       Serial.print(F(" S="));
-		  Serial.print(_message.getString());
+      Serial.print(_message.getString());
       Serial.print(F(" I="));
-		  Serial.print(_message.getInt());
+      Serial.print(_message.getInt());
       Serial.print(F(" F="));
-		  Serial.println(_message.getFloat());
+      Serial.println(_message.getFloat());
     #endif
-		send(_message, _ack);
+    send(_message, _ack);
   }
 }
 

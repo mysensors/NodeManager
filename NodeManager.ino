@@ -28,7 +28,6 @@
 #define SKETCH_NAME "NodeManager"
 #define SKETCH_VERSION "1.0"
 
-
 /**********************************
  * MySensors node configuration
  */
@@ -131,7 +130,7 @@
  * NodeManager configuration
  */
 
-// if enabled, enable debug messages on serial port
+// enable NodeManager's debug on serial port
 #define DEBUG 1
 
 // Enable this module to use one of the following sensors: SensorAnalogInput, SensorLDR, SensorRain, SensorSoilMoisture
@@ -183,7 +182,7 @@
 // Enable this module to use one of the following sensors: SensorDimmer
 #define MODULE_DIMMER 0
 // Enable this module to use one of the following sensors: SensorRainGauge, SensorPowerMeter, SensorWaterMeter
-#define MODULE_PULSE_METER 1
+#define MODULE_PULSE_METER 0
 
 /***********************************
  * Load NodeManager Library
@@ -197,7 +196,7 @@ NodeManager node;
  */
 
 //SensorBattery battery(node);
-SensorConfiguration configuration(node);
+//SensorConfiguration configuration(node);
 //SensorSignal signal(node);
 //PowerManager power(5,6);
 
@@ -219,24 +218,24 @@ SensorConfiguration configuration(node);
 //SensorSwitch sensorSwitch(node,3);
 //SensorDoor door(node,3);
 //SensorMotion motion(node,3);
-//SensorDs18b20 ds18b20(node,4);
+//SensorDs18b20 ds18b20(node,6);
 //SensorBH1750 bh1750(node);
 //SensorMLX90614 mlx90614(node);
 //SensorBME280 bme280(node);
 //SensorBMP085 bmp085(node);
 //SensorBMP280 bmp280(node);
 //SensorSonoff sonoff(node);
-//SensorHCSR04 hcsr04(node,4);
+//SensorHCSR04 hcsr04(node,6);
 //SensorMCP9808 mcp9808(node);
 //SensorMQ mq(node,A0);
 //SensorMHZ19 mhz19(node,6);
 //SensorAM2320 am2320(node);
 //SensorTSL2561 tsl2561(node);
-//SensorPT100 pt100(node,4);
+//SensorPT100 pt100(node,6);
 //SensorDimmer dimmer(node,A0);
 //SensorRainGauge rainGauge(node,3);
 //SensorPowerMeter powerMeter(node,3);
-SensorWaterMeter waterMeter(node,3);
+//SensorWaterMeter waterMeter(node,3);
 
 /***********************************
  * Main Sketch
@@ -251,7 +250,7 @@ void before() {
  * Configure your sensors below
  */
 
-  node.setReportIntervalSeconds(20);
+  node.setReportIntervalSeconds(10);
   //battery.setReportIntervalSeconds(10);
   //node.setSleepSeconds(20);
   
