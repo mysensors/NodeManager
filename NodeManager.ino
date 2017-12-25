@@ -96,7 +96,7 @@ SensorPlantowerPMS  | 3     | MODULE_PMS            | Plantower PMS particulate 
 //#define MY_RF24_ENABLE_ENCRYPTION
 //#define MY_RF24_CHANNEL 125
 //#define MY_RF24_PA_LEVEL RF24_PA_HIGH
-//#define MY_NODEMANAGER_DEBUG_VERBOSE_RF24
+//#define MY_DEBUG_VERBOSE_RF24
 //#define MY_RF24_DATARATE RF24_250KBPS
 
 // RFM69 radio settings
@@ -107,7 +107,7 @@ SensorPlantowerPMS  | 3     | MODULE_PMS            | Plantower PMS particulate 
 //#define MY_RFM69_NEW_DRIVER
 //#define MY_RFM69_ENABLE_ENCRYPTION
 //#define MY_RFM69_NETWORKID 100
-//#define MY_NODEMANAGER_DEBUG_VERBOSE_RFM69
+//#define MY_DEBUG_VERBOSE_RFM69
 //#define MY_RF69_IRQ_PIN D1
 //#define MY_RF69_IRQ_NUM MY_RF69_IRQ_PIN
 //#define MY_RF69_SPI_CS D2
