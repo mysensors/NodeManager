@@ -311,11 +311,11 @@ class Request {
 class Child {
   public:
     Child();
-    Child(Sensor* sensor, int child_id, int presentation, int type, char* description);
+    Child(Sensor* sensor, int child_id, int presentation, int type, const char* description);
     int child_id;
     int presentation = S_CUSTOM;
     int type = V_CUSTOM;
-    char* description = "";
+    const char* description = "";
     Timer* force_update_timer;
     virtual void sendValue();
     virtual bool isNewValue();
@@ -326,7 +326,7 @@ class Child {
 
 class ChildInt: public Child {
   public:
-    ChildInt(Sensor* sensor, int child_id, int presentation, int type, char* description);
+    ChildInt(Sensor* sensor, int child_id, int presentation, int type, const char* description);
     void setValueInt(int value);
     int getValueInt();
     void sendValue();
@@ -339,7 +339,7 @@ class ChildInt: public Child {
 
 class ChildFloat: public Child {
   public:
-    ChildFloat(Sensor* sensor, int child_id, int presentation, int type, char* description);
+    ChildFloat(Sensor* sensor, int child_id, int presentation, int type, const char* description);
     void setValueFloat(float value);
     float getValueFloat();
     void sendValue();
@@ -352,7 +352,7 @@ class ChildFloat: public Child {
 
 class ChildDouble: public Child {
   public:
-    ChildDouble(Sensor* sensor, int child_id, int presentation, int type, char* description);
+    ChildDouble(Sensor* sensor, int child_id, int presentation, int type, const char* description);
     void setValueDouble(double value);
     double getValueDouble();
     void sendValue();
@@ -365,14 +365,14 @@ class ChildDouble: public Child {
 
 class ChildString: public Child {
   public:
-    ChildString(Sensor* sensor, int child_id, int presentation, int type, char* description);
-    void setValueString(char* value);
-    char* getValueString();
+    ChildString(Sensor* sensor, int child_id, int presentation, int type, const char* description);
+    void setValueString(const char* value);
+    const char* getValueString();
     void sendValue();
     bool isNewValue();
   private:
-    char* _value = "";
-    char* _last_value = "";
+    const char* _value = "";
+    const char* _last_value = "";
 };
 
 /***************************************
@@ -384,7 +384,7 @@ class Sensor {
     Sensor();
     Sensor(NodeManager& node_manager, int pin);
     // return the name of the sensor
-    char* getName();
+    const char* getName();
     // [1] where the sensor is attached to (default: not set)
     void setPin(int value);
     int getPin();
@@ -438,7 +438,7 @@ class Sensor {
     void registerChild(Child* child);
     NodeManager* _node;
   protected:
-    char* _name = "";
+    const char* _name = "";
     int _pin = -1;
     int _samples = 1;
     int _samples_interval = 0;
