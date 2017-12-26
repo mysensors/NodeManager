@@ -3684,7 +3684,7 @@ void NodeManager::saveToMemory(int index, int value) {
 float NodeManager::getVcc() {
   #ifndef MY_GATEWAY_ESP8266
     // Measure Vcc against 1.1V Vref
-    #ifdef defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+    #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
       ADMUX = (_BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
     #elif defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
       ADMUX = (_BV(MUX5) | _BV(MUX0));
