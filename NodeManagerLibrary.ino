@@ -223,7 +223,7 @@ Child::Child() {
 }
 
 // constructor
-Child::Child(Sensor* __sensor, int _child_id, int _presentation, int _type, char* _description = "") {
+Child::Child(Sensor* __sensor, int _child_id, int _presentation, int _type, const char* _description = "") {
   child_id = _child_id;
   presentation = _presentation;
   type = _type;
@@ -245,7 +245,7 @@ bool Child::isNewValue() {
 */
 
 // ChildInt class
-ChildInt::ChildInt(Sensor* sensor, int child_id, int presentation, int type, char* description = ""): Child(sensor, child_id, presentation, type, description)  {
+ChildInt::ChildInt(Sensor* sensor, int child_id, int presentation, int type, const char* description = ""): Child(sensor, child_id, presentation, type, description)  {
 }
 
 // store a new value and update the total
@@ -279,7 +279,7 @@ bool ChildInt::isNewValue() {
 */
 
 // ChildFloat class
-ChildFloat::ChildFloat(Sensor* sensor, int child_id, int presentation, int type, char* description = ""): Child(sensor, child_id, presentation, type, description)  {
+ChildFloat::ChildFloat(Sensor* sensor, int child_id, int presentation, int type, const char* description = ""): Child(sensor, child_id, presentation, type, description)  {
 }
 
 // store a new value and update the total
@@ -313,7 +313,7 @@ bool ChildFloat::isNewValue() {
 */
 
 // ChildDouble class
-ChildDouble::ChildDouble(Sensor* sensor, int child_id, int presentation, int type, char* description = ""): Child(sensor, child_id, presentation, type, description)  {
+ChildDouble::ChildDouble(Sensor* sensor, int child_id, int presentation, int type, const char* description = ""): Child(sensor, child_id, presentation, type, description)  {
 }
 
 // store a new value and update the total
@@ -347,16 +347,16 @@ bool ChildDouble::isNewValue() {
 */
 
 // ChildString class
-ChildString::ChildString(Sensor* sensor, int child_id, int presentation, int type, char* description = ""): Child(sensor, child_id, presentation, type, description)  {
+ChildString::ChildString(Sensor* sensor, int child_id, int presentation, int type, const char* description = ""): Child(sensor, child_id, presentation, type, description)  {
 }
 
 // store a new value and update the total
-void ChildString::setValueString(char* value) {
+void ChildString::setValueString(const char* value) {
   _value = value;
 }
 
 // return the value
-char* ChildString::getValueString() {
+const char* ChildString::getValueString() {
   return _value;
 }
 
@@ -386,7 +386,7 @@ Sensor::Sensor(NodeManager& node_manager, int pin = -1) {
 }
 
 // return the name of the sensor
-char* Sensor::getName() {
+const char* Sensor::getName() {
   return _name;
 }
 
