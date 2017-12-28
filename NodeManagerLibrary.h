@@ -148,6 +148,10 @@
   #include <PMS.h>
   #include <SoftwareSerial.h> 
 #endif
+#ifdef MODULE_VL53L0X
+  #include <Wire.h>
+  #include <VL53L0X.h>
+#endif
 
 /*******************************************************************
    Classes
@@ -1338,6 +1342,25 @@ class SensorPlantowerPMS: public Sensor {
     bool _valuesRead = false;
     bool _valuesReadError = false;
 };
+#endif
+
+/*
+ * VL53L0X Laser distance sensor
+ */
+#ifdef MODULE_VL53L0X
+class SensorVL53L0X: public Sensor {
+  public:
+    SensorVL53L0X(NodeManager& node_manager, int xshut_pin);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(MyMessage* message);
+  protected:
+    int _getDistance();
+    VL53L0X *_lox;
+};
+
 #endif
 
 /***************************************

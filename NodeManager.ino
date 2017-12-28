@@ -75,6 +75,7 @@ SensorRainGauge     | 1     | MODULE_PULSE_METER    | Rain gauge sensor         
 SensorPowerMeter    | 1     | MODULE_PULSE_METER    | Power meter pulse sensor                                                                          | -
 SensorWaterMeter    | 1     | MODULE_PULSE_METER    | Water meter pulse sensor                                                                          | -
 SensorPlantowerPMS  | 3     | MODULE_PMS            | Plantower PMS particulate matter sensors (reporting PM<=1.0, PM<=2.5 and PM<=10.0 in µg/m³)       | https://github.com/fu-hsi/pms
+SensorVL53L0X       | 1     | MODULE_VL53L0X        | VL53L0X laser time-of-flight distance sensor via I²C, sleep pin supported (optional)              | https://github.com/pololu/vl53l0x-arduino
 
 */
 
@@ -209,6 +210,7 @@ SensorPlantowerPMS  | 3     | MODULE_PMS            | Plantower PMS particulate 
 //#define MODULE_DIMMER
 //#define MODULE_PULSE_METER
 //#define MODULE_PMS
+//#define MODULE_VL53L0X
 
 /***********************************
  * Load NodeManager Library
@@ -266,6 +268,7 @@ NodeManager node;
 //SensorPowerMeter powerMeter(node,3);
 //SensorWaterMeter waterMeter(node,3);
 //SensorPlantowerPMS pms(node,6,7);
+//SensorVL53L0X vl53l0x(node, /*XSHUT_PIN=*/2);
 
 /***********************************
  * Main Sketch
