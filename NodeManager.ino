@@ -183,6 +183,7 @@ SensorPlantowerPMS  | 3     | MODULE_PMS            | Plantower PMS particulate 
  * NodeManager modules
  */
 
+//#define NO_MODULE_POWER_MANAGER
 //#define MODULE_ANALOG_INPUT
 //#define MODULE_THERMISTOR
 //#define MODULE_ML8511

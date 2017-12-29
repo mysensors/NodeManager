@@ -223,6 +223,7 @@ private:
    PowerManager
 */
 
+#ifndef NO_MODULE_POWER_MANAGER
 class PowerManager {
   public:
     PowerManager(int ground_pin, int vcc_pin, int wait_time = 50);
@@ -238,6 +239,7 @@ class PowerManager {
     int _ground_pin = -1;
     long _wait = 0;
 };
+#endif
 
 /*
    Timer
@@ -396,12 +398,14 @@ class Sensor {
     void setTrackLastValue(bool value);
     // [9] if track last value is enabled, force to send an update after the configured number of minutes
     void setForceUpdateMinutes(int value);
+#ifndef NO_MODULE_POWER_MANAGER
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
     void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
     // [13] manually turn the power on
     void powerOn();
     // [14] manually turn the power off
     void powerOff();
+#endif
     // [17] After how many minutes the sensor will report back its measure (default: 10 minutes)
     void setReportIntervalSeconds(int value);
     // [16] After how many minutes the sensor will report back its measure (default: 10 minutes)
@@ -416,8 +420,10 @@ class Sensor {
     int getInterruptPin();
     // listen for interrupts on the given pin so interrupt() will be called when occurring
     void setInterrupt(int pin, int mode, int initial);
+#ifndef NO_MODULE_POWER_MANAGER
     // set a previously configured PowerManager to the sensor so to powering it up with custom pins
     void setPowerManager(PowerManager& powerManager);
+#endif
     // list of configured child
     List<Child*> children;
     // define what to do at each stage of the sketch
@@ -444,7 +450,9 @@ class Sensor {
     int _samples_interval = 0;
     bool _track_last_value = false;
     int _interrupt_pin = -1;
+#ifndef NO_MODULE_POWER_MANAGER
     PowerManager* _powerManager = nullptr;
+#endif
     Timer* _report_timer;
 };
 
@@ -1370,11 +1378,13 @@ class NodeManager {
     // register a sensor
     void registerSensor(Sensor* sensor);
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
+#ifndef NO_MODULE_POWER_MANAGER
     void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
     // [24] manually turn the power on
     void powerOn();
     // [25] manually turn the power off
     void powerOff();
+#endif
     // [21] set this to true if you want destination node to send ack back to this node (default: false)
     void setAck(bool value);
     bool getAck();
@@ -1440,13 +1450,17 @@ class NodeManager {
     void sendMessage(int child_id, int type, float value);
     void sendMessage(int child_id, int type, double value);
     void sendMessage(int child_id, int type, const char* value);
+#ifndef NO_MODULE_POWER_MANAGER
     void setPowerManager(PowerManager& powerManager);
+#endif
     int getAvailableChildId();
     List<Sensor*> sensors;
     Child* getChild(int child_id);
     Sensor* getSensorWithChild(int child_id);
   private:
+#ifndef NO_MODULE_POWER_MANAGER
     PowerManager* _powerManager = nullptr;
+#endif
     MyMessage _message;
     void _sendMessage(int child_id, int type);
     int _status = AWAKE;
