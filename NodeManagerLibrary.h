@@ -165,14 +165,12 @@ public:
     _internalArray = NULL;
     _endPosition = 0;
     _allocBlocks = 0;
-    _preAllocBlocks = 0;
   }
   ~List() {
     delete[] _internalArray;
     _internalArray = NULL;
     _endPosition = 0;
     _allocBlocks = 0;
-    _preAllocBlocks = 0;
   }
   void push(T item) {
     if (_endPosition == _allocBlocks) _AllocOneBlock(false);
@@ -182,7 +180,7 @@ public:
   void pop() {
     if (_endPosition == 0) return;
     --_endPosition;
-    if (_allocBlocks > _preAllocBlocks) _DeAllocOneBlock(false);
+    _DeAllocOneBlock(false);
   }
   T get(int position) {
     position = position -1;
@@ -193,11 +191,18 @@ public:
   inline iterator end() { return _internalArray + _endPosition; }
   inline bool empty() { return (_endPosition == 0); }
   inline unsigned int size() { return _endPosition; }
+  void allocateBlocks(int alloc) {
+    _allocBlocks = alloc;
+    T* newArray = new T[_allocBlocks];
+    for (int i = 0; i < _endPosition; ++i) newArray[i] = _internalArray[i];
+    delete[] _internalArray;
+    _internalArray = newArray;
+  }
+
 private:
   T* _internalArray;
   int _endPosition;
   int _allocBlocks;
-  int _preAllocBlocks;
   void _AllocOneBlock(bool shiftItems) {
     ++_allocBlocks;
     T* newArray = new T[_allocBlocks];
@@ -1345,7 +1350,7 @@ class SensorPlantowerPMS: public Sensor {
 */
 class NodeManager {
   public:
-    NodeManager();
+    NodeManager(int sensorcount = 0);
     // [10] send the same message multiple times (default: 1)
     void setRetries(int value);
     int getRetries();

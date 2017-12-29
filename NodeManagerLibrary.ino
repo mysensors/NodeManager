@@ -2995,6 +2995,8 @@ SensorPlantowerPMS::SensorPlantowerPMS(NodeManager& node_manager, int rxpin, int
 
 // what to do during before
 void SensorPlantowerPMS::onBefore() {
+  // Allocate memory for all children at once (to prevent memory fragmentation)
+  children.allocateBlocks(3);
   // register the child
   new ChildInt(this, _node->getAvailableChildId(), S_AIR_QUALITY, V_LEVEL, "PM1.0");
   new ChildInt(this, _node->getAvailableChildId(), S_AIR_QUALITY, V_LEVEL, "PM2.5");
@@ -3351,9 +3353,12 @@ void SensorConfiguration::onReceive(MyMessage* message) {
 */
 
 // initialize the node manager
-NodeManager::NodeManager() {
+NodeManager::NodeManager(int sensorcount) {
   // setup the message container
   _message = MyMessage();
+  if (sensorcount>0) {
+    sensors.allocateBlocks(sensorcount);
+  }
 }
 
 int NodeManager::_last_interrupt_pin = -1;
