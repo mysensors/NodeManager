@@ -75,6 +75,7 @@ SensorRainGauge     | 1     | MODULE_PULSE_METER    | Rain gauge sensor         
 SensorPowerMeter    | 1     | MODULE_PULSE_METER    | Power meter pulse sensor                                                                          | -
 SensorWaterMeter    | 1     | MODULE_PULSE_METER    | Water meter pulse sensor                                                                          | -
 SensorPlantowerPMS  | 3     | MODULE_PMS            | Plantower PMS particulate matter sensors (reporting PM<=1.0, PM<=2.5 and PM<=10.0 in µg/m³)       | https://github.com/fu-hsi/pms
+DisplaySSD1306      | 1     | MODULE_SSD1306        | SSD1306 128x64 OLED display (I²C); By default displays values of all sensors and children         | https://github.com/greiman/SSD1306Ascii.git
 
 ## Installation
 
@@ -497,6 +498,20 @@ Each sensor class exposes additional methods.
     void setInitialValue(int value);
     // set the interrupt mode to attach to (default: FALLING)
     void setInterruptMode(int value);
+~~~
+
+* DisplaySSD1306
+~~~c
+    // [102] set the contrast of the display (0-255)
+    void setContrast(uint8_t value);
+    // [104] Rotate the display 180 degree (use rotate=false to revert)
+    void rotateDisplay(bool rotate = true);
+    // [105] Text font size (possible are 1 and 2; default is 1)
+    void setFontSize(int fontsize);
+    // [106] Text caption font size (possible are 1 and 2; default is 2)
+    void setHeaderFontSize(int fontsize);
+    // [107] Invert display (black text on color background; use invert=false to revert)
+    void invertDisplay(bool invert = true);
 ~~~
 
 ### Remote API

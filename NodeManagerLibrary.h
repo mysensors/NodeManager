@@ -148,6 +148,10 @@
   #include <PMS.h>
   #include <SoftwareSerial.h> 
 #endif
+#ifdef MODULE_SSD1306
+  #include <SSD1306Ascii.h>
+  #include <SSD1306AsciiAvrI2c.h>
+#endif
 
 /*******************************************************************
    Classes
@@ -319,6 +323,7 @@ class Child {
     Timer* force_update_timer;
     virtual void sendValue();
     virtual bool isNewValue();
+    virtual void printOn(Print& p);
   protected:
     int _samples = 0;
     Sensor* _sensor;
@@ -331,6 +336,7 @@ class ChildInt: public Child {
     int getValueInt();
     void sendValue();
     bool isNewValue();
+    void printOn(Print& p);
   private:
     int _value;
     int _last_value;
@@ -344,6 +350,7 @@ class ChildFloat: public Child {
     float getValueFloat();
     void sendValue();
     bool isNewValue();
+    void printOn(Print& p);
   private:
     float _value;
     float _last_value;
@@ -357,6 +364,7 @@ class ChildDouble: public Child {
     double getValueDouble();
     void sendValue();
     bool isNewValue();
+    void printOn(Print& p);
   private:
     double _value;
     double _last_value;
@@ -370,6 +378,7 @@ class ChildString: public Child {
     const char* getValueString();
     void sendValue();
     bool isNewValue();
+    void printOn(Print& p);
   private:
     const char* _value = "";
     const char* _last_value = "";
@@ -1338,6 +1347,44 @@ class SensorPlantowerPMS: public Sensor {
     bool _valuesRead = false;
     bool _valuesReadError = false;
 };
+#endif
+
+/*
+ * SSD1306 OLED display
+ */
+#ifdef MODULE_SSD1306
+class DisplaySSD1306: public Sensor {
+  public:
+    DisplaySSD1306(NodeManager& node_manager, const DevType* dev, uint8_t i2caddress = 0x3C);
+    // set text font (default: &Adafruit5x7)
+    void setFont(const uint8_t* font);
+    // [102] set the contrast of the display (0-255)
+    void setContrast(uint8_t value);
+    // [103] set the displayed text
+    void setText(const char* value);
+    // [104] Rotate the display 180 degree (use rotate=false to revert)
+    void rotateDisplay(bool rotate = true);
+    // [105] Text font size (possible are 1 and 2; default is 1)
+    void setFontSize(int fontsize);
+    // [106] Text caption font size (possible are 1 and 2; default is 2)
+    void setHeaderFontSize(int fontsize);
+    // [107] Invert display (black text on color background; use invert=false to revert)
+    void invertDisplay(bool invert = true);
+    // define what to do at each stage of the sketch
+    void onBefore();
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(MyMessage* message);
+    void updateDisplay();
+  protected:
+    virtual void _display(const char*displaystr = 0);
+    SSD1306AsciiAvrI2c *_oled;
+    const DevType* _dev;
+    uint8_t _i2caddress = 0x3c;
+    int _fontsize = 1;
+    int _caption_fontsize = 2;
+};
+
 #endif
 
 /***************************************

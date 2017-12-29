@@ -75,6 +75,7 @@ SensorRainGauge     | 1     | MODULE_PULSE_METER    | Rain gauge sensor         
 SensorPowerMeter    | 1     | MODULE_PULSE_METER    | Power meter pulse sensor                                                                          | -
 SensorWaterMeter    | 1     | MODULE_PULSE_METER    | Water meter pulse sensor                                                                          | -
 SensorPlantowerPMS  | 3     | MODULE_PMS            | Plantower PMS particulate matter sensors (reporting PM<=1.0, PM<=2.5 and PM<=10.0 in µg/m³)       | https://github.com/fu-hsi/pms
+DisplaySSD1306      | 1     | MODULE_SSD1306        | SSD1306 128x64 OLED display (I²C); By default displays values of all sensors and children         | https://github.com/greiman/SSD1306Ascii.git
 
 */
 
@@ -209,6 +210,7 @@ SensorPlantowerPMS  | 3     | MODULE_PMS            | Plantower PMS particulate 
 //#define MODULE_DIMMER
 //#define MODULE_PULSE_METER
 //#define MODULE_PMS
+//#define MODULE_SSD1306
 
 /***********************************
  * Load NodeManager Library
@@ -266,6 +268,7 @@ NodeManager node;
 //SensorPowerMeter powerMeter(node,3);
 //SensorWaterMeter waterMeter(node,3);
 //SensorPlantowerPMS pms(node,6,7);
+//DisplaySSD1306 ssd1306(node, &Adafruit128x64, /*I2C_ADDRESS=*/0x3C);
 
 /***********************************
  * Main Sketch
