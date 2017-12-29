@@ -2996,9 +2996,9 @@ SensorPlantowerPMS::SensorPlantowerPMS(NodeManager& node_manager, int rxpin, int
 // what to do during before
 void SensorPlantowerPMS::onBefore() {
   // register the child
-  new ChildInt(this, _node->getAvailableChildId(), S_AIR_QUALITY, V_LEVEL, "PM1.0");
-  new ChildInt(this, _node->getAvailableChildId(), S_AIR_QUALITY, V_LEVEL, "PM2.5");
-  new ChildInt(this, _node->getAvailableChildId(), S_AIR_QUALITY, V_LEVEL, "PM10.0");
+  new ChildInt(this, _node->getAvailableChildId(), S_DUST, V_LEVEL, "PM1.0");
+  new ChildInt(this, _node->getAvailableChildId(), S_DUST, V_LEVEL, "PM2.5");
+  new ChildInt(this, _node->getAvailableChildId(), S_DUST, V_LEVEL, "PM10.0");
 }
 
 // what to do during setup
