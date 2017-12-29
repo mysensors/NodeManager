@@ -3008,15 +3008,12 @@ void SensorPlantowerPMS::onSetup() {
   _ser->begin(9600);
 }
 
-// Clean _valuesRead flag at the beginning so the onLoop function knows when to read values (should be done only once for all children)
-void SensorPlantowerPMS::loop(MyMessage* message) {
-  _valuesRead = false;
-  _valuesReadError = false;
-  Sensor::loop(message);
-}
-
 // what to do during loop
 void SensorPlantowerPMS::onLoop(Child* child) {
+  if (child == children.get(1)) {
+    _valuesRead = false;
+    _valuesReadError = false;
+  }
   // Read the ppm values
   if (!_valuesRead || _valuesReadError) {
     _valuesReadError = !_pms->read(_data, 1000);
@@ -3042,7 +3039,7 @@ void SensorPlantowerPMS::onLoop(Child* child) {
   }
   // store the value
   ((ChildInt*)child)->setValueInt(val);
-  #if DEBUG == 1
+  #ifdef NODEMANAGER_DEBUG
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
