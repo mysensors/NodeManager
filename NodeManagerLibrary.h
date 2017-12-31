@@ -1325,7 +1325,6 @@ class SensorPlantowerPMS: public Sensor {
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
-    void loop(MyMessage* message);
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
   protected:
