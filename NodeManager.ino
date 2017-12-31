@@ -181,10 +181,9 @@ SensorVL53L0X       | 1     | MODULE_VL53L0X        | VL53L0X laser time-of-flig
 //#define MY_DEFAULT_TX_LED_PIN  6
 
 /***********************************
- * NodeManager modules
+ * NodeManager sensors
  */
 
-//#define NO_MODULE_POWER_MANAGER
 //#define MODULE_ANALOG_INPUT
 //#define MODULE_THERMISTOR
 //#define MODULE_ML8511
@@ -214,12 +213,16 @@ SensorVL53L0X       | 1     | MODULE_VL53L0X        | VL53L0X laser time-of-flig
 //#define MODULE_VL53L0X
 
 /***********************************
+ * NodeManager advanced settings
+ */
+
+#define NODEMANAGER_DEBUG
+//#define DISABLE_POWER_MANAGER
+
+/***********************************
  * Load NodeManager Library
  */
 
-// enable NodeManager's debug on serial port
-#define NODEMANAGER_DEBUG
-// include NodeManager's library
 #include "NodeManagerLibrary.h"
 NodeManager node;
 

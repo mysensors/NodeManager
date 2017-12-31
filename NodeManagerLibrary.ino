@@ -6,7 +6,7 @@
    PowerManager
 */
 
-#ifndef NO_MODULE_POWER_MANAGER
+#ifndef DISABLE_POWER_MANAGER
 PowerManager::PowerManager(int ground_pin, int vcc_pin, int wait_time) {
   setPowerPins(ground_pin, vcc_pin, wait_time);
 }
@@ -414,7 +414,7 @@ void Sensor::setForceUpdateMinutes(int value) {
     child->force_update_timer->start(value,MINUTES);
   }
 }
-#ifndef NO_MODULE_POWER_MANAGER
+#ifndef DISABLE_POWER_MANAGER
 void Sensor::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
   if (_powerManager == nullptr) return;
   _powerManager->setPowerPins(ground_pin, vcc_pin, wait_time);
@@ -481,7 +481,7 @@ void Sensor::presentation() {
       Serial.print(F(" D="));
       Serial.println(child->description);
     #endif
-    present(child->child_id, child->presentation,child->description,_node->getAck());
+    present(child->child_id, child->presentation, child->description, _node->getAck());
   }
 
 }
@@ -522,7 +522,7 @@ void Sensor::loop(MyMessage* message) {
     }
   }
   // turn the sensor on
-#ifndef NO_MODULE_POWER_MANAGER
+#ifndef DISABLE_POWER_MANAGER
   powerOn();
 #endif
   // iterates over all the children
@@ -550,7 +550,7 @@ void Sensor::loop(MyMessage* message) {
         child->sendValue();
   }
   // turn the sensor off
-#ifndef NO_MODULE_POWER_MANAGER
+#ifndef DISABLE_POWER_MANAGER
   powerOff();
 #endif
   // if called from loop(), restart the report timer if over
@@ -578,7 +578,7 @@ Child* Sensor::getChild(int child_id) {
   return nullptr;
 }
 
-#ifndef NO_MODULE_POWER_MANAGER
+#ifndef DISABLE_POWER_MANAGER
 void Sensor::setPowerManager(PowerManager& powerManager) {
   _powerManager = &powerManager;
 }
@@ -3196,7 +3196,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       case 20: _node->setSleepBetweenSend(request.getValueInt()); break;
       case 21: _node->setAck(request.getValueInt()); break;
       case 22: _node->setIsMetric(request.getValueInt()); break;
-#ifndef NO_MODULE_POWER_MANAGER
+#ifndef DISABLE_POWER_MANAGER
       case 24: _node->powerOn(); break;
       case 25: _node->powerOff(); break;
 #endif
@@ -3224,7 +3224,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         case 6: sensor->setSamplesInterval(request.getValueInt()); break;
         case 7: sensor->setTrackLastValue(request.getValueInt()); break;
         case 9: sensor->setForceUpdateMinutes(request.getValueInt()); break;
-#ifndef NO_MODULE_POWER_MANAGER
+#ifndef DISABLE_POWER_MANAGER
         case 13: sensor->powerOn(); break;
         case 14: sensor->powerOff(); break;
 #endif
@@ -3501,7 +3501,7 @@ void NodeManager::setInterrupt(int pin, int mode, int initial) {
 void NodeManager::setInterruptMinDelta(long value) {
   _interrupt_min_delta = value;
 }
-#ifndef NO_MODULE_POWER_MANAGER
+#ifndef DISABLE_POWER_MANAGER
 void NodeManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
   if (_powerManager == nullptr) return;
   _powerManager->setPowerPins(ground_pin, vcc_pin, wait_time);
@@ -3653,7 +3653,7 @@ void NodeManager::setup() {
 // run the main function for all the register sensors
 void NodeManager::loop() {
   // turn on the pin powering all the sensors
-#ifndef NO_MODULE_POWER_MANAGER
+#ifndef DISABLE_POWER_MANAGER
   powerOn();
 #endif
   // run loop for all the registered sensors
@@ -3674,7 +3674,7 @@ void NodeManager::loop() {
     }
   }
   // turn off the pin powering all the sensors
-#ifndef NO_MODULE_POWER_MANAGER
+#ifndef DISABLE_POWER_MANAGER
   powerOff();
 #endif
   // continue/start sleeping as requested
@@ -3699,13 +3699,13 @@ void NodeManager::receive(MyMessage &message) {
   Sensor* sensor = getSensorWithChild(message.sensor);
   if (sensor != nullptr) {
     // turn on the pin powering all the sensors
-#ifndef NO_MODULE_POWER_MANAGER
+#ifndef DISABLE_POWER_MANAGER
     powerOn();
 #endif
     // call the sensor's receive()
     sensor->receive(message);
     // turn off the pin powering all the sensors
-#ifndef NO_MODULE_POWER_MANAGER
+#ifndef DISABLE_POWER_MANAGER
     powerOff();
 #endif
   }
@@ -3982,7 +3982,7 @@ void NodeManager::_sendMessage(int child_id, int type) {
   }
 }
 
-#ifndef NO_MODULE_POWER_MANAGER
+#ifndef DISABLE_POWER_MANAGER
 void NodeManager::setPowerManager(PowerManager& powerManager) {
   _powerManager = &powerManager;
 }
@@ -4048,18 +4048,6 @@ void NodeManager::_sleep() {
   #ifdef NODEMANAGER_DEBUG
     Serial.println(F("AWAKE"));
   #endif
-}
-
-// present the service
-void NodeManager::_present(int child_id, int type) {
-  #ifdef NODEMANAGER_DEBUG
-    Serial.print(F("PRES I="));
-    Serial.print(child_id);
-    Serial.print(F(", T="));
-    Serial.println(type);
-  #endif
-  if (_sleep_between_send > 0) sleep(_sleep_between_send);
-  present(child_id,type,"",_ack);
 }
 
 // load the configuration stored in the eeprom
