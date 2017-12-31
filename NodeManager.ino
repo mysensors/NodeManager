@@ -192,7 +192,7 @@ SensorVL53L0X       | 1     | MODULE_VL53L0X        | VL53L0X laser time-of-flig
 //#define MODULE_DIGITAL_INPUT
 //#define MODULE_DIGITAL_OUTPUT
 //#define MODULE_DHT
-//#define MODULE_SHT21
+#define MODULE_SHT21
 //#define MODULE_SWITCH
 //#define MODULE_DS18B20
 //#define MODULE_BH1750
@@ -245,7 +245,7 @@ NodeManager node;
 //SensorLatchingRelay latching(node,6);
 //SensorDHT11 dht11(node,6);
 //SensorDHT22 dht22(node,6);
-//SensorSHT21 sht21(node);
+SensorSHT21 sht21(node);
 //SensorHTU21D htu21(node);
 //SensorSwitch sensorSwitch(node,3);
 //SensorDoor door(node,3);
@@ -284,12 +284,13 @@ void before() {
   * Configure your sensors below
   */
 
+  node.setReportIntervalSeconds(10);
   //node.setReportIntervalMinutes(5);
   //node.setSleepMinutes(5);
   
   //node.setPowerManager(power);
   //battery.setReportIntervalMinutes(30);
-  //sht.children.get(1)->child_id = 5;
+  sht21.children.get(1)->child_id = 5;
 
   
   /*

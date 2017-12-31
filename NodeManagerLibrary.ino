@@ -477,7 +477,9 @@ void Sensor::presentation() {
       Serial.print(F("PRES I="));
       Serial.print(child->child_id);
       Serial.print(F(" T="));
-      Serial.println(child->presentation);
+      Serial.print(child->presentation);
+      Serial.print(F(" D="));
+      Serial.println(child->description);
     #endif
     present(child->child_id, child->presentation,child->description,_node->getAck());
   }
@@ -1396,13 +1398,14 @@ SensorDHT22::SensorDHT22(NodeManager& node_manager, int pin): SensorDHT(node_man
 // contructor
 SensorSHT21::SensorSHT21(NodeManager& node_manager): Sensor(node_manager) {
   _name = "SHT21";
+  // register the child
+  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP,_name);
+  new ChildFloat(this,_node->getAvailableChildId(),S_HUM,V_HUM,_name);
 }
 
 // what to do during before
 void SensorSHT21::onBefore() {
-  // register the child
-  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
-  new ChildFloat(this,_node->getAvailableChildId(),S_HUM,V_HUM);
+
 }
 
 // what to do during setup
@@ -3600,12 +3603,15 @@ void NodeManager::before() {
     // call each sensor's before()
     sensor->before();
   }
+  #ifdef NODEMANAGER_DEBUG
+    Serial.print(F("RADIO..."));
+  #endif
 }
 
 // present NodeManager and its sensors
 void NodeManager::presentation() {
   #ifdef NODEMANAGER_DEBUG
-    Serial.println(F("RADIO OK"));
+    Serial.println(F("OK"));
   #endif
   // Send the sketch version information to the gateway and Controller
   if (_sleep_between_send > 0) sleep(_sleep_between_send);
