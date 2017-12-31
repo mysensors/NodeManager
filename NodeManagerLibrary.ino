@@ -3057,6 +3057,83 @@ void SensorPlantowerPMS::onReceive(MyMessage* message) {
 #endif
 
 /*
+ * VL53L0X Laser distance sensor
+ */
+#ifdef MODULE_VL53L0X
+// constructor
+SensorVL53L0X::SensorVL53L0X(NodeManager& node_manager, int xshut_pin): Sensor(node_manager, xshut_pin) {
+  _name = "VL53L0X";
+  if (_pin > 0) {
+    pinMode(_pin, OUTPUT); // Put sensor in deep sleep until the loop
+    digitalWrite(_pin, LOW);
+  }
+}
+
+void SensorVL53L0X::onBefore() {
+  // register the child
+  new ChildInt(this, _node->getAvailableChildId(), S_DISTANCE, V_DISTANCE, "Dist");
+  _lox = new VL53L0X();
+}
+
+void SensorVL53L0X::onSetup() {
+  if (_lox) {
+    Wire.begin();
+  }
+}
+
+int SensorVL53L0X::_getDistance() {
+  int distance = -1;
+
+  if (_lox) {
+    // The XSHUT pin puts the sensor into deep sleep when pulled to LOW;
+    // To wake up, do NOT write HIGH (=3.3V or 5V) to the pin, as the sensor
+    // uses only 2.8V and is not 5V-tolerant. Instead, set the pin to INPUT.
+    if (_pin >= 0) {
+      pinMode(_pin, INPUT);
+      sleep(5); // Transition from HW standby to SW standby might take up to 1.5 ms => use 5ms to be on the safe side
+    }
+    _lox->init();
+    _lox->setTimeout(500);
+    distance = _lox->readRangeSingleMillimeters();
+    if (_pin >= 0) {
+      digitalWrite(_pin, LOW);
+      pinMode(_pin, OUTPUT);
+    }
+  }
+
+//  if (measure.RangeStatus == 0) {  // only 0  data
+  if (_lox->timeoutOccurred()) {
+    distance = -1;
+  }
+  return distance;
+}
+
+void SensorVL53L0X::onLoop(Child *child) {
+  int val = _getDistance();
+  ((ChildInt*)child)->setValueInt(val);
+  #ifdef NODEMANAGER_DEBUG
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
+    Serial.print(F(" D="));
+    if (val>=0) {
+      Serial.print(val);
+      Serial.println(F("mm"));
+    } else {
+      Serial.println(F("OOR"));
+    }
+  #endif
+}
+
+// what to do as the main task when receiving a message
+void SensorVL53L0X::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+}
+#endif
+
+/*
    SensorConfiguration
 */
 // contructor
