@@ -707,7 +707,7 @@ void SensorSignal::onReceive(MyMessage* message) {
 }
 #endif
 
-#ifdef MODULE_ANALOG_INPUT
+#ifdef USE_ANALOG_INPUT
 /*
    SensorAnalogInput
 */
@@ -865,7 +865,7 @@ void SensorSoilMoisture::onSetup() {
 }
 #endif
 
-#ifdef MODULE_THERMISTOR
+#ifdef USE_THERMISTOR
 /*
    SensorThermistor
 */
@@ -939,7 +939,7 @@ void SensorThermistor::onReceive(MyMessage* message) {
 }
 #endif
 
-#ifdef MODULE_ML8511
+#ifdef USE_ML8511
 /*
    SensorML8511
 */
@@ -995,7 +995,7 @@ float SensorML8511::_mapfloat(float x, float in_min, float in_max, float out_min
 }
 #endif
 
-#ifdef MODULE_ACS712
+#ifdef USE_ACS712
 /*
    SensorACS712
 */
@@ -1050,7 +1050,7 @@ void SensorACS712::onReceive(MyMessage* message) {
 
 #endif
 
-#ifdef MODULE_DIGITAL_INPUT
+#ifdef USE_DIGITAL_INPUT
 /*
    SensorDigitalInput
 */
@@ -1098,7 +1098,7 @@ void SensorDigitalInput::onReceive(MyMessage* message) {
 #endif
 
 
-#ifdef MODULE_DIGITAL_OUTPUT
+#ifdef USE_DIGITAL_OUTPUT
 /*
    SensorDigitalOutput
 */
@@ -1302,7 +1302,7 @@ void SensorLatchingRelay::_setStatus(Child* child, int value) {
 
 #endif
 
-#ifdef MODULE_DHT
+#ifdef USE_DHT
 /*
    SensorDHT
 */
@@ -1394,7 +1394,7 @@ SensorDHT22::SensorDHT22(NodeManager& node_manager, int pin): SensorDHT(node_man
 /*
    SensorSHT21
 */
-#ifdef MODULE_SHT21
+#ifdef USE_SHT21
 // contructor
 SensorSHT21::SensorSHT21(NodeManager& node_manager): Sensor(node_manager) {
   _name = "SHT21";
@@ -1465,7 +1465,7 @@ SensorHTU21D::SensorHTU21D(NodeManager& nodeManager): SensorSHT21(nodeManager) {
 }
 #endif 
 
-#ifdef MODULE_SWITCH
+#ifdef USE_SWITCH
 /*
  * SensorSwitch
  */
@@ -1576,7 +1576,7 @@ void SensorMotion::onSetup() {
 /*
    SensorDs18b20
 */
-#ifdef MODULE_DS18B20
+#ifdef USE_DS18B20
 // contructor
 SensorDs18b20::SensorDs18b20(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
   _name = "DS18B20";
@@ -1657,7 +1657,7 @@ void SensorDs18b20::setSleepDuringConversion(bool value) {
 /*
    SensorBH1750
 */
-#ifdef MODULE_BH1750
+#ifdef USE_BH1750
 // contructor
 SensorBH1750::SensorBH1750(NodeManager& node_manager): Sensor(node_manager) {
   _name = "BH1750";
@@ -1703,7 +1703,7 @@ void SensorBH1750::onReceive(MyMessage* message) {
 /*
    SensorMLX90614
 */
-#ifdef MODULE_MLX90614
+#ifdef USE_MLX90614
 // contructor
 SensorMLX90614::SensorMLX90614(NodeManager& node_manager): Sensor(node_manager) {
   _name = "MLX90614";
@@ -1751,7 +1751,7 @@ void SensorMLX90614::onReceive(MyMessage* message) {
 /*
    SensorBosch
 */
-#if defined(MODULE_BME280) || defined(MODULE_BMP085) || defined(MODULE_BMP280)
+#if defined(USE_BME280) || defined(USE_BMP085) || defined(USE_BMP280)
 // contructor
 SensorBosch::SensorBosch(NodeManager& node_manager): Sensor(node_manager) {
   _name = "BOSH";
@@ -1894,7 +1894,7 @@ uint8_t SensorBosch::GetI2CAddress(uint8_t chip_id) {
 /*
  * SensorBME280
  */
-#ifdef MODULE_BME280
+#ifdef USE_BME280
 SensorBME280::SensorBME280(NodeManager& node_manager): SensorBosch(node_manager) {
   _name = "BME280";
 }
@@ -1974,7 +1974,7 @@ void SensorBME280::onLoop(Child* child) {
 /*
    SensorBMP085
 */
-#ifdef MODULE_BMP085
+#ifdef USE_BMP085
 // contructor
 SensorBMP085::SensorBMP085(NodeManager& node_manager): SensorBosch(node_manager) {
   _name = "BMP085";
@@ -2041,7 +2041,7 @@ void SensorBMP085::onLoop(Child* child) {
 /*
  * SensorBMP280
  */
-#ifdef MODULE_BMP280
+#ifdef USE_BMP280
 SensorBMP280::SensorBMP280(NodeManager& node_manager): SensorBosch(node_manager) {
   _name = "BMP280";
 }
@@ -2106,7 +2106,7 @@ void SensorBMP280::onLoop(Child* child) {
 /*
    SensorSonoff
 */
-#ifdef MODULE_SONOFF
+#ifdef USE_SONOFF
 // contructor
 SensorSonoff::SensorSonoff(NodeManager& node_manager): Sensor(node_manager) {
   _name = "SONOFF";
@@ -2207,7 +2207,7 @@ void SensorSonoff::_blink() {
 /*
    SensorHCSR04
 */
-#ifdef MODULE_HCSR04
+#ifdef USE_HCSR04
 // contructor
 SensorHCSR04::SensorHCSR04(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
   _name = "HCSR04";
@@ -2262,7 +2262,7 @@ void SensorHCSR04::onReceive(MyMessage* message) {
 /*
    SensorMCP9808
 */
-#ifdef MODULE_MCP9808
+#ifdef USE_MCP9808
 // contructor
 SensorMCP9808::SensorMCP9808(NodeManager& node_manager): Sensor(node_manager) {
   _name = "MCP9808";
@@ -2305,7 +2305,7 @@ void SensorMCP9808::onReceive(MyMessage* message) {
 /*
  * SensorMQ
  */
-#ifdef MODULE_MQ
+#ifdef USE_MQ
 
 float SensorMQ::_default_LPGCurve[3] = {2.3,0.21,-0.47};
 float SensorMQ::_default_COCurve[3] = {2.3,0.72,-0.34};
@@ -2460,7 +2460,7 @@ int SensorMQ::_MQGetPercentage(float rs_ro_ratio, float *pcurve) {
 /*
    SensorMHZ19
 */
-#ifdef MODULE_MHZ19
+#ifdef USE_MHZ19
 // contructor
 SensorMHZ19::SensorMHZ19(NodeManager& node_manager, int rxpin, int txpin): Sensor(node_manager, rxpin) {
   _name = "MHZ19";
@@ -2541,7 +2541,7 @@ int SensorMHZ19::_readCO2() {
 /*
    SensorAM2320
 */
-#ifdef MODULE_AM2320
+#ifdef USE_AM2320
 // constructor
 SensorAM2320::SensorAM2320(NodeManager& node_manager): Sensor(node_manager) {
   _name = "AM2320";
@@ -2604,7 +2604,7 @@ void SensorAM2320::onReceive(MyMessage* message) {
 /*
    SensorTSL2561
 */
-#ifdef MODULE_TSL2561
+#ifdef USE_TSL2561
 // contructor
 SensorTSL2561::SensorTSL2561(NodeManager& node_manager): Sensor(node_manager) {
   _name = "TSL2561";
@@ -2728,7 +2728,7 @@ void SensorTSL2561::onReceive(MyMessage* message) {
 /*
    SensorPT100
 */
-#ifdef MODULE_PT100
+#ifdef USE_PT100
 // contructor
 SensorPT100::SensorPT100(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
   _name = "PT100";
@@ -2780,7 +2780,7 @@ void SensorPT100::onReceive(MyMessage* message) {
    SensorDimmer
 */
 
-#ifdef MODULE_DIMMER
+#ifdef USE_DIMMER
 // contructor
 SensorDimmer::SensorDimmer(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
   _name = "DIMMER";
@@ -2867,7 +2867,7 @@ float SensorDimmer::_getEasing(float t, float b, float c, float d) {
 /*
    SensorPulseMeter
 */
-#ifdef MODULE_PULSE_METER
+#ifdef USE_PULSE_METER
 // contructor
 SensorPulseMeter::SensorPulseMeter(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
   _name = "PULSE";
@@ -2997,7 +2997,7 @@ void SensorWaterMeter::_reportTotal(Child* child) {
 /*
    SensorPlantowerPMS
 */
-#ifdef MODULE_PMS
+#ifdef USE_PMS
 // contructor
 SensorPlantowerPMS::SensorPlantowerPMS(NodeManager& node_manager, int rxpin, int txpin): Sensor(node_manager, rxpin) {
   _name = "PMS";
@@ -3073,7 +3073,7 @@ void SensorPlantowerPMS::onReceive(MyMessage* message) {
 /*
  * VL53L0X Laser distance sensor
  */
-#ifdef MODULE_VL53L0X
+#ifdef USE_VL53L0X
 // constructor
 SensorVL53L0X::SensorVL53L0X(NodeManager& node_manager, int xshut_pin): Sensor(node_manager, xshut_pin) {
   _name = "VL53L0X";
@@ -3256,7 +3256,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      #ifdef MODULE_ANALOG_INPUT
+      #ifdef USE_ANALOG_INPUT
       if (strcmp(sensor->getName(),"ANALOG_I") == 0 || strcmp(sensor->getName(),"LDR") == 0 || strcmp(sensor->getName(),"RAIN") == 0 || strcmp(sensor->getName(),"SOIL") == 0) {
         SensorAnalogInput* custom_sensor = (SensorAnalogInput*)sensor;
         switch(function) {
@@ -3269,7 +3269,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      #ifdef MODULE_THERMISTOR
+      #ifdef USE_THERMISTOR
       if (strcmp(sensor->getName(),"THERMISTOR") == 0) {
         SensorThermistor* custom_sensor = (SensorThermistor*)sensor;
         switch(function) {
@@ -3282,7 +3282,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      #ifdef MODULE_ACS712
+      #ifdef USE_ACS712
       if (strcmp(sensor->getName(),"ACS712") == 0) {
         SensorACS712* custom_sensor = (SensorACS712*)sensor;
         switch(function) {
@@ -3292,7 +3292,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      #ifdef MODULE_DIGITAL_OUTPUT
+      #ifdef USE_DIGITAL_OUTPUT
       if (strcmp(sensor->getName(),"DIGITAL_O") == 0 || strcmp(sensor->getName(),"RELAY") == 0 || strcmp(sensor->getName(),"LATCHING") == 0) {
         SensorDigitalOutput* custom_sensor = (SensorDigitalOutput*)sensor;
         switch(function) {
@@ -3314,7 +3314,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      #ifdef MODULE_SWITCH
+      #ifdef USE_SWITCH
       if (strcmp(sensor->getName(),"SWITCH") == 0 || strcmp(sensor->getName(),"DOOR") == 0 || strcmp(sensor->getName(),"MOTION") == 0) {
         SensorSwitch* custom_sensor = (SensorSwitch*)sensor;
         switch(function) {
@@ -3326,7 +3326,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      #ifdef MODULE_DS18B20
+      #ifdef USE_DS18B20
       if (strcmp(sensor->getName(),"DS18B20") == 0) {
         SensorDs18b20* custom_sensor = (SensorDs18b20*)sensor;
         switch(function) {
@@ -3336,7 +3336,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      #ifdef MODULE_BH1750
+      #ifdef USE_BH1750
       if (strcmp(sensor->getName(),"BH1750") == 0) {
         SensorBH1750* custom_sensor = (SensorBH1750*)sensor;
         switch(function) {
@@ -3345,7 +3345,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      #if defined(MODULE_BME280) || defined(MODULE_BMP085) || defined(MODULE_BMP280)
+      #if defined(USE_BME280) || defined(USE_BMP085) || defined(USE_BMP280)
       if (strcmp(sensor->getName(),"BMP085") == 0 || strcmp(sensor->getName(),"BME280") == 0 || strcmp(sensor->getName(),"BMP280") == 0) {
         SensorBosch* custom_sensor = (SensorBosch*)sensor;
         switch(function) {
@@ -3354,7 +3354,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      #ifdef MODULE_SONOFF
+      #ifdef USE_SONOFF
       if (strcmp(sensor->getName(),"SONOFF") == 0) {
         SensorSonoff* custom_sensor = (SensorSonoff*)sensor;
         switch(function) {
@@ -3365,7 +3365,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      #ifdef MODULE_HCSR04
+      #ifdef USE_HCSR04
       if (strcmp(sensor->getName(),"HCSR04") == 0) {
         SensorHCSR04* custom_sensor = (SensorHCSR04*)sensor;
         switch(function) {
@@ -3376,7 +3376,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      #ifdef MODULE_MQ
+      #ifdef USE_MQ
       if (strcmp(sensor->getName(),"MQ") == 0) {
         SensorMQ* custom_sensor = (SensorMQ*)sensor;
         switch(function) {
@@ -3392,7 +3392,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      #ifdef MODULE_TSL2561
+      #ifdef USE_TSL2561
       if (strcmp(sensor->getName(),"TSL2561") == 0) {
         SensorTSL2561* custom_sensor = (SensorTSL2561*)sensor;
         switch(function) {
@@ -3404,7 +3404,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      #ifdef MODULE_PT100
+      #ifdef USE_PT100
       if (strcmp(sensor->getName(),"PT100") == 0) {
         SensorPT100* custom_sensor = (SensorPT100*)sensor;
         switch(function) {
@@ -3413,7 +3413,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      #ifdef MODULE_DIMMER
+      #ifdef USE_DIMMER
       if (strcmp(sensor->getName(),"DIMMER") == 0) {
         SensorDimmer* custom_sensor = (SensorDimmer*)sensor;
         switch(function) {
@@ -3424,7 +3424,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      #ifdef MODULE_PULSE_METER
+      #ifdef USE_PULSE_METER
       if (strcmp(sensor->getName(),"RAIN_GAUGE") == 0 || strcmp(sensor->getName(),"POWER") == 0 || strcmp(sensor->getName(),"WATER") == 0) {
         SensorPulseMeter* custom_sensor = (SensorPulseMeter*)sensor;
         switch(function) {

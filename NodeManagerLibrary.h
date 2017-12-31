@@ -83,72 +83,72 @@
 #include <MySensors.h>
 
 // include third party libraries
-#ifdef MODULE_DHT
+#ifdef USE_DHT
   #include <DHT.h>
 #endif
-#ifdef MODULE_SHT21
+#ifdef USE_SHT21
   #include <Wire.h>
   #include <Sodaq_SHT2x.h>
 #endif
-#ifdef MODULE_DS18B20
+#ifdef USE_DS18B20
   #include <OneWire.h>
   #include <DallasTemperature.h>
 #endif
-#ifdef MODULE_BH1750
+#ifdef USE_BH1750
   #include <BH1750.h>
   #include <Wire.h>
 #endif
-#ifdef MODULE_MLX90614
+#ifdef USE_MLX90614
   #include <Wire.h>
   #include <Adafruit_MLX90614.h>
 #endif
-#ifdef MODULE_BME280
+#ifdef USE_BME280
   #include <Wire.h>
   #include <SPI.h>
   #include <Adafruit_Sensor.h>
   #include <Adafruit_BME280.h>
 #endif
-#ifdef MODULE_SONOFF
+#ifdef USE_SONOFF
   #include <Bounce2.h>
 #endif
-#ifdef MODULE_BMP085
+#ifdef USE_BMP085
   #include <Wire.h>
   #include <Adafruit_BMP085.h>
 #endif
-#ifdef MODULE_HCSR04
+#ifdef USE_HCSR04
   #include <NewPing.h>
 #endif
-#ifdef MODULE_MCP9808
+#ifdef USE_MCP9808
   #include <Wire.h>
   #include "Adafruit_MCP9808.h"
 #endif
-#ifdef MODULE_MHZ19
+#ifdef USE_MHZ19
   #include <SoftwareSerial.h>
 #endif
-#ifdef MODULE_AM2320
+#ifdef USE_AM2320
   #include <Wire.h>
   #include <AM2320.h>
 #endif
-#ifdef MODULE_TSL2561
+#ifdef USE_TSL2561
   #include <TSL2561.h>
   #include <Wire.h>
 #endif
-#ifdef MODULE_PT100
+#ifdef USE_PT100
   #include <DFRobotHighTemperatureSensor.h>
 #endif
-#ifdef MODULE_BMP280
+#ifdef USE_BMP280
   #include <Wire.h>
   #include <Adafruit_Sensor.h>
   #include <Adafruit_BMP280.h>
 #endif
-#ifdef MODULE_DIMMER
+#ifdef USE_DIMMER
   #include <math.h>
 #endif
-#ifdef MODULE_PMS
+#ifdef USE_PMS
   #include <PMS.h>
   #include <SoftwareSerial.h> 
 #endif
-#ifdef MODULE_VL53L0X
+#ifdef USE_VL53L0X
   #include <Wire.h>
   #include <VL53L0X.h>
 #endif
@@ -525,7 +525,7 @@ class SensorConfiguration: public Sensor {
   protected:
 };
 
-#ifdef MODULE_ANALOG_INPUT
+#ifdef USE_ANALOG_INPUT
 /*
    SensorAnalogInput: read the analog input of a configured pin
 */
@@ -591,7 +591,7 @@ class SensorSoilMoisture: public SensorAnalogInput {
 };
 #endif
 
-#ifdef MODULE_THERMISTOR
+#ifdef USE_THERMISTOR
 /*
    SensorThermistor: read the temperature from a thermistor
 */
@@ -622,7 +622,7 @@ class SensorThermistor: public Sensor {
 };
 #endif
 
-#ifdef MODULE_ML8511
+#ifdef USE_ML8511
 /*
     SensorML8511
 */
@@ -640,7 +640,7 @@ class SensorML8511: public Sensor {
 };
 #endif
 
-#ifdef MODULE_ACS712
+#ifdef USE_ACS712
 /*
     SensorACS712
 */
@@ -663,7 +663,7 @@ class SensorACS712: public Sensor {
 };
 #endif
 
-#ifdef MODULE_DIGITAL_INPUT
+#ifdef USE_DIGITAL_INPUT
 /*
    SensorDigitalInput: read the digital input of the configured pin
 */
@@ -678,7 +678,7 @@ class SensorDigitalInput: public Sensor {
 };
 #endif
 
-#ifdef MODULE_DIGITAL_OUTPUT
+#ifdef USE_DIGITAL_OUTPUT
 /*
    SensorDigitalOutput: control a digital output of the configured pin
 */
@@ -752,7 +752,7 @@ class SensorLatchingRelay: public SensorRelay {
 /*
    SensorDHT
 */
-#ifdef MODULE_DHT
+#ifdef USE_DHT
 class SensorDHT: public Sensor {
   public:
     SensorDHT(NodeManager& node_manager, int pin);
@@ -787,7 +787,7 @@ class SensorDHT22: public SensorDHT {
 /*
    SensorSHT21: temperature and humidity sensor
 */
-#ifdef MODULE_SHT21
+#ifdef USE_SHT21
 class SensorSHT21: public Sensor {
   public:
     SensorSHT21(NodeManager& node_manager);
@@ -812,7 +812,7 @@ class SensorHTU21D: public SensorSHT21 {
 /*
  * SensorSwitch
  */
-#ifdef MODULE_SWITCH
+#ifdef USE_SWITCH
 class SensorSwitch: public Sensor {
   public:
     SensorSwitch(NodeManager& node_manager, int pin);
@@ -859,7 +859,7 @@ class SensorMotion: public SensorSwitch {
 /*
    SensorDs18b20
 */
-#ifdef MODULE_DS18B20
+#ifdef USE_DS18B20
 class SensorDs18b20: public Sensor {
   public:
     SensorDs18b20(NodeManager& node_manager, int pin);
@@ -883,7 +883,7 @@ class SensorDs18b20: public Sensor {
 /*
    SensorBH1750
 */
-#ifdef MODULE_BH1750
+#ifdef USE_BH1750
 class SensorBH1750: public Sensor {
   public:
     SensorBH1750(NodeManager& node_manager);
@@ -902,7 +902,7 @@ class SensorBH1750: public Sensor {
 /*
    SensorMLX90614
 */
-#ifdef MODULE_MLX90614
+#ifdef USE_MLX90614
 class SensorMLX90614: public Sensor {
   public:
     SensorMLX90614(NodeManager& node_manager);
@@ -922,7 +922,7 @@ class SensorMLX90614: public Sensor {
  * SensorBosch
 */
 
-#if defined(MODULE_BME280) || defined(MODULE_BMP085) || defined(MODULE_BMP280)
+#if defined(USE_BME280) || defined(USE_BMP085) || defined(USE_BMP280)
 class SensorBosch: public Sensor {
   public:
     SensorBosch(NodeManager& node_manager);
@@ -951,7 +951,7 @@ class SensorBosch: public Sensor {
 /*
    SensorBME280
 */
-#ifdef MODULE_BME280
+#ifdef USE_BME280
 class SensorBME280: public SensorBosch {
   public:
     SensorBME280(NodeManager& node_manager);
@@ -967,7 +967,7 @@ class SensorBME280: public SensorBosch {
 /*
    SensorBMP085
 */
-#ifdef MODULE_BMP085
+#ifdef USE_BMP085
 class SensorBMP085: public SensorBosch {
   public:
     SensorBMP085(NodeManager& node_manager);
@@ -983,7 +983,7 @@ class SensorBMP085: public SensorBosch {
 /*
    SensorBMP280
 */
-#ifdef MODULE_BMP280
+#ifdef USE_BMP280
 class SensorBMP280: public SensorBosch {
   public:
     SensorBMP280(NodeManager& node_manager);
@@ -999,7 +999,7 @@ class SensorBMP280: public SensorBosch {
 /*
    SensorSonoff
 */
-#ifdef MODULE_SONOFF
+#ifdef USE_SONOFF
 class SensorSonoff: public Sensor {
   public:
     SensorSonoff(NodeManager& node_manager);
@@ -1033,7 +1033,7 @@ class SensorSonoff: public Sensor {
 /*
    SensorHCSR04
 */
-#ifdef MODULE_HCSR04
+#ifdef USE_HCSR04
 class SensorHCSR04: public Sensor {
   public:
     SensorHCSR04(NodeManager& node_manager, int pin);
@@ -1060,7 +1060,7 @@ class SensorHCSR04: public Sensor {
 /*
    SensorMCP9808
 */
-#ifdef MODULE_MCP9808
+#ifdef USE_MCP9808
 class SensorMCP9808: public Sensor {
   public:
     SensorMCP9808(NodeManager& node_manager);
@@ -1077,7 +1077,7 @@ class SensorMCP9808: public Sensor {
 /*
     SensorMQ
  */
- #ifdef MODULE_MQ
+ #ifdef USE_MQ
 class SensorMQ: public Sensor {
   public:
     SensorMQ(NodeManager& node_manager, int pin);
@@ -1137,7 +1137,7 @@ class SensorMQ: public Sensor {
 /*
    SensorMHZ19
 */
-#ifdef MODULE_MHZ19
+#ifdef USE_MHZ19
 class SensorMHZ19: public Sensor {
   public:
     SensorMHZ19(NodeManager& node_manager, int rxpin, int txpin);
@@ -1157,7 +1157,7 @@ class SensorMHZ19: public Sensor {
 /*
    SensorAM2320
 */
-#ifdef MODULE_AM2320
+#ifdef USE_AM2320
 class SensorAM2320: public Sensor {
   public:
     SensorAM2320(NodeManager& node_manager);
@@ -1174,7 +1174,7 @@ class SensorAM2320: public Sensor {
 /*
    SensorTSL2561
 */
-#ifdef MODULE_TSL2561
+#ifdef USE_TSL2561
 class SensorTSL2561: public Sensor {
   public:
     SensorTSL2561(NodeManager& node_manager);
@@ -1217,7 +1217,7 @@ class SensorTSL2561: public Sensor {
 /*
     SensorPT100
 */
-#ifdef MODULE_PT100
+#ifdef USE_PT100
 class SensorPT100: public Sensor {
   public:
     SensorPT100(NodeManager& node_manager, int pin);
@@ -1237,7 +1237,7 @@ class SensorPT100: public Sensor {
 /*
     SensorPT100
 */
-#ifdef MODULE_DIMMER
+#ifdef USE_DIMMER
 class SensorDimmer: public Sensor {
   public:
     SensorDimmer(NodeManager& node_manager, int pin);
@@ -1272,7 +1272,7 @@ class SensorDimmer: public Sensor {
 /*
     SensorPulseMeter
 */
-#ifdef MODULE_PULSE_METER
+#ifdef USE_PULSE_METER
 class SensorPulseMeter: public Sensor {
   public:
     SensorPulseMeter(NodeManager& node_manager, int pin);
@@ -1335,7 +1335,7 @@ class SensorWaterMeter: public SensorPulseMeter {
 /*
    SensorPlantowerPMS
 */
-#ifdef MODULE_PMS
+#ifdef USE_PMS
 class SensorPlantowerPMS: public Sensor {
   public:
     SensorPlantowerPMS(NodeManager& node_manager, int rxpin, int txpin);
@@ -1359,7 +1359,7 @@ class SensorPlantowerPMS: public Sensor {
 /*
  * VL53L0X Laser distance sensor
  */
-#ifdef MODULE_VL53L0X
+#ifdef USE_VL53L0X
 class SensorVL53L0X: public Sensor {
   public:
     SensorVL53L0X(NodeManager& node_manager, int xshut_pin);
