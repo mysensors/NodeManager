@@ -184,6 +184,7 @@ SensorVL53L0X       | 1     | MODULE_VL53L0X        | VL53L0X laser time-of-flig
  * NodeManager modules
  */
 
+//#define NO_MODULE_POWER_MANAGER
 //#define MODULE_ANALOG_INPUT
 //#define MODULE_THERMISTOR
 //#define MODULE_ML8511

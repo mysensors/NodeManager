@@ -6,6 +6,7 @@
    PowerManager
 */
 
+#ifndef NO_MODULE_POWER_MANAGER
 PowerManager::PowerManager(int ground_pin, int vcc_pin, int wait_time) {
   setPowerPins(ground_pin, vcc_pin, wait_time);
 }
@@ -57,6 +58,7 @@ void PowerManager::powerOff() {
   // power off the sensor by turning low the vcc pin
   digitalWrite(_vcc_pin, LOW);
 }
+#endif
 
 /******************************************
     Timer
@@ -412,6 +414,7 @@ void Sensor::setForceUpdateMinutes(int value) {
     child->force_update_timer->start(value,MINUTES);
   }
 }
+#ifndef NO_MODULE_POWER_MANAGER
 void Sensor::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
   if (_powerManager == nullptr) return;
   _powerManager->setPowerPins(ground_pin, vcc_pin, wait_time);
@@ -424,6 +427,7 @@ void Sensor::powerOff() {
   if (_powerManager == nullptr) return;
   _powerManager->powerOff();
 }
+#endif
 int Sensor::getInterruptPin() {
   return _interrupt_pin;
 }
@@ -516,7 +520,9 @@ void Sensor::loop(MyMessage* message) {
     }
   }
   // turn the sensor on
+#ifndef NO_MODULE_POWER_MANAGER
   powerOn();
+#endif
   // iterates over all the children
   for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
     Child* child = *itr;
@@ -542,7 +548,9 @@ void Sensor::loop(MyMessage* message) {
         child->sendValue();
   }
   // turn the sensor off
+#ifndef NO_MODULE_POWER_MANAGER
   powerOff();
+#endif
   // if called from loop(), restart the report timer if over
   if (message == nullptr && _report_timer->isRunning() && _report_timer->isOver()) _report_timer->restart();
 }
@@ -568,10 +576,11 @@ Child* Sensor::getChild(int child_id) {
   return nullptr;
 }
 
+#ifndef NO_MODULE_POWER_MANAGER
 void Sensor::setPowerManager(PowerManager& powerManager) {
   _powerManager = &powerManager;
 }
-
+#endif
 
 // virtual functions
 void Sensor::onBefore() {}
@@ -3184,8 +3193,10 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       case 20: _node->setSleepBetweenSend(request.getValueInt()); break;
       case 21: _node->setAck(request.getValueInt()); break;
       case 22: _node->setIsMetric(request.getValueInt()); break;
+#ifndef NO_MODULE_POWER_MANAGER
       case 24: _node->powerOn(); break;
       case 25: _node->powerOff(); break;
+#endif
       case 27: _node->saveToMemory(0,request.getValueInt()); break;
       case 28: _node->setInterruptMinDelta(request.getValueInt()); break;
       case 30: _node->setSleepOrWait(request.getValueInt()); break;
@@ -3210,8 +3221,10 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         case 6: sensor->setSamplesInterval(request.getValueInt()); break;
         case 7: sensor->setTrackLastValue(request.getValueInt()); break;
         case 9: sensor->setForceUpdateMinutes(request.getValueInt()); break;
+#ifndef NO_MODULE_POWER_MANAGER
         case 13: sensor->powerOn(); break;
         case 14: sensor->powerOff(); break;
+#endif
         case 16: sensor->setReportIntervalMinutes(request.getValueInt()); break;
         case 17: sensor->setReportIntervalSeconds(request.getValueInt()); break;
         case 19: sensor->setReportIntervalHours(request.getValueInt()); break;
@@ -3485,6 +3498,7 @@ void NodeManager::setInterrupt(int pin, int mode, int initial) {
 void NodeManager::setInterruptMinDelta(long value) {
   _interrupt_min_delta = value;
 }
+#ifndef NO_MODULE_POWER_MANAGER
 void NodeManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
   if (_powerManager == nullptr) return;
   _powerManager->setPowerPins(ground_pin, vcc_pin, wait_time);
@@ -3497,6 +3511,7 @@ void NodeManager::powerOff() {
   if (_powerManager == nullptr) return;
   _powerManager->powerOff();
 }
+#endif
 void NodeManager::setSleepBetweenSend(int value) {
   _sleep_between_send = value;
 }
@@ -3632,7 +3647,9 @@ void NodeManager::setup() {
 // run the main function for all the register sensors
 void NodeManager::loop() {
   // turn on the pin powering all the sensors
+#ifndef NO_MODULE_POWER_MANAGER
   powerOn();
+#endif
   // run loop for all the registered sensors
   for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
     Sensor* sensor = *itr;
@@ -3651,7 +3668,9 @@ void NodeManager::loop() {
     }
   }
   // turn off the pin powering all the sensors
+#ifndef NO_MODULE_POWER_MANAGER
   powerOff();
+#endif
   // continue/start sleeping as requested
   if (isSleepingNode()) _sleep();
 }
@@ -3674,11 +3693,15 @@ void NodeManager::receive(MyMessage &message) {
   Sensor* sensor = getSensorWithChild(message.sensor);
   if (sensor != nullptr) {
     // turn on the pin powering all the sensors
+#ifndef NO_MODULE_POWER_MANAGER
     powerOn();
+#endif
     // call the sensor's receive()
     sensor->receive(message);
     // turn off the pin powering all the sensors
+#ifndef NO_MODULE_POWER_MANAGER
     powerOff();
+#endif
   }
 }
 
@@ -3953,9 +3976,11 @@ void NodeManager::_sendMessage(int child_id, int type) {
   }
 }
 
+#ifndef NO_MODULE_POWER_MANAGER
 void NodeManager::setPowerManager(PowerManager& powerManager) {
   _powerManager = &powerManager;
 }
+#endif
 
 // return the requested child 
 Child* NodeManager::getChild(int child_id) {
