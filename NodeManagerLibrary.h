@@ -322,7 +322,7 @@ class Request {
 class Child {
   public:
     Child();
-    Child(Sensor* sensor, int child_id, int presentation, int type, const char* description);
+    Child(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
     int child_id;
     int presentation = S_CUSTOM;
     int type = V_CUSTOM;
@@ -337,7 +337,7 @@ class Child {
 
 class ChildInt: public Child {
   public:
-    ChildInt(Sensor* sensor, int child_id, int presentation, int type, const char* description);
+    ChildInt(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
     void setValueInt(int value);
     int getValueInt();
     void sendValue();
@@ -350,7 +350,7 @@ class ChildInt: public Child {
 
 class ChildFloat: public Child {
   public:
-    ChildFloat(Sensor* sensor, int child_id, int presentation, int type, const char* description);
+    ChildFloat(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
     void setValueFloat(float value);
     float getValueFloat();
     void sendValue();
@@ -363,7 +363,7 @@ class ChildFloat: public Child {
 
 class ChildDouble: public Child {
   public:
-    ChildDouble(Sensor* sensor, int child_id, int presentation, int type, const char* description);
+    ChildDouble(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
     void setValueDouble(double value);
     double getValueDouble();
     void sendValue();
@@ -376,7 +376,7 @@ class ChildDouble: public Child {
 
 class ChildString: public Child {
   public:
-    ChildString(Sensor* sensor, int child_id, int presentation, int type, const char* description);
+    ChildString(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
     void setValueString(const char* value);
     const char* getValueString();
     void sendValue();
@@ -393,7 +393,7 @@ class ChildString: public Child {
 class Sensor {
   public:
     Sensor();
-    Sensor(NodeManager& node_manager, int pin);
+    Sensor(NodeManager& node_manager, int pin = -1);
     // return the name of the sensor
     const char* getName();
     // [1] where the sensor is attached to (default: not set)
@@ -470,7 +470,7 @@ class Sensor {
 */
 class SensorBattery: public Sensor {
   public:
-    SensorBattery(NodeManager& nodeManager);
+    SensorBattery(NodeManager& nodeManager, int child_id = BATTERY_CHILD_ID);
     // [102] the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
     void setMinVoltage(float value);
     // [103] the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
@@ -482,7 +482,6 @@ class SensorBattery: public Sensor {
     // [106] if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
     void setBatteryVoltsPerBit(float value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -499,12 +498,10 @@ class SensorBattery: public Sensor {
 */
 class SensorSignal: public Sensor {
   public:
-    SensorSignal(NodeManager& nodeManager);
+    SensorSignal(NodeManager& nodeManager, int child_id = SIGNAL_CHILD_ID);
     // [101] define which signal report to send. Possible values are SR_UPLINK_QUALITY, SR_TX_POWER_LEVEL, SR_TX_POWER_PERCENT, SR_TX_RSSI, SR_RX_RSSI, SR_TX_SNR, SR_RX_SNR (default: SR_RX_RSSI)
     void setSignalCommand(int value);
     // define what to do at each stage of the sketch
-    void onBefore();
-    void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
   protected:
@@ -531,7 +528,7 @@ class SensorConfiguration: public Sensor {
 */
 class SensorAnalogInput: public Sensor {
   public:
-    SensorAnalogInput(NodeManager& node_manager, int pin);
+    SensorAnalogInput(NodeManager& node_manager, int pin, int child_id = -255);
     // [101] the analog reference to use (default: not set, can be either INTERNAL or DEFAULT)
     void setReference(int value);
     // [102] reverse the value or the percentage (e.g. 70% -> 30%) (default: false)
@@ -543,7 +540,6 @@ class SensorAnalogInput: public Sensor {
     // [105] maximum value for calculating the percentage (default: 1024)
     void setRangeMax(int value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -562,9 +558,8 @@ class SensorAnalogInput: public Sensor {
 */
 class SensorLDR: public SensorAnalogInput {
   public:
-    SensorLDR(NodeManager& node_manager, int pin);
+    SensorLDR(NodeManager& node_manager, int pin, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
 };
 
@@ -573,9 +568,8 @@ class SensorLDR: public SensorAnalogInput {
 */
 class SensorRain: public SensorAnalogInput {
   public:
-    SensorRain(NodeManager& node_manager, int pin);
+    SensorRain(NodeManager& node_manager, int pin, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
 };
 
@@ -584,9 +578,8 @@ class SensorRain: public SensorAnalogInput {
 */
 class SensorSoilMoisture: public SensorAnalogInput {
   public:
-    SensorSoilMoisture(NodeManager& node_manager, int pin);
+    SensorSoilMoisture(NodeManager& node_manager, int pin, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
 };
 #endif
@@ -597,7 +590,7 @@ class SensorSoilMoisture: public SensorAnalogInput {
 */
 class SensorThermistor: public Sensor {
   public:
-    SensorThermistor(NodeManager& node_manager, int pin);
+    SensorThermistor(NodeManager& node_manager, int pin, int child_id = -255);
     // [101] resistance at 25 degrees C (default: 10000)
     void setNominalResistor(long value);
     // [102] temperature for nominal resistance (default: 25)
@@ -609,7 +602,6 @@ class SensorThermistor: public Sensor {
     // [105] set a temperature offset
     void setOffset(float value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -629,9 +621,8 @@ class SensorThermistor: public Sensor {
 
 class SensorML8511: public Sensor {
   public:
-    SensorML8511(NodeManager& node_Manager, int pin);
+    SensorML8511(NodeManager& node_Manager, int pin, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -647,7 +638,7 @@ class SensorML8511: public Sensor {
 
 class SensorACS712: public Sensor {
   public:
-    SensorACS712(NodeManager& node_manager, int pin);
+    SensorACS712(NodeManager& node_manager, int pin, int child_id = -255);
     // [101] set how many mV are equivalent to 1 Amp. The value depends on the module (100 for 20A Module, 66 for 30A Module) (default: 185);
     void setmVPerAmp(int value);
     // [102] set ACS offset (default: 2500);
@@ -669,9 +660,8 @@ class SensorACS712: public Sensor {
 */
 class SensorDigitalInput: public Sensor {
   public:
-    SensorDigitalInput(NodeManager& node_manager, int pin);
+    SensorDigitalInput(NodeManager& node_manager, int pin, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -684,7 +674,7 @@ class SensorDigitalInput: public Sensor {
 */
 class SensorDigitalOutput: public Sensor {
   public:
-    SensorDigitalOutput(NodeManager& node_manager, int pin);
+    SensorDigitalOutput(NodeManager& node_manager, int pin, int child_id = -255);
     // [103] define which value to set to the output when set to on (default: HIGH)
     void setOnValue(int value);
     // [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
@@ -699,8 +689,6 @@ class SensorDigitalOutput: public Sensor {
     void setStatus(Child* child, int value);
     // get the current state
     int getStatus();
-    // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -721,9 +709,7 @@ class SensorDigitalOutput: public Sensor {
 */
 class SensorRelay: public SensorDigitalOutput {
   public:
-    SensorRelay(NodeManager& node_manager, int pin);
-    // define what to do at each stage of the sketch
-    void onBefore();
+    SensorRelay(NodeManager& node_manager, int pin, int child_id = -255);
 };
 
 /*
@@ -731,7 +717,7 @@ class SensorRelay: public SensorDigitalOutput {
 */
 class SensorLatchingRelay: public SensorRelay {
   public:
-    SensorLatchingRelay(NodeManager& node_manager, int pin);
+    SensorLatchingRelay(NodeManager& node_manager, int pin, int child_id = -255);
     // [201] set the duration of the pulse to send in ms to activate the relay (default: 50)
     void setPulseWidth(int value);
     // [202] set the pin which turns the relay off (default: the pin provided while registering the sensor)
@@ -739,7 +725,6 @@ class SensorLatchingRelay: public SensorRelay {
     // [203] set the pin which turns the relay on (default: the pin provided while registering the sensor + 1)
     void setPinOn(int value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
   protected:
     int _pin_on;
@@ -755,9 +740,8 @@ class SensorLatchingRelay: public SensorRelay {
 #ifdef USE_DHT
 class SensorDHT: public Sensor {
   public:
-    SensorDHT(NodeManager& node_manager, int pin);
+    SensorDHT(NodeManager& node_manager, int pin, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -772,7 +756,7 @@ class SensorDHT: public Sensor {
 */
 class SensorDHT11: public SensorDHT {
   public:
-    SensorDHT11(NodeManager& node_manager, int pin);
+    SensorDHT11(NodeManager& node_manager, int pin, int child_id = -255);
 };
 
 /*
@@ -780,7 +764,7 @@ class SensorDHT11: public SensorDHT {
 */
 class SensorDHT22: public SensorDHT {
   public:
-    SensorDHT22(NodeManager& node_manager, int pin);
+    SensorDHT22(NodeManager& node_manager, int pin, int child_id = -255);
 };
 #endif
 
@@ -790,9 +774,8 @@ class SensorDHT22: public SensorDHT {
 #ifdef USE_SHT21
 class SensorSHT21: public Sensor {
   public:
-    SensorSHT21(NodeManager& node_manager);
+    SensorSHT21(NodeManager& node_manager, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -805,7 +788,7 @@ class SensorSHT21: public Sensor {
 
 class SensorHTU21D: public SensorSHT21 {
   public:
-    SensorHTU21D(NodeManager& nodeManager);
+    SensorHTU21D(NodeManager& nodeManager, int child_id = -255);
 };
 #endif
 
@@ -815,7 +798,7 @@ class SensorHTU21D: public SensorSHT21 {
 #ifdef USE_SWITCH
 class SensorSwitch: public Sensor {
   public:
-    SensorSwitch(NodeManager& node_manager, int pin);
+    SensorSwitch(NodeManager& node_manager, int pin, int child_id = -255);
     // [101] set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
     void setMode(int value);
     // [102] milliseconds to wait before reading the input (default: 0)
@@ -825,7 +808,6 @@ class SensorSwitch: public Sensor {
     // [104] Set initial value on the interrupt pin (default: HIGH)
     void setInitial(int value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -842,8 +824,7 @@ class SensorSwitch: public Sensor {
  */
 class SensorDoor: public SensorSwitch {
   public:
-    SensorDoor(NodeManager& node_manager, int pin);
-    void onBefore();
+    SensorDoor(NodeManager& node_manager, int pin, int child_id = -255);
 };
 
 /*
@@ -851,8 +832,7 @@ class SensorDoor: public SensorSwitch {
  */
 class SensorMotion: public SensorSwitch {
   public:
-    SensorMotion(NodeManager& node_manager, int pin);
-    void onBefore();
+    SensorMotion(NodeManager& node_manager, int pin, int child_id = -255);
     void onSetup();
 };
 #endif
@@ -862,7 +842,7 @@ class SensorMotion: public SensorSwitch {
 #ifdef USE_DS18B20
 class SensorDs18b20: public Sensor {
   public:
-    SensorDs18b20(NodeManager& node_manager, int pin);
+    SensorDs18b20(NodeManager& node_manager, int pin, int child_id = -255);
     // returns the sensor's resolution in bits
     int getResolution();
     // [101] set the sensor's resolution in bits
@@ -870,8 +850,6 @@ class SensorDs18b20: public Sensor {
     // [102] sleep while DS18B20 calculates temperature (default: false)
     void setSleepDuringConversion(bool value);
     // define what to do at each stage of the sketch
-    void onBefore();
-    void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
   protected:
@@ -886,11 +864,10 @@ class SensorDs18b20: public Sensor {
 #ifdef USE_BH1750
 class SensorBH1750: public Sensor {
   public:
-    SensorBH1750(NodeManager& node_manager);
+    SensorBH1750(NodeManager& node_manager, int child_id = -255);
     // [101] set sensor reading mode, e.g. BH1750_ONE_TIME_HIGH_RES_MODE
     void setMode(uint8_t mode);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -905,9 +882,8 @@ class SensorBH1750: public Sensor {
 #ifdef USE_MLX90614
 class SensorMLX90614: public Sensor {
   public:
-    SensorMLX90614(NodeManager& node_manager);
+    SensorMLX90614(NodeManager& node_manager, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -925,13 +901,10 @@ class SensorMLX90614: public Sensor {
 #if defined(USE_BME280) || defined(USE_BMP085) || defined(USE_BMP280)
 class SensorBosch: public Sensor {
   public:
-    SensorBosch(NodeManager& node_manager);
+    SensorBosch(NodeManager& node_manager, int child_id = -255);
     // [101] define how many pressure samples to keep track of for calculating the forecast (default: 5)
     void setForecastSamplesCount(int value);
     // define what to do at each stage of the sketch
-    void onBefore();
-    void onSetup();
-    void onLoop(Child* child);
     void onReceive(MyMessage* message);
     static uint8_t GetI2CAddress(uint8_t chip_id);
   protected:
@@ -954,9 +927,8 @@ class SensorBosch: public Sensor {
 #ifdef USE_BME280
 class SensorBME280: public SensorBosch {
   public:
-    SensorBME280(NodeManager& node_manager);
+    SensorBME280(NodeManager& node_manager, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
   protected:
@@ -970,9 +942,8 @@ class SensorBME280: public SensorBosch {
 #ifdef USE_BMP085
 class SensorBMP085: public SensorBosch {
   public:
-    SensorBMP085(NodeManager& node_manager);
+    SensorBMP085(NodeManager& node_manager, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
   protected:
@@ -986,9 +957,8 @@ class SensorBMP085: public SensorBosch {
 #ifdef USE_BMP280
 class SensorBMP280: public SensorBosch {
   public:
-    SensorBMP280(NodeManager& node_manager);
+    SensorBMP280(NodeManager& node_manager, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
   protected:
@@ -1002,7 +972,7 @@ class SensorBMP280: public SensorBosch {
 #ifdef USE_SONOFF
 class SensorSonoff: public Sensor {
   public:
-    SensorSonoff(NodeManager& node_manager);
+    SensorSonoff(NodeManager& node_manager, int child_id = -255);
     // [101] set the button's pin (default: 0)
     void setButtonPin(int value);
     // [102] set the relay's pin (default: 12)
@@ -1010,7 +980,6 @@ class SensorSonoff: public Sensor {
     // [103] set the led's pin (default: 13)
     void setLedPin(int value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -1480,7 +1449,7 @@ class NodeManager {
 #ifndef DISABLE_POWER_MANAGER
     void setPowerManager(PowerManager& powerManager);
 #endif
-    int getAvailableChildId();
+    int getAvailableChildId(int child_id);
     List<Sensor*> sensors;
     Child* getChild(int child_id);
     Sensor* getSensorWithChild(int child_id);

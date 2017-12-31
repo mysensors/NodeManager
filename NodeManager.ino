@@ -191,7 +191,7 @@ SensorVL53L0X       | 1     | USE_VL53L0X        | VL53L0X laser time-of-flight 
 //#define USE_DIGITAL_INPUT
 //#define USE_DIGITAL_OUTPUT
 //#define USE_DHT
-#define USE_SHT21
+//#define USE_SHT21
 //#define USE_SWITCH
 //#define USE_DS18B20
 //#define USE_BH1750
@@ -199,7 +199,7 @@ SensorVL53L0X       | 1     | USE_VL53L0X        | VL53L0X laser time-of-flight 
 //#define USE_BME280
 //#define USE_BMP085
 //#define USE_BMP280
-//#define USE_SONOFF
+#define USE_SONOFF
 //#define USE_HCSR04
 //#define USE_MCP9808
 //#define USE_MQ
@@ -230,9 +230,9 @@ NodeManager node;
  * Add your sensors below
  */
 
-//SensorBattery battery(node);
+SensorBattery battery(node);
 //SensorConfiguration configuration(node);
-//SensorSignal signal(node);
+SensorSignal signal(node);
 //PowerManager power(5,6);
 
 //SensorAnalogInput analog(node,A0);
@@ -248,7 +248,7 @@ NodeManager node;
 //SensorLatchingRelay latching(node,6);
 //SensorDHT11 dht11(node,6);
 //SensorDHT22 dht22(node,6);
-SensorSHT21 sht21(node);
+//SensorSHT21 sht21(node);
 //SensorHTU21D htu21(node);
 //SensorSwitch sensorSwitch(node,3);
 //SensorDoor door(node,3);
@@ -259,7 +259,7 @@ SensorSHT21 sht21(node);
 //SensorBME280 bme280(node);
 //SensorBMP085 bmp085(node);
 //SensorBMP280 bmp280(node);
-//SensorSonoff sonoff(node);
+SensorSonoff sonoff(node);
 //SensorHCSR04 hcsr04(node,6);
 //SensorMCP9808 mcp9808(node);
 //SensorMQ mq(node,A0);
@@ -293,7 +293,7 @@ void before() {
   
   //node.setPowerManager(power);
   //battery.setReportIntervalMinutes(30);
-  sht21.children.get(1)->child_id = 5;
+  //sht21.children.get(1)->child_id = 5;
 
   
   /*

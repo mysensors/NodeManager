@@ -225,7 +225,7 @@ Child::Child() {
 }
 
 // constructor
-Child::Child(Sensor* __sensor, int _child_id, int _presentation, int _type, const char* _description = "") {
+Child::Child(Sensor* __sensor, int _child_id, int _presentation, int _type, const char* _description) {
   child_id = _child_id;
   presentation = _presentation;
   type = _type;
@@ -247,7 +247,7 @@ bool Child::isNewValue() {
 */
 
 // ChildInt class
-ChildInt::ChildInt(Sensor* sensor, int child_id, int presentation, int type, const char* description = ""): Child(sensor, child_id, presentation, type, description)  {
+ChildInt::ChildInt(Sensor* sensor, int child_id, int presentation, int type, const char* description): Child(sensor, child_id, presentation, type, description)  {
 }
 
 // store a new value and update the total
@@ -281,7 +281,7 @@ bool ChildInt::isNewValue() {
 */
 
 // ChildFloat class
-ChildFloat::ChildFloat(Sensor* sensor, int child_id, int presentation, int type, const char* description = ""): Child(sensor, child_id, presentation, type, description)  {
+ChildFloat::ChildFloat(Sensor* sensor, int child_id, int presentation, int type, const char* description): Child(sensor, child_id, presentation, type, description)  {
 }
 
 // store a new value and update the total
@@ -315,7 +315,7 @@ bool ChildFloat::isNewValue() {
 */
 
 // ChildDouble class
-ChildDouble::ChildDouble(Sensor* sensor, int child_id, int presentation, int type, const char* description = ""): Child(sensor, child_id, presentation, type, description)  {
+ChildDouble::ChildDouble(Sensor* sensor, int child_id, int presentation, int type, const char* description): Child(sensor, child_id, presentation, type, description)  {
 }
 
 // store a new value and update the total
@@ -349,7 +349,7 @@ bool ChildDouble::isNewValue() {
 */
 
 // ChildString class
-ChildString::ChildString(Sensor* sensor, int child_id, int presentation, int type, const char* description = ""): Child(sensor, child_id, presentation, type, description)  {
+ChildString::ChildString(Sensor* sensor, int child_id, int presentation, int type, const char* description): Child(sensor, child_id, presentation, type, description)  {
 }
 
 // store a new value and update the total
@@ -380,7 +380,7 @@ bool ChildString::isNewValue() {
 // constructor
 Sensor::Sensor() {  
 }
-Sensor::Sensor(NodeManager& node_manager, int pin = -1) {
+Sensor::Sensor(NodeManager& node_manager, int pin) {
   _node = &node_manager;
   _pin = pin;
   _report_timer = new Timer(_node);
@@ -596,8 +596,10 @@ void Sensor::onInterrupt(){}
 */
 #ifndef MY_GATEWAY_ESP8266
 // contructor
-SensorBattery::SensorBattery(NodeManager& node_manager): Sensor(node_manager) {
+SensorBattery::SensorBattery(NodeManager& node_manager, int child_id): Sensor(node_manager) {
   _name = "BATTERY";
+  children.allocateBlocks(1);
+  new ChildFloat(this,child_id,S_MULTIMETER,V_VOLTAGE,_name);
   // report battery level every 60 minutes by default
   setReportIntervalMinutes(60);
 }
@@ -615,11 +617,6 @@ void SensorBattery::setBatteryPin(int value) {
 }
 void SensorBattery::setBatteryVoltsPerBit(float value) {
   _battery_volts_per_bit = value;
-}
-
-// what to do during before
-void SensorBattery::onBefore() {
-  new ChildFloat(this,BATTERY_CHILD_ID,S_MULTIMETER,V_VOLTAGE);
 }
 
 // what to do during setup
@@ -668,24 +665,16 @@ void SensorBattery::onReceive(MyMessage* message) {
 */
 #ifndef MY_GATEWAY_ESP8266
 // contructor
-SensorSignal::SensorSignal(NodeManager& node_manager): Sensor(node_manager) {
+SensorSignal::SensorSignal(NodeManager& node_manager, int child_id): Sensor(node_manager) {
   _name = "SIGNAL";
+  children.allocateBlocks(1);
+  new ChildInt(this,child_id,S_SOUND,V_LEVEL,_name);
   // report signal level every 60 minutes by default
   setReportIntervalMinutes(60);
 }
 // setter/getter
 void SensorSignal::setSignalCommand(int value) {
   _signal_command = value;
-}
-
-// what to do during before
-void SensorSignal::onBefore() {
-  new ChildInt(this,SIGNAL_CHILD_ID,S_SOUND,V_LEVEL);
-}
-
-// what to do during setup
-void SensorSignal::onSetup() {
-
 }
 
 // what to do during loop
@@ -713,8 +702,10 @@ void SensorSignal::onReceive(MyMessage* message) {
 */
 
 // contructor
-SensorAnalogInput::SensorAnalogInput(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+SensorAnalogInput::SensorAnalogInput(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "ANALOG_I";
+  children.allocateBlocks(1);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
 }
 
 // setter/getter
@@ -732,11 +723,6 @@ void SensorAnalogInput::setRangeMin(int value) {
 }
 void SensorAnalogInput::setRangeMax(int value) {
   _range_max = value;
-}
-
-// what to do during before
-void SensorAnalogInput::onBefore() {
-  new ChildInt(this,_node->getAvailableChildId(),S_CUSTOM,V_CUSTOM);
 }
 
 // what to do during setup
@@ -805,13 +791,11 @@ int SensorAnalogInput::_getPercentage(int adc) {
 */
 
 // contructor
-SensorLDR::SensorLDR(NodeManager& node_manager, int pin): SensorAnalogInput(node_manager, pin) {
+SensorLDR::SensorLDR(NodeManager& node_manager, int pin, int child_id): SensorAnalogInput(node_manager, pin, child_id) {
   _name = "LDR";
-}
-
-// what to do during before
-void SensorLDR::onBefore() {
-  new ChildInt(this,_node->getAvailableChildId(),S_LIGHT_LEVEL,V_LIGHT_LEVEL);
+  children.get(1)->presentation = S_LIGHT_LEVEL;
+  children.get(1)->type = V_LIGHT_LEVEL;
+  children.get(1)->description = _name;
 }
 
 // what to do during setup
@@ -824,13 +808,11 @@ void SensorLDR::onSetup() {
 */
 
 // contructor
-SensorRain::SensorRain(NodeManager& node_manager, int pin): SensorAnalogInput(node_manager, pin) {
+SensorRain::SensorRain(NodeManager& node_manager, int pin, int child_id): SensorAnalogInput(node_manager, pin, child_id) {
   _name = "RAIN";
-}
-
-// what to do during before
-void SensorRain::onBefore() {
-  new ChildInt(this,_node->getAvailableChildId(),S_RAIN,V_RAINRATE);
+  children.get(1)->presentation = S_RAIN;
+  children.get(1)->type = V_RAINRATE;
+  children.get(1)->description = _name;
 }
 
 // what to do during setup
@@ -846,13 +828,11 @@ void SensorRain::onSetup() {
 */
 
 // contructor
-SensorSoilMoisture::SensorSoilMoisture(NodeManager& node_manager, int pin): SensorAnalogInput(node_manager, pin) {
+SensorSoilMoisture::SensorSoilMoisture(NodeManager& node_manager, int pin, int child_id): SensorAnalogInput(node_manager, pin, child_id) {
   _name = "SOIL";
-}
-
-// what to do during before
-void SensorSoilMoisture::onBefore() {
-  new ChildInt(this,_node->getAvailableChildId(),S_MOISTURE,V_LEVEL);
+  children.get(1)->presentation = S_MOISTURE;
+  children.get(1)->type = V_LEVEL;
+  children.get(1)->description = _name;
 }
 
 // what to do during setup
@@ -871,8 +851,10 @@ void SensorSoilMoisture::onSetup() {
 */
 
 // contructor
-SensorThermistor::SensorThermistor(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+SensorThermistor::SensorThermistor(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "THERMISTOR";
+  children.allocateBlocks(1);
+  new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
 }
 
 // setter/getter
@@ -890,11 +872,6 @@ void SensorThermistor::setSeriesResistor(long value) {
 }
 void SensorThermistor::setOffset(float value) {
   _offset = value;
-}
-
-// what to do during before
-void SensorThermistor::onBefore() {
-  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
 }
 
 // what to do during setup
@@ -945,13 +922,10 @@ void SensorThermistor::onReceive(MyMessage* message) {
 */
 
 // contructor
-SensorML8511::SensorML8511(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+SensorML8511::SensorML8511(NodeManager& node_manager, int pin, int child_id = -255): Sensor(node_manager, pin) {
   _name = "ML8511";
-}
-
-// what to do during before
-void SensorML8511::onBefore() {
-  new ChildFloat(this,_node->getAvailableChildId(),S_UV,V_UV);
+  children.allocateBlocks(1);
+  new ChildFloat(this,_node->getAvailableChildId(child_id),S_UV,V_UV,_name);
 }
 
 // what to do during setup
@@ -1001,8 +975,10 @@ float SensorML8511::_mapfloat(float x, float in_min, float in_max, float out_min
 */
 
 // contructor
-SensorACS712::SensorACS712(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+SensorACS712::SensorACS712(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "ACS712";
+  children.allocateBlocks(1);
+  new ChildFloat(this,_node->getAvailableChildId(child_id),S_MULTIMETER,V_CURRENT,_name);
 }
 
 // setter/getter
@@ -1011,11 +987,6 @@ void SensorACS712::setmVPerAmp(int value) {
 }
 void SensorACS712::setOffset(int value) {
   _ACS_offset = value;
-}
-
-// what to do during before
-void SensorACS712::onBefore() {
-  new ChildFloat(this,_node->getAvailableChildId(),S_MULTIMETER,V_CURRENT);
 }
 
 // what to do during setup
@@ -1056,14 +1027,10 @@ void SensorACS712::onReceive(MyMessage* message) {
 */
 
 // contructor
-SensorDigitalInput::SensorDigitalInput(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+SensorDigitalInput::SensorDigitalInput(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "DIGITAL_I";
-}
-
-// what to do during before
-void SensorDigitalInput::onBefore() {
-  // register the child
-  new ChildInt(this,_node->getAvailableChildId(),S_CUSTOM,V_CUSTOM);
+  children.allocateBlocks(1);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
 }
 
 // what to do during setup
@@ -1103,13 +1070,10 @@ void SensorDigitalInput::onReceive(MyMessage* message) {
    SensorDigitalOutput
 */
 
-SensorDigitalOutput::SensorDigitalOutput(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+SensorDigitalOutput::SensorDigitalOutput(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "DIGITAL_O";
-}
-
-// what to do during before
-void SensorDigitalOutput::onBefore() {
-  new ChildInt(this,_node->getAvailableChildId(),S_CUSTOM,V_CUSTOM);
+  children.allocateBlocks(1);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
 }
 
 // what to do during setup
@@ -1234,13 +1198,11 @@ int SensorDigitalOutput::_getValueToWrite(int value) {
 */
 
 // contructor
-SensorRelay::SensorRelay(NodeManager& node_manager, int pin): SensorDigitalOutput(node_manager, pin) {
+SensorRelay::SensorRelay(NodeManager& node_manager, int pin, int child_id): SensorDigitalOutput(node_manager, pin, child_id) {
   _name = "RELAY";
-}
-
-// what to do during before
-void SensorRelay::onBefore() {
-  new ChildInt(this,_node->getAvailableChildId(),S_BINARY,V_STATUS);
+  children.get(1)->presentation = S_BINARY;
+  children.get(1)->type = V_STATUS;
+  children.get(1)->description = _name;
 }
 
 /*
@@ -1248,11 +1210,12 @@ void SensorRelay::onBefore() {
 */
 
 // contructor
-SensorLatchingRelay::SensorLatchingRelay(NodeManager& node_manager, int pin): SensorRelay(node_manager, pin) {
+SensorLatchingRelay::SensorLatchingRelay(NodeManager& node_manager, int pin, int child_id): SensorRelay(node_manager, pin, child_id) {
   _name = "LATCHING";
   // set the "off" pin to the provided pin and the "on" pin to the provided pin + 1
   _pin_on = pin;
   _pin_off = pin + 1;
+  children.get(1)->description = _name;
 }
 
 // setter/getter
@@ -1264,11 +1227,6 @@ void SensorLatchingRelay::setPinOn(int value) {
 }
 void SensorLatchingRelay::setPinOff(int value) {
   _pin_off = value;
-}
-
-// what to do during before
-void SensorLatchingRelay::onBefore() {
-  new ChildInt(this,_node->getAvailableChildId(),S_BINARY,V_STATUS);
 }
 
 // what to do during setup
@@ -1308,16 +1266,12 @@ void SensorLatchingRelay::_setStatus(Child* child, int value) {
 */
 
 // contructor
-SensorDHT::SensorDHT(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+SensorDHT::SensorDHT(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "DHT";
   _dht_type = DHT::DHT11;
-}
-
-// what to do during before
-void SensorDHT::onBefore() {
-  // register the child
-  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
-  new ChildFloat(this,_node->getAvailableChildId(),S_HUM,V_HUM);
+  children.allocateBlocks(2);
+  new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+  new ChildFloat(this,_node->getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
 }
 
 // what to do during setup
@@ -1375,9 +1329,11 @@ void SensorDHT::onReceive(MyMessage* message) {
 */
 
 // contructor
-SensorDHT11::SensorDHT11(NodeManager& node_manager, int pin): SensorDHT(node_manager, pin) {
+SensorDHT11::SensorDHT11(NodeManager& node_manager, int pin, int child_id): SensorDHT(node_manager, pin, child_id) {
   _name = "DHT11";
   _dht_type = DHT::DHT11;
+  children.get(1)->description = _name;
+  children.get(2)->description = _name;
 }
 
 /*
@@ -1385,9 +1341,11 @@ SensorDHT11::SensorDHT11(NodeManager& node_manager, int pin): SensorDHT(node_man
 */
 
 // contructor
-SensorDHT22::SensorDHT22(NodeManager& node_manager, int pin): SensorDHT(node_manager, pin) {
+SensorDHT22::SensorDHT22(NodeManager& node_manager, int pin, int child_id): SensorDHT(node_manager, pin, child_id) {
   _name = "DHT22";
   _dht_type = DHT::DHT22;
+  children.get(1)->description = _name;
+  children.get(2)->description = _name;
 }
 #endif
 
@@ -1396,16 +1354,11 @@ SensorDHT22::SensorDHT22(NodeManager& node_manager, int pin): SensorDHT(node_man
 */
 #ifdef USE_SHT21
 // contructor
-SensorSHT21::SensorSHT21(NodeManager& node_manager): Sensor(node_manager) {
+SensorSHT21::SensorSHT21(NodeManager& node_manager, int child_id): Sensor(node_manager) {
   _name = "SHT21";
-  // register the child
-  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP,_name);
-  new ChildFloat(this,_node->getAvailableChildId(),S_HUM,V_HUM,_name);
-}
-
-// what to do during before
-void SensorSHT21::onBefore() {
-
+  children.allocateBlocks(2);
+  new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+  new ChildFloat(this,_node->getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
 }
 
 // what to do during setup
@@ -1460,8 +1413,10 @@ void SensorSHT21::onReceive(MyMessage* message) {
  * SensorHTU21D
  */
  // constructor
-SensorHTU21D::SensorHTU21D(NodeManager& nodeManager): SensorSHT21(nodeManager) {
+SensorHTU21D::SensorHTU21D(NodeManager& nodeManager, int child_id): SensorSHT21(nodeManager, child_id) {
   _name = "HTU21";
+  children.get(1)->description = _name;
+  children.get(2)->description = _name;
 }
 #endif 
 
@@ -1469,8 +1424,10 @@ SensorHTU21D::SensorHTU21D(NodeManager& nodeManager): SensorSHT21(nodeManager) {
 /*
  * SensorSwitch
  */
-SensorSwitch::SensorSwitch(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+SensorSwitch::SensorSwitch(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "SWITCH";
+  children.allocateBlocks(1);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_CUSTOM,V_TRIPPED,_name);
 }
 
 // setter/getter
@@ -1485,11 +1442,6 @@ void SensorSwitch::setTriggerTime(int value) {
 }
 void SensorSwitch::setInitial(int value) {
   _initial = value;
-}
-
-// what to do during before
-void SensorSwitch::onBefore() {
-  new ChildInt(this,_node->getAvailableChildId(),S_CUSTOM,V_TRIPPED);
 }
 
 // what to do during setup
@@ -1544,25 +1496,21 @@ void SensorSwitch::onInterrupt() {
 /*
  * SensorDoor
  */
-SensorDoor::SensorDoor(NodeManager& node_manager, int pin): SensorSwitch(node_manager, pin) {
+SensorDoor::SensorDoor(NodeManager& node_manager, int pin, int child_id): SensorSwitch(node_manager, pin, child_id) {
   _name = "DOOR";
-}
-
-// what to do during before
-void SensorDoor::onBefore() {
-  new ChildInt(this,_node->getAvailableChildId(),S_DOOR,V_TRIPPED);
+  children.get(1)->presentation = S_DOOR;
+  children.get(1)->type = V_TRIPPED;
+  children.get(1)->description = _name;
 }
 
 /*
  * SensorMotion
  */
-SensorMotion::SensorMotion(NodeManager& node_manager, int pin): SensorSwitch(node_manager, pin) {
+SensorMotion::SensorMotion(NodeManager& node_manager, int pin, int child_id): SensorSwitch(node_manager, pin, child_id) {
   _name = "MOTION";
-}
-
-// what to do during before
-void SensorMotion::onBefore() {
-  new ChildInt(this,_node->getAvailableChildId(),S_MOTION,V_TRIPPED);
+  children.get(1)->presentation = S_MOTION;
+  children.get(1)->type = V_TRIPPED;
+  children.get(1)->description = _name;
 }
 
 // what to do during setup
@@ -1578,12 +1526,8 @@ void SensorMotion::onSetup() {
 */
 #ifdef USE_DS18B20
 // contructor
-SensorDs18b20::SensorDs18b20(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+SensorDs18b20::SensorDs18b20(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "DS18B20";
-}
-
-// what to do during before
-void SensorDs18b20::onBefore() {
   // initialize the library
   OneWire* oneWire = new OneWire(_pin);
   _sensors = new DallasTemperature(oneWire);
@@ -1591,12 +1535,8 @@ void SensorDs18b20::onBefore() {
   _sensors->begin();
   // register a new child for each sensor on the bus
   for(int i = 0; i < _sensors->getDeviceCount(); i++) {
-    new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
+    new ChildFloat(this,_node->getAvailableChildId(child_id+i),S_TEMP,V_TEMP,_name);
   }
-}
-
-// what to do during setup
-void SensorDs18b20::onSetup() {
 }
 
 // what to do during loop
@@ -1651,7 +1591,6 @@ void SensorDs18b20::setResolution(int value) {
 void SensorDs18b20::setSleepDuringConversion(bool value) {
    _sleep_during_conversion = value;
 }
-
 #endif
 
 /*
@@ -1659,17 +1598,14 @@ void SensorDs18b20::setSleepDuringConversion(bool value) {
 */
 #ifdef USE_BH1750
 // contructor
-SensorBH1750::SensorBH1750(NodeManager& node_manager): Sensor(node_manager) {
+SensorBH1750::SensorBH1750(NodeManager& node_manager, int child_id): Sensor(node_manager) {
   _name = "BH1750";
+  children.allocateBlocks(1);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_LIGHT_LEVEL,V_LEVEL,_name);
 }
 // setter/getter
 void SensorBH1750::setMode(uint8_t mode) {
   _lightSensor->configure(mode);
-}
-
-// what to do during before
-void SensorBH1750::onBefore() {
-  new ChildInt(this,_node->getAvailableChildId(),S_LIGHT_LEVEL,V_LEVEL);
 }
 
 // what to do during setup
@@ -1705,14 +1641,11 @@ void SensorBH1750::onReceive(MyMessage* message) {
 */
 #ifdef USE_MLX90614
 // contructor
-SensorMLX90614::SensorMLX90614(NodeManager& node_manager): Sensor(node_manager) {
+SensorMLX90614::SensorMLX90614(NodeManager& node_manager, int child_id): Sensor(node_manager) {
   _name = "MLX90614";
-}
-
-// what to do during before
-void SensorMLX90614::onBefore() {
-  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
-  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
+  children.allocateBlocks(2);
+  new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+  new ChildFloat(this,_node->getAvailableChildId(child_id+1),S_TEMP,V_TEMP,_name);
 }
 
 // what to do during setup
@@ -1747,14 +1680,13 @@ void SensorMLX90614::onReceive(MyMessage* message) {
 }
 #endif
 
-
 /*
    SensorBosch
 */
 #if defined(USE_BME280) || defined(USE_BMP085) || defined(USE_BMP280)
 // contructor
-SensorBosch::SensorBosch(NodeManager& node_manager): Sensor(node_manager) {
-  _name = "BOSH";
+SensorBosch::SensorBosch(NodeManager& node_manager, int child_id = -255): Sensor(node_manager) {
+  _name = "BOSCH";
   // initialize the forecast samples array
   _forecast_samples = new float[_forecast_samples_count];
 }
@@ -1762,18 +1694,6 @@ SensorBosch::SensorBosch(NodeManager& node_manager): Sensor(node_manager) {
 // setter/getter
 void SensorBosch::setForecastSamplesCount(int value) {
   _forecast_samples_count = value;
-}
-
-// what to do during before
-void SensorBosch::onBefore() {
-}
-
-// what to do during setup
-void SensorBosch::onSetup() {
-}
-
-// what to do during loop
-void SensorBosch::onLoop(Child* child) {
 }
 
 // what to do as the main task when receiving a message
@@ -1895,17 +1815,13 @@ uint8_t SensorBosch::GetI2CAddress(uint8_t chip_id) {
  * SensorBME280
  */
 #ifdef USE_BME280
-SensorBME280::SensorBME280(NodeManager& node_manager): SensorBosch(node_manager) {
+SensorBME280::SensorBME280(NodeManager& node_manager, int child_id): SensorBosch(node_manager, child_id) {
   _name = "BME280";
-}
-
-// what to do during before
-void SensorBME280::onBefore() {
-  // register the child
-  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
-  new ChildFloat(this,_node->getAvailableChildId(),S_HUM,V_HUM);
-  new ChildFloat(this,_node->getAvailableChildId(),S_BARO,V_PRESSURE);
-  new ChildString(this,_node->getAvailableChildId(),S_BARO,V_FORECAST);
+  children.allocateBlocks(4);
+  new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+  new ChildFloat(this,_node->getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
+  new ChildFloat(this,_node->getAvailableChildId(child_id+2),S_BARO,V_PRESSURE,_name);
+  new ChildString(this,_node->getAvailableChildId(child_id+3),S_BARO,V_FORECAST,_name);
 }
 
 // what to do during setup
@@ -1976,16 +1892,12 @@ void SensorBME280::onLoop(Child* child) {
 */
 #ifdef USE_BMP085
 // contructor
-SensorBMP085::SensorBMP085(NodeManager& node_manager): SensorBosch(node_manager) {
+SensorBMP085::SensorBMP085(NodeManager& node_manager, int child_id): SensorBosch(node_manager, child_id) {
   _name = "BMP085";
-}
-
-// what to do during before
-void SensorBMP085::onBefore() {
-  // register the child
-  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
-  new ChildFloat(this,_node->getAvailableChildId(),S_BARO,V_PRESSURE);
-  new ChildString(this,_node->getAvailableChildId(),S_BARO,V_FORECAST);
+  children.allocateBlocks(3);
+  new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+  new ChildFloat(this,_node->getAvailableChildId(child_id+1),S_BARO,V_PRESSURE,_name);
+  new ChildString(this,_node->getAvailableChildId(child_id+2),S_BARO,V_FORECAST,_name);
 }
 
 // what to do during setup
@@ -2042,16 +1954,13 @@ void SensorBMP085::onLoop(Child* child) {
  * SensorBMP280
  */
 #ifdef USE_BMP280
-SensorBMP280::SensorBMP280(NodeManager& node_manager): SensorBosch(node_manager) {
+SensorBMP280::SensorBMP280(NodeManager& node_manager, int child_id): SensorBosch(node_manager, child_id) {
   _name = "BMP280";
-}
+  children.allocateBlocks(3);
+  new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+  new ChildFloat(this,_node->getAvailableChildId(child_id+1),S_BARO,V_PRESSURE,_name);
+  new ChildString(this,_node->getAvailableChildId(child_id+2),S_BARO,V_FORECAST,_name);
 
-  // what to do during before
-void SensorBMP280::onBefore() {
-  // register the child
-  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
-  new ChildFloat(this,_node->getAvailableChildId(),S_BARO,V_PRESSURE);
-  new ChildString(this,_node->getAvailableChildId(),S_BARO,V_FORECAST);
 }
 
 // what to do during setup
@@ -2108,8 +2017,10 @@ void SensorBMP280::onLoop(Child* child) {
 */
 #ifdef USE_SONOFF
 // contructor
-SensorSonoff::SensorSonoff(NodeManager& node_manager): Sensor(node_manager) {
+SensorSonoff::SensorSonoff(NodeManager& node_manager, int child_id): Sensor(node_manager) {
   _name = "SONOFF";
+  children.allocateBlocks(1);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_BINARY,V_STATUS,_name);
 } 
 
 // setter/getter
@@ -2121,12 +2032,6 @@ void SensorSonoff::setRelayPin(int value) {
 }
 void SensorSonoff::setLedPin(int value) {
     _led_pin = value;
-}
-
-// what to do during before
-void SensorSonoff::onBefore() {
-  // register the child
-  new ChildInt(this,_node->getAvailableChildId(),S_BINARY,V_STATUS);
 }
 
 // what to do during setup
@@ -3898,7 +3803,8 @@ void NodeManager::sleepOrWait(long value) {
 }
 
 // return the next available child_id
-int NodeManager::getAvailableChildId() {
+int NodeManager::getAvailableChildId(int child_id) {
+  if (child_id > -1) return child_id;
   for (int i = 1; i < 255; i++) {
     if (i == CONFIGURATION_CHILD_ID || i == BATTERY_CHILD_ID || i == SIGNAL_CHILD_ID) continue;
     Child* child = getChild(i);
