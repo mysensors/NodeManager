@@ -156,6 +156,10 @@
   #include <SSD1306Ascii.h>
   #include <SSD1306AsciiAvrI2c.h>
 #endif
+#ifdef USE_SHT31
+  #include <Wire.h>
+  #include "Adafruit_SHT31.h"
+#endif
 
 /*******************************************************************
    Classes
@@ -1399,6 +1403,22 @@ class DisplaySSD1306: public Sensor {
     uint8_t _i2caddress = 0x3c;
     int _fontsize = 1;
     int _caption_fontsize = 2;
+};
+#endif
+
+/*
+   SensorSHT31: temperature and humidity sensor
+*/
+#ifdef USE_SHT31
+class SensorSHT31: public Sensor {
+  public:
+    SensorSHT31(NodeManager& node_manager, int child_id = -255);
+    // define what to do at each stage of the sketch
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(MyMessage* message);
+  protected:
+    Adafruit_SHT31* _sht31;
 };
 #endif
 

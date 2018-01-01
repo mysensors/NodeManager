@@ -3189,6 +3189,68 @@ void DisplaySSD1306::onReceive(MyMessage* message) {
 #endif
 
 /*
+   SensorSHT31
+*/
+#ifdef USE_SHT31
+// contructor
+SensorSHT31::SensorSHT31(NodeManager& node_manager, int child_id): Sensor(node_manager) {
+  _name = "SHT31";
+  children.allocateBlocks(2);
+  new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+  new ChildFloat(this,_node->getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
+}
+
+// what to do during setup
+void SensorSHT31::onSetup() {
+  _sht31 = new Adafruit_SHT31();
+  // Set to 0x45 for alternate i2c addr
+  _sht31->begin(0x44); 
+}
+
+// what to do during loop
+void SensorSHT31::onLoop(Child* child) {
+  // temperature sensor
+  if (child->type == V_TEMP) {
+    // read the temperature
+    float temperature = _sht31->readTemperature();
+    // convert it
+    temperature = _node->celsiusToFahrenheit(temperature);
+    #ifdef NODEMANAGER_DEBUG
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
+      Serial.print(F(" T="));
+      Serial.println(temperature);
+    #endif
+    // store the value
+    if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
+  }
+  // Humidity Sensor
+  else if (child->type == V_HUM) {
+    // read humidity
+    float humidity = _sht31->readHumidity();
+    if (isnan(humidity)) return;
+    #ifdef NODEMANAGER_DEBUG
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
+      Serial.print(F(" H="));
+      Serial.println(humidity);
+    #endif
+    // store the value
+   if (! isnan(humidity)) ((ChildFloat*)child)->setValueFloat(humidity);
+  }
+}
+
+// what to do as the main task when receiving a message
+void SensorSHT31::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+}
+#endif
+
+/*
    SensorConfiguration
 */
 // contructor
