@@ -672,7 +672,6 @@ class SensorACS712: public Sensor {
     // [102] set ACS offset (default: 2500);
     void setOffset(int value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);

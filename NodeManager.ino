@@ -86,11 +86,8 @@ SensorVL53L0X       | 1     | USE_VL53L0X        | VL53L0X laser time-of-flight 
 // General settings
 #define SKETCH_NAME "NodeManager"
 #define SKETCH_VERSION "1.0"
-#define MY_BAUD_RATE 9600
 //#define MY_DEBUG
 //#define MY_NODE_ID 99
-//#define MY_SMART_SLEEP_WAIT_DURATION_MS 500
-#define MY_SPLASH_SCREEN_DISABLED
 
 // NRF24 radio settings
 #define MY_RADIO_NRF24
@@ -132,6 +129,13 @@ SensorVL53L0X       | 1     | USE_VL53L0X        | VL53L0X laser time-of-flight 
 //#define OTA_WAIT_PERIOD 300
 //#define FIRMWARE_MAX_REQUESTS 2
 //#define MY_OTA_RETRY 2
+
+// Advanced settings
+#define MY_BAUD_RATE 9600
+//#define MY_SMART_SLEEP_WAIT_DURATION_MS 500
+#define MY_SPLASH_SCREEN_DISABLED
+//#define MY_DISABLE_RAM_ROUTING_TABLE_FEATURE
+//#define MY_DISABLE_SIGNAL_REPORT
 
 /**********************************
  * MySensors gateway configuration
@@ -222,7 +226,7 @@ SensorVL53L0X       | 1     | USE_VL53L0X        | VL53L0X laser time-of-flight 
 //#define DISABLE_INTERRUPTS
 //#define DISABLE_TRACK_LAST_VALUE
 //#define DISABLE_EEPROM
-#define DISABLE_SLEEP
+//#define DISABLE_SLEEP
 
 /***********************************
  * Load NodeManager Library
@@ -299,7 +303,6 @@ void before() {
   //node.setPowerManager(power);
   //battery.setReportIntervalMinutes(30);
   //sht21.children.get(1)->child_id = 5;
-
   
   /*
   * Configure your sensors above
