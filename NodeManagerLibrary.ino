@@ -428,9 +428,11 @@ void Sensor::powerOff() {
   _powerManager->powerOff();
 }
 #endif
+#ifndef DISABLE_INTERRUPTS
 int Sensor::getInterruptPin() {
   return _interrupt_pin;
 }
+#endif
 
 // After how many seconds the sensor will report back its measure
 void Sensor::setReportIntervalSeconds(int value) {
@@ -458,11 +460,13 @@ bool Sensor::isReportIntervalConfigured() {
   return _report_timer->isConfigured();
 }
 
+#ifndef DISABLE_INTERRUPTS
 // listen for interrupts on the given pin so interrupt() will be called when occurring
 void Sensor::setInterrupt(int pin, int mode, int initial) {
   _interrupt_pin = pin;
   _node->setInterrupt(pin,mode,initial);
 }
+#endif
 
 // register a child
 void Sensor::registerChild(Child* child) {
@@ -522,9 +526,9 @@ void Sensor::loop(MyMessage* message) {
     }
   }
   // turn the sensor on
-#ifndef DISABLE_POWER_MANAGER
-  powerOn();
-#endif
+  #ifndef DISABLE_POWER_MANAGER
+    powerOn();
+  #endif
   // iterates over all the children
   for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
     Child* child = *itr;
@@ -550,18 +554,20 @@ void Sensor::loop(MyMessage* message) {
         child->sendValue();
   }
   // turn the sensor off
-#ifndef DISABLE_POWER_MANAGER
-  powerOff();
-#endif
+  #ifndef DISABLE_POWER_MANAGER
+    powerOff();
+  #endif
   // if called from loop(), restart the report timer if over
   if (message == nullptr && _report_timer->isRunning() && _report_timer->isOver()) _report_timer->restart();
 }
 
+#ifndef DISABLE_INTERRUPTS
 // receive and handle an interrupt
 void Sensor::interrupt() {
   // call the implementation of onInterrupt()
   onInterrupt();
 }
+#endif
 
 // receive a message from the radio network
 void Sensor::receive(MyMessage &message) {
@@ -3041,16 +3047,18 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       case 8: _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,VERSION); return;
       case 9: _node->wakeup(); break;
       case 10: _node->setRetries(request.getValueInt()); break;
-      case 19: _node->setSleepInterruptPin(request.getValueInt()); break;
+      #ifndef DISABLE_INTERRUPTS
+        case 19: _node->setSleepInterruptPin(request.getValueInt()); break;
+        case 28: _node->setInterruptMinDelta(request.getValueInt()); break;
+      #endif
       case 20: _node->setSleepBetweenSend(request.getValueInt()); break;
       case 21: _node->setAck(request.getValueInt()); break;
       case 22: _node->setIsMetric(request.getValueInt()); break;
-#ifndef DISABLE_POWER_MANAGER
-      case 24: _node->powerOn(); break;
-      case 25: _node->powerOff(); break;
-#endif
+      #ifndef DISABLE_POWER_MANAGER
+        case 24: _node->powerOn(); break;
+        case 25: _node->powerOff(); break;
+      #endif
       case 27: _node->saveToMemory(0,request.getValueInt()); break;
-      case 28: _node->setInterruptMinDelta(request.getValueInt()); break;
       case 30: _node->setSleepOrWait(request.getValueInt()); break;
       case 31: _node->setRebootPin(request.getValueInt()); break;
       case 32: _node->setADCOff(); break;
@@ -3073,10 +3081,10 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         case 6: sensor->setSamplesInterval(request.getValueInt()); break;
         case 7: sensor->setTrackLastValue(request.getValueInt()); break;
         case 9: sensor->setForceUpdateMinutes(request.getValueInt()); break;
-#ifndef DISABLE_POWER_MANAGER
-        case 13: sensor->powerOn(); break;
-        case 14: sensor->powerOff(); break;
-#endif
+        #ifndef DISABLE_POWER_MANAGER
+          case 13: sensor->powerOn(); break;
+          case 14: sensor->powerOff(); break;
+        #endif
         case 16: sensor->setReportIntervalMinutes(request.getValueInt()); break;
         case 17: sensor->setReportIntervalSeconds(request.getValueInt()); break;
         case 19: sensor->setReportIntervalHours(request.getValueInt()); break;
@@ -3300,10 +3308,12 @@ NodeManager::NodeManager(int sensorcount) {
   }
 }
 
+#ifndef DISABLE_INTERRUPTS
 int NodeManager::_last_interrupt_pin = -1;
 long NodeManager::_last_interrupt_1 = millis();
 long NodeManager::_last_interrupt_2 = millis();
 long NodeManager::_interrupt_min_delta = 100;
+#endif
 
 // setter/getter
 void NodeManager::setRetries(int value) {
@@ -3334,6 +3344,7 @@ void NodeManager::setSleepDays(int value) {
 long NodeManager::getSleepSeconds() {
   return _sleep_time;
 }
+#ifndef DISABLE_INTERRUPTS
 void NodeManager::setSleepInterruptPin(int value) {
   _sleep_interrupt_pin = value;
 }
@@ -3350,6 +3361,7 @@ void NodeManager::setInterrupt(int pin, int mode, int initial) {
 void NodeManager::setInterruptMinDelta(long value) {
   _interrupt_min_delta = value;
 }
+#endif
 #ifndef DISABLE_POWER_MANAGER
 void NodeManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
   if (_powerManager == nullptr) return;
@@ -3495,19 +3507,22 @@ void NodeManager::setup() {
     // call each sensor's setup()
     sensor->setup();
   }
+#ifndef DISABLE_INTERRUPTS
   // setup the interrupt pins
   setupInterrupts();
+#endif
 }
 
 // run the main function for all the register sensors
 void NodeManager::loop() {
   // turn on the pin powering all the sensors
-#ifndef DISABLE_POWER_MANAGER
-  powerOn();
-#endif
+  #ifndef DISABLE_POWER_MANAGER
+    powerOn();
+  #endif
   // run loop for all the registered sensors
   for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
     Sensor* sensor = *itr;
+    #ifndef DISABLE_INTERRUPTS
     if (_last_interrupt_pin != -1 && sensor->getInterruptPin() == _last_interrupt_pin) {
       // if there was an interrupt for this sensor, call the sensor's interrupt() and then loop()
       _message.clear();
@@ -3517,15 +3532,18 @@ void NodeManager::loop() {
       _last_interrupt_pin = -1;
     }
     else if (_last_interrupt_pin == -1) {
+    #else
+    if (true) {
+    #endif
       // if just at the end of a cycle, call the sensor's loop() 
       _message.clear();
       sensor->loop(nullptr);
     }
   }
   // turn off the pin powering all the sensors
-#ifndef DISABLE_POWER_MANAGER
-  powerOff();
-#endif
+  #ifndef DISABLE_POWER_MANAGER
+    powerOff();
+  #endif
   // continue/start sleeping as requested
   if (isSleepingNode()) _sleep();
 }
@@ -3548,15 +3566,15 @@ void NodeManager::receive(MyMessage &message) {
   Sensor* sensor = getSensorWithChild(message.sensor);
   if (sensor != nullptr) {
     // turn on the pin powering all the sensors
-#ifndef DISABLE_POWER_MANAGER
-    powerOn();
-#endif
+    #ifndef DISABLE_POWER_MANAGER
+      powerOn();
+    #endif
     // call the sensor's receive()
     sensor->receive(message);
     // turn off the pin powering all the sensors
-#ifndef DISABLE_POWER_MANAGER
-    powerOff();
-#endif
+    #ifndef DISABLE_POWER_MANAGER
+      powerOff();
+    #endif
   }
 }
 
@@ -3662,6 +3680,7 @@ float NodeManager::getVcc() {
   #endif
 }
 
+#ifndef DISABLE_INTERRUPTS
 // setup the interrupt pins
 void NodeManager::setupInterrupts() {
   // configure wakeup pin if needed
@@ -3698,6 +3717,7 @@ void NodeManager::setupInterrupts() {
 int NodeManager::getLastInterruptPin() {
   return _last_interrupt_pin;
 }
+#endif
 
 // set the default interval in seconds all the sensors will report their measures
 void NodeManager::setReportIntervalSeconds(int value) {
@@ -3757,6 +3777,7 @@ int NodeManager::getAvailableChildId(int child_id) {
   return 254;
 }
 
+#ifndef DISABLE_INTERRUPTS
 // handle an interrupt
 void NodeManager::_onInterrupt_1() {
   long now = millis();
@@ -3780,6 +3801,7 @@ void NodeManager::_onInterrupt_2() {
     _last_interrupt_2 = now;
   }
 }
+#endif
 
 // send a message by providing the source child, type of the message and value
 void NodeManager::sendMessage(int child_id, int type, int value) {
@@ -3866,6 +3888,7 @@ void NodeManager::_sleep() {
   #endif
   // go to sleep
   int interrupt = -1;
+#ifndef DISABLE_INTERRUPTS
   // setup interrupt pins
   int interrupt_1_pin = _interrupt_1_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_1);
   int interrupt_2_pin = _interrupt_2_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_2);
@@ -3894,6 +3917,9 @@ void NodeManager::_sleep() {
     // when waking up from an interrupt on the wakup pin, stop sleeping
     if (_sleep_interrupt_pin == pin_number) _status = AWAKE;
   }
+#else
+  sleep(INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,_sleep_time*1000, true);
+#endif
   // coming out of sleep
   #ifdef NODEMANAGER_DEBUG
     Serial.println(F("AWAKE"));

@@ -425,10 +425,12 @@ class Sensor {
     void setReportIntervalDays(int value);
     // return true if the report interval has been already configured
     bool isReportIntervalConfigured();
+#ifndef DISABLE_INTERRUPTS
     // return the pin the interrupt is attached to
     int getInterruptPin();
     // listen for interrupts on the given pin so interrupt() will be called when occurring
     void setInterrupt(int pin, int mode, int initial);
+#endif
 #ifndef DISABLE_POWER_MANAGER
     // set a previously configured PowerManager to the sensor so to powering it up with custom pins
     void setPowerManager(PowerManager& powerManager);
@@ -440,7 +442,9 @@ class Sensor {
     void presentation();
     void setup();
     void loop(MyMessage* message);
+#ifndef DISABLE_INTERRUPTS
     void interrupt();
+#endif
     void receive(MyMessage &message);
     // abstract functions, subclasses need to implement
     virtual void onBefore();
@@ -458,7 +462,9 @@ class Sensor {
     int _samples = 1;
     int _samples_interval = 0;
     bool _track_last_value = false;
+#ifndef DISABLE_INTERRUPTS
     int _interrupt_pin = -1;
+#endif
 #ifndef DISABLE_POWER_MANAGER
     PowerManager* _powerManager = nullptr;
 #endif
@@ -1345,12 +1351,14 @@ class NodeManager {
     void setSleepHours(int value);
     // [29] set the duration (in days) of a sleep cycle
     void setSleepDays(int value);
+#ifndef DISABLE_INTERRUPTS
     // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
     void setSleepInterruptPin(int value);
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
     void setInterrupt(int pin, int mode, int initial = -1);
     // [28] ignore two consecutive interrupts if happening within this timeframe in milliseconds (default: 100)
     void setInterruptMinDelta(long value);
+#endif
     // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
     int getSleepBetweenSend();
@@ -1392,10 +1400,12 @@ class NodeManager {
     void saveToMemory(int index, int value);
     // return vcc in V
     float getVcc();
+#ifndef DISABLE_INTERRUPTS
     // setup the configured interrupt pins
     void setupInterrupts();
     // return the pin from which the last interrupt came
     int getLastInterruptPin();
+#endif
     // [36] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
     void setReportIntervalSeconds(int value);
     // [37] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
@@ -1421,9 +1431,11 @@ class NodeManager {
     void loop();
     void receive(MyMessage & msg);
     void receiveTime(unsigned long ts);
+#ifndef DISABLE_INTERRUPTS
     // handle interrupts
     static void _onInterrupt_1();
     static void _onInterrupt_2();
+#endif
     // send a message by providing the source child, type of the message and value
 	  void sendMessage(int child_id, int type, int value);
     void sendMessage(int child_id, int type, float value);
@@ -1447,6 +1459,7 @@ class NodeManager {
     int _sleep_interrupt_pin = -1;
     int _sleep_between_send = 0;
     int _retries = 1;
+#ifndef DISABLE_INTERRUPTS
     int _interrupt_1_mode = MODE_NOT_DEFINED;
     int _interrupt_2_mode = MODE_NOT_DEFINED;
     int _interrupt_1_initial = -1;
@@ -1455,6 +1468,7 @@ class NodeManager {
     static long _interrupt_min_delta;
     static long _last_interrupt_1;
     static long _last_interrupt_2;
+#endif
     long _timestamp = -1;
     bool _ack = false;
     void _sleep();
