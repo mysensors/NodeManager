@@ -243,6 +243,9 @@ Child::Child(Sensor* __sensor, int _child_id, int _presentation, int _type, cons
 // set a value, implemented by the subclasses
 void Child::sendValue() {
 }
+// Print the child's value (variable type depending on the child class) to the given output
+void Child::printOn(Print& p) {
+}
 #ifndef DISABLE_TRACK_LAST_VALUE
 // check if it is an updated value, implemented by the subclasses
 bool Child::isNewValue() {
@@ -278,6 +281,11 @@ void ChildInt::sendValue() {
 #endif
   _total = 0;
   _samples = 0;
+}
+
+// Print the child's value (variable type depending on the child class) to the given output
+void ChildInt::printOn(Print& p) {
+  p.print(_value);
 }
 
 #ifndef DISABLE_TRACK_LAST_VALUE
@@ -317,6 +325,12 @@ void ChildFloat::sendValue() {
   _total = 0;
   _samples = 0;
 }
+
+// Print the child's value (variable type depending on the child class) to the given output
+void ChildFloat::printOn(Print& p) {
+  p.print(_value);
+}
+
 #ifndef DISABLE_TRACK_LAST_VALUE
 // check if it is an updated value
 bool ChildFloat::isNewValue() {
@@ -354,6 +368,12 @@ void ChildDouble::sendValue() {
   _total = 0;
   _samples = 0;
 }
+
+// Print the child's value (variable type depending on the child class) to the given output
+void ChildDouble::printOn(Print& p) {
+  p.print(_value);
+}
+
 #ifndef DISABLE_TRACK_LAST_VALUE
 // check if it is an updated value
 bool ChildDouble::isNewValue() {
@@ -386,6 +406,11 @@ void ChildString::sendValue() {
   _last_value = _value;
 #endif
   _value = "";
+}
+
+// Print the child's value (variable type depending on the child class) to the given output
+void ChildString::printOn(Print& p) {
+  p.print(_value);
 }
 
 #ifndef DISABLE_TRACK_LAST_VALUE
@@ -3031,6 +3056,139 @@ int SensorVL53L0X::_getDistance() {
 #endif
 
 /*
+ * DisplaySSD1306 OLED displays (I²C)
+ */
+#ifdef USE_SSD1306
+// constructor
+DisplaySSD1306::DisplaySSD1306(NodeManager& node_manager, int child_id): Sensor(node_manager) {
+  _name = "SSD1306";
+  // We don't need any sensors, but we need a child, otherwise the loop will never be executed
+  children.allocateBlocks(1);
+  new Child(this, _node->getAvailableChildId(child_id), S_INFO, V_TEXT,_name);
+}
+
+// setter/getter
+void DisplaySSD1306::setDev(const DevType* dev) {
+  _dev = dev;
+}
+void DisplaySSD1306::setI2CAddress(uint8_t i2caddress) {
+  _i2caddress = i2caddress;
+}
+// [101] set text font (default: Adafruit5x7)
+void DisplaySSD1306::setFont(const uint8_t* font) {
+  _oled->setFont(font);
+}
+// [102] set the contrast of the display
+void DisplaySSD1306::setContrast(uint8_t value) {
+  _oled->setContrast(value);
+}
+// [103] set the displayed text
+void DisplaySSD1306::setText(const char* value) {
+  ((ChildString*)children.get(1))->setValueString(value);
+}
+// [104] Rotate the display 180 degree
+void DisplaySSD1306::rotateDisplay(bool rotate) {
+  if (rotate) {
+    _oled->ssd1306WriteCmd(SSD1306_SEGREMAP);
+    _oled->ssd1306WriteCmd(SSD1306_COMSCANINC);
+  } else {
+    _oled->ssd1306WriteCmd(SSD1306_SEGREMAP | 0x01);
+    _oled->ssd1306WriteCmd(SSD1306_COMSCANDEC);
+  }
+}
+// [105] Text font size (possible are 1 and 2; default is 1)
+void DisplaySSD1306::setFontSize(int fontsize) {
+  _fontsize = (fontsize>=2) ? 2 : 1;
+}
+// [106] Text caption font size (possible are 1 and 2; default is 2)
+void DisplaySSD1306::setHeaderFontSize(int fontsize) {
+  _caption_fontsize = (fontsize>=2) ? 2 : 1;
+}
+// [107] Invert display (black text on color background)
+void DisplaySSD1306::invertDisplay(bool invert = true) {
+  if (invert) {
+    _oled->ssd1306WriteCmd(SSD1306_INVERTDISPLAY);
+  } else {
+    _oled->ssd1306WriteCmd(SSD1306_NORMALDISPLAY);
+  }
+}
+
+// what to do during setup
+void DisplaySSD1306::onSetup() {
+  _oled = new SSD1306AsciiAvrI2c();
+  _oled->begin(_dev, _i2caddress);
+  _oled->setFont(Adafruit5x7);
+}
+
+// what to do during loop
+void DisplaySSD1306::onLoop(Child*child) {
+  if (child) {
+    _display(((ChildString*)child)->getValueString());
+  } else {
+    _display();
+  }
+  #ifdef NODEMANAGER_DEBUG
+    Serial.print(_name);
+    Serial.println(F(" UPD"));
+  #endif
+}
+
+void DisplaySSD1306::updateDisplay() {
+  _display(((ChildString*)children.get(1))->getValueString());
+}
+
+void DisplaySSD1306::_display(const char*displaystr = 0) {
+  _oled->setCursor(0, 0);
+  if (displaystr) {
+    if (_caption_fontsize >= 2 )
+      _oled->set2X();
+    else
+      _oled->set1X();
+    _oled->print(displaystr);
+    _oled->clearToEOL();
+    _oled->println();
+  }
+
+  if (_fontsize >= 2 )
+    _oled->set2X();
+  else
+    _oled->set1X();
+
+  for (List<Sensor*>::iterator itr = _node->sensors.begin(); itr != _node->sensors.end(); ++itr) {
+    Sensor* sensor = *itr;
+    // Display sensor name
+    _oled->print(sensor->getName());
+//    _oled->clearToEOL();
+//    _oled->println();
+
+    // Loop through all children and show name, value (and type)
+    for (List<Child*>::iterator chitr = sensor->children.begin(); chitr != sensor->children.end(); ++chitr) {
+      Child* ch = *chitr;
+      if (strlen(ch->description) > 0) {
+        _oled->print(F(" "));
+        _oled->print(ch->description);
+      }
+      _oled->print(F(": "));
+      ch->printOn(*_oled);
+      _oled->clearToEOL();
+      _oled->println();
+    }
+  }
+  // The current row starts with index 0, so we need to offset by one
+  if (_oled->row() + 1 < _oled->displayRows()) {
+    _oled->clear(0, _oled->displayWidth() - 1, _oled->row() + 1, _oled->displayRows());
+  }
+}
+
+// what to do as the main task when receiving a message
+void DisplaySSD1306::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+}
+#endif
+
+/*
    SensorConfiguration
 */
 // contructor
@@ -3321,6 +3479,20 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         SensorPulseMeter* custom_sensor = (SensorPulseMeter*)sensor;
         switch(function) {
           case 102: custom_sensor->setPulseFactor(request.getValueFloat()); break;
+          default: return;
+        }
+      }
+      #endif
+      #ifdef USE_SSD1306
+      if (strcmp(sensor->getName(),"SSD1306") == 0) {
+        DisplaySSD1306* display_SSD1306 = (DisplaySSD1306*)sensor;
+        switch(function) {
+          case 102: display_SSD1306->setContrast((uint8_t)request.getValueInt()); break;
+//          case 103: display_SSD1306->setText(request.getValueString()); break;
+          case 104: display_SSD1306->rotateDisplay((bool)request.getValueInt()); break;
+          case 105: display_SSD1306->setFontSize(request.getValueInt()); break;
+          case 106: display_SSD1306->setHeaderFontSize(request.getValueInt()); break;
+          case 107: display_SSD1306->invertDisplay((bool)request.getValueInt()); break;
           default: return;
         }
       }

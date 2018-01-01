@@ -76,6 +76,7 @@ SensorPowerMeter    | 1     | USE_PULSE_METER    | Power meter pulse sensor     
 SensorWaterMeter    | 1     | USE_PULSE_METER    | Water meter pulse sensor                                                                          | -
 SensorPlantowerPMS  | 3     | USE_PMS            | Plantower PMS particulate matter sensors (reporting PM<=1.0, PM<=2.5 and PM<=10.0 in µg/m³)       | https://github.com/fu-hsi/pms
 SensorVL53L0X       | 1     | USE_VL53L0X        | VL53L0X laser time-of-flight distance sensor via I²C, sleep pin supported (optional)              | https://github.com/pololu/vl53l0x-arduino
+DisplaySSD1306      | 1     | MODULE_SSD1306     | SSD1306 128x64 OLED display (I²C); By default displays values of all sensors and children         | https://github.com/greiman/SSD1306Ascii.git
 
 ## Installation
 
@@ -504,6 +505,28 @@ Each sensor class exposes additional methods.
     void setInitialValue(int value);
     // set the interrupt mode to attach to (default: FALLING)
     void setInterruptMode(int value);
+~~~
+
+* DisplaySSD1306
+~~~c
+    // set device
+    void setDev(const DevType* dev);
+    // set i2c address
+    void setI2CAddress(uint8_t i2caddress);
+    // set text font (default: &Adafruit5x7)
+    void setFont(const uint8_t* font);
+    // [102] set the contrast of the display (0-255)
+    void setContrast(uint8_t value);
+    // [103] set the displayed text
+    void setText(const char* value);
+    // [104] Rotate the display 180 degree (use rotate=false to revert)
+    void rotateDisplay(bool rotate = true);
+    // [105] Text font size (possible are 1 and 2; default is 1)
+    void setFontSize(int fontsize);
+    // [106] Text caption font size (possible are 1 and 2; default is 2)
+    void setHeaderFontSize(int fontsize);
+    // [107] Invert display (black text on color background; use invert=false to revert)
+    void invertDisplay(bool invert = true);
 ~~~
 
 ### Remote API

@@ -152,6 +152,10 @@
   #include <Wire.h>
   #include <VL53L0X.h>
 #endif
+#ifdef USE_SSD1306
+  #include <SSD1306Ascii.h>
+  #include <SSD1306AsciiAvrI2c.h>
+#endif
 
 /*******************************************************************
    Classes
@@ -328,6 +332,7 @@ class Child {
     int type = V_CUSTOM;
     const char* description = "";
     virtual void sendValue();
+    virtual void printOn(Print& p);
 #ifndef DISABLE_TRACK_LAST_VALUE
     Timer* force_update_timer;
     virtual bool isNewValue();
@@ -343,6 +348,7 @@ class ChildInt: public Child {
     void setValueInt(int value);
     int getValueInt();
     void sendValue();
+    void printOn(Print& p);
 #ifndef DISABLE_TRACK_LAST_VALUE
     bool isNewValue();
 #endif
@@ -360,6 +366,7 @@ class ChildFloat: public Child {
     void setValueFloat(float value);
     float getValueFloat();
     void sendValue();
+    void printOn(Print& p);
 #ifndef DISABLE_TRACK_LAST_VALUE
     bool isNewValue();
 #endif
@@ -377,6 +384,7 @@ class ChildDouble: public Child {
     void setValueDouble(double value);
     double getValueDouble();
     void sendValue();
+    void printOn(Print& p);
 #ifndef DISABLE_TRACK_LAST_VALUE
     bool isNewValue();
 #endif
@@ -394,6 +402,7 @@ class ChildString: public Child {
     void setValueString(const char* value);
     const char* getValueString();
     void sendValue();
+    void printOn(Print& p);
 #ifndef DISABLE_TRACK_LAST_VALUE
     bool isNewValue();
 #endif
@@ -1351,7 +1360,46 @@ class SensorVL53L0X: public Sensor {
     int _getDistance();
     VL53L0X *_lox;
 };
+#endif
 
+/*
+ * SSD1306 OLED display
+ */
+#ifdef USE_SSD1306
+class DisplaySSD1306: public Sensor {
+  public:
+    DisplaySSD1306(NodeManager& node_manager, int child_id = -255);
+    // set device
+    void setDev(const DevType* dev);
+    // set i2c address
+    void setI2CAddress(uint8_t i2caddress);
+    // set text font (default: &Adafruit5x7)
+    void setFont(const uint8_t* font);
+    // [102] set the contrast of the display (0-255)
+    void setContrast(uint8_t value);
+    // [103] set the displayed text
+    void setText(const char* value);
+    // [104] Rotate the display 180 degree (use rotate=false to revert)
+    void rotateDisplay(bool rotate = true);
+    // [105] Text font size (possible are 1 and 2; default is 1)
+    void setFontSize(int fontsize);
+    // [106] Text caption font size (possible are 1 and 2; default is 2)
+    void setHeaderFontSize(int fontsize);
+    // [107] Invert display (black text on color background; use invert=false to revert)
+    void invertDisplay(bool invert = true);
+    // define what to do at each stage of the sketch
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(MyMessage* message);
+    void updateDisplay();
+  protected:
+    virtual void _display(const char*displaystr = 0);
+    SSD1306AsciiAvrI2c *_oled;
+    const DevType* _dev = &Adafruit128x64;
+    uint8_t _i2caddress = 0x3c;
+    int _fontsize = 1;
+    int _caption_fontsize = 2;
+};
 #endif
 
 /***************************************

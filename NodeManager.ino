@@ -76,7 +76,7 @@ SensorPowerMeter    | 1     | USE_PULSE_METER    | Power meter pulse sensor     
 SensorWaterMeter    | 1     | USE_PULSE_METER    | Water meter pulse sensor                                                                          | -
 SensorPlantowerPMS  | 3     | USE_PMS            | Plantower PMS particulate matter sensors (reporting PM<=1.0, PM<=2.5 and PM<=10.0 in µg/m³)       | https://github.com/fu-hsi/pms
 SensorVL53L0X       | 1     | USE_VL53L0X        | VL53L0X laser time-of-flight distance sensor via I²C, sleep pin supported (optional)              | https://github.com/pololu/vl53l0x-arduino
-
+DisplaySSD1306      | 1     | USE_SSD1306        | SSD1306 128x64 OLED display (I²C); By default displays values of all sensors and children         | https://github.com/greiman/SSD1306Ascii.git
 */
 
 /**********************************
@@ -215,6 +215,7 @@ SensorVL53L0X       | 1     | USE_VL53L0X        | VL53L0X laser time-of-flight 
 //#define USE_PULSE_METER
 //#define USE_PMS
 //#define USE_VL53L0X
+#define USE_SSD1306
 
 /***********************************
  * NodeManager advanced settings
@@ -282,6 +283,7 @@ NodeManager node;
 //SensorWaterMeter waterMeter(node,3);
 //SensorPlantowerPMS pms(node,6,7);
 //SensorVL53L0X vl53l0x(node, /*XSHUT_PIN=*/2);
+DisplaySSD1306 ssd1306(node);
 
 /***********************************
  * Main Sketch
