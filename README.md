@@ -605,7 +605,6 @@ The sensor will be put to sleep after startup and will report both the measures 
 Even if the sensor is sleeping most of the time, it can be potentially woke up by sending a V_CUSTOM message to NodeManager service child id (200 by default) just after having reported its heartbeat. At this point the node will report awake and the user can interact with it by e.g. sending REQ messages to its child IDs, changing the duration of a sleep cycle, etc.
 
 ~~~c
-*/
 
 /**********************************
  * MySensors node configuration
@@ -705,7 +704,6 @@ void receiveTime(unsigned long ts) {
 The following sketch can be used to report back to the controller when a motion sensor attached to the board's pin 3 triggers. In this example, the board will be put to sleep just after startup and will report a heartbeat every hour. NodeManager will take care of configuring an interrupt associated to the provided pin so automatically wake up when a motion is detected and report a V_TRIPPED message back.
 
 ~~~c
-*/
 
 /**********************************
  * MySensors node configuration
@@ -804,7 +802,6 @@ In this example, the board also runs at 1Mhz so it can go down to 1.8V: by setti
 The board will be put to sleep just after startup and will report back to the controller every 5 minutes. It is the controller's responsability to catch when the board reports its heartbeat (using smart sleep behind the scene) and send a command back if needed.
 
 ~~~c
-*/
 
 /**********************************
  * MySensors node configuration

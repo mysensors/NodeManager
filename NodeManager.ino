@@ -199,7 +199,7 @@ SensorVL53L0X       | 1     | USE_VL53L0X        | VL53L0X laser time-of-flight 
 //#define USE_BME280
 //#define USE_BMP085
 //#define USE_BMP280
-#define USE_SONOFF
+//#define USE_SONOFF
 //#define USE_HCSR04
 //#define USE_MCP9808
 //#define USE_MQ
@@ -230,9 +230,9 @@ NodeManager node;
  * Add your sensors below
  */
 
-SensorBattery battery(node);
+//SensorBattery battery(node);
 //SensorConfiguration configuration(node);
-SensorSignal signal(node);
+//SensorSignal signal(node);
 //PowerManager power(5,6);
 
 //SensorAnalogInput analog(node,A0);
@@ -259,7 +259,7 @@ SensorSignal signal(node);
 //SensorBME280 bme280(node);
 //SensorBMP085 bmp085(node);
 //SensorBMP280 bmp280(node);
-SensorSonoff sonoff(node);
+//SensorSonoff sonoff(node);
 //SensorHCSR04 hcsr04(node,6);
 //SensorMCP9808 mcp9808(node);
 //SensorMQ mq(node,A0);
@@ -287,7 +287,7 @@ void before() {
   * Configure your sensors below
   */
 
-  node.setReportIntervalSeconds(10);
+  //node.setReportIntervalSeconds(10);
   //node.setReportIntervalMinutes(5);
   //node.setSleepMinutes(5);
   

@@ -2114,10 +2114,12 @@ void SensorSonoff::_blink() {
 */
 #ifdef USE_HCSR04
 // contructor
-SensorHCSR04::SensorHCSR04(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+SensorHCSR04::SensorHCSR04(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "HCSR04";
   _trigger_pin = pin;
   _echo_pin = pin;
+  children.allocateBlocks(1);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_DISTANCE,V_DISTANCE,_name);
 }
 
 // setter/getter
@@ -2129,12 +2131,6 @@ void SensorHCSR04::setEchoPin(int value) {
 }
 void SensorHCSR04::setMaxDistance(int value) {
   _max_distance = value;
-}
-
-// what to do during before
-void SensorHCSR04::onBefore() {
-  // register the child
-  new ChildInt(this,_node->getAvailableChildId(),S_DISTANCE,V_DISTANCE);
 }
 
 // what to do during setup
@@ -2169,13 +2165,10 @@ void SensorHCSR04::onReceive(MyMessage* message) {
 */
 #ifdef USE_MCP9808
 // contructor
-SensorMCP9808::SensorMCP9808(NodeManager& node_manager): Sensor(node_manager) {
+SensorMCP9808::SensorMCP9808(NodeManager& node_manager, int child_id): Sensor(node_manager) {
   _name = "MCP9808";
-}
-
-// what to do during before
-void SensorMCP9808::onBefore() {
-  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
+  children.allocateBlocks(1);
+  new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
 }
 
 // what to do during setup
@@ -2216,11 +2209,13 @@ float SensorMQ::_default_LPGCurve[3] = {2.3,0.21,-0.47};
 float SensorMQ::_default_COCurve[3] = {2.3,0.72,-0.34};
 float SensorMQ::_default_SmokeCurve[3] = {2.3,0.53,-0.44};
 
-SensorMQ::SensorMQ(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+SensorMQ::SensorMQ(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "MQ";
   _LPGCurve = SensorMQ::_default_LPGCurve;
   _COCurve = SensorMQ::_default_COCurve;
   _SmokeCurve = SensorMQ::_default_SmokeCurve;
+  children.allocateBlocks(1);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_AIR_QUALITY,V_LEVEL,_name);
 }
 
 //setter/getter
@@ -2258,16 +2253,10 @@ void SensorMQ::setSmokeCurve(float *value) {
   _SmokeCurve = value;
 }
 
-// what to do during before
-void SensorMQ::onBefore() {
-  // prepare the pin for input
-  pinMode(_pin, INPUT);
-  // register the child
-  new ChildInt(this,_node->getAvailableChildId(),S_AIR_QUALITY,V_LEVEL);
-}
-
 // what to do during setup
 void SensorMQ::onSetup() {
+  // prepare the pin for input
+  pinMode(_pin, INPUT);
   _ro = _MQCalibration();
 }
 
@@ -2367,16 +2356,12 @@ int SensorMQ::_MQGetPercentage(float rs_ro_ratio, float *pcurve) {
 */
 #ifdef USE_MHZ19
 // contructor
-SensorMHZ19::SensorMHZ19(NodeManager& node_manager, int rxpin, int txpin): Sensor(node_manager, rxpin) {
+SensorMHZ19::SensorMHZ19(NodeManager& node_manager, int rxpin, int txpin, int child_id): Sensor(node_manager, rxpin) {
   _name = "MHZ19";
   _rx_pin = rxpin;
   _tx_pin = txpin;
-}
-
-// what to do during before
-void SensorMHZ19::onBefore() {
-  // register the child
-  new ChildInt(this,_node->getAvailableChildId(),S_AIR_QUALITY,V_LEVEL);
+  children.allocateBlocks(1);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_AIR_QUALITY,V_LEVEL,_name);
 }
 
 // what to do during setup
@@ -2448,15 +2433,11 @@ int SensorMHZ19::_readCO2() {
 */
 #ifdef USE_AM2320
 // constructor
-SensorAM2320::SensorAM2320(NodeManager& node_manager): Sensor(node_manager) {
+SensorAM2320::SensorAM2320(NodeManager& node_manager, int child_id): Sensor(node_manager) {
   _name = "AM2320";
-}
-
-// what do to during before
-void SensorAM2320::onBefore() {
-  // register the child
-  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
-  new ChildFloat(this,_node->getAvailableChildId(),S_HUM,V_HUM);
+  children.allocateBlocks(2);
+  new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+  new ChildFloat(this,_node->getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
 }
 
 // what do to during setup
@@ -2511,8 +2492,10 @@ void SensorAM2320::onReceive(MyMessage* message) {
 */
 #ifdef USE_TSL2561
 // contructor
-SensorTSL2561::SensorTSL2561(NodeManager& node_manager): Sensor(node_manager) {
+SensorTSL2561::SensorTSL2561(NodeManager& node_manager, int child_id): Sensor(node_manager) {
   _name = "TSL2561";
+  children.allocateBlocks(1);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_LIGHT_LEVEL,V_LEVEL,_name);
 }
 
 // setter/getter
@@ -2527,12 +2510,6 @@ void SensorTSL2561::setSpectrum(int value) {
 }
 void SensorTSL2561::setAddress(int value) {
   _tsl_address = value;
-}
-
-// what do to during before
-void SensorTSL2561::onBefore() {
-  // register the child
-  new ChildInt(this,_node->getAvailableChildId(),S_LIGHT_LEVEL,V_LEVEL);
 }
 
 // what do to during setup
@@ -2635,19 +2612,15 @@ void SensorTSL2561::onReceive(MyMessage* message) {
 */
 #ifdef USE_PT100
 // contructor
-SensorPT100::SensorPT100(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+SensorPT100::SensorPT100(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "PT100";
+  children.allocateBlocks(1);
+  new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
 }
 
 // setter/getter
 void SensorPT100::setVoltageRef(float value) {
    _voltageRef = value;
-}
-
-// what to do during before
-void SensorPT100::onBefore() {
-  // register the child
-  new ChildFloat(this,_node->getAvailableChildId(),S_TEMP,V_TEMP);
 }
 
 // what to do during setup
@@ -2687,8 +2660,10 @@ void SensorPT100::onReceive(MyMessage* message) {
 
 #ifdef USE_DIMMER
 // contructor
-SensorDimmer::SensorDimmer(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+SensorDimmer::SensorDimmer(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "DIMMER";
+  children.allocateBlocks(1);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_DIMMER,V_PERCENTAGE,_name);
 }
 
 // setter/getter
@@ -2700,12 +2675,6 @@ void SensorDimmer::setDuration(int value) {
 }
 void SensorDimmer::setStepDuration(int value) {
   _duration = value;
-}
-
-// what to do during before
-void SensorDimmer::onBefore() {
-  // register the child
-  new ChildInt(this,_node->getAvailableChildId(),S_DIMMER,V_PERCENTAGE);
 }
 
 // what to do during setup
@@ -2774,7 +2743,7 @@ float SensorDimmer::_getEasing(float t, float b, float c, float d) {
 */
 #ifdef USE_PULSE_METER
 // contructor
-SensorPulseMeter::SensorPulseMeter(NodeManager& node_manager, int pin): Sensor(node_manager, pin) {
+SensorPulseMeter::SensorPulseMeter(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "PULSE";
 }
 
@@ -2787,12 +2756,6 @@ void SensorPulseMeter::setInitialValue(int value) {
 }
 void SensorPulseMeter::setInterruptMode(int value) {
   _interrupt_mode = value;
-}
-
-// what to do during before
-void SensorPulseMeter::onBefore() {
-  // register the child
-  new ChildFloat(this,_node->getAvailableChildId(),S_CUSTOM,V_CUSTOM);
 }
 
 // what to do during setup
@@ -2847,14 +2810,10 @@ void SensorPulseMeter::_reportTotal(Child* child) {
    SensorRainGauge
 */
 // contructor
-SensorRainGauge::SensorRainGauge(NodeManager& node_manager, int pin): SensorPulseMeter(node_manager, pin) {
+SensorRainGauge::SensorRainGauge(NodeManager& node_manager, int pin, int child_id): SensorPulseMeter(node_manager, pin, child_id) {
   _name = "RAIN_GAUGE";
-}
-
-// what to do during before
-void SensorRainGauge::onBefore() {
-  // register the child
-  new ChildFloat(this,_node->getAvailableChildId(),S_RAIN,V_RAIN);
+  children.allocateBlocks(1);
+  new ChildFloat(this,_node->getAvailableChildId(child_id),S_RAIN,V_RAIN,_name);
   setPulseFactor(9.09);
 }
 
@@ -2862,14 +2821,10 @@ void SensorRainGauge::onBefore() {
    SensorPowerMeter
 */
 // contructor
-SensorPowerMeter::SensorPowerMeter(NodeManager& node_manager, int pin): SensorPulseMeter(node_manager, pin) {
+SensorPowerMeter::SensorPowerMeter(NodeManager& node_manager, int pin, int child_id): SensorPulseMeter(node_manager, pin, child_id) {
   _name = "POWER";
-}
-
-// what to do during before
-void SensorPowerMeter::onBefore() {
-  // register the child
-  new ChildDouble(this,_node->getAvailableChildId(),S_POWER,V_KWH);
+  children.allocateBlocks(1);
+  new ChildDouble(this,_node->getAvailableChildId(child_id),S_POWER,V_KWH,_name);
   setPulseFactor(1000);
 }
 
@@ -2882,14 +2837,10 @@ void SensorPowerMeter::_reportTotal(Child* child) {
    SensorWaterMeter
 */
 // contructor
-SensorWaterMeter::SensorWaterMeter(NodeManager& node_manager, int pin): SensorPulseMeter(node_manager, pin) {
+SensorWaterMeter::SensorWaterMeter(NodeManager& node_manager, int pin, int child_id): SensorPulseMeter(node_manager, pin, child_id) {
   _name = "WATER";
-}
-
-// what to do during before
-void SensorWaterMeter::onBefore() {
-  // register the child
-  new ChildDouble(this,_node->getAvailableChildId(),S_WATER,V_VOLUME);
+  children.allocateBlocks(1);
+  new ChildDouble(this,_node->getAvailableChildId(child_id),S_WATER,V_VOLUME,_name);
   setPulseFactor(1000);
 }
 
@@ -2904,20 +2855,15 @@ void SensorWaterMeter::_reportTotal(Child* child) {
 */
 #ifdef USE_PMS
 // contructor
-SensorPlantowerPMS::SensorPlantowerPMS(NodeManager& node_manager, int rxpin, int txpin): Sensor(node_manager, rxpin) {
+SensorPlantowerPMS::SensorPlantowerPMS(NodeManager& node_manager, int rxpin, int txpin, int child_id): Sensor(node_manager, rxpin) {
   _name = "PMS";
   _rx_pin = rxpin;
   _tx_pin = txpin;
-}
-
-// what to do during before
-void SensorPlantowerPMS::onBefore() {
-  // Allocate memory for all children at once (to prevent memory fragmentation)
   children.allocateBlocks(3);
   // register the child
-  new ChildInt(this, _node->getAvailableChildId(), S_DUST, V_LEVEL, "PM1.0");
-  new ChildInt(this, _node->getAvailableChildId(), S_DUST, V_LEVEL, "PM2.5");
-  new ChildInt(this, _node->getAvailableChildId(), S_DUST, V_LEVEL, "PM10.0");
+  new ChildInt(this, _node->getAvailableChildId(child_id), S_DUST, V_LEVEL, "PM1.0");
+  new ChildInt(this, _node->getAvailableChildId(child_id+1), S_DUST, V_LEVEL, "PM2.5");
+  new ChildInt(this, _node->getAvailableChildId(child_id+2), S_DUST, V_LEVEL, "PM10.0");
 }
 
 // what to do during setup
@@ -2980,53 +2926,25 @@ void SensorPlantowerPMS::onReceive(MyMessage* message) {
  */
 #ifdef USE_VL53L0X
 // constructor
-SensorVL53L0X::SensorVL53L0X(NodeManager& node_manager, int xshut_pin): Sensor(node_manager, xshut_pin) {
+SensorVL53L0X::SensorVL53L0X(NodeManager& node_manager, int xshut_pin, int child_id): Sensor(node_manager, xshut_pin) {
   _name = "VL53L0X";
+  children.allocateBlocks(1);
+  new ChildInt(this, _node->getAvailableChildId(child_id), S_DISTANCE, V_DISTANCE,_name);
+}
+
+// what to do during setup
+void SensorVL53L0X::onSetup() {
   if (_pin > 0) {
     pinMode(_pin, OUTPUT); // Put sensor in deep sleep until the loop
     digitalWrite(_pin, LOW);
   }
-}
-
-void SensorVL53L0X::onBefore() {
-  // register the child
-  new ChildInt(this, _node->getAvailableChildId(), S_DISTANCE, V_DISTANCE, "Dist");
   _lox = new VL53L0X();
-}
-
-void SensorVL53L0X::onSetup() {
   if (_lox) {
     Wire.begin();
   }
 }
 
-int SensorVL53L0X::_getDistance() {
-  int distance = -1;
-
-  if (_lox) {
-    // The XSHUT pin puts the sensor into deep sleep when pulled to LOW;
-    // To wake up, do NOT write HIGH (=3.3V or 5V) to the pin, as the sensor
-    // uses only 2.8V and is not 5V-tolerant. Instead, set the pin to INPUT.
-    if (_pin >= 0) {
-      pinMode(_pin, INPUT);
-      sleep(5); // Transition from HW standby to SW standby might take up to 1.5 ms => use 5ms to be on the safe side
-    }
-    _lox->init();
-    _lox->setTimeout(500);
-    distance = _lox->readRangeSingleMillimeters();
-    if (_pin >= 0) {
-      digitalWrite(_pin, LOW);
-      pinMode(_pin, OUTPUT);
-    }
-  }
-
-//  if (measure.RangeStatus == 0) {  // only 0  data
-  if (_lox->timeoutOccurred()) {
-    distance = -1;
-  }
-  return distance;
-}
-
+// what to do during loop
 void SensorVL53L0X::onLoop(Child *child) {
   int val = _getDistance();
   ((ChildInt*)child)->setValueInt(val);
@@ -3049,6 +2967,32 @@ void SensorVL53L0X::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
   if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+}
+
+// measure the distance
+int SensorVL53L0X::_getDistance() {
+  int distance = -1;
+  if (_lox) {
+    // The XSHUT pin puts the sensor into deep sleep when pulled to LOW;
+    // To wake up, do NOT write HIGH (=3.3V or 5V) to the pin, as the sensor
+    // uses only 2.8V and is not 5V-tolerant. Instead, set the pin to INPUT.
+    if (_pin >= 0) {
+      pinMode(_pin, INPUT);
+      sleep(5); // Transition from HW standby to SW standby might take up to 1.5 ms => use 5ms to be on the safe side
+    }
+    _lox->init();
+    _lox->setTimeout(500);
+    distance = _lox->readRangeSingleMillimeters();
+    if (_pin >= 0) {
+      digitalWrite(_pin, LOW);
+      pinMode(_pin, OUTPUT);
+    }
+  }
+  //  if (measure.RangeStatus == 0) {  // only 0  data
+  if (_lox->timeoutOccurred()) {
+    distance = -1;
+  }
+  return distance;
 }
 #endif
 
