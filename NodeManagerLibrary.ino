@@ -232,15 +232,18 @@ Child::Child(Sensor* __sensor, int _child_id, int _presentation, int _type, cons
   description = _description;
   _sensor = __sensor;
   _sensor->registerChild(this);
+#ifndef DISABLE_TRACK_LAST_VALUE
   force_update_timer = new Timer(_sensor->_node);
+#endif
 }
 // set a value, implemented by the subclasses
 void Child::sendValue() {
 }
-
+#ifndef DISABLE_TRACK_LAST_VALUE
 // check if it is an updated value, implemented by the subclasses
 bool Child::isNewValue() {
 }
+#endif
 
 /*
  ChildInt class
@@ -266,15 +269,19 @@ int ChildInt::getValueInt() {
 void ChildInt::sendValue() {
   if (_samples == 0) return;
   _sensor->_node->sendMessage(child_id,type,_value);
+#ifndef DISABLE_TRACK_LAST_VALUE
   _last_value = _value;
+#endif
   _total = 0;
   _samples = 0;
 }
 
+#ifndef DISABLE_TRACK_LAST_VALUE
 // check if it is an updated value
 bool ChildInt::isNewValue() {
   return _last_value != _value;
 }
+#endif
 
 /*
  ChildFloat class
@@ -300,15 +307,18 @@ float ChildFloat::getValueFloat() {
 void ChildFloat::sendValue() {
   if (_samples == 0) return;
   _sensor->_node->sendMessage(child_id,type,_value);
+#ifndef DISABLE_TRACK_LAST_VALUE
   _last_value = _value;
+#endif
   _total = 0;
   _samples = 0;
 }
-
+#ifndef DISABLE_TRACK_LAST_VALUE
 // check if it is an updated value
 bool ChildFloat::isNewValue() {
   return _last_value != _value;
 }
+#endif
 
 /*
  ChildDouble class
@@ -334,15 +344,18 @@ double ChildDouble::getValueDouble() {
 void ChildDouble::sendValue() {
   if (_samples == 0) return;
   _sensor->_node->sendMessage(child_id,type,_value);
+#ifndef DISABLE_TRACK_LAST_VALUE
   _last_value = _value;
+#endif
   _total = 0;
   _samples = 0;
 }
-
+#ifndef DISABLE_TRACK_LAST_VALUE
 // check if it is an updated value
 bool ChildDouble::isNewValue() {
   return _last_value != _value;
 }
+#endif
 
 /*
  ChildString class
@@ -365,14 +378,18 @@ const char* ChildString::getValueString() {
 // send the value back to the controller
 void ChildString::sendValue() {
   _sensor->_node->sendMessage(child_id,type,_value);
+#ifndef DISABLE_TRACK_LAST_VALUE
   _last_value = _value;
+#endif
   _value = "";
 }
 
+#ifndef DISABLE_TRACK_LAST_VALUE
 // check if it is an updated value
 bool ChildString::isNewValue() {
   return strcmp(_value, _last_value) != 0;
 }
+#endif
 
 /*
    Sensor class
@@ -405,6 +422,7 @@ void Sensor::setSamples(int value) {
 void Sensor::setSamplesInterval(int value) {
   _samples_interval = value;
 }
+#ifndef DISABLE_TRACK_LAST_VALUE
 void Sensor::setTrackLastValue(bool value) {
   _track_last_value = value;
 }
@@ -414,6 +432,7 @@ void Sensor::setForceUpdateMinutes(int value) {
     child->force_update_timer->start(value,MINUTES);
   }
 }
+#endif
 #ifndef DISABLE_POWER_MANAGER
 void Sensor::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
   if (_powerManager == nullptr) return;
@@ -526,14 +545,16 @@ void Sensor::loop(MyMessage* message) {
     }
   }
   // turn the sensor on
-  #ifndef DISABLE_POWER_MANAGER
-    powerOn();
-  #endif
+#ifndef DISABLE_POWER_MANAGER
+  powerOn();
+#endif
   // iterates over all the children
   for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
     Child* child = *itr;
+#ifndef DISABLE_TRACK_LAST_VALUE
     // update the force update timer if running
     if (child->force_update_timer->isRunning()) child->force_update_timer->update();
+#endif
     // if a specific child is requested, skip all the others
     if (message != nullptr && message->sensor != child->child_id) continue;
     // collect multiple samples if needed
@@ -547,16 +568,19 @@ void Sensor::loop(MyMessage* message) {
     }
     // process the result and send a response back if 1) is not a loop 2) not tracking last value 3) tracking last value and there is a new value 4) tracking last value and timer is over
     if (
-      message != nullptr || 
-      ! _track_last_value || 
+      message != nullptr 
+#ifndef DISABLE_TRACK_LAST_VALUE
+      || ! _track_last_value || 
       _track_last_value && child->isNewValue() || 
-      _track_last_value && child->force_update_timer->isRunning() && child->force_update_timer->isOver()) 
+      _track_last_value && child->force_update_timer->isRunning() && child->force_update_timer->isOver()
+#endif
+      ) 
         child->sendValue();
   }
   // turn the sensor off
-  #ifndef DISABLE_POWER_MANAGER
-    powerOff();
-  #endif
+#ifndef DISABLE_POWER_MANAGER
+  powerOff();
+#endif
   // if called from loop(), restart the report timer if over
   if (message == nullptr && _report_timer->isRunning() && _report_timer->isOver()) _report_timer->restart();
 }
@@ -629,11 +653,11 @@ void SensorBattery::setBatteryVoltsPerBit(float value) {
 void SensorBattery::onSetup() {
   // when measuring the battery from a pin, analog reference must be internal
   if (! _battery_internal_vcc && _battery_pin > -1)
-    #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-      analogReference(INTERNAL1V1);
-    #else
-      analogReference(INTERNAL);
-    #endif
+#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+    analogReference(INTERNAL1V1);
+#else
+    analogReference(INTERNAL);
+#endif
 }
 
 // what to do during loop
@@ -766,13 +790,13 @@ void SensorAnalogInput::onReceive(MyMessage* message) {
 
 // read the analog input
 int SensorAnalogInput::_getAnalogRead() {
-  #ifndef MY_GATEWAY_ESP8266
-    // set the reference
-    if (_reference != -1) {
-      analogReference(_reference);
-      wait(100);
-    }
-  #endif
+#ifndef MY_GATEWAY_ESP8266
+  // set the reference
+  if (_reference != -1) {
+    analogReference(_reference);
+    wait(100);
+  }
+#endif
   // read and return the value
   int value = analogRead(_pin);
   if (_reverse) value = _range_max - value;
@@ -3040,24 +3064,24 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       case 4: _node->setSleepMinutes(request.getValueInt()); break;
       case 5: _node->setSleepHours(request.getValueInt()); break;
       case 29: _node->setSleepDays(request.getValueInt()); break;
-      #ifndef MY_GATEWAY_ESP8266
-        case 6: _node->reboot(); return;
-      #endif
+#ifndef MY_GATEWAY_ESP8266
+      case 6: _node->reboot(); return;
+#endif
       case 7: _node->clearEeprom(); break;
       case 8: _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,VERSION); return;
       case 9: _node->wakeup(); break;
       case 10: _node->setRetries(request.getValueInt()); break;
-      #ifndef DISABLE_INTERRUPTS
-        case 19: _node->setSleepInterruptPin(request.getValueInt()); break;
-        case 28: _node->setInterruptMinDelta(request.getValueInt()); break;
-      #endif
+#ifndef DISABLE_INTERRUPTS
+      case 19: _node->setSleepInterruptPin(request.getValueInt()); break;
+      case 28: _node->setInterruptMinDelta(request.getValueInt()); break;
+#endif
       case 20: _node->setSleepBetweenSend(request.getValueInt()); break;
       case 21: _node->setAck(request.getValueInt()); break;
       case 22: _node->setIsMetric(request.getValueInt()); break;
-      #ifndef DISABLE_POWER_MANAGER
-        case 24: _node->powerOn(); break;
-        case 25: _node->powerOff(); break;
-      #endif
+#ifndef DISABLE_POWER_MANAGER
+      case 24: _node->powerOn(); break;
+      case 25: _node->powerOff(); break;
+#endif
       case 27: _node->saveToMemory(0,request.getValueInt()); break;
       case 30: _node->setSleepOrWait(request.getValueInt()); break;
       case 31: _node->setRebootPin(request.getValueInt()); break;
@@ -3079,12 +3103,14 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         case 1: sensor->setPin(request.getValueInt()); break;
         case 5: sensor->setSamples(request.getValueInt()); break;
         case 6: sensor->setSamplesInterval(request.getValueInt()); break;
+#ifndef DISABLE_TRACK_LAST_VALUE
         case 7: sensor->setTrackLastValue(request.getValueInt()); break;
         case 9: sensor->setForceUpdateMinutes(request.getValueInt()); break;
-        #ifndef DISABLE_POWER_MANAGER
-          case 13: sensor->powerOn(); break;
-          case 14: sensor->powerOff(); break;
-        #endif
+#endif
+#ifndef DISABLE_POWER_MANAGER
+        case 13: sensor->powerOn(); break;
+        case 14: sensor->powerOff(); break;
+#endif
         case 16: sensor->setReportIntervalMinutes(request.getValueInt()); break;
         case 17: sensor->setReportIntervalSeconds(request.getValueInt()); break;
         case 19: sensor->setReportIntervalHours(request.getValueInt()); break;

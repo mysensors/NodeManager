@@ -327,9 +327,11 @@ class Child {
     int presentation = S_CUSTOM;
     int type = V_CUSTOM;
     const char* description = "";
-    Timer* force_update_timer;
     virtual void sendValue();
+#ifndef DISABLE_TRACK_LAST_VALUE
+    Timer* force_update_timer;
     virtual bool isNewValue();
+#endif
   protected:
     int _samples = 0;
     Sensor* _sensor;
@@ -341,10 +343,14 @@ class ChildInt: public Child {
     void setValueInt(int value);
     int getValueInt();
     void sendValue();
+#ifndef DISABLE_TRACK_LAST_VALUE
     bool isNewValue();
+#endif
   private:
     int _value;
+#ifndef DISABLE_TRACK_LAST_VALUE
     int _last_value;
+#endif
     int _total = 0;
 };
 
@@ -354,10 +360,14 @@ class ChildFloat: public Child {
     void setValueFloat(float value);
     float getValueFloat();
     void sendValue();
+#ifndef DISABLE_TRACK_LAST_VALUE
     bool isNewValue();
+#endif
   private:
     float _value;
+#ifndef DISABLE_TRACK_LAST_VALUE
     float _last_value;
+#endif
     float _total = 0;
 };
 
@@ -367,10 +377,14 @@ class ChildDouble: public Child {
     void setValueDouble(double value);
     double getValueDouble();
     void sendValue();
+#ifndef DISABLE_TRACK_LAST_VALUE
     bool isNewValue();
+#endif
   private:
     double _value;
+#ifndef DISABLE_TRACK_LAST_VALUE
     double _last_value;
+#endif
     double _total = 0;
 };
 
@@ -380,10 +394,14 @@ class ChildString: public Child {
     void setValueString(const char* value);
     const char* getValueString();
     void sendValue();
+#ifndef DISABLE_TRACK_LAST_VALUE
     bool isNewValue();
+#endif
   private:
     const char* _value = "";
+#ifndef DISABLE_TRACK_LAST_VALUE
     const char* _last_value = "";
+#endif
 };
 
 /***************************************
@@ -403,10 +421,12 @@ class Sensor {
     void setSamples(int value);
     // [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
     void setSamplesInterval(int value);
+#ifndef DISABLE_TRACK_LAST_VALUE
     // [7] if true will report the measure only if different than the previous one (default: false)
     void setTrackLastValue(bool value);
     // [9] if track last value is enabled, force to send an update after the configured number of minutes
     void setForceUpdateMinutes(int value);
+#endif
 #ifndef DISABLE_POWER_MANAGER
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
     void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
@@ -461,7 +481,9 @@ class Sensor {
     int _pin = -1;
     int _samples = 1;
     int _samples_interval = 0;
+#ifndef DISABLE_TRACK_LAST_VALUE
     bool _track_last_value = false;
+#endif
 #ifndef DISABLE_INTERRUPTS
     int _interrupt_pin = -1;
 #endif
