@@ -221,7 +221,8 @@ SensorVL53L0X       | 1     | USE_VL53L0X        | VL53L0X laser time-of-flight 
 //#define DISABLE_POWER_MANAGER
 //#define DISABLE_INTERRUPTS
 //#define DISABLE_TRACK_LAST_VALUE
-#define DISABLE_EEPROM
+//#define DISABLE_EEPROM
+#define DISABLE_SLEEP
 
 /***********************************
  * Load NodeManager Library

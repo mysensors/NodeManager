@@ -120,13 +120,17 @@ void Timer::unset() {
 // update the timer at every cycle
 void Timer::update() {
   if (! isRunning()) return;
+#ifndef DISABLE_SLEEP
   if (_node->isSleepingNode()) {
     // millis() is not reliable while sleeping so calculate how long a sleep cycle would last in seconds and update the elapsed time
     _elapsed += _node->getSleepSeconds();
   } else {
+#endif
     // use millis() to calculate the elapsed time in seconds
     _elapsed = (long)((millis() - _last_millis)/1000);
+#ifndef DISABLE_SLEEP
   }
+#endif
   _first_run = false;
 }
 
@@ -3060,10 +3064,12 @@ void SensorConfiguration::onReceive(MyMessage* message) {
   if (child_id == 0) {
     switch(function) {
       case 1: _node->hello(); break;
+#ifndef DISABLE_SLEEP
       case 3: _node->setSleepSeconds(request.getValueInt()); break;
       case 4: _node->setSleepMinutes(request.getValueInt()); break;
       case 5: _node->setSleepHours(request.getValueInt()); break;
       case 29: _node->setSleepDays(request.getValueInt()); break;
+#endif
 #ifndef MY_GATEWAY_ESP8266
       case 6: _node->reboot(); return;
 #endif
@@ -3351,7 +3357,7 @@ void NodeManager::setRetries(int value) {
 int NodeManager::getRetries() {
   return _retries;
 }
-
+#ifndef DISABLE_SLEEP
 void NodeManager::setSleepSeconds(int value) {
   // set the status to AWAKE if the time provided is 0, SLEEP otherwise
   if (value == 0) _status = AWAKE;
@@ -3375,6 +3381,7 @@ void NodeManager::setSleepDays(int value) {
 long NodeManager::getSleepSeconds() {
   return _sleep_time;
 }
+#endif
 #ifndef DISABLE_INTERRUPTS
 void NodeManager::setSleepInterruptPin(int value) {
   _sleep_interrupt_pin = value;
@@ -3551,13 +3558,13 @@ void NodeManager::setup() {
 // run the main function for all the register sensors
 void NodeManager::loop() {
   // turn on the pin powering all the sensors
-  #ifndef DISABLE_POWER_MANAGER
-    powerOn();
-  #endif
+#ifndef DISABLE_POWER_MANAGER
+  powerOn();
+#endif
   // run loop for all the registered sensors
   for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
     Sensor* sensor = *itr;
-    #ifndef DISABLE_INTERRUPTS
+#ifndef DISABLE_INTERRUPTS
     if (_last_interrupt_pin != -1 && sensor->getInterruptPin() == _last_interrupt_pin) {
       // if there was an interrupt for this sensor, call the sensor's interrupt() and then loop()
       _message.clear();
@@ -3567,20 +3574,22 @@ void NodeManager::loop() {
       _last_interrupt_pin = -1;
     }
     else if (_last_interrupt_pin == -1) {
-    #else
+#else
     if (true) {
-    #endif
+#endif
       // if just at the end of a cycle, call the sensor's loop() 
       _message.clear();
       sensor->loop(nullptr);
     }
   }
   // turn off the pin powering all the sensors
-  #ifndef DISABLE_POWER_MANAGER
-    powerOff();
-  #endif
+#ifndef DISABLE_POWER_MANAGER
+  powerOff();
+#endif
+#ifndef DISABLE_SLEEP
   // continue/start sleeping as requested
   if (isSleepingNode()) _sleep();
+#endif
 }
 
 // dispacth inbound messages

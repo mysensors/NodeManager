@@ -1364,6 +1364,7 @@ class NodeManager {
     // [10] send the same message multiple times (default: 1)
     void setRetries(int value);
     int getRetries();
+#ifndef DISABLE_SLEEP
     // [3] set the duration (in seconds) of a sleep cycle
     void setSleepSeconds(int value);
     long getSleepSeconds();
@@ -1373,6 +1374,7 @@ class NodeManager {
     void setSleepHours(int value);
     // [29] set the duration (in days) of a sleep cycle
     void setSleepDays(int value);
+#endif
 #ifndef DISABLE_INTERRUPTS
     // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
     void setSleepInterruptPin(int value);
