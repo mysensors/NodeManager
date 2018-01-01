@@ -1412,14 +1412,18 @@ class NodeManager {
     void hello();
     // [6] reboot the board
     void reboot();
-    // [7] clear the EEPROM
-    void clearEeprom();
     // [9] wake up the board
     void wakeup();
+#ifndef DISABLE_EEPROM
+    // [7] clear the EEPROM
+    void clearEeprom();
     // return the value stored at the requested index from the EEPROM
     int loadFromMemory(int index);
     // [27] save the given index of the EEPROM the provided value
     void saveToMemory(int index, int value);
+    // [40] if set save the sleep settings in memory, also when changed remotely (default: false)
+    void setSaveSleepSettings(bool value);
+#endif
     // return vcc in V
     float getVcc();
 #ifndef DISABLE_INTERRUPTS
@@ -1444,8 +1448,6 @@ class NodeManager {
     void setRebootPin(int value);
     // [32] turn the ADC off so to save 0.2 mA
     void setADCOff();
-    // [30] if set save the sleep settings in memory, also when changed remotely (default: false)
-    void setSaveSleepSettings(bool value);
     // hook into the main sketch functions
     void before();
     void presentation();
@@ -1500,9 +1502,11 @@ class NodeManager {
     int _report_interval_seconds = 10*60;
     bool _sleep_or_wait = true;
     int _reboot_pin = -1;
+#ifndef DISABLE_EEPROM
     bool _save_sleep_settings = false;
     void _loadSleepSettings();
     void _saveSleepSettings();
+#endif
 };
 
 #endif

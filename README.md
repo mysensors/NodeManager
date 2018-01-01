@@ -253,7 +253,7 @@ You can interact with each class provided by NodeManager through a set of API fu
     void setRebootPin(int value);
     // [32] turn the ADC off so to save 0.2 mA
     void setADCOff();
-    // [30] if set save the sleep settings in memory, also when changed remotely (default: false)
+    // [40] if set save the sleep settings in memory, also when changed remotely (default: false)
     void setSaveSleepSettings(bool value);
 ~~~
 

@@ -3067,7 +3067,11 @@ void SensorConfiguration::onReceive(MyMessage* message) {
 #ifndef MY_GATEWAY_ESP8266
       case 6: _node->reboot(); return;
 #endif
+#ifndef DISABLE_EEPROM
       case 7: _node->clearEeprom(); break;
+      case 27: _node->saveToMemory(0,request.getValueInt()); break;
+      case 40: _node->setSaveSleepSettings(request.getValueInt()); break;
+#endif
       case 8: _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,VERSION); return;
       case 9: _node->wakeup(); break;
       case 10: _node->setRetries(request.getValueInt()); break;
@@ -3082,7 +3086,6 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       case 24: _node->powerOn(); break;
       case 25: _node->powerOff(); break;
 #endif
-      case 27: _node->saveToMemory(0,request.getValueInt()); break;
       case 30: _node->setSleepOrWait(request.getValueInt()); break;
       case 31: _node->setRebootPin(request.getValueInt()); break;
       case 32: _node->setADCOff(); break;
@@ -3355,8 +3358,10 @@ void NodeManager::setSleepSeconds(int value) {
   else _status = SLEEP;
   // store the time
   _sleep_time = value;
+#ifndef DISABLE_EEPROM
   // save sleep settings to eeprom
   if (_save_sleep_settings) _saveSleepSettings();
+#endif
 }
 void NodeManager::setSleepMinutes(int value) {
   setSleepSeconds(value*60);
@@ -3423,9 +3428,11 @@ void NodeManager::setIsMetric(bool value) {
 bool NodeManager::getIsMetric() {
   return _is_metric;
 }
+#ifndef DISABLE_EEPROM
 void NodeManager::setSaveSleepSettings(bool value) {
   _save_sleep_settings = value;
 }
+#endif
 
 // Convert a temperature from celsius to fahrenheit depending on how isMetric is set
 float NodeManager::celsiusToFahrenheit(float temperature) {
@@ -3480,8 +3487,10 @@ void NodeManager::before() {
     Serial.print(F(" B="));
     Serial.println(MY_CAP_RXBUF);
   #endif
+#ifndef DISABLE_EEPROM
   // restore the sleep settings saved in the eeprom
   if (_save_sleep_settings) _loadSleepSettings();
+#endif
   // setup individual sensors
   for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
     Sensor* sensor = *itr;
@@ -3655,20 +3664,13 @@ void NodeManager::reboot() {
   #endif
 }
 
+#ifndef DISABLE_EEPROM
 // clear the EEPROM
 void NodeManager::clearEeprom() {
   #ifdef NODEMANAGER_DEBUG
     Serial.println(F("CLEAR"));
   #endif
   for (uint16_t i=0; i<EEPROM_LOCAL_CONFIG_ADDRESS; i++) saveState(i, 0xFF);
-}
-
-// wake up the board
-void NodeManager::wakeup() {
-  #ifdef NODEMANAGER_DEBUG
-    Serial.println(F("WAKEUP"));
-  #endif
-  _status = AWAKE;
 }
 
 // return the value stored at the requested index from the EEPROM
@@ -3679,6 +3681,15 @@ int NodeManager::loadFromMemory(int index) {
 // save the given index of the EEPROM the provided value
 void NodeManager::saveToMemory(int index, int value) {
   saveState(index+EEPROM_USER_START, value);
+}
+#endif
+
+// wake up the board
+void NodeManager::wakeup() {
+  #ifdef NODEMANAGER_DEBUG
+    Serial.println(F("WAKEUP"));
+  #endif
+  _status = AWAKE;
 }
 
 // return vcc in V
@@ -3952,6 +3963,7 @@ void NodeManager::_sleep() {
   #endif
 }
 
+#ifndef DISABLE_EEPROM
 // load the configuration stored in the eeprom
 void NodeManager::_loadSleepSettings() {
   if (loadState(EEPROM_SLEEP_SAVED) == 1) {
@@ -3987,3 +3999,4 @@ void NodeManager::_saveSleepSettings() {
   saveState(EEPROM_SLEEP_2,bit_2);
   saveState(EEPROM_SLEEP_3,bit_3);
 }
+#endif
