@@ -83,74 +83,82 @@
 #include <MySensors.h>
 
 // include third party libraries
-#ifdef MODULE_DHT
+#ifdef USE_DHT
   #include <DHT.h>
 #endif
-#ifdef MODULE_SHT21
+#ifdef USE_SHT21
   #include <Wire.h>
   #include <Sodaq_SHT2x.h>
 #endif
-#ifdef MODULE_DS18B20
+#ifdef USE_DS18B20
   #include <OneWire.h>
   #include <DallasTemperature.h>
 #endif
-#ifdef MODULE_BH1750
+#ifdef USE_BH1750
   #include <BH1750.h>
   #include <Wire.h>
 #endif
-#ifdef MODULE_MLX90614
+#ifdef USE_MLX90614
   #include <Wire.h>
   #include <Adafruit_MLX90614.h>
 #endif
-#ifdef MODULE_BME280
+#ifdef USE_BME280
   #include <Wire.h>
   #include <SPI.h>
   #include <Adafruit_Sensor.h>
   #include <Adafruit_BME280.h>
 #endif
-#ifdef MODULE_SONOFF
+#ifdef USE_SONOFF
   #include <Bounce2.h>
 #endif
-#ifdef MODULE_BMP085
+#ifdef USE_BMP085
   #include <Wire.h>
   #include <Adafruit_BMP085.h>
 #endif
-#ifdef MODULE_HCSR04
+#ifdef USE_HCSR04
   #include <NewPing.h>
 #endif
-#ifdef MODULE_MCP9808
+#ifdef USE_MCP9808
   #include <Wire.h>
   #include "Adafruit_MCP9808.h"
 #endif
-#ifdef MODULE_MHZ19
+#ifdef USE_MHZ19
   #include <SoftwareSerial.h>
 #endif
-#ifdef MODULE_AM2320
+#ifdef USE_AM2320
   #include <Wire.h>
   #include <AM2320.h>
 #endif
-#ifdef MODULE_TSL2561
+#ifdef USE_TSL2561
   #include <TSL2561.h>
   #include <Wire.h>
 #endif
-#ifdef MODULE_PT100
+#ifdef USE_PT100
   #include <DFRobotHighTemperatureSensor.h>
 #endif
-#ifdef MODULE_BMP280
+#ifdef USE_BMP280
   #include <Wire.h>
   #include <Adafruit_Sensor.h>
   #include <Adafruit_BMP280.h>
 #endif
-#ifdef MODULE_DIMMER
+#ifdef USE_DIMMER
   #include <math.h>
 #endif
-#ifdef MODULE_PMS
+#ifdef USE_PMS
   #include <PMS.h>
   #include <SoftwareSerial.h> 
 #endif
-#ifdef MODULE_VL53L0X
+#ifdef USE_VL53L0X
   #include <Wire.h>
   #include <VL53L0X.h>
+#endif
+#ifdef USE_SSD1306
+  #include <SSD1306Ascii.h>
+  #include <SSD1306AsciiAvrI2c.h>
+#endif
+#ifdef USE_SHT31
+  #include <Wire.h>
+  #include "Adafruit_SHT31.h"
 #endif
 
 /*******************************************************************
@@ -232,7 +240,7 @@ private:
    PowerManager
 */
 
-#ifndef NO_MODULE_POWER_MANAGER
+#ifndef DISABLE_POWER_MANAGER
 class PowerManager {
   public:
     PowerManager(int ground_pin, int vcc_pin, int wait_time = 50);
@@ -322,14 +330,17 @@ class Request {
 class Child {
   public:
     Child();
-    Child(Sensor* sensor, int child_id, int presentation, int type, const char* description);
+    Child(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
     int child_id;
     int presentation = S_CUSTOM;
     int type = V_CUSTOM;
     const char* description = "";
-    Timer* force_update_timer;
     virtual void sendValue();
+    virtual void printOn(Print& p);
+#ifndef DISABLE_TRACK_LAST_VALUE
+    Timer* force_update_timer;
     virtual bool isNewValue();
+#endif
   protected:
     int _samples = 0;
     Sensor* _sensor;
@@ -337,53 +348,73 @@ class Child {
 
 class ChildInt: public Child {
   public:
-    ChildInt(Sensor* sensor, int child_id, int presentation, int type, const char* description);
+    ChildInt(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
     void setValueInt(int value);
     int getValueInt();
     void sendValue();
+    void printOn(Print& p);
+#ifndef DISABLE_TRACK_LAST_VALUE
     bool isNewValue();
+#endif
   private:
     int _value;
+#ifndef DISABLE_TRACK_LAST_VALUE
     int _last_value;
+#endif
     int _total = 0;
 };
 
 class ChildFloat: public Child {
   public:
-    ChildFloat(Sensor* sensor, int child_id, int presentation, int type, const char* description);
+    ChildFloat(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
     void setValueFloat(float value);
     float getValueFloat();
     void sendValue();
+    void printOn(Print& p);
+#ifndef DISABLE_TRACK_LAST_VALUE
     bool isNewValue();
+#endif
   private:
     float _value;
+#ifndef DISABLE_TRACK_LAST_VALUE
     float _last_value;
+#endif
     float _total = 0;
 };
 
 class ChildDouble: public Child {
   public:
-    ChildDouble(Sensor* sensor, int child_id, int presentation, int type, const char* description);
+    ChildDouble(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
     void setValueDouble(double value);
     double getValueDouble();
     void sendValue();
+    void printOn(Print& p);
+#ifndef DISABLE_TRACK_LAST_VALUE
     bool isNewValue();
+#endif
   private:
     double _value;
+#ifndef DISABLE_TRACK_LAST_VALUE
     double _last_value;
+#endif
     double _total = 0;
 };
 
 class ChildString: public Child {
   public:
-    ChildString(Sensor* sensor, int child_id, int presentation, int type, const char* description);
+    ChildString(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
     void setValueString(const char* value);
     const char* getValueString();
     void sendValue();
+    void printOn(Print& p);
+#ifndef DISABLE_TRACK_LAST_VALUE
     bool isNewValue();
+#endif
   private:
     const char* _value = "";
+#ifndef DISABLE_TRACK_LAST_VALUE
     const char* _last_value = "";
+#endif
 };
 
 /***************************************
@@ -393,7 +424,7 @@ class ChildString: public Child {
 class Sensor {
   public:
     Sensor();
-    Sensor(NodeManager& node_manager, int pin);
+    Sensor(NodeManager& node_manager, int pin = -1);
     // return the name of the sensor
     const char* getName();
     // [1] where the sensor is attached to (default: not set)
@@ -403,11 +434,13 @@ class Sensor {
     void setSamples(int value);
     // [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
     void setSamplesInterval(int value);
+#ifndef DISABLE_TRACK_LAST_VALUE
     // [7] if true will report the measure only if different than the previous one (default: false)
     void setTrackLastValue(bool value);
     // [9] if track last value is enabled, force to send an update after the configured number of minutes
     void setForceUpdateMinutes(int value);
-#ifndef NO_MODULE_POWER_MANAGER
+#endif
+#ifndef DISABLE_POWER_MANAGER
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
     void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
     // [13] manually turn the power on
@@ -425,11 +458,13 @@ class Sensor {
     void setReportIntervalDays(int value);
     // return true if the report interval has been already configured
     bool isReportIntervalConfigured();
+#ifndef DISABLE_INTERRUPTS
     // return the pin the interrupt is attached to
     int getInterruptPin();
     // listen for interrupts on the given pin so interrupt() will be called when occurring
     void setInterrupt(int pin, int mode, int initial);
-#ifndef NO_MODULE_POWER_MANAGER
+#endif
+#ifndef DISABLE_POWER_MANAGER
     // set a previously configured PowerManager to the sensor so to powering it up with custom pins
     void setPowerManager(PowerManager& powerManager);
 #endif
@@ -440,7 +475,9 @@ class Sensor {
     void presentation();
     void setup();
     void loop(MyMessage* message);
+#ifndef DISABLE_INTERRUPTS
     void interrupt();
+#endif
     void receive(MyMessage &message);
     // abstract functions, subclasses need to implement
     virtual void onBefore();
@@ -457,9 +494,13 @@ class Sensor {
     int _pin = -1;
     int _samples = 1;
     int _samples_interval = 0;
+#ifndef DISABLE_TRACK_LAST_VALUE
     bool _track_last_value = false;
+#endif
+#ifndef DISABLE_INTERRUPTS
     int _interrupt_pin = -1;
-#ifndef NO_MODULE_POWER_MANAGER
+#endif
+#ifndef DISABLE_POWER_MANAGER
     PowerManager* _powerManager = nullptr;
 #endif
     Timer* _report_timer;
@@ -470,7 +511,7 @@ class Sensor {
 */
 class SensorBattery: public Sensor {
   public:
-    SensorBattery(NodeManager& nodeManager);
+    SensorBattery(NodeManager& nodeManager, int child_id = BATTERY_CHILD_ID);
     // [102] the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
     void setMinVoltage(float value);
     // [103] the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
@@ -482,7 +523,6 @@ class SensorBattery: public Sensor {
     // [106] if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
     void setBatteryVoltsPerBit(float value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -499,12 +539,10 @@ class SensorBattery: public Sensor {
 */
 class SensorSignal: public Sensor {
   public:
-    SensorSignal(NodeManager& nodeManager);
+    SensorSignal(NodeManager& nodeManager, int child_id = SIGNAL_CHILD_ID);
     // [101] define which signal report to send. Possible values are SR_UPLINK_QUALITY, SR_TX_POWER_LEVEL, SR_TX_POWER_PERCENT, SR_TX_RSSI, SR_RX_RSSI, SR_TX_SNR, SR_RX_SNR (default: SR_RX_RSSI)
     void setSignalCommand(int value);
     // define what to do at each stage of the sketch
-    void onBefore();
-    void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
   protected:
@@ -525,13 +563,13 @@ class SensorConfiguration: public Sensor {
   protected:
 };
 
-#ifdef MODULE_ANALOG_INPUT
+#ifdef USE_ANALOG_INPUT
 /*
    SensorAnalogInput: read the analog input of a configured pin
 */
 class SensorAnalogInput: public Sensor {
   public:
-    SensorAnalogInput(NodeManager& node_manager, int pin);
+    SensorAnalogInput(NodeManager& node_manager, int pin, int child_id = -255);
     // [101] the analog reference to use (default: not set, can be either INTERNAL or DEFAULT)
     void setReference(int value);
     // [102] reverse the value or the percentage (e.g. 70% -> 30%) (default: false)
@@ -543,7 +581,6 @@ class SensorAnalogInput: public Sensor {
     // [105] maximum value for calculating the percentage (default: 1024)
     void setRangeMax(int value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -562,9 +599,8 @@ class SensorAnalogInput: public Sensor {
 */
 class SensorLDR: public SensorAnalogInput {
   public:
-    SensorLDR(NodeManager& node_manager, int pin);
+    SensorLDR(NodeManager& node_manager, int pin, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
 };
 
@@ -573,9 +609,8 @@ class SensorLDR: public SensorAnalogInput {
 */
 class SensorRain: public SensorAnalogInput {
   public:
-    SensorRain(NodeManager& node_manager, int pin);
+    SensorRain(NodeManager& node_manager, int pin, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
 };
 
@@ -584,20 +619,19 @@ class SensorRain: public SensorAnalogInput {
 */
 class SensorSoilMoisture: public SensorAnalogInput {
   public:
-    SensorSoilMoisture(NodeManager& node_manager, int pin);
+    SensorSoilMoisture(NodeManager& node_manager, int pin, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
 };
 #endif
 
-#ifdef MODULE_THERMISTOR
+#ifdef USE_THERMISTOR
 /*
    SensorThermistor: read the temperature from a thermistor
 */
 class SensorThermistor: public Sensor {
   public:
-    SensorThermistor(NodeManager& node_manager, int pin);
+    SensorThermistor(NodeManager& node_manager, int pin, int child_id = -255);
     // [101] resistance at 25 degrees C (default: 10000)
     void setNominalResistor(long value);
     // [102] temperature for nominal resistance (default: 25)
@@ -609,7 +643,6 @@ class SensorThermistor: public Sensor {
     // [105] set a temperature offset
     void setOffset(float value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -622,16 +655,15 @@ class SensorThermistor: public Sensor {
 };
 #endif
 
-#ifdef MODULE_ML8511
+#ifdef USE_ML8511
 /*
     SensorML8511
 */
 
 class SensorML8511: public Sensor {
   public:
-    SensorML8511(NodeManager& node_Manager, int pin);
+    SensorML8511(NodeManager& node_Manager, int pin, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -640,20 +672,19 @@ class SensorML8511: public Sensor {
 };
 #endif
 
-#ifdef MODULE_ACS712
+#ifdef USE_ACS712
 /*
     SensorACS712
 */
 
 class SensorACS712: public Sensor {
   public:
-    SensorACS712(NodeManager& node_manager, int pin);
+    SensorACS712(NodeManager& node_manager, int pin, int child_id = -255);
     // [101] set how many mV are equivalent to 1 Amp. The value depends on the module (100 for 20A Module, 66 for 30A Module) (default: 185);
     void setmVPerAmp(int value);
     // [102] set ACS offset (default: 2500);
     void setOffset(int value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -663,28 +694,27 @@ class SensorACS712: public Sensor {
 };
 #endif
 
-#ifdef MODULE_DIGITAL_INPUT
+#ifdef USE_DIGITAL_INPUT
 /*
    SensorDigitalInput: read the digital input of the configured pin
 */
 class SensorDigitalInput: public Sensor {
   public:
-    SensorDigitalInput(NodeManager& node_manager, int pin);
+    SensorDigitalInput(NodeManager& node_manager, int pin, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
 };
 #endif
 
-#ifdef MODULE_DIGITAL_OUTPUT
+#ifdef USE_DIGITAL_OUTPUT
 /*
    SensorDigitalOutput: control a digital output of the configured pin
 */
 class SensorDigitalOutput: public Sensor {
   public:
-    SensorDigitalOutput(NodeManager& node_manager, int pin);
+    SensorDigitalOutput(NodeManager& node_manager, int pin, int child_id = -255);
     // [103] define which value to set to the output when set to on (default: HIGH)
     void setOnValue(int value);
     // [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
@@ -699,8 +729,6 @@ class SensorDigitalOutput: public Sensor {
     void setStatus(Child* child, int value);
     // get the current state
     int getStatus();
-    // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -721,9 +749,7 @@ class SensorDigitalOutput: public Sensor {
 */
 class SensorRelay: public SensorDigitalOutput {
   public:
-    SensorRelay(NodeManager& node_manager, int pin);
-    // define what to do at each stage of the sketch
-    void onBefore();
+    SensorRelay(NodeManager& node_manager, int pin, int child_id = -255);
 };
 
 /*
@@ -731,7 +757,7 @@ class SensorRelay: public SensorDigitalOutput {
 */
 class SensorLatchingRelay: public SensorRelay {
   public:
-    SensorLatchingRelay(NodeManager& node_manager, int pin);
+    SensorLatchingRelay(NodeManager& node_manager, int pin, int child_id = -255);
     // [201] set the duration of the pulse to send in ms to activate the relay (default: 50)
     void setPulseWidth(int value);
     // [202] set the pin which turns the relay off (default: the pin provided while registering the sensor)
@@ -739,7 +765,6 @@ class SensorLatchingRelay: public SensorRelay {
     // [203] set the pin which turns the relay on (default: the pin provided while registering the sensor + 1)
     void setPinOn(int value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
   protected:
     int _pin_on;
@@ -752,12 +777,11 @@ class SensorLatchingRelay: public SensorRelay {
 /*
    SensorDHT
 */
-#ifdef MODULE_DHT
+#ifdef USE_DHT
 class SensorDHT: public Sensor {
   public:
-    SensorDHT(NodeManager& node_manager, int pin);
+    SensorDHT(NodeManager& node_manager, int pin, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -772,7 +796,7 @@ class SensorDHT: public Sensor {
 */
 class SensorDHT11: public SensorDHT {
   public:
-    SensorDHT11(NodeManager& node_manager, int pin);
+    SensorDHT11(NodeManager& node_manager, int pin, int child_id = -255);
 };
 
 /*
@@ -780,19 +804,18 @@ class SensorDHT11: public SensorDHT {
 */
 class SensorDHT22: public SensorDHT {
   public:
-    SensorDHT22(NodeManager& node_manager, int pin);
+    SensorDHT22(NodeManager& node_manager, int pin, int child_id = -255);
 };
 #endif
 
 /*
    SensorSHT21: temperature and humidity sensor
 */
-#ifdef MODULE_SHT21
+#ifdef USE_SHT21
 class SensorSHT21: public Sensor {
   public:
-    SensorSHT21(NodeManager& node_manager);
+    SensorSHT21(NodeManager& node_manager, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -805,17 +828,17 @@ class SensorSHT21: public Sensor {
 
 class SensorHTU21D: public SensorSHT21 {
   public:
-    SensorHTU21D(NodeManager& nodeManager);
+    SensorHTU21D(NodeManager& nodeManager, int child_id = -255);
 };
 #endif
 
 /*
  * SensorSwitch
  */
-#ifdef MODULE_SWITCH
+#ifdef USE_SWITCH
 class SensorSwitch: public Sensor {
   public:
-    SensorSwitch(NodeManager& node_manager, int pin);
+    SensorSwitch(NodeManager& node_manager, int pin, int child_id = -255);
     // [101] set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
     void setMode(int value);
     // [102] milliseconds to wait before reading the input (default: 0)
@@ -825,7 +848,6 @@ class SensorSwitch: public Sensor {
     // [104] Set initial value on the interrupt pin (default: HIGH)
     void setInitial(int value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -842,8 +864,7 @@ class SensorSwitch: public Sensor {
  */
 class SensorDoor: public SensorSwitch {
   public:
-    SensorDoor(NodeManager& node_manager, int pin);
-    void onBefore();
+    SensorDoor(NodeManager& node_manager, int pin, int child_id = -255);
 };
 
 /*
@@ -851,18 +872,17 @@ class SensorDoor: public SensorSwitch {
  */
 class SensorMotion: public SensorSwitch {
   public:
-    SensorMotion(NodeManager& node_manager, int pin);
-    void onBefore();
+    SensorMotion(NodeManager& node_manager, int pin, int child_id = -255);
     void onSetup();
 };
 #endif
 /*
    SensorDs18b20
 */
-#ifdef MODULE_DS18B20
+#ifdef USE_DS18B20
 class SensorDs18b20: public Sensor {
   public:
-    SensorDs18b20(NodeManager& node_manager, int pin);
+    SensorDs18b20(NodeManager& node_manager, int pin, int child_id = -255);
     // returns the sensor's resolution in bits
     int getResolution();
     // [101] set the sensor's resolution in bits
@@ -870,8 +890,6 @@ class SensorDs18b20: public Sensor {
     // [102] sleep while DS18B20 calculates temperature (default: false)
     void setSleepDuringConversion(bool value);
     // define what to do at each stage of the sketch
-    void onBefore();
-    void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
   protected:
@@ -883,14 +901,13 @@ class SensorDs18b20: public Sensor {
 /*
    SensorBH1750
 */
-#ifdef MODULE_BH1750
+#ifdef USE_BH1750
 class SensorBH1750: public Sensor {
   public:
-    SensorBH1750(NodeManager& node_manager);
+    SensorBH1750(NodeManager& node_manager, int child_id = -255);
     // [101] set sensor reading mode, e.g. BH1750_ONE_TIME_HIGH_RES_MODE
     void setMode(uint8_t mode);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -902,12 +919,11 @@ class SensorBH1750: public Sensor {
 /*
    SensorMLX90614
 */
-#ifdef MODULE_MLX90614
+#ifdef USE_MLX90614
 class SensorMLX90614: public Sensor {
   public:
-    SensorMLX90614(NodeManager& node_manager);
+    SensorMLX90614(NodeManager& node_manager, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -922,16 +938,13 @@ class SensorMLX90614: public Sensor {
  * SensorBosch
 */
 
-#if defined(MODULE_BME280) || defined(MODULE_BMP085) || defined(MODULE_BMP280)
+#if defined(USE_BME280) || defined(USE_BMP085) || defined(USE_BMP280)
 class SensorBosch: public Sensor {
   public:
-    SensorBosch(NodeManager& node_manager);
+    SensorBosch(NodeManager& node_manager, int child_id = -255);
     // [101] define how many pressure samples to keep track of for calculating the forecast (default: 5)
     void setForecastSamplesCount(int value);
     // define what to do at each stage of the sketch
-    void onBefore();
-    void onSetup();
-    void onLoop(Child* child);
     void onReceive(MyMessage* message);
     static uint8_t GetI2CAddress(uint8_t chip_id);
   protected:
@@ -951,12 +964,11 @@ class SensorBosch: public Sensor {
 /*
    SensorBME280
 */
-#ifdef MODULE_BME280
+#ifdef USE_BME280
 class SensorBME280: public SensorBosch {
   public:
-    SensorBME280(NodeManager& node_manager);
+    SensorBME280(NodeManager& node_manager, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
   protected:
@@ -967,12 +979,11 @@ class SensorBME280: public SensorBosch {
 /*
    SensorBMP085
 */
-#ifdef MODULE_BMP085
+#ifdef USE_BMP085
 class SensorBMP085: public SensorBosch {
   public:
-    SensorBMP085(NodeManager& node_manager);
+    SensorBMP085(NodeManager& node_manager, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
   protected:
@@ -983,12 +994,11 @@ class SensorBMP085: public SensorBosch {
 /*
    SensorBMP280
 */
-#ifdef MODULE_BMP280
+#ifdef USE_BMP280
 class SensorBMP280: public SensorBosch {
   public:
-    SensorBMP280(NodeManager& node_manager);
+    SensorBMP280(NodeManager& node_manager, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
   protected:
@@ -999,10 +1009,10 @@ class SensorBMP280: public SensorBosch {
 /*
    SensorSonoff
 */
-#ifdef MODULE_SONOFF
+#ifdef USE_SONOFF
 class SensorSonoff: public Sensor {
   public:
-    SensorSonoff(NodeManager& node_manager);
+    SensorSonoff(NodeManager& node_manager, int child_id = -255);
     // [101] set the button's pin (default: 0)
     void setButtonPin(int value);
     // [102] set the relay's pin (default: 12)
@@ -1010,7 +1020,6 @@ class SensorSonoff: public Sensor {
     // [103] set the led's pin (default: 13)
     void setLedPin(int value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -1033,10 +1042,10 @@ class SensorSonoff: public Sensor {
 /*
    SensorHCSR04
 */
-#ifdef MODULE_HCSR04
+#ifdef USE_HCSR04
 class SensorHCSR04: public Sensor {
   public:
-    SensorHCSR04(NodeManager& node_manager, int pin);
+    SensorHCSR04(NodeManager& node_manager, int pin, int child_id = -255);
     // [101] Arduino pin tied to trigger pin on the ultrasonic sensor (default: the pin set while registering the sensor)
     void setTriggerPin(int value);
     // [102] Arduino pin tied to echo pin on the ultrasonic sensor (default: the pin set while registering the sensor)
@@ -1044,7 +1053,6 @@ class SensorHCSR04: public Sensor {
     // [103] Maximum distance we want to ping for (in centimeters) (default: 300)
     void setMaxDistance(int value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -1060,12 +1068,11 @@ class SensorHCSR04: public Sensor {
 /*
    SensorMCP9808
 */
-#ifdef MODULE_MCP9808
+#ifdef USE_MCP9808
 class SensorMCP9808: public Sensor {
   public:
-    SensorMCP9808(NodeManager& node_manager);
+    SensorMCP9808(NodeManager& node_manager, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -1077,10 +1084,10 @@ class SensorMCP9808: public Sensor {
 /*
     SensorMQ
  */
- #ifdef MODULE_MQ
+ #ifdef USE_MQ
 class SensorMQ: public Sensor {
   public:
-    SensorMQ(NodeManager& node_manager, int pin);
+    SensorMQ(NodeManager& node_manager, int pin, int child_id = -255);
     // [101] define the target gas whose ppm has to be returned. 0: LPG, 1: CO, 2: Smoke (default: 1);
     void setTargetGas(int value);
     // [102] define the load resistance on the board, in kilo ohms (default: 1);
@@ -1104,7 +1111,6 @@ class SensorMQ: public Sensor {
     // set the SmokeCurve array (default: {2.3,0.53,-0.44})
     void setSmokeCurve(float *value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -1137,12 +1143,11 @@ class SensorMQ: public Sensor {
 /*
    SensorMHZ19
 */
-#ifdef MODULE_MHZ19
+#ifdef USE_MHZ19
 class SensorMHZ19: public Sensor {
   public:
-    SensorMHZ19(NodeManager& node_manager, int rxpin, int txpin);
+    SensorMHZ19(NodeManager& node_manager, int rxpin, int txpin, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -1157,12 +1162,11 @@ class SensorMHZ19: public Sensor {
 /*
    SensorAM2320
 */
-#ifdef MODULE_AM2320
+#ifdef USE_AM2320
 class SensorAM2320: public Sensor {
   public:
-    SensorAM2320(NodeManager& node_manager);
+    SensorAM2320(NodeManager& node_manager, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -1174,10 +1178,10 @@ class SensorAM2320: public Sensor {
 /*
    SensorTSL2561
 */
-#ifdef MODULE_TSL2561
+#ifdef USE_TSL2561
 class SensorTSL2561: public Sensor {
   public:
-    SensorTSL2561(NodeManager& node_manager);
+    SensorTSL2561(NodeManager& node_manager, int child_id = -255);
     // [101] set the gain, possible values are SensorTSL2561::GAIN_0X (0), SensorTSL2561::GAIN_16X (1) (default 16x)
     void setGain(int value);
     // [102] set the timing, possible values are SensorTSL2561::INTEGRATIONTIME_13MS (0), SensorTSL2561::INTEGRATIONTIME_101MS (1), SensorTSL2561::INTEGRATIONTIME_402MS (2) (default: 13ms)
@@ -1187,7 +1191,6 @@ class SensorTSL2561: public Sensor {
     // [104] set the i2c address values are SensorTSL2561::ADDR_FLOAT, SensorTSL2561::ADDR_LOW, SensorTSL2561::ADDR_HIGH
     void setAddress(int value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -1217,14 +1220,13 @@ class SensorTSL2561: public Sensor {
 /*
     SensorPT100
 */
-#ifdef MODULE_PT100
+#ifdef USE_PT100
 class SensorPT100: public Sensor {
   public:
-    SensorPT100(NodeManager& node_manager, int pin);
+    SensorPT100(NodeManager& node_manager, int pin, int child_id = -255);
     // [101] set the voltageRef used to compare with analog measures
     void setVoltageRef(float value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -1237,10 +1239,10 @@ class SensorPT100: public Sensor {
 /*
     SensorPT100
 */
-#ifdef MODULE_DIMMER
+#ifdef USE_DIMMER
 class SensorDimmer: public Sensor {
   public:
-    SensorDimmer(NodeManager& node_manager, int pin);
+    SensorDimmer(NodeManager& node_manager, int pin, int child_id = -255);
     // [101] set the effect to use for a smooth transition, can be one of SensorDimmer::EASE_LINEAR, SensorDimmer::EASE_INSINE, SensorDimmer::EASE_OUTSINE, SensorDimmer::EASE_INOUTSINE (default: EASE_LINEAR)
     void setEasing(int value);
     // [102] the duration of entire the transition in seconds (default: 1)
@@ -1248,7 +1250,6 @@ class SensorDimmer: public Sensor {
     // [103] the duration of a single step of the transition in milliseconds (default: 100)
     void setStepDuration(int value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -1272,10 +1273,10 @@ class SensorDimmer: public Sensor {
 /*
     SensorPulseMeter
 */
-#ifdef MODULE_PULSE_METER
+#ifdef USE_PULSE_METER
 class SensorPulseMeter: public Sensor {
   public:
-    SensorPulseMeter(NodeManager& node_manager, int pin);
+    SensorPulseMeter(NodeManager& node_manager, int pin, int child_id = -255);
     // [102] set how many pulses for each unit (e.g. 1000 pulses for 1 kwh of power, 9 pulses for 1 mm of rain, etc.)
     void setPulseFactor(float value);
     // set initial value - internal pull up (default: HIGH)
@@ -1283,7 +1284,6 @@ class SensorPulseMeter: public Sensor {
     // set the interrupt mode to attach to (default: FALLING)
     void setInterruptMode(int value);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -1302,9 +1302,7 @@ class SensorPulseMeter: public Sensor {
 */
 class SensorRainGauge: public SensorPulseMeter {
   public:
-    SensorRainGauge(NodeManager& node_manager, int pin);
-    // define what to do at each stage of the sketch
-    void onBefore();
+    SensorRainGauge(NodeManager& node_manager, int pin, int child_id = -255);
 };
 
 /*
@@ -1312,9 +1310,7 @@ class SensorRainGauge: public SensorPulseMeter {
 */
 class SensorPowerMeter: public SensorPulseMeter {
   public:
-    SensorPowerMeter(NodeManager& node_manager, int pin);
-    // define what to do at each stage of the sketch
-    void onBefore();
+    SensorPowerMeter(NodeManager& node_manager, int pin, int child_id = -255);
   protected:
     void _reportTotal(Child* child);
 };
@@ -1324,9 +1320,7 @@ class SensorPowerMeter: public SensorPulseMeter {
 */
 class SensorWaterMeter: public SensorPulseMeter {
   public:
-    SensorWaterMeter(NodeManager& node_manager, int pin);
-    // define what to do at each stage of the sketch
-    void onBefore();
+    SensorWaterMeter(NodeManager& node_manager, int pin, int child_id = -255);
   protected:
     void _reportTotal(Child* child);
 };
@@ -1335,12 +1329,11 @@ class SensorWaterMeter: public SensorPulseMeter {
 /*
    SensorPlantowerPMS
 */
-#ifdef MODULE_PMS
+#ifdef USE_PMS
 class SensorPlantowerPMS: public Sensor {
   public:
-    SensorPlantowerPMS(NodeManager& node_manager, int rxpin, int txpin);
+    SensorPlantowerPMS(NodeManager& node_manager, int rxpin, int txpin, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -1359,12 +1352,11 @@ class SensorPlantowerPMS: public Sensor {
 /*
  * VL53L0X Laser distance sensor
  */
-#ifdef MODULE_VL53L0X
+#ifdef USE_VL53L0X
 class SensorVL53L0X: public Sensor {
   public:
-    SensorVL53L0X(NodeManager& node_manager, int xshut_pin);
+    SensorVL53L0X(NodeManager& node_manager, int xshut_pin, int child_id = -255);
     // define what to do at each stage of the sketch
-    void onBefore();
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
@@ -1372,7 +1364,62 @@ class SensorVL53L0X: public Sensor {
     int _getDistance();
     VL53L0X *_lox;
 };
+#endif
 
+/*
+ * SSD1306 OLED display
+ */
+#ifdef USE_SSD1306
+class DisplaySSD1306: public Sensor {
+  public:
+    DisplaySSD1306(NodeManager& node_manager, int child_id = -255);
+    // set device
+    void setDev(const DevType* dev);
+    // set i2c address
+    void setI2CAddress(uint8_t i2caddress);
+    // set text font (default: &Adafruit5x7)
+    void setFont(const uint8_t* font);
+    // [102] set the contrast of the display (0-255)
+    void setContrast(uint8_t value);
+    // [103] set the displayed text
+    void setText(const char* value);
+    // [104] Rotate the display 180 degree (use rotate=false to revert)
+    void rotateDisplay(bool rotate = true);
+    // [105] Text font size (possible are 1 and 2; default is 1)
+    void setFontSize(int fontsize);
+    // [106] Text caption font size (possible are 1 and 2; default is 2)
+    void setHeaderFontSize(int fontsize);
+    // [107] Invert display (black text on color background; use invert=false to revert)
+    void invertDisplay(bool invert = true);
+    // define what to do at each stage of the sketch
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(MyMessage* message);
+    void updateDisplay();
+  protected:
+    virtual void _display(const char*displaystr = 0);
+    SSD1306AsciiAvrI2c *_oled;
+    const DevType* _dev = &Adafruit128x64;
+    uint8_t _i2caddress = 0x3c;
+    int _fontsize = 1;
+    int _caption_fontsize = 2;
+};
+#endif
+
+/*
+   SensorSHT31: temperature and humidity sensor
+*/
+#ifdef USE_SHT31
+class SensorSHT31: public Sensor {
+  public:
+    SensorSHT31(NodeManager& node_manager, int child_id = -255);
+    // define what to do at each stage of the sketch
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(MyMessage* message);
+  protected:
+    Adafruit_SHT31* _sht31;
+};
 #endif
 
 /***************************************
@@ -1384,6 +1431,7 @@ class NodeManager {
     // [10] send the same message multiple times (default: 1)
     void setRetries(int value);
     int getRetries();
+#ifndef DISABLE_SLEEP
     // [3] set the duration (in seconds) of a sleep cycle
     void setSleepSeconds(int value);
     long getSleepSeconds();
@@ -1393,19 +1441,22 @@ class NodeManager {
     void setSleepHours(int value);
     // [29] set the duration (in days) of a sleep cycle
     void setSleepDays(int value);
+#endif
+#ifndef DISABLE_INTERRUPTS
     // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
     void setSleepInterruptPin(int value);
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
     void setInterrupt(int pin, int mode, int initial = -1);
     // [28] ignore two consecutive interrupts if happening within this timeframe in milliseconds (default: 100)
     void setInterruptMinDelta(long value);
+#endif
     // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
     int getSleepBetweenSend();
     // register a sensor
     void registerSensor(Sensor* sensor);
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-#ifndef NO_MODULE_POWER_MANAGER
+#ifndef DISABLE_POWER_MANAGER
     void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
     // [24] manually turn the power on
     void powerOn();
@@ -1430,20 +1481,26 @@ class NodeManager {
     void hello();
     // [6] reboot the board
     void reboot();
-    // [7] clear the EEPROM
-    void clearEeprom();
     // [9] wake up the board
     void wakeup();
+#ifndef DISABLE_EEPROM
+    // [7] clear the EEPROM
+    void clearEeprom();
     // return the value stored at the requested index from the EEPROM
     int loadFromMemory(int index);
     // [27] save the given index of the EEPROM the provided value
     void saveToMemory(int index, int value);
+    // [40] if set save the sleep settings in memory, also when changed remotely (default: false)
+    void setSaveSleepSettings(bool value);
+#endif
     // return vcc in V
     float getVcc();
+#ifndef DISABLE_INTERRUPTS
     // setup the configured interrupt pins
     void setupInterrupts();
     // return the pin from which the last interrupt came
     int getLastInterruptPin();
+#endif
     // [36] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
     void setReportIntervalSeconds(int value);
     // [37] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
@@ -1460,8 +1517,6 @@ class NodeManager {
     void setRebootPin(int value);
     // [32] turn the ADC off so to save 0.2 mA
     void setADCOff();
-    // [30] if set save the sleep settings in memory, also when changed remotely (default: false)
-    void setSaveSleepSettings(bool value);
     // hook into the main sketch functions
     void before();
     void presentation();
@@ -1469,23 +1524,25 @@ class NodeManager {
     void loop();
     void receive(MyMessage & msg);
     void receiveTime(unsigned long ts);
+#ifndef DISABLE_INTERRUPTS
     // handle interrupts
     static void _onInterrupt_1();
     static void _onInterrupt_2();
+#endif
     // send a message by providing the source child, type of the message and value
 	  void sendMessage(int child_id, int type, int value);
     void sendMessage(int child_id, int type, float value);
     void sendMessage(int child_id, int type, double value);
     void sendMessage(int child_id, int type, const char* value);
-#ifndef NO_MODULE_POWER_MANAGER
+#ifndef DISABLE_POWER_MANAGER
     void setPowerManager(PowerManager& powerManager);
 #endif
-    int getAvailableChildId();
+    int getAvailableChildId(int child_id = -255);
     List<Sensor*> sensors;
     Child* getChild(int child_id);
     Sensor* getSensorWithChild(int child_id);
   private:
-#ifndef NO_MODULE_POWER_MANAGER
+#ifndef DISABLE_POWER_MANAGER
     PowerManager* _powerManager = nullptr;
 #endif
     MyMessage _message;
@@ -1495,6 +1552,7 @@ class NodeManager {
     int _sleep_interrupt_pin = -1;
     int _sleep_between_send = 0;
     int _retries = 1;
+#ifndef DISABLE_INTERRUPTS
     int _interrupt_1_mode = MODE_NOT_DEFINED;
     int _interrupt_2_mode = MODE_NOT_DEFINED;
     int _interrupt_1_initial = -1;
@@ -1503,6 +1561,7 @@ class NodeManager {
     static long _interrupt_min_delta;
     static long _last_interrupt_1;
     static long _last_interrupt_2;
+#endif
     long _timestamp = -1;
     bool _ack = false;
     void _sleep();
@@ -1512,9 +1571,11 @@ class NodeManager {
     int _report_interval_seconds = 10*60;
     bool _sleep_or_wait = true;
     int _reboot_pin = -1;
+#ifndef DISABLE_EEPROM
     bool _save_sleep_settings = false;
     void _loadSleepSettings();
     void _saveSleepSettings();
+#endif
 };
 
 #endif

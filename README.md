@@ -33,49 +33,50 @@ To use a buil-in sensor:
 Once created, the sensor will automatically present one or more child to the gateway and controller.
 A list of buil-in sensors, module to enable, required dependencies and the number of child automatically created is presented below:
 
-Sensor Name         |#Child | Module to enable      | Description                                                                                       | Dependencies
---------------------|-------|-----------------------|---------------------------------------------------------------------------------------------------|----------------------------------------------------------
-SensorBattery       | 1     | -                     | Built-in sensor for automatic battery reporting                                                   | - 
-SensorSignal        | 1     | -                     | Built-in sensor for automatic signal level reporting                                              | -
-SensorConfiguration | 1     | -                     | Built-in sensor for OTA remote configuration of any registered sensor                             | -
-SensorAnalogInput   | 1     | MODULE_ANALOG_INPUT   | Generic analog sensor, return a pin's analog value or its percentage                              | -
-SensorLDR           | 1     | MODULE_ANALOG_INPUT   | LDR sensor, return the light level of an attached light resistor in percentage                    | -
-SensorRain          | 1     | MODULE_ANALOG_INPUT   | Rain sensor, return the percentage of rain from an attached analog sensor                         | -
-SensorSoilMoisture  | 1     | MODULE_ANALOG_INPUT   | Soil moisture sensor, return the percentage of moisture from an attached analog sensor            | -
-SensorThermistor    | 1     | MODULE_THERMISTOR     | Thermistor sensor, return the temperature based on the attached thermistor                        | -
-SensorML8511        | 1     | MODULE_ML8511         | ML8511 sensor, return UV intensity                                                                | -
-SensorACS712        | 1     | MODULE_ACS712         | ACS712 sensor, measure the current going through the attached module                              | -
-SensorDigitalInput  | 1     | MODULE_DIGITAL_INPUT  | Generic digital sensor, return a pin's digital value                                              | -
-SensorDigitalOutput | 1     | MODULE_DIGITAL_OUTPUT | Generic digital output sensor, allows setting the digital output of a pin to the requested value  | -
-SensorRelay         | 1     | MODULE_DIGITAL_OUTPUT | Relay sensor, allows activating the relay                                                         | -
-SensorLatchingRelay | 1     | MODULE_DIGITAL_OUTPUT | Latching Relay sensor, allows activating the relay with a pulse                                   | -
-SensorDHT11         | 2     | MODULE_DHT            | DHT11 sensor, return temperature/humidity based on the attached DHT sensor                        | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/DHT
-SensorDHT22         | 2     | MODULE_DHT            | DHT22 sensor, return temperature/humidity based on the attached DHT sensor                        | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/DHT
-SensorSHT21         | 2     | MODULE_SHT21          | SHT21 sensor, return temperature/humidity based on the attached SHT21 sensor                      | https://github.com/SodaqMoja/Sodaq_SHT2x
-SensorHTU21D        | 2     | MODULE_SHT21          | HTU21D sensor, return temperature/humidity based on the attached HTU21D sensor                    | https://github.com/SodaqMoja/Sodaq_SHT2x
-SensorSwitch        | 1     | MODULE_SWITCH         | Generic switch, wake up the board when a pin changes status                                       | -
-SensorDoor          | 1     | MODULE_SWITCH         | Door sensor, wake up the board and report when an attached magnetic sensor has been opened/closed | -
-SensorMotion        | 1     | MODULE_SWITCH         | Motion sensor, wake up the board and report when an attached PIR has triggered                    | -
-SensorDs18b20       | 1+    |  MODULE_DS18B20       | DS18B20 sensor, return the temperature based on the attached sensor                               | https://github.com/milesburton/Arduino-Temperature-Control-Library
-SensorBH1750        | 1     | MODULE_BH1750         | BH1750 sensor, return light level in lux                                                          | https://github.com/claws/BH1750
-SensorMLX90614      | 2     | MODULE_MLX90614       | MLX90614 contactless temperature sensor, return ambient and object temperature                    | https://github.com/adafruit/Adafruit-MLX90614-Library
-SensorBME280        | 4     | MODULE_BME280         | BME280 sensor, return temperature/humidity/pressure based on the attached BME280 sensor           | https://github.com/adafruit/Adafruit_BME280_Library
-SensorBMP085        | 3     | MODULE_BMP085         | BMP085/BMP180 sensor, return temperature and pressure                                             | https://github.com/adafruit/Adafruit-BMP085-Library
-SensorBMP280        | 3     | MODULE_BMP280         | BMP280 sensor, return temperature/pressure based on the attached BMP280 sensor                    | https://github.com/adafruit/Adafruit_BMP280_Library
-SensorSonoff        | 1     | MODULE_SONOFF         | Sonoff wireless smart switch                                                                      | https://github.com/thomasfredericks/Bounce2
-SensorHCSR04        | 1     | MODULE_HCSR04         | HC-SR04 sensor, return the distance between the sensor and an object                              | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/NewPing
-SensorMCP9808       | 1     | MODULE_MCP9808        | MCP9808 sensor, measure the temperature through the attached module                               | https://github.com/adafruit/Adafruit_MCP9808_Library
-SensorMQ            | 1     | MODULE_MQ             | MQ sensor, return ppm of the target gas                                                           | -
-SensorMHZ19         | 1     | MODULE_MHZ19          | MH-Z19 CO2 sensor via UART (SoftwareSerial, default on pins 6(Rx) and 7(Tx)                       | -
-SensorAM2320        | 2     | MODULE_AM2320         | AM2320 sensors, return temperature/humidity based on the attached AM2320 sensor                   | https://github.com/thakshak/AM2320
-SensorTSL2561       | 1     | MODULE_TSL2561        | TSL2561 sensor, return light in lux                                                               | https://github.com/adafruit/TSL2561-Arduino-Library
-SensorPT100         | 1     | MODULE_PT100          | DFRobot Driver high temperature sensor, return the temperature from the attached PT100 sensor     | -
-SensorDimmer        | 1     | MODULE_DIMMER         | Generic dimmer sensor used to drive a pwm output                                                  | -
-SensorRainGauge     | 1     | MODULE_PULSE_METER    | Rain gauge sensor                                                                                 | -
-SensorPowerMeter    | 1     | MODULE_PULSE_METER    | Power meter pulse sensor                                                                          | -
-SensorWaterMeter    | 1     | MODULE_PULSE_METER    | Water meter pulse sensor                                                                          | -
-SensorPlantowerPMS  | 3     | MODULE_PMS            | Plantower PMS particulate matter sensors (reporting PM<=1.0, PM<=2.5 and PM<=10.0 in µg/m³)       | https://github.com/fu-hsi/pms
-SensorVL53L0X       | 1     | MODULE_VL53L0X        | VL53L0X laser time-of-flight distance sensor via I²C, sleep pin supported (optional)              | https://github.com/pololu/vl53l0x-arduino
+Sensor Name         |#Child | Module to enable   | Description                                                                                       | Dependencies
+--------------------|-------|--------------------|---------------------------------------------------------------------------------------------------|----------------------------------------------------------
+SensorBattery       | 1     | -                  | Built-in sensor for automatic battery reporting                                                   | - 
+SensorSignal        | 1     | -                  | Built-in sensor for automatic signal level reporting                                              | -
+SensorConfiguration | 1     | -                  | Built-in sensor for OTA remote configuration of any registered sensor                             | -
+SensorAnalogInput   | 1     | USE_ANALOG_INPUT   | Generic analog sensor, return a pin's analog value or its percentage                              | -
+SensorLDR           | 1     | USE_ANALOG_INPUT   | LDR sensor, return the light level of an attached light resistor in percentage                    | -
+SensorRain          | 1     | USE_ANALOG_INPUT   | Rain sensor, return the percentage of rain from an attached analog sensor                         | -
+SensorSoilMoisture  | 1     | USE_ANALOG_INPUT   | Soil moisture sensor, return the percentage of moisture from an attached analog sensor            | -
+SensorThermistor    | 1     | USE_THERMISTOR     | Thermistor sensor, return the temperature based on the attached thermistor                        | -
+SensorML8511        | 1     | USE_ML8511         | ML8511 sensor, return UV intensity                                                                | -
+SensorACS712        | 1     | USE_ACS712         | ACS712 sensor, measure the current going through the attached module                              | -
+SensorDigitalInput  | 1     | USE_DIGITAL_INPUT  | Generic digital sensor, return a pin's digital value                                              | -
+SensorDigitalOutput | 1     | USE_DIGITAL_OUTPUT | Generic digital output sensor, allows setting the digital output of a pin to the requested value  | -
+SensorRelay         | 1     | USE_DIGITAL_OUTPUT | Relay sensor, allows activating the relay                                                         | -
+SensorLatchingRelay | 1     | USE_DIGITAL_OUTPUT | Latching Relay sensor, allows activating the relay with a pulse                                   | -
+SensorDHT11         | 2     | USE_DHT            | DHT11 sensor, return temperature/humidity based on the attached DHT sensor                        | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/DHT
+SensorDHT22         | 2     | USE_DHT            | DHT22 sensor, return temperature/humidity based on the attached DHT sensor                        | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/DHT
+SensorSHT21         | 2     | USE_SHT21          | SHT21 sensor, return temperature/humidity based on the attached SHT21 sensor                      | https://github.com/SodaqMoja/Sodaq_SHT2x
+SensorHTU21D        | 2     | USE_SHT21          | HTU21D sensor, return temperature/humidity based on the attached HTU21D sensor                    | https://github.com/SodaqMoja/Sodaq_SHT2x
+SensorSwitch        | 1     | USE_SWITCH         | Generic switch, wake up the board when a pin changes status                                       | -
+SensorDoor          | 1     | USE_SWITCH         | Door sensor, wake up the board and report when an attached magnetic sensor has been opened/closed | -
+SensorMotion        | 1     | USE_SWITCH         | Motion sensor, wake up the board and report when an attached PIR has triggered                    | -
+SensorDs18b20       | 1+    | USE_DS18B20        | DS18B20 sensor, return the temperature based on the attached sensor                               | https://github.com/milesburton/Arduino-Temperature-Control-Library
+SensorBH1750        | 1     | USE_BH1750         | BH1750 sensor, return light level in lux                                                          | https://github.com/claws/BH1750
+SensorMLX90614      | 2     | USE_MLX90614       | MLX90614 contactless temperature sensor, return ambient and object temperature                    | https://github.com/adafruit/Adafruit-MLX90614-Library
+SensorBME280        | 4     | USE_BME280         | BME280 sensor, return temperature/humidity/pressure based on the attached BME280 sensor           | https://github.com/adafruit/Adafruit_BME280_Library
+SensorBMP085        | 3     | USE_BMP085         | BMP085/BMP180 sensor, return temperature and pressure                                             | https://github.com/adafruit/Adafruit-BMP085-Library
+SensorBMP280        | 3     | USE_BMP280         | BMP280 sensor, return temperature/pressure based on the attached BMP280 sensor                    | https://github.com/adafruit/Adafruit_BMP280_Library
+SensorSonoff        | 1     | USE_SONOFF         | Sonoff wireless smart switch                                                                      | https://github.com/thomasfredericks/Bounce2
+SensorHCSR04        | 1     | USE_HCSR04         | HC-SR04 sensor, return the distance between the sensor and an object                              | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/NewPing
+SensorMCP9808       | 1     | USE_MCP9808        | MCP9808 sensor, measure the temperature through the attached module                               | https://github.com/adafruit/Adafruit_MCP9808_Library
+SensorMQ            | 1     | USE_MQ             | MQ sensor, return ppm of the target gas                                                           | -
+SensorMHZ19         | 1     | USE_MHZ19          | MH-Z19 CO2 sensor via UART (SoftwareSerial, default on pins 6(Rx) and 7(Tx)                       | -
+SensorAM2320        | 2     | USE_AM2320         | AM2320 sensors, return temperature/humidity based on the attached AM2320 sensor                   | https://github.com/thakshak/AM2320
+SensorTSL2561       | 1     | USE_TSL2561        | TSL2561 sensor, return light in lux                                                               | https://github.com/adafruit/TSL2561-Arduino-Library
+SensorPT100         | 1     | USE_PT100          | DFRobot Driver high temperature sensor, return the temperature from the attached PT100 sensor     | -
+SensorDimmer        | 1     | USE_DIMMER         | Generic dimmer sensor used to drive a pwm output                                                  | -
+SensorRainGauge     | 1     | USE_PULSE_METER    | Rain gauge sensor                                                                                 | -
+SensorPowerMeter    | 1     | USE_PULSE_METER    | Power meter pulse sensor                                                                          | -
+SensorWaterMeter    | 1     | USE_PULSE_METER    | Water meter pulse sensor                                                                          | -
+SensorPlantowerPMS  | 3     | USE_PMS            | Plantower PMS particulate matter sensors (reporting PM<=1.0, PM<=2.5 and PM<=10.0 in µg/m³)       | https://github.com/fu-hsi/pms
+SensorVL53L0X       | 1     | USE_VL53L0X        | VL53L0X laser time-of-flight distance sensor via I²C, sleep pin supported (optional)              | https://github.com/pololu/vl53l0x-arduino
+DisplaySSD1306      | 1     | MODULE_SSD1306     | SSD1306 128x64 OLED display (I²C); By default displays values of all sensors and children         | https://github.com/greiman/SSD1306Ascii.git
 
 ## Installation
 
@@ -111,15 +112,21 @@ The next step is to enable NodeManager's modules required for your sensors. When
 
 ### Add your sensors
 
-Find in the main sketch `Add your sensors below` and add your sensors to NodeManager. To add a sensor, just create an instance of the class, passing it `node` as an argument and an optional pin. 
+Find in the main sketch `Add your sensors below` and add your sensors to NodeManager. To add a sensor, just create an instance of the class, passing it `node` as an argument. 
+Those sensors requiring a pin to operate would take it as a second argument in the constructor. 
+NodeManager automatically creates all the child_ids assigning an incremental counter. If you need to set your own child_id, pass it as the last argument to the constructor
 
 ~~~c
+// Add a thermistor sensor attached to pin A0
 SensorThermistor thermistor(node,A0);
+// Add a LDR sensor attached to pin A0 and assing child_id 5
+SensorLDR ldr(node,A1,5);
+// Add a temperature/humidity sensor SHT21 sensor. No pin required since using i2c
 SensorSHT21 sht21(node);
 ~~~
 
 The sensor will be then registered automatically with NodeManager which will take care of it all along its lifecycle. Please ensure the corresponding module has been previously enabled for a successful compilation of the code.
-NodeManager will assign a child id automatically, present each sensor for you to the controller, query each sensor and report the measure back to the gateway/controller. For actuators (e.g. relays) those can be triggered by sending a `REQ` message with the expected type to their assigned child id.
+NodeManager will present each sensor for you to the controller, query each sensor and report the measure back to the gateway/controller. For actuators (e.g. relays) those can be triggered by sending a `REQ` message with the expected type to their assigned child id.
 
 ### Configuring your sensors
 
@@ -247,7 +254,7 @@ You can interact with each class provided by NodeManager through a set of API fu
     void setRebootPin(int value);
     // [32] turn the ADC off so to save 0.2 mA
     void setADCOff();
-    // [30] if set save the sleep settings in memory, also when changed remotely (default: false)
+    // [40] if set save the sleep settings in memory, also when changed remotely (default: false)
     void setSaveSleepSettings(bool value);
 ~~~
 
@@ -500,6 +507,28 @@ Each sensor class exposes additional methods.
     void setInterruptMode(int value);
 ~~~
 
+* DisplaySSD1306
+~~~c
+    // set device
+    void setDev(const DevType* dev);
+    // set i2c address
+    void setI2CAddress(uint8_t i2caddress);
+    // set text font (default: &Adafruit5x7)
+    void setFont(const uint8_t* font);
+    // [102] set the contrast of the display (0-255)
+    void setContrast(uint8_t value);
+    // [103] set the displayed text
+    void setText(const char* value);
+    // [104] Rotate the display 180 degree (use rotate=false to revert)
+    void rotateDisplay(bool rotate = true);
+    // [105] Text font size (possible are 1 and 2; default is 1)
+    void setFontSize(int fontsize);
+    // [106] Text caption font size (possible are 1 and 2; default is 2)
+    void setHeaderFontSize(int fontsize);
+    // [107] Invert display (black text on color background; use invert=false to revert)
+    void invertDisplay(bool invert = true);
+~~~
+
 ### Remote API
 
 If SensorConfiguration is added to NodeManager, the API can be also called remotely. SensorConfiguration exposes child id 200 that can be used to interact with the service by sending `V_CUSTOM` type of messages and commands within the payload. For each `REQ` message, the node will respond with a `SET` message if successful. 
@@ -605,7 +634,6 @@ The sensor will be put to sleep after startup and will report both the measures 
 Even if the sensor is sleeping most of the time, it can be potentially woke up by sending a V_CUSTOM message to NodeManager service child id (200 by default) just after having reported its heartbeat. At this point the node will report awake and the user can interact with it by e.g. sending REQ messages to its child IDs, changing the duration of a sleep cycle, etc.
 
 ~~~c
-*/
 
 /**********************************
  * MySensors node configuration
@@ -625,8 +653,8 @@ Even if the sensor is sleeping most of the time, it can be potentially woke up b
  * NodeManager modules
  */
 
-#define MODULE_ANALOG_INPUT
-#define MODULE_THERMISTOR
+#define USE_ANALOG_INPUT
+#define USE_THERMISTOR
 
 /***********************************
  * Load NodeManager Library
@@ -705,7 +733,6 @@ void receiveTime(unsigned long ts) {
 The following sketch can be used to report back to the controller when a motion sensor attached to the board's pin 3 triggers. In this example, the board will be put to sleep just after startup and will report a heartbeat every hour. NodeManager will take care of configuring an interrupt associated to the provided pin so automatically wake up when a motion is detected and report a V_TRIPPED message back.
 
 ~~~c
-*/
 
 /**********************************
  * MySensors node configuration
@@ -725,7 +752,7 @@ The following sketch can be used to report back to the controller when a motion 
  * NodeManager modules
  */
 
-#define MODULE_SWITCH
+#define USE_SWITCH
 
 /***********************************
  * Load NodeManager Library
@@ -804,7 +831,6 @@ In this example, the board also runs at 1Mhz so it can go down to 1.8V: by setti
 The board will be put to sleep just after startup and will report back to the controller every 5 minutes. It is the controller's responsability to catch when the board reports its heartbeat (using smart sleep behind the scene) and send a command back if needed.
 
 ~~~c
-*/
 
 /**********************************
  * MySensors node configuration
@@ -824,7 +850,7 @@ The board will be put to sleep just after startup and will report back to the co
  * NodeManager modules
  */
 
-#define MODULE_DIGITAL_OUTPUT
+#define USE_DIGITAL_OUTPUT
 
 /***********************************
  * Load NodeManager Library
