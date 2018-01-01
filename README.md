@@ -111,15 +111,21 @@ The next step is to enable NodeManager's modules required for your sensors. When
 
 ### Add your sensors
 
-Find in the main sketch `Add your sensors below` and add your sensors to NodeManager. To add a sensor, just create an instance of the class, passing it `node` as an argument and an optional pin. 
+Find in the main sketch `Add your sensors below` and add your sensors to NodeManager. To add a sensor, just create an instance of the class, passing it `node` as an argument. 
+Those sensors requiring a pin to operate would take it as a second argument in the constructor. 
+NodeManager automatically creates all the child_ids assigning an incremental counter. If you need to set your own child_id, pass it as the last argument to the constructor
 
 ~~~c
+// Add a thermistor sensor attached to pin A0
 SensorThermistor thermistor(node,A0);
+// Add a LDR sensor attached to pin A0 and assing child_id 5
+SensorLDR ldr(node,A1,5);
+// Add a temperature/humidity sensor SHT21 sensor. No pin required since using i2c
 SensorSHT21 sht21(node);
 ~~~
 
 The sensor will be then registered automatically with NodeManager which will take care of it all along its lifecycle. Please ensure the corresponding module has been previously enabled for a successful compilation of the code.
-NodeManager will assign a child id automatically, present each sensor for you to the controller, query each sensor and report the measure back to the gateway/controller. For actuators (e.g. relays) those can be triggered by sending a `REQ` message with the expected type to their assigned child id.
+NodeManager will present each sensor for you to the controller, query each sensor and report the measure back to the gateway/controller. For actuators (e.g. relays) those can be triggered by sending a `REQ` message with the expected type to their assigned child id.
 
 ### Configuring your sensors
 
