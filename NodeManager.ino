@@ -288,7 +288,7 @@ NodeManager node;
 //SensorVL53L0X vl53l0x(node, /*XSHUT_PIN=*/2);
 //SensorSHT31 sht31(node);
 
-// Other devies
+// Other devices
 //DisplaySSD1306 ssd1306(node);
 
 /***********************************

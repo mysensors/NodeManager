@@ -3105,7 +3105,7 @@ void DisplaySSD1306::setHeaderFontSize(int fontsize) {
   _caption_fontsize = (fontsize>=2) ? 2 : 1;
 }
 // [107] Invert display (black text on color background)
-void DisplaySSD1306::invertDisplay(bool invert = true) {
+void DisplaySSD1306::invertDisplay(bool invert) {
   if (invert) {
     _oled->ssd1306WriteCmd(SSD1306_INVERTDISPLAY);
   } else {
@@ -3137,7 +3137,7 @@ void DisplaySSD1306::updateDisplay() {
   _display(((ChildString*)children.get(1))->getValueString());
 }
 
-void DisplaySSD1306::_display(const char*displaystr = 0) {
+void DisplaySSD1306::_display(const char*displaystr) {
   _oled->setCursor(0, 0);
   if (displaystr) {
     if (_caption_fontsize >= 2 )
