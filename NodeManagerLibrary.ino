@@ -3651,9 +3651,6 @@ void NodeManager::powerOff() {
 void NodeManager::setSleepBetweenSend(int value) {
   _sleep_between_send = value;
 }
-int NodeManager::getSleepBetweenSend() {
-  return _sleep_between_send;
-}
 void NodeManager::setAck(bool value) {
     _ack = value;
 }
@@ -3751,19 +3748,24 @@ void NodeManager::presentation() {
     Serial.println(F("OK"));
   #endif
   // Send the sketch version information to the gateway and Controller
-  if (_sleep_between_send > 0) sleep(_sleep_between_send);
+  _sleepBetweenSend();
   sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
+  _sleepBetweenSend();
   // present each sensor
   for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
     Sensor* sensor = *itr;
     // call each sensor's presentation()
-    if (_sleep_between_send > 0) sleep(_sleep_between_send);
     sensor->presentation();
+    _sleepBetweenSend();
   }
   #ifdef NODEMANAGER_DEBUG
     Serial.println(F("READY"));
     Serial.println("");
   #endif
+  // wait a bit before leaving this function
+  _sleepBetweenSend();
+  _sleepBetweenSend();
+  _sleepBetweenSend();
 }
 
 
@@ -4112,8 +4114,6 @@ void NodeManager::_sendMessage(int child_id, int type) {
   _message.setType(type);
   // send the message, multiple times if requested
   for (int i = 0; i < _retries; i++) {
-    // if configured, sleep beetween each send
-    if (_sleep_between_send > 0) sleep(_sleep_between_send);
     #ifdef NODEMANAGER_DEBUG
       Serial.print(F("SEND D="));
       Serial.print(_message.destination);
@@ -4131,6 +4131,8 @@ void NodeManager::_sendMessage(int child_id, int type) {
       Serial.println(_message.getFloat());
     #endif
     send(_message, _ack);
+    // if configured, sleep beetween each send
+    _sleepBetweenSend();
   }
 }
 
@@ -4241,5 +4243,10 @@ void NodeManager::_saveSleepSettings() {
   saveState(EEPROM_SLEEP_1,bit_1);
   saveState(EEPROM_SLEEP_2,bit_2);
   saveState(EEPROM_SLEEP_3,bit_3);
+}
+
+// sleep between send()
+void NodeManager::_sleepBetweenSend() {
+  if (_sleep_between_send > 0) sleep(_sleep_between_send);
 }
 #endif

@@ -137,6 +137,13 @@ SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperat
 //#define MY_DISABLE_RAM_ROUTING_TABLE_FEATURE
 //#define MY_DISABLE_SIGNAL_REPORT
 
+// Optimizations when running on 2032 Coin Cell. Also set node.setSleepBetweenSend(500) and run the board at 1Mhz
+//#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
+//#define MY_TRANSPORT_WAIT_READY_MS  5000
+//#define MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS 2000
+//#define MY_PARENT_NODE_ID 0
+//#define MY_PARENT_NODE_IS_STATIC
+
 /**********************************
  * MySensors gateway configuration
  */
@@ -303,7 +310,6 @@ void before() {
   /*
   * Configure your sensors below
   */
-
   //node.setReportIntervalSeconds(10);
   //node.setReportIntervalMinutes(5);
   //node.setSleepMinutes(5);

@@ -1452,7 +1452,6 @@ class NodeManager {
 #endif
     // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
-    int getSleepBetweenSend();
     // register a sensor
     void registerSensor(Sensor* sensor);
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
@@ -1576,6 +1575,7 @@ class NodeManager {
     void _loadSleepSettings();
     void _saveSleepSettings();
 #endif
+    void _sleepBetweenSend();
 };
 
 #endif
