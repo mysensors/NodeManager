@@ -3771,6 +3771,12 @@ void NodeManager::presentation() {
 
 // setup NodeManager
 void NodeManager::setup() {
+#ifdef USE_TIME
+  // the function to get the time from the RTC
+  setSyncProvider(RTC.get);  
+  // Request latest time from controller at startup
+  requestTime();  
+#endif
   // retrieve and store isMetric from the controller
   if (_get_controller_config) _is_metric = getControllerConfig().isMetric;
   #ifdef NODEMANAGER_DEBUG
@@ -3881,6 +3887,9 @@ void NodeManager::receiveTime(unsigned long ts) {
   #ifdef NODEMANAGER_DEBUG
     Serial.print(F("TIME T="));
     Serial.print(_timestamp);
+  #endif
+  #ifdef USE_TIME
+    RTC.set(ts);
   #endif
 }
 
@@ -4249,4 +4258,22 @@ void NodeManager::_saveSleepSettings() {
 void NodeManager::_sleepBetweenSend() {
   if (_sleep_between_send > 0) sleep(_sleep_between_send);
 }
+
+#ifdef USE_TIME
+void NodeManager::_requestTime() {
+  /*
+  unsigned long now = millis();
+  // If no time has been received yet, request it every 10 second from controller
+  // When time has been received, request update every hour
+  if ((!timeReceived && (now-lastRequest) > (10UL*1000UL))
+    || (timeReceived && (now-lastRequest) > (60UL*1000UL*60UL))) {
+    // Request time from controller. 
+    Serial.println("requesting time");
+    requestTime();  
+    lastRequest = now;
+    
+  }*/
+}
+#endif
+
 #endif

@@ -87,7 +87,7 @@ SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperat
 #define SKETCH_NAME "NodeManager"
 #define SKETCH_VERSION "1.0"
 //#define MY_DEBUG
-//#define MY_NODE_ID 99
+#define MY_NODE_ID 99
 
 // NRF24 radio settings
 #define MY_RADIO_NRF24
@@ -224,6 +224,7 @@ SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperat
 //#define USE_VL53L0X
 //#define USE_SSD1306
 //#define USE_SHT31
+#define USE_TIME
 
 /***********************************
  * NodeManager advanced settings
@@ -313,6 +314,10 @@ void before() {
   //node.setReportIntervalSeconds(10);
   //node.setReportIntervalMinutes(5);
   //node.setSleepMinutes(5);
+  node.setSleepSeconds(10);
+  RTC.set(1516543198);
+  //setSyncProvider(RTC.get);
+  setSyncInterval(0);
   
   //node.setPowerManager(power);
   //battery.setReportIntervalMinutes(30);
@@ -340,6 +345,39 @@ void setup() {
 void loop() {
   // call NodeManager loop routine
   node.loop();
+    tmElements_t tm;
+  RTC.read(tm);
+  Serial.print(tm.Day);
+  Serial.print("-");
+  Serial.print(tm.Month);
+  Serial.print("-");
+  Serial.print(tmYearToCalendar(tm.Year)-2000);
+  Serial.print(" ");
+  Serial.print(tm.Hour);
+  Serial.print(":");
+  Serial.print(tm.Minute);
+  Serial.print(":");
+  Serial.print(tm.Second);
+  Serial.println("");
+  
+   Serial.println(now());
+  Serial.println(millis());
+    // digital clock display of the time
+    Serial.print(hour());
+    Serial.print(' ');
+    Serial.print(minute());
+    Serial.print(' ');
+    Serial.print(second());
+    Serial.print(' ');
+    Serial.print(day());
+    Serial.print(' ');
+    Serial.print(month());
+    Serial.print(' ');
+    Serial.print(year()); 
+    Serial.println(); 
+    Serial.println(); 
+
+    
 }
 
 // receive

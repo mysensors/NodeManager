@@ -160,7 +160,9 @@
   #include <Wire.h>
   #include "Adafruit_SHT31.h"
 #endif
-
+#ifdef USE_TIME
+  #include <DS3232RTC.h>
+#endif
 /*******************************************************************
    Classes
 */
@@ -1576,6 +1578,10 @@ class NodeManager {
     void _saveSleepSettings();
 #endif
     void _sleepBetweenSend();
+#ifdef USE_TIME
+    bool _time_received = false;
+    void _requestTime();
+#endif
 };
 
 #endif
