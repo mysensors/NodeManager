@@ -534,6 +534,7 @@ class SensorBattery: public Sensor {
       float _battery_volts_per_bit = 0.003363075;
 };
 
+#ifdef MY_SIGNAL_REPORT_ENABLED
 /*
    SensorSignal: report RSSI signal strength from the radio
 */
@@ -548,6 +549,7 @@ class SensorSignal: public Sensor {
   protected:
     int _signal_command = SR_RX_RSSI;
 };
+#endif
 
 /*
    SensorConfiguration: allow remote configuration of the board and any configured sensor

@@ -135,7 +135,7 @@ SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperat
 //#define MY_SMART_SLEEP_WAIT_DURATION_MS 500
 #define MY_SPLASH_SCREEN_DISABLED
 //#define MY_DISABLE_RAM_ROUTING_TABLE_FEATURE
-//#define MY_DISABLE_SIGNAL_REPORT
+//#define MY_SIGNAL_REPORT_ENABLED
 
 // Optimizations when running on 2032 Coin Cell. Also set node.setSleepBetweenSend(500) and run the board at 1Mhz
 //#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
