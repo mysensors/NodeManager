@@ -1583,6 +1583,7 @@ class NodeManager {
 #ifdef ENABLE_TIME
     bool _time_is_valid = false;
     long _remainder_sleep_time = -1;
+    long _time_last_sync;
 #endif
 };
 

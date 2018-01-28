@@ -203,7 +203,7 @@ SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperat
 //#define USE_DIGITAL_OUTPUT
 //#define USE_DHT
 //#define USE_SHT21
-#define USE_SWITCH
+//#define USE_SWITCH
 //#define USE_DS18B20
 //#define USE_BH1750
 //#define USE_MLX90614
@@ -273,7 +273,7 @@ NodeManager node;
 //SensorHTU21D htu21(node);
 //SensorSwitch sensorSwitch(node,3);
 //SensorDoor door(node,3);
-SensorMotion motion(node,3);
+//SensorMotion motion(node,3);
 //SensorDs18b20 ds18b20(node,6);
 //SensorBH1750 bh1750(node);
 //SensorMLX90614 mlx90614(node);
@@ -314,7 +314,7 @@ void before() {
   //node.setReportIntervalSeconds(10);
   //node.setReportIntervalMinutes(5);
   //node.setSleepMinutes(5);
-  node.setSleepSeconds(30);
+  //node.setSleepSeconds(30);
   //setTime(1516543198);
 /*
   RTC.set(1516543198);

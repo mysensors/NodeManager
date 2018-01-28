@@ -3797,6 +3797,10 @@ void NodeManager::setup() {
 
 // run the main function for all the register sensors
 void NodeManager::loop() {
+#ifdef ENABLE_TIME
+  // if the time was last updated more than 60 minutes ago, update it
+  if (_time_is_valid && (now() - _time_last_sync) > 60*60) syncTime();
+#endif
   // turn on the pin powering all the sensors
 #ifndef DISABLE_POWER_MANAGER
   powerOn();
@@ -3869,8 +3873,11 @@ void NodeManager::receiveTime(unsigned long ts) {
     Serial.println(ts);
   #endif
   #ifdef ENABLE_TIME
+    // time is now valid
     _time_is_valid = true;
+    // set the current system time to the received time
     setTime(ts);
+    _time_last_sync = now();
   #endif
 }
 
@@ -4152,6 +4159,7 @@ Sensor* NodeManager::getSensorWithChild(int child_id) {
 #ifdef ENABLE_TIME
 // sync the time with the controller
 void NodeManager::syncTime() {
+  _time_is_valid = false;
   int retries = 10;
   // ask the controller for the time up to 10 times until received
   while ( ! _time_is_valid && retries >= 0) {
@@ -4169,8 +4177,6 @@ void NodeManager::syncTime() {
 void NodeManager::_sleep() {
   long sleep_time = _sleep_time;
 #ifdef ENABLE_TIME
-  // time is no more valid, must be updated once woken up
-  _time_is_valid = false;
   // if there is time still to sleep, sleep for that timeframe only
   if (_remainder_sleep_time > 0) sleep_time = _remainder_sleep_time;
 #endif
