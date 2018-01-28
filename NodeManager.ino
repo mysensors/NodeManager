@@ -203,7 +203,7 @@ SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperat
 //#define USE_DIGITAL_OUTPUT
 //#define USE_DHT
 //#define USE_SHT21
-//#define USE_SWITCH
+#define USE_SWITCH
 //#define USE_DS18B20
 //#define USE_BH1750
 //#define USE_MLX90614
@@ -224,7 +224,6 @@ SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperat
 //#define USE_VL53L0X
 //#define USE_SSD1306
 //#define USE_SHT31
-#define USE_TIME
 
 /***********************************
  * NodeManager advanced settings
@@ -237,6 +236,7 @@ SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperat
 //#define DISABLE_TRACK_LAST_VALUE
 //#define DISABLE_EEPROM
 //#define DISABLE_SLEEP
+#define ENABLE_TIME
 
 /***********************************
  * Load NodeManager Library
@@ -273,7 +273,7 @@ NodeManager node;
 //SensorHTU21D htu21(node);
 //SensorSwitch sensorSwitch(node,3);
 //SensorDoor door(node,3);
-//SensorMotion motion(node,3);
+SensorMotion motion(node,3);
 //SensorDs18b20 ds18b20(node,6);
 //SensorBH1750 bh1750(node);
 //SensorMLX90614 mlx90614(node);
@@ -314,11 +314,13 @@ void before() {
   //node.setReportIntervalSeconds(10);
   //node.setReportIntervalMinutes(5);
   //node.setSleepMinutes(5);
-  node.setSleepSeconds(10);
+  node.setSleepSeconds(30);
+  //setTime(1516543198);
+/*
   RTC.set(1516543198);
   //setSyncProvider(RTC.get);
   setSyncInterval(0);
-  
+  */
   //node.setPowerManager(power);
   //battery.setReportIntervalMinutes(30);
   //sht21.children.get(1)->child_id = 5;
@@ -345,6 +347,7 @@ void setup() {
 void loop() {
   // call NodeManager loop routine
   node.loop();
+  /*
     tmElements_t tm;
   RTC.read(tm);
   Serial.print(tm.Day);
@@ -376,7 +379,7 @@ void loop() {
     Serial.print(year()); 
     Serial.println(); 
     Serial.println(); 
-
+*/
     
 }
 

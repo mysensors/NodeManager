@@ -160,8 +160,10 @@
   #include <Wire.h>
   #include "Adafruit_SHT31.h"
 #endif
-#ifdef USE_TIME
+#ifdef ENABLE_TIME
   #include <DS3232RTC.h>
+  #include <TimeLib.h>
+
 #endif
 /*******************************************************************
    Classes
@@ -1467,8 +1469,6 @@ class NodeManager {
     // [21] set this to true if you want destination node to send ack back to this node (default: false)
     void setAck(bool value);
     bool getAck();
-    // request and return the current timestamp from the controller
-    long getTimestamp();
     // Request the controller's configuration on startup (default: true)
     void setGetControllerConfig(bool value);
     // [22] Manually set isMetric setting
@@ -1518,6 +1518,9 @@ class NodeManager {
     void setRebootPin(int value);
     // [32] turn the ADC off so to save 0.2 mA
     void setADCOff();
+#ifdef ENABLE_TIME
+    void syncTime();
+#endif
     // hook into the main sketch functions
     void before();
     void presentation();
@@ -1563,7 +1566,6 @@ class NodeManager {
     static long _last_interrupt_1;
     static long _last_interrupt_2;
 #endif
-    long _timestamp = -1;
     bool _ack = false;
     void _sleep();
     void _present(int child_id, int type);
@@ -1578,9 +1580,9 @@ class NodeManager {
     void _saveSleepSettings();
 #endif
     void _sleepBetweenSend();
-#ifdef USE_TIME
-    bool _time_received = false;
-    void _requestTime();
+#ifdef ENABLE_TIME
+    bool _time_is_valid = false;
+    long _remainder_sleep_time = -1;
 #endif
 };
 

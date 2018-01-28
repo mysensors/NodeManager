@@ -3771,12 +3771,6 @@ void NodeManager::presentation() {
 
 // setup NodeManager
 void NodeManager::setup() {
-#ifdef USE_TIME
-  // the function to get the time from the RTC
-  setSyncProvider(RTC.get);  
-  // Request latest time from controller at startup
-  requestTime();  
-#endif
   // retrieve and store isMetric from the controller
   if (_get_controller_config) _is_metric = getControllerConfig().isMetric;
   #ifdef NODEMANAGER_DEBUG
@@ -3785,6 +3779,10 @@ void NodeManager::setup() {
     Serial.print(F(" M="));
     Serial.println(_is_metric);
   #endif
+#ifdef ENABLE_TIME
+  // sync the time with the controller
+  syncTime();
+#endif
   // run setup for all the registered sensors
   for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
     Sensor* sensor = *itr;
@@ -3864,32 +3862,15 @@ void NodeManager::receive(MyMessage &message) {
   }
 }
 
-// request and return the current timestamp from the controller
-long NodeManager::getTimestamp() {
-  int retries = 3;
-  _timestamp = -1;
-  while (_timestamp == -1 && retries > 0) {
-    #ifdef NODEMANAGER_DEBUG
-      Serial.println(F("TIME"));
-    #endif
-    // request the time to the controller
-    requestTime();
-    // keep asking every 1 second
-    sleepOrWait(1000);
-    retries--;
-  }  
-  return _timestamp;
-}
-
 // receive the time from the controller and save it
 void NodeManager::receiveTime(unsigned long ts) {
-  _timestamp = ts;
   #ifdef NODEMANAGER_DEBUG
     Serial.print(F("TIME T="));
-    Serial.print(_timestamp);
+    Serial.println(ts);
   #endif
-  #ifdef USE_TIME
-    RTC.set(ts);
+  #ifdef ENABLE_TIME
+    _time_is_valid = true;
+    setTime(ts);
   #endif
 }
 
@@ -4168,11 +4149,34 @@ Sensor* NodeManager::getSensorWithChild(int child_id) {
   return nullptr;  
 }
 
+#ifdef ENABLE_TIME
+// sync the time with the controller
+void NodeManager::syncTime() {
+  int retries = 10;
+  // ask the controller for the time up to 10 times until received
+  while ( ! _time_is_valid && retries >= 0) {
+    #ifdef NODEMANAGER_DEBUG
+      Serial.println(F("REQ TIME"));
+    #endif
+    requestTime();
+    wait(1000);
+    retries = retries - 1;
+  }
+}
+#endif
+
 // wrapper of smart sleep
 void NodeManager::_sleep() {
+  long sleep_time = _sleep_time;
+#ifdef ENABLE_TIME
+  // time is no more valid, must be updated once woken up
+  _time_is_valid = false;
+  // if there is time still to sleep, sleep for that timeframe only
+  if (_remainder_sleep_time > 0) sleep_time = _remainder_sleep_time;
+#endif
   #ifdef NODEMANAGER_DEBUG
     Serial.print(F("SLEEP "));
-    Serial.print(_sleep_time);
+    Serial.print(sleep_time);
     Serial.println(F("s"));
     // print a new line to separate the different cycles
     Serial.println("");
@@ -4184,7 +4188,7 @@ void NodeManager::_sleep() {
   int interrupt_1_pin = _interrupt_1_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_1);
   int interrupt_2_pin = _interrupt_2_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_2);
   // enter smart sleep for the requested sleep interval and with the configured interrupts
-  interrupt = sleep(interrupt_1_pin,_interrupt_1_mode,interrupt_2_pin,_interrupt_2_mode,_sleep_time*1000, true);
+  interrupt = sleep(interrupt_1_pin,_interrupt_1_mode,interrupt_2_pin,_interrupt_2_mode,sleep_time*1000, true);
   if (interrupt > -1) {
     // woke up by an interrupt
     int pin_number = -1;
@@ -4209,12 +4213,24 @@ void NodeManager::_sleep() {
     if (_sleep_interrupt_pin == pin_number) _status = AWAKE;
   }
 #else
-  sleep(INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,_sleep_time*1000, true);
+  sleep(INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,sleep_time*1000, true);
 #endif
   // coming out of sleep
   #ifdef NODEMANAGER_DEBUG
     Serial.println(F("AWAKE"));
   #endif
+#ifdef ENABLE_TIME
+  // keep track of the old time so to calculate the amount of time slept
+  long old_time = now();
+  // sync the time with the controller
+  syncTime();
+  // calculate the remainder time to sleep if woken up by an interrupt
+  if (interrupt > -1) {
+    if (_remainder_sleep_time == -1) _remainder_sleep_time = _sleep_time;
+    _remainder_sleep_time = _remainder_sleep_time - (now() - old_time);
+  }
+  else _remainder_sleep_time = -1;
+#endif
 }
 
 #ifndef DISABLE_EEPROM
@@ -4258,22 +4274,5 @@ void NodeManager::_saveSleepSettings() {
 void NodeManager::_sleepBetweenSend() {
   if (_sleep_between_send > 0) sleep(_sleep_between_send);
 }
-
-#ifdef USE_TIME
-void NodeManager::_requestTime() {
-  /*
-  unsigned long now = millis();
-  // If no time has been received yet, request it every 10 second from controller
-  // When time has been received, request update every hour
-  if ((!timeReceived && (now-lastRequest) > (10UL*1000UL))
-    || (timeReceived && (now-lastRequest) > (60UL*1000UL*60UL))) {
-    // Request time from controller. 
-    Serial.println("requesting time");
-    requestTime();  
-    lastRequest = now;
-    
-  }*/
-}
-#endif
 
 #endif
