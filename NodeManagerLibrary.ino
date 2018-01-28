@@ -719,6 +719,7 @@ void SensorBattery::onReceive(MyMessage* message) {
 }
 #endif
 
+#ifdef MY_SIGNAL_REPORT_ENABLED
 /*
    SensorSignal
 */
@@ -753,6 +754,7 @@ void SensorSignal::onReceive(MyMessage* message) {
   if (child == nullptr) return;
   if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
+#endif
 #endif
 
 #ifdef USE_ANALOG_INPUT
@@ -3360,6 +3362,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           default: return;
         }
       }
+      #ifdef MY_SIGNAL_REPORT_ENABLED
       if (strcmp(sensor->getName(),"SIGNAL") == 0) {
         SensorSignal* custom_sensor = (SensorSignal*)sensor;
         switch(function) {
@@ -3367,6 +3370,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           default: return;
         }
       }
+      #endif
       #endif
       #ifdef USE_ANALOG_INPUT
       if (strcmp(sensor->getName(),"ANALOG_I") == 0 || strcmp(sensor->getName(),"LDR") == 0 || strcmp(sensor->getName(),"RAIN") == 0 || strcmp(sensor->getName(),"SOIL") == 0) {
