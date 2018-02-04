@@ -1447,7 +1447,6 @@ void SensorSwitch::onInterrupt() {
       Serial.print(F(" V="));
       Serial.println(value);
     #endif
-    _value_int = value;
     // allow the signal to be restored to its normal value
     if (_trigger_time > 0) _node_manager->sleepOrWait(_trigger_time);
   } else {
