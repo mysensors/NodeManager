@@ -476,14 +476,18 @@ class Sensor {
 #endif
     // list of configured child
     List<Child*> children;
+#if FEATURE_INTERRUPTS == ON
+    void interrupt();
+#endif
+    Child* getChild(int child_id);
+    // register a child
+    void registerChild(Child* child);
+    NodeManager* _node;
     // define what to do at each stage of the sketch
     void before();
     void presentation();
     void setup();
     void loop(MyMessage* message);
-#if FEATURE_INTERRUPTS == ON
-    void interrupt();
-#endif
     void receive(MyMessage &message);
     // abstract functions, subclasses need to implement
     virtual void onBefore();
@@ -491,10 +495,6 @@ class Sensor {
     virtual void onLoop(Child* child);
     virtual void onReceive(MyMessage* message);
     virtual void onInterrupt();
-    Child* getChild(int child_id);
-    // register a child
-    void registerChild(Child* child);
-    NodeManager* _node;
   protected:
     const char* _name = "";
     int _pin = -1;
@@ -1527,12 +1527,6 @@ class NodeManager {
     long getTime();
     void receiveTime(unsigned long ts);
 #endif
-    // hook into the main sketch functions
-    void before();
-    void presentation();
-    void setup();
-    void loop();
-    void receive(MyMessage & msg);
 #if FEATURE_INTERRUPTS == ON
     // handle interrupts
     static void _onInterrupt_1();
@@ -1550,6 +1544,12 @@ class NodeManager {
     List<Sensor*> sensors;
     Child* getChild(int child_id);
     Sensor* getSensorWithChild(int child_id);
+    // hook into the main sketch functions
+    void before();
+    void presentation();
+    void setup();
+    void loop();
+    void receive(MyMessage & msg);
   private:
 #if FEATURE_POWER_MANAGER == ON
     PowerManager* _powerManager = nullptr;
