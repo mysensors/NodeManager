@@ -904,6 +904,8 @@ class SensorSwitch: public Sensor {
     void setTriggerTime(int value);
     // [104] Set initial value on the interrupt pin (default: HIGH)
     void setInitial(int value);
+    // [105] Set active state (default: HIGH) 
+    void setActiveState(int value);
     // define what to do at each stage of the sketch
     void onBefore();
     void onSetup();
@@ -916,6 +918,7 @@ class SensorSwitch: public Sensor {
     int _trigger_time = 0;
     int _mode = CHANGE;
     int _initial = HIGH;
+    int _active_state = HIGH;
 };
 
 /*

@@ -1388,6 +1388,9 @@ void SensorSwitch::setTriggerTime(int value) {
 void SensorSwitch::setInitial(int value) {
   _initial = value;
 }
+void SensorSwitch::setActiveState(int value) {
+  _active_state = value;
+}
 
 // what to do during before
 void SensorSwitch::onBefore() {
@@ -1420,6 +1423,7 @@ void SensorSwitch::onProcess(Request & request) {
     case 102: setDebounce(request.getValueInt()); break;
     case 103: setTriggerTime(request.getValueInt()); break;
     case 104: setInitial(request.getValueInt()); break;
+    case 105: setActiveState(request.getValueInt()); break;
     default: return;
   }
   _send(_msg_service.set(function));
@@ -1433,6 +1437,8 @@ void SensorSwitch::onInterrupt() {
   int value = digitalRead(_pin);
   // process the value
   if ( (_mode == RISING && value == HIGH ) || (_mode == FALLING && value == LOW) || (_mode == CHANGE) )  {
+    // invert the value if Active State is set to LOW
+    _value_int = _active_state == LOW ? !value : value;
     #if DEBUG == 1
       Serial.print(F("SWITCH I="));
       Serial.print(_child_id);
@@ -1441,7 +1447,6 @@ void SensorSwitch::onInterrupt() {
       Serial.print(F(" V="));
       Serial.println(value);
     #endif
-    _value_int = value;
     // allow the signal to be restored to its normal value
     if (_trigger_time > 0) _node_manager->sleepOrWait(_trigger_time);
   } else {
