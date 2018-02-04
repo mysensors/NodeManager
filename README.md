@@ -78,6 +78,25 @@ SensorPlantowerPMS  | 3     | USE_PMS            | Plantower PMS particulate mat
 SensorVL53L0X       | 1     | USE_VL53L0X        | VL53L0X laser time-of-flight distance sensor via I²C, sleep pin supported (optional)              | https://github.com/pololu/vl53l0x-arduino
 DisplaySSD1306      | 1     | USE_SSD1306        | SSD1306 128x64 OLED display (I²C); By default displays values of all sensors and children         | https://github.com/greiman/SSD1306Ascii.git
 
+### Advanced features
+
+NodeManager provides useful built-in features which can be disabled if you need to save some storage for your code. 
+To enable/disable a buil-in feature:
+* Install the required library if any
+* Enable the corresponding feature by setting it to ON in the main sketch. To disable it, set it to OFF
+
+A list of buil-in features and the required dependencies is presented below:
+
+Feature                     | Default | Description                                                                                      | Dependencies
+----------------------------|---------|--------------------------------------------------------------------------------------------------|----------------------------------------------------------
+FEATURE_POWER_MANAGER       | ON      | allow powering on your sensors only while the node is awake                                      | - 
+FEATURE_INTERRUPTS          | ON      | allow managing interrupt-based sensors like a PIR or a door sensor                               | - 
+FEATURE_TRACK_LAST_VALUE    | ON      | allow reporting a measure only when different from the previous one                              | - 
+FEATURE_EEPROM              | ON      | allow keeping track of some information in the EEPROM                                            | - 
+FEATURE_SLEEP               | ON      | allow managing automatically the complexity behind battery-powered sleeping sensors              | - 
+FEATURE_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
+FEATURE_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device (requires FEATURE_TIME)| https://github.com/JChristensen/DS3232RTC
+
 ## Installation
 
 * Download the package or clone the git repository from https://github.com/mysensors/NodeManager
@@ -177,9 +196,11 @@ You can interact with each class provided by NodeManager through a set of API fu
 ### NodeManager API
 
 ~~~c
+    NodeManager(int sensorcount = 0);
     // [10] send the same message multiple times (default: 1)
     void setRetries(int value);
     int getRetries();
+#if FEATURE_SLEEP == ON
     // [3] set the duration (in seconds) of a sleep cycle
     void setSleepSeconds(int value);
     long getSleepSeconds();
@@ -189,28 +210,30 @@ You can interact with each class provided by NodeManager through a set of API fu
     void setSleepHours(int value);
     // [29] set the duration (in days) of a sleep cycle
     void setSleepDays(int value);
+#endif
+#if FEATURE_INTERRUPTS == ON
     // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
     void setSleepInterruptPin(int value);
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
     void setInterrupt(int pin, int mode, int initial = -1);
     // [28] ignore two consecutive interrupts if happening within this timeframe in milliseconds (default: 100)
     void setInterruptMinDelta(long value);
+#endif
     // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
     void setSleepBetweenSend(int value);
-    int getSleepBetweenSend();
     // register a sensor
     void registerSensor(Sensor* sensor);
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
+#if FEATURE_POWER_MANAGER == ON
     void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
     // [24] manually turn the power on
     void powerOn();
     // [25] manually turn the power off
     void powerOff();
+#endif
     // [21] set this to true if you want destination node to send ack back to this node (default: false)
     void setAck(bool value);
     bool getAck();
-    // request and return the current timestamp from the controller
-    long getTimestamp();
     // Request the controller's configuration on startup (default: true)
     void setGetControllerConfig(bool value);
     // [22] Manually set isMetric setting
@@ -224,20 +247,26 @@ You can interact with each class provided by NodeManager through a set of API fu
     void hello();
     // [6] reboot the board
     void reboot();
-    // [7] clear the EEPROM
-    void clearEeprom();
     // [9] wake up the board
     void wakeup();
+#if FEATURE_EEPROM == ON
+    // [7] clear the EEPROM
+    void clearEeprom();
     // return the value stored at the requested index from the EEPROM
     int loadFromMemory(int index);
     // [27] save the given index of the EEPROM the provided value
     void saveToMemory(int index, int value);
+    // [40] if set save the sleep settings in memory, also when changed remotely (default: false)
+    void setSaveSleepSettings(bool value);
+#endif
     // return vcc in V
     float getVcc();
+#if FEATURE_INTERRUPTS == ON
     // setup the configured interrupt pins
     void setupInterrupts();
     // return the pin from which the last interrupt came
     int getLastInterruptPin();
+#endif
     // [36] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
     void setReportIntervalSeconds(int value);
     // [37] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
@@ -254,16 +283,39 @@ You can interact with each class provided by NodeManager through a set of API fu
     void setRebootPin(int value);
     // [32] turn the ADC off so to save 0.2 mA
     void setADCOff();
-    // [40] if set save the sleep settings in memory, also when changed remotely (default: false)
-    void setSaveSleepSettings(bool value);
+#if FEATURE_TIME == ON
+    // [41] synchronize the local time with the controller
+    void syncTime();
+    // [42] returns the current system time
+    long getTime();
+    void receiveTime(unsigned long ts);
+#endif
+#if FEATURE_INTERRUPTS == ON
+    // handle interrupts
+    static void _onInterrupt_1();
+    static void _onInterrupt_2();
+#endif
+    // send a message by providing the source child, type of the message and value
+	  void sendMessage(int child_id, int type, int value);
+    void sendMessage(int child_id, int type, float value);
+    void sendMessage(int child_id, int type, double value);
+    void sendMessage(int child_id, int type, const char* value);
+#if FEATURE_POWER_MANAGER == ON
+    void setPowerManager(PowerManager& powerManager);
+#endif
+    int getAvailableChildId(int child_id = -255);
+    List<Sensor*> sensors;
+    Child* getChild(int child_id);
+    Sensor* getSensorWithChild(int child_id);
 ~~~
 
 ### Sensor API
 
 The following methods are available for all the sensors:
 ~~~c
+    Sensor(NodeManager& node_manager, int pin = -1);
     // return the name of the sensor
-    char* getName();
+    const char* getName();
     // [1] where the sensor is attached to (default: not set)
     void setPin(int value);
     int getPin();
@@ -271,16 +323,20 @@ The following methods are available for all the sensors:
     void setSamples(int value);
     // [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
     void setSamplesInterval(int value);
+#if FEATURE_TRACK_LAST_VALUE == ON
     // [7] if true will report the measure only if different than the previous one (default: false)
     void setTrackLastValue(bool value);
     // [9] if track last value is enabled, force to send an update after the configured number of minutes
     void setForceUpdateMinutes(int value);
+#endif
+#if FEATURE_POWER_MANAGER == ON
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
     void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
     // [13] manually turn the power on
     void powerOn();
     // [14] manually turn the power off
     void powerOff();
+#endif
     // [17] After how many minutes the sensor will report back its measure (default: 10 minutes)
     void setReportIntervalSeconds(int value);
     // [16] After how many minutes the sensor will report back its measure (default: 10 minutes)
@@ -291,14 +347,25 @@ The following methods are available for all the sensors:
     void setReportIntervalDays(int value);
     // return true if the report interval has been already configured
     bool isReportIntervalConfigured();
+#if FEATURE_INTERRUPTS == ON
     // return the pin the interrupt is attached to
     int getInterruptPin();
     // listen for interrupts on the given pin so interrupt() will be called when occurring
     void setInterrupt(int pin, int mode, int initial);
+#endif
+#if FEATURE_POWER_MANAGER == ON
     // set a previously configured PowerManager to the sensor so to powering it up with custom pins
-    void setPowerManager(const PowerManager& powerManager);
+    void setPowerManager(PowerManager& powerManager);
+#endif
     // list of configured child
     List<Child*> children;
+#if FEATURE_INTERRUPTS == ON
+    void interrupt();
+#endif
+    Child* getChild(int child_id);
+    // register a child
+    void registerChild(Child* child);
+    NodeManager* _node;
 ~~~
 
 ### Built-in sensors API
