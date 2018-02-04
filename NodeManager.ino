@@ -229,14 +229,17 @@ SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperat
  * NodeManager advanced settings
  */
 
+// NodeManager's debug output on serial console when defined
 #define NODEMANAGER_DEBUG
 
+// Enable/disable NodeManager's features
 #define FEATURE_POWER_MANAGER ON
 #define FEATURE_INTERRUPTS ON
 #define FEATURE_TRACK_LAST_VALUE ON
 #define FEATURE_EEPROM ON
 #define FEATURE_SLEEP ON
 #define FEATURE_TIME ON
+#define FEATURE_RTC OFF
 
 /***********************************
  * Load NodeManager Library
@@ -389,8 +392,10 @@ void receive(MyMessage &message) {
   node.receive(message);
 }
 
+#if FEATURE_TIME == ON
 // receiveTime
 void receiveTime(unsigned long ts) {
   // call NodeManager receiveTime routine
   node.receiveTime(ts);
 }
+#endif

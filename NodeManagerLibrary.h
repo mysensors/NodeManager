@@ -161,8 +161,11 @@
   #include "Adafruit_SHT31.h"
 #endif
 #if FEATURE_TIME == ON
-  #include <DS3232RTC.h>
   #include <TimeLib.h>
+#endif
+#if FEATURE_RTC == ON
+  #define FEATURE_TIME ON
+  #include <DS3232RTC.h>
 #endif
 /*******************************************************************
    Classes
@@ -1526,7 +1529,9 @@ class NodeManager {
     void setup();
     void loop();
     void receive(MyMessage & msg);
+#if FEATURE_TIME == ON
     void receiveTime(unsigned long ts);
+#endif
 #if FEATURE_INTERRUPTS == ON
     // handle interrupts
     static void _onInterrupt_1();

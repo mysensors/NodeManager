@@ -3866,20 +3866,20 @@ void NodeManager::receive(MyMessage &message) {
   }
 }
 
+#if FEATURE_TIME == ON
 // receive the time from the controller and save it
 void NodeManager::receiveTime(unsigned long ts) {
   #ifdef NODEMANAGER_DEBUG
     Serial.print(F("TIME T="));
     Serial.println(ts);
   #endif
-  #if FEATURE_TIME == ON
-    // time is now valid
-    _time_is_valid = true;
-    // set the current system time to the received time
-    setTime(ts);
-    _time_last_sync = now();
-  #endif
+  // time is now valid
+  _time_is_valid = true;
+  // set the current system time to the received time
+  setTime(ts);
+  _time_last_sync = now();
 }
+#endif
 
 // Send a hello message back to the controller
 void NodeManager::hello() {
