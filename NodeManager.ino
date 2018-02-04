@@ -231,12 +231,12 @@ SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperat
 
 #define NODEMANAGER_DEBUG
 
-//#define DISABLE_POWER_MANAGER
-//#define DISABLE_INTERRUPTS
-//#define DISABLE_TRACK_LAST_VALUE
-//#define DISABLE_EEPROM
-//#define DISABLE_SLEEP
-#define ENABLE_TIME
+#define FEATURE_POWER_MANAGER ON
+#define FEATURE_INTERRUPTS ON
+#define FEATURE_TRACK_LAST_VALUE ON
+#define FEATURE_EEPROM ON
+#define FEATURE_SLEEP ON
+#define FEATURE_TIME ON
 
 /***********************************
  * Load NodeManager Library

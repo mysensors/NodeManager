@@ -160,10 +160,9 @@
   #include <Wire.h>
   #include "Adafruit_SHT31.h"
 #endif
-#ifdef ENABLE_TIME
+#if FEATURE_TIME == ON
   #include <DS3232RTC.h>
   #include <TimeLib.h>
-
 #endif
 /*******************************************************************
    Classes
@@ -244,7 +243,7 @@ private:
    PowerManager
 */
 
-#ifndef DISABLE_POWER_MANAGER
+#if FEATURE_POWER_MANAGER == ON
 class PowerManager {
   public:
     PowerManager(int ground_pin, int vcc_pin, int wait_time = 50);
@@ -341,7 +340,7 @@ class Child {
     const char* description = "";
     virtual void sendValue();
     virtual void printOn(Print& p);
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
     Timer* force_update_timer;
     virtual bool isNewValue();
 #endif
@@ -357,12 +356,12 @@ class ChildInt: public Child {
     int getValueInt();
     void sendValue();
     void printOn(Print& p);
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
     bool isNewValue();
 #endif
   private:
     int _value;
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
     int _last_value;
 #endif
     int _total = 0;
@@ -375,12 +374,12 @@ class ChildFloat: public Child {
     float getValueFloat();
     void sendValue();
     void printOn(Print& p);
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
     bool isNewValue();
 #endif
   private:
     float _value;
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
     float _last_value;
 #endif
     float _total = 0;
@@ -393,12 +392,12 @@ class ChildDouble: public Child {
     double getValueDouble();
     void sendValue();
     void printOn(Print& p);
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
     bool isNewValue();
 #endif
   private:
     double _value;
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
     double _last_value;
 #endif
     double _total = 0;
@@ -411,12 +410,12 @@ class ChildString: public Child {
     const char* getValueString();
     void sendValue();
     void printOn(Print& p);
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
     bool isNewValue();
 #endif
   private:
     const char* _value = "";
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
     const char* _last_value = "";
 #endif
 };
@@ -438,13 +437,13 @@ class Sensor {
     void setSamples(int value);
     // [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
     void setSamplesInterval(int value);
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
     // [7] if true will report the measure only if different than the previous one (default: false)
     void setTrackLastValue(bool value);
     // [9] if track last value is enabled, force to send an update after the configured number of minutes
     void setForceUpdateMinutes(int value);
 #endif
-#ifndef DISABLE_POWER_MANAGER
+#if FEATURE_POWER_MANAGER == ON
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
     void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
     // [13] manually turn the power on
@@ -462,13 +461,13 @@ class Sensor {
     void setReportIntervalDays(int value);
     // return true if the report interval has been already configured
     bool isReportIntervalConfigured();
-#ifndef DISABLE_INTERRUPTS
+#if FEATURE_INTERRUPTS == ON
     // return the pin the interrupt is attached to
     int getInterruptPin();
     // listen for interrupts on the given pin so interrupt() will be called when occurring
     void setInterrupt(int pin, int mode, int initial);
 #endif
-#ifndef DISABLE_POWER_MANAGER
+#if FEATURE_POWER_MANAGER == ON
     // set a previously configured PowerManager to the sensor so to powering it up with custom pins
     void setPowerManager(PowerManager& powerManager);
 #endif
@@ -479,7 +478,7 @@ class Sensor {
     void presentation();
     void setup();
     void loop(MyMessage* message);
-#ifndef DISABLE_INTERRUPTS
+#if FEATURE_INTERRUPTS == ON
     void interrupt();
 #endif
     void receive(MyMessage &message);
@@ -498,13 +497,13 @@ class Sensor {
     int _pin = -1;
     int _samples = 1;
     int _samples_interval = 0;
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
     bool _track_last_value = false;
 #endif
-#ifndef DISABLE_INTERRUPTS
+#if FEATURE_INTERRUPTS == ON
     int _interrupt_pin = -1;
 #endif
-#ifndef DISABLE_POWER_MANAGER
+#if FEATURE_POWER_MANAGER == ON
     PowerManager* _powerManager = nullptr;
 #endif
     Timer* _report_timer;
@@ -1435,7 +1434,7 @@ class NodeManager {
     // [10] send the same message multiple times (default: 1)
     void setRetries(int value);
     int getRetries();
-#ifndef DISABLE_SLEEP
+#if FEATURE_SLEEP == ON
     // [3] set the duration (in seconds) of a sleep cycle
     void setSleepSeconds(int value);
     long getSleepSeconds();
@@ -1446,7 +1445,7 @@ class NodeManager {
     // [29] set the duration (in days) of a sleep cycle
     void setSleepDays(int value);
 #endif
-#ifndef DISABLE_INTERRUPTS
+#if FEATURE_INTERRUPTS == ON
     // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
     void setSleepInterruptPin(int value);
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
@@ -1459,7 +1458,7 @@ class NodeManager {
     // register a sensor
     void registerSensor(Sensor* sensor);
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-#ifndef DISABLE_POWER_MANAGER
+#if FEATURE_POWER_MANAGER == ON
     void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
     // [24] manually turn the power on
     void powerOn();
@@ -1484,7 +1483,7 @@ class NodeManager {
     void reboot();
     // [9] wake up the board
     void wakeup();
-#ifndef DISABLE_EEPROM
+#if FEATURE_EEPROM == ON
     // [7] clear the EEPROM
     void clearEeprom();
     // return the value stored at the requested index from the EEPROM
@@ -1496,7 +1495,7 @@ class NodeManager {
 #endif
     // return vcc in V
     float getVcc();
-#ifndef DISABLE_INTERRUPTS
+#if FEATURE_INTERRUPTS == ON
     // setup the configured interrupt pins
     void setupInterrupts();
     // return the pin from which the last interrupt came
@@ -1518,7 +1517,7 @@ class NodeManager {
     void setRebootPin(int value);
     // [32] turn the ADC off so to save 0.2 mA
     void setADCOff();
-#ifdef ENABLE_TIME
+#if FEATURE_TIME == ON
     void syncTime();
 #endif
     // hook into the main sketch functions
@@ -1528,7 +1527,7 @@ class NodeManager {
     void loop();
     void receive(MyMessage & msg);
     void receiveTime(unsigned long ts);
-#ifndef DISABLE_INTERRUPTS
+#if FEATURE_INTERRUPTS == ON
     // handle interrupts
     static void _onInterrupt_1();
     static void _onInterrupt_2();
@@ -1538,7 +1537,7 @@ class NodeManager {
     void sendMessage(int child_id, int type, float value);
     void sendMessage(int child_id, int type, double value);
     void sendMessage(int child_id, int type, const char* value);
-#ifndef DISABLE_POWER_MANAGER
+#if FEATURE_POWER_MANAGER == ON
     void setPowerManager(PowerManager& powerManager);
 #endif
     int getAvailableChildId(int child_id = -255);
@@ -1546,7 +1545,7 @@ class NodeManager {
     Child* getChild(int child_id);
     Sensor* getSensorWithChild(int child_id);
   private:
-#ifndef DISABLE_POWER_MANAGER
+#if FEATURE_POWER_MANAGER == ON
     PowerManager* _powerManager = nullptr;
 #endif
     MyMessage _message;
@@ -1556,7 +1555,7 @@ class NodeManager {
     int _sleep_interrupt_pin = -1;
     int _sleep_between_send = 0;
     int _retries = 1;
-#ifndef DISABLE_INTERRUPTS
+#if FEATURE_INTERRUPTS == ON
     int _interrupt_1_mode = MODE_NOT_DEFINED;
     int _interrupt_2_mode = MODE_NOT_DEFINED;
     int _interrupt_1_initial = -1;
@@ -1574,13 +1573,13 @@ class NodeManager {
     int _report_interval_seconds = 10*60;
     bool _sleep_or_wait = true;
     int _reboot_pin = -1;
-#ifndef DISABLE_EEPROM
+#if FEATURE_EEPROM == ON
     bool _save_sleep_settings = false;
     void _loadSleepSettings();
     void _saveSleepSettings();
 #endif
     void _sleepBetweenSend();
-#ifdef ENABLE_TIME
+#if FEATURE_TIME == ON
     bool _time_is_valid = false;
     long _remainder_sleep_time = -1;
     long _time_last_sync;

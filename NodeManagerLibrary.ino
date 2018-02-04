@@ -6,7 +6,7 @@
    PowerManager
 */
 
-#ifndef DISABLE_POWER_MANAGER
+#if FEATURE_POWER_MANAGER == ON
 PowerManager::PowerManager(int ground_pin, int vcc_pin, int wait_time) {
   setPowerPins(ground_pin, vcc_pin, wait_time);
 }
@@ -120,7 +120,7 @@ void Timer::unset() {
 // update the timer at every cycle
 void Timer::update() {
   if (! isRunning()) return;
-#ifndef DISABLE_SLEEP
+#if FEATURE_SLEEP == ON
   if (_node->isSleepingNode()) {
     // millis() is not reliable while sleeping so calculate how long a sleep cycle would last in seconds and update the elapsed time
     _elapsed += _node->getSleepSeconds();
@@ -128,7 +128,7 @@ void Timer::update() {
 #endif
     // use millis() to calculate the elapsed time in seconds
     _elapsed = (long)((millis() - _last_millis)/1000);
-#ifndef DISABLE_SLEEP
+#if FEATURE_SLEEP == ON
   }
 #endif
   _first_run = false;
@@ -236,7 +236,7 @@ Child::Child(Sensor* __sensor, int _child_id, int _presentation, int _type, cons
   description = _description;
   _sensor = __sensor;
   _sensor->registerChild(this);
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
   force_update_timer = new Timer(_sensor->_node);
 #endif
 }
@@ -246,7 +246,7 @@ void Child::sendValue() {
 // Print the child's value (variable type depending on the child class) to the given output
 void Child::printOn(Print& p) {
 }
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
 // check if it is an updated value, implemented by the subclasses
 bool Child::isNewValue() {
 }
@@ -276,7 +276,7 @@ int ChildInt::getValueInt() {
 void ChildInt::sendValue() {
   if (_samples == 0) return;
   _sensor->_node->sendMessage(child_id,type,_value);
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
   _last_value = _value;
 #endif
   _total = 0;
@@ -288,7 +288,7 @@ void ChildInt::printOn(Print& p) {
   p.print(_value);
 }
 
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
 // check if it is an updated value
 bool ChildInt::isNewValue() {
   return _last_value != _value;
@@ -319,7 +319,7 @@ float ChildFloat::getValueFloat() {
 void ChildFloat::sendValue() {
   if (_samples == 0) return;
   _sensor->_node->sendMessage(child_id,type,_value);
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
   _last_value = _value;
 #endif
   _total = 0;
@@ -331,7 +331,7 @@ void ChildFloat::printOn(Print& p) {
   p.print(_value);
 }
 
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
 // check if it is an updated value
 bool ChildFloat::isNewValue() {
   return _last_value != _value;
@@ -362,7 +362,7 @@ double ChildDouble::getValueDouble() {
 void ChildDouble::sendValue() {
   if (_samples == 0) return;
   _sensor->_node->sendMessage(child_id,type,_value);
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
   _last_value = _value;
 #endif
   _total = 0;
@@ -374,7 +374,7 @@ void ChildDouble::printOn(Print& p) {
   p.print(_value);
 }
 
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
 // check if it is an updated value
 bool ChildDouble::isNewValue() {
   return _last_value != _value;
@@ -402,7 +402,7 @@ const char* ChildString::getValueString() {
 // send the value back to the controller
 void ChildString::sendValue() {
   _sensor->_node->sendMessage(child_id,type,_value);
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
   _last_value = _value;
 #endif
   _value = "";
@@ -413,7 +413,7 @@ void ChildString::printOn(Print& p) {
   p.print(_value);
 }
 
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
 // check if it is an updated value
 bool ChildString::isNewValue() {
   return strcmp(_value, _last_value) != 0;
@@ -451,7 +451,7 @@ void Sensor::setSamples(int value) {
 void Sensor::setSamplesInterval(int value) {
   _samples_interval = value;
 }
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
 void Sensor::setTrackLastValue(bool value) {
   _track_last_value = value;
 }
@@ -462,7 +462,7 @@ void Sensor::setForceUpdateMinutes(int value) {
   }
 }
 #endif
-#ifndef DISABLE_POWER_MANAGER
+#if FEATURE_POWER_MANAGER == ON
 void Sensor::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
   if (_powerManager == nullptr) return;
   _powerManager->setPowerPins(ground_pin, vcc_pin, wait_time);
@@ -476,7 +476,7 @@ void Sensor::powerOff() {
   _powerManager->powerOff();
 }
 #endif
-#ifndef DISABLE_INTERRUPTS
+#if FEATURE_INTERRUPTS == ON
 int Sensor::getInterruptPin() {
   return _interrupt_pin;
 }
@@ -508,7 +508,7 @@ bool Sensor::isReportIntervalConfigured() {
   return _report_timer->isConfigured();
 }
 
-#ifndef DISABLE_INTERRUPTS
+#if FEATURE_INTERRUPTS == ON
 // listen for interrupts on the given pin so interrupt() will be called when occurring
 void Sensor::setInterrupt(int pin, int mode, int initial) {
   _interrupt_pin = pin;
@@ -574,13 +574,13 @@ void Sensor::loop(MyMessage* message) {
     }
   }
   // turn the sensor on
-#ifndef DISABLE_POWER_MANAGER
+#if FEATURE_POWER_MANAGER == ON
   powerOn();
 #endif
   // iterates over all the children
   for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
     Child* child = *itr;
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
     // update the force update timer if running
     if (child->force_update_timer->isRunning()) child->force_update_timer->update();
 #endif
@@ -598,7 +598,7 @@ void Sensor::loop(MyMessage* message) {
     // process the result and send a response back if 1) is not a loop 2) not tracking last value 3) tracking last value and there is a new value 4) tracking last value and timer is over
     if (
       message != nullptr 
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
       || ! _track_last_value || 
       _track_last_value && child->isNewValue() || 
       _track_last_value && child->force_update_timer->isRunning() && child->force_update_timer->isOver()
@@ -607,14 +607,14 @@ void Sensor::loop(MyMessage* message) {
         child->sendValue();
   }
   // turn the sensor off
-#ifndef DISABLE_POWER_MANAGER
+#if FEATURE_POWER_MANAGER == ON
   powerOff();
 #endif
   // if called from loop(), restart the report timer if over
   if (message == nullptr && _report_timer->isRunning() && _report_timer->isOver()) _report_timer->restart();
 }
 
-#ifndef DISABLE_INTERRUPTS
+#if FEATURE_INTERRUPTS == ON
 // receive and handle an interrupt
 void Sensor::interrupt() {
   // call the implementation of onInterrupt()
@@ -637,7 +637,7 @@ Child* Sensor::getChild(int child_id) {
   return nullptr;
 }
 
-#ifndef DISABLE_POWER_MANAGER
+#if FEATURE_POWER_MANAGER == ON
 void Sensor::setPowerManager(PowerManager& powerManager) {
   _powerManager = &powerManager;
 }
@@ -3284,7 +3284,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
   if (child_id == 0) {
     switch(function) {
       case 1: _node->hello(); break;
-#ifndef DISABLE_SLEEP
+#if FEATURE_SLEEP == ON
       case 3: _node->setSleepSeconds(request.getValueInt()); break;
       case 4: _node->setSleepMinutes(request.getValueInt()); break;
       case 5: _node->setSleepHours(request.getValueInt()); break;
@@ -3293,7 +3293,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
 #ifndef MY_GATEWAY_ESP8266
       case 6: _node->reboot(); return;
 #endif
-#ifndef DISABLE_EEPROM
+#if FEATURE_EEPROM == ON
       case 7: _node->clearEeprom(); break;
       case 27: _node->saveToMemory(0,request.getValueInt()); break;
       case 40: _node->setSaveSleepSettings(request.getValueInt()); break;
@@ -3301,14 +3301,14 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       case 8: _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,VERSION); return;
       case 9: _node->wakeup(); break;
       case 10: _node->setRetries(request.getValueInt()); break;
-#ifndef DISABLE_INTERRUPTS
+#if FEATURE_INTERRUPTS == ON
       case 19: _node->setSleepInterruptPin(request.getValueInt()); break;
       case 28: _node->setInterruptMinDelta(request.getValueInt()); break;
 #endif
       case 20: _node->setSleepBetweenSend(request.getValueInt()); break;
       case 21: _node->setAck(request.getValueInt()); break;
       case 22: _node->setIsMetric(request.getValueInt()); break;
-#ifndef DISABLE_POWER_MANAGER
+#if FEATURE_POWER_MANAGER == ON
       case 24: _node->powerOn(); break;
       case 25: _node->powerOff(); break;
 #endif
@@ -3332,11 +3332,11 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         case 1: sensor->setPin(request.getValueInt()); break;
         case 5: sensor->setSamples(request.getValueInt()); break;
         case 6: sensor->setSamplesInterval(request.getValueInt()); break;
-#ifndef DISABLE_TRACK_LAST_VALUE
+#if FEATURE_TRACK_LAST_VALUE == ON
         case 7: sensor->setTrackLastValue(request.getValueInt()); break;
         case 9: sensor->setForceUpdateMinutes(request.getValueInt()); break;
 #endif
-#ifndef DISABLE_POWER_MANAGER
+#if FEATURE_POWER_MANAGER == ON
         case 13: sensor->powerOn(); break;
         case 14: sensor->powerOff(); break;
 #endif
@@ -3577,7 +3577,7 @@ NodeManager::NodeManager(int sensorcount) {
   }
 }
 
-#ifndef DISABLE_INTERRUPTS
+#if FEATURE_INTERRUPTS == ON
 int NodeManager::_last_interrupt_pin = -1;
 long NodeManager::_last_interrupt_1 = millis();
 long NodeManager::_last_interrupt_2 = millis();
@@ -3591,14 +3591,14 @@ void NodeManager::setRetries(int value) {
 int NodeManager::getRetries() {
   return _retries;
 }
-#ifndef DISABLE_SLEEP
+#if FEATURE_SLEEP == ON
 void NodeManager::setSleepSeconds(int value) {
   // set the status to AWAKE if the time provided is 0, SLEEP otherwise
   if (value == 0) _status = AWAKE;
   else _status = SLEEP;
   // store the time
   _sleep_time = value;
-#ifndef DISABLE_EEPROM
+#if FEATURE_EEPROM == ON
   // save sleep settings to eeprom
   if (_save_sleep_settings) _saveSleepSettings();
 #endif
@@ -3616,7 +3616,7 @@ long NodeManager::getSleepSeconds() {
   return _sleep_time;
 }
 #endif
-#ifndef DISABLE_INTERRUPTS
+#if FEATURE_INTERRUPTS == ON
 void NodeManager::setSleepInterruptPin(int value) {
   _sleep_interrupt_pin = value;
 }
@@ -3634,7 +3634,7 @@ void NodeManager::setInterruptMinDelta(long value) {
   _interrupt_min_delta = value;
 }
 #endif
-#ifndef DISABLE_POWER_MANAGER
+#if FEATURE_POWER_MANAGER == ON
 void NodeManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
   if (_powerManager == nullptr) return;
   _powerManager->setPowerPins(ground_pin, vcc_pin, wait_time);
@@ -3666,7 +3666,7 @@ void NodeManager::setIsMetric(bool value) {
 bool NodeManager::getIsMetric() {
   return _is_metric;
 }
-#ifndef DISABLE_EEPROM
+#if FEATURE_EEPROM == ON
 void NodeManager::setSaveSleepSettings(bool value) {
   _save_sleep_settings = value;
 }
@@ -3725,7 +3725,7 @@ void NodeManager::before() {
     Serial.print(F(" B="));
     Serial.println(MY_CAP_RXBUF);
   #endif
-#ifndef DISABLE_EEPROM
+#if FEATURE_EEPROM == ON
   // restore the sleep settings saved in the eeprom
   if (_save_sleep_settings) _loadSleepSettings();
 #endif
@@ -3779,7 +3779,7 @@ void NodeManager::setup() {
     Serial.print(F(" M="));
     Serial.println(_is_metric);
   #endif
-#ifdef ENABLE_TIME
+#if FEATURE_TIME == ON
   // sync the time with the controller
   syncTime();
 #endif
@@ -3789,7 +3789,7 @@ void NodeManager::setup() {
     // call each sensor's setup()
     sensor->setup();
   }
-#ifndef DISABLE_INTERRUPTS
+#if FEATURE_INTERRUPTS == ON
   // setup the interrupt pins
   setupInterrupts();
 #endif
@@ -3797,18 +3797,18 @@ void NodeManager::setup() {
 
 // run the main function for all the register sensors
 void NodeManager::loop() {
-#ifdef ENABLE_TIME
+#if FEATURE_TIME == ON
   // if the time was last updated more than 60 minutes ago, update it
   if (_time_is_valid && (now() - _time_last_sync) > 60*60) syncTime();
 #endif
   // turn on the pin powering all the sensors
-#ifndef DISABLE_POWER_MANAGER
+#if FEATURE_POWER_MANAGER == ON
   powerOn();
 #endif
   // run loop for all the registered sensors
   for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
     Sensor* sensor = *itr;
-#ifndef DISABLE_INTERRUPTS
+#if FEATURE_INTERRUPTS == ON
     if (_last_interrupt_pin != -1 && sensor->getInterruptPin() == _last_interrupt_pin) {
       // if there was an interrupt for this sensor, call the sensor's interrupt() and then loop()
       _message.clear();
@@ -3827,10 +3827,10 @@ void NodeManager::loop() {
     }
   }
   // turn off the pin powering all the sensors
-#ifndef DISABLE_POWER_MANAGER
+#if FEATURE_POWER_MANAGER == ON
   powerOff();
 #endif
-#ifndef DISABLE_SLEEP
+#if FEATURE_SLEEP == ON
   // continue/start sleeping as requested
   if (isSleepingNode()) _sleep();
 #endif
@@ -3854,13 +3854,13 @@ void NodeManager::receive(MyMessage &message) {
   Sensor* sensor = getSensorWithChild(message.sensor);
   if (sensor != nullptr) {
     // turn on the pin powering all the sensors
-    #ifndef DISABLE_POWER_MANAGER
+    #if FEATURE_POWER_MANAGER == ON
       powerOn();
     #endif
     // call the sensor's receive()
     sensor->receive(message);
     // turn off the pin powering all the sensors
-    #ifndef DISABLE_POWER_MANAGER
+    #if FEATURE_POWER_MANAGER == ON
       powerOff();
     #endif
   }
@@ -3872,7 +3872,7 @@ void NodeManager::receiveTime(unsigned long ts) {
     Serial.print(F("TIME T="));
     Serial.println(ts);
   #endif
-  #ifdef ENABLE_TIME
+  #if FEATURE_TIME == ON
     // time is now valid
     _time_is_valid = true;
     // set the current system time to the received time
@@ -3906,7 +3906,7 @@ void NodeManager::reboot() {
   #endif
 }
 
-#ifndef DISABLE_EEPROM
+#if FEATURE_EEPROM == ON
 // clear the EEPROM
 void NodeManager::clearEeprom() {
   #ifdef NODEMANAGER_DEBUG
@@ -3959,7 +3959,7 @@ float NodeManager::getVcc() {
   #endif
 }
 
-#ifndef DISABLE_INTERRUPTS
+#if FEATURE_INTERRUPTS == ON
 // setup the interrupt pins
 void NodeManager::setupInterrupts() {
   // configure wakeup pin if needed
@@ -4056,7 +4056,7 @@ int NodeManager::getAvailableChildId(int child_id) {
   return 254;
 }
 
-#ifndef DISABLE_INTERRUPTS
+#if FEATURE_INTERRUPTS == ON
 // handle an interrupt
 void NodeManager::_onInterrupt_1() {
   long now = millis();
@@ -4133,7 +4133,7 @@ void NodeManager::_sendMessage(int child_id, int type) {
   }
 }
 
-#ifndef DISABLE_POWER_MANAGER
+#if FEATURE_POWER_MANAGER == ON
 void NodeManager::setPowerManager(PowerManager& powerManager) {
   _powerManager = &powerManager;
 }
@@ -4156,7 +4156,7 @@ Sensor* NodeManager::getSensorWithChild(int child_id) {
   return nullptr;  
 }
 
-#ifdef ENABLE_TIME
+#if FEATURE_TIME == ON
 // sync the time with the controller
 void NodeManager::syncTime() {
   _time_is_valid = false;
@@ -4176,7 +4176,7 @@ void NodeManager::syncTime() {
 // wrapper of smart sleep
 void NodeManager::_sleep() {
   long sleep_time = _sleep_time;
-#ifdef ENABLE_TIME
+#if FEATURE_TIME == ON
   // if there is time still to sleep, sleep for that timeframe only
   if (_remainder_sleep_time > 0) sleep_time = _remainder_sleep_time;
 #endif
@@ -4189,7 +4189,7 @@ void NodeManager::_sleep() {
   #endif
   // go to sleep
   int interrupt = -1;
-#ifndef DISABLE_INTERRUPTS
+#if FEATURE_INTERRUPTS == ON
   // setup interrupt pins
   int interrupt_1_pin = _interrupt_1_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_1);
   int interrupt_2_pin = _interrupt_2_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_2);
@@ -4225,7 +4225,7 @@ void NodeManager::_sleep() {
   #ifdef NODEMANAGER_DEBUG
     Serial.println(F("AWAKE"));
   #endif
-#ifdef ENABLE_TIME
+#if FEATURE_TIME == ON
   // keep track of the old time so to calculate the amount of time slept
   long old_time = now();
   // sync the time with the controller
@@ -4239,7 +4239,7 @@ void NodeManager::_sleep() {
 #endif
 }
 
-#ifndef DISABLE_EEPROM
+#if FEATURE_EEPROM == ON
 // load the configuration stored in the eeprom
 void NodeManager::_loadSleepSettings() {
   if (loadState(EEPROM_SLEEP_SAVED) == 1) {
