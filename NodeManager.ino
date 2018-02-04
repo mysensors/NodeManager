@@ -195,7 +195,7 @@ SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperat
  * NodeManager modules
  */
 
-//#define USE_ANALOG_INPUT
+#define USE_ANALOG_INPUT
 //#define USE_THERMISTOR
 //#define USE_ML8511
 //#define USE_ACS712
@@ -259,7 +259,7 @@ NodeManager node;
 //PowerManager power(5,6);
 
 // Attached sensors
-//SensorAnalogInput analog(node,A0);
+SensorAnalogInput analog(node,A0);
 //SensorLDR ldr(node,A0);
 //SensorRain rain(node,A0);
 //SensorSoilMoisture soil(node,A0);
@@ -314,7 +314,7 @@ void before() {
   /*
   * Configure your sensors below
   */
-  //node.setReportIntervalSeconds(20);
+  node.setReportIntervalSeconds(20);
   //node.setReportIntervalMinutes(5);
   //node.setSleepMinutes(5);
   node.setSleepSeconds(10);
@@ -350,39 +350,6 @@ void setup() {
 void loop() {
   // call NodeManager loop routine
   node.loop();
-    tmElements_t tm;
-  RTC.read(tm);
-  Serial.print(tm.Day);
-  Serial.print("-");
-  Serial.print(tm.Month);
-  Serial.print("-");
-  Serial.print(tmYearToCalendar(tm.Year)-2000);
-  Serial.print(" ");
-  Serial.print(tm.Hour);
-  Serial.print(":");
-  Serial.print(tm.Minute);
-  Serial.print(":");
-  Serial.print(tm.Second);
-  Serial.println("");
-  
-   Serial.println(now());
-  Serial.println(millis());
-    // digital clock display of the time
-    Serial.print(hour());
-    Serial.print(' ');
-    Serial.print(minute());
-    Serial.print(' ');
-    Serial.print(second());
-    Serial.print(' ');
-    Serial.print(day());
-    Serial.print(' ');
-    Serial.print(month());
-    Serial.print(' ');
-    Serial.print(year()); 
-    Serial.println(); 
-    Serial.println(); 
-
-    
 }
 
 // receive

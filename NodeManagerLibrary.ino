@@ -75,6 +75,10 @@ void Timer::start(int target, int unit) {
 }
 void Timer::start() {
   if (_is_configured) _is_running = true;
+#if FEATURE_TIME == ON
+  // keep track of the time the timer has started
+  _last = now();
+#endif
 }
 
 // stop the timer
@@ -86,7 +90,7 @@ void Timer::stop() {
 void Timer::reset() {
   // reset the timer
   _elapsed = 0;
-  _last_millis = 0;
+  _last = 0;
 }
 
 // restart the timer
@@ -95,7 +99,7 @@ void Timer::restart() {
   stop();
   reset();
   // if using millis(), keep track of the current timestamp for calculating the difference
-  if (! _node->isSleepingNode()) _last_millis = millis();
+  if (! _node->isSleepingNode()) _last = millis();
   start();
 }
 
@@ -120,15 +124,19 @@ void Timer::unset() {
 // update the timer at every cycle
 void Timer::update() {
   if (! isRunning()) return;
+#if FEATURE_TIME == ON
+  // system time is available so use now() to calculated the elapsed time
+  _elapsed = (long)(now() - _last);
+#else
 #if FEATURE_SLEEP == ON
   if (_node->isSleepingNode()) {
     // millis() is not reliable while sleeping so calculate how long a sleep cycle would last in seconds and update the elapsed time
     _elapsed += _node->getSleepSeconds();
-  } else {
+  }
 #endif
+  if (! _node->isSleepingNode()) {
     // use millis() to calculate the elapsed time in seconds
-    _elapsed = (long)((millis() - _last_millis)/1000);
-#if FEATURE_SLEEP == ON
+    _elapsed = (long)((millis() - _last)/1000);
   }
 #endif
   _first_run = false;
@@ -3319,6 +3327,10 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       case 37: _node->setReportIntervalMinutes(request.getValueInt()); break;
       case 38: _node->setReportIntervalHours(request.getValueInt()); break;
       case 39: _node->setReportIntervalDays(request.getValueInt()); break;
+#if FEATURE_TIME == ON
+      case 41: _node->syncTime(); break;
+      case 42: _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,(int)_node->getTime()); return;
+#endif
       default: return; 
     }
   // the request is for a sensor
@@ -4177,6 +4189,11 @@ void NodeManager::syncTime() {
     wait(1000);
     retries = retries - 1;
   }
+}
+
+// returns the current system time
+long NodeManager::getTime() {
+  return now();
 }
 #endif
 

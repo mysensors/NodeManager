@@ -299,10 +299,10 @@ class Timer {
     NodeManager* _node;
     int _target = 0;
     long _elapsed = 0;
-    long _last_millis = 0;
     bool _is_running = false;
     bool _is_configured = false;
     bool _first_run = true;
+    long _last = 0;
 };
 
 /*
@@ -1521,7 +1521,11 @@ class NodeManager {
     // [32] turn the ADC off so to save 0.2 mA
     void setADCOff();
 #if FEATURE_TIME == ON
+    // [41] synchronize the local time with the controller
     void syncTime();
+    // [42] returns the current system time
+    long getTime();
+    void receiveTime(unsigned long ts);
 #endif
     // hook into the main sketch functions
     void before();
@@ -1529,9 +1533,6 @@ class NodeManager {
     void setup();
     void loop();
     void receive(MyMessage & msg);
-#if FEATURE_TIME == ON
-    void receiveTime(unsigned long ts);
-#endif
 #if FEATURE_INTERRUPTS == ON
     // handle interrupts
     static void _onInterrupt_1();
