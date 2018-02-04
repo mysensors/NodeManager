@@ -1498,7 +1498,6 @@ void SensorDs18b20::onLoop() {
   // requestTemperatures() reads ALL sensors connected on the bus,
   // so we only need to do it when reading the first sensor on the bus (_index==0)
   if (_index == 0) {
-    Serial.println("READING TEMP SENSORS");
     _sensors->requestTemperatures();
     if (_sleep_during_conversion) {
       // calculate conversion time and sleep
