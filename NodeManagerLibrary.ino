@@ -3875,8 +3875,15 @@ void NodeManager::receiveTime(unsigned long ts) {
   #endif
   // time is now valid
   _time_is_valid = true;
+#if FEATURE_RTC == ON
+  // set the RTC time to the time received from the controller
+  RTC.set(ts);
+  // sync the system time with the RTC
+  setSyncProvider(RTC.get);
+#else
   // set the current system time to the received time
   setTime(ts);
+#endif
   _time_last_sync = now();
 }
 #endif
@@ -4228,8 +4235,13 @@ void NodeManager::_sleep() {
 #if FEATURE_TIME == ON
   // keep track of the old time so to calculate the amount of time slept
   long old_time = now();
+#if FEATURE_RTC == ON
+  // sync the time with the RTC
+  setSyncProvider(RTC.get);
+#else
   // sync the time with the controller
   syncTime();
+#endif
   // calculate the remainder time to sleep if woken up by an interrupt
   if (interrupt > -1) {
     if (_remainder_sleep_time == -1) _remainder_sleep_time = _sleep_time;

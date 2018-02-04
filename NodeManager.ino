@@ -239,7 +239,7 @@ SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperat
 #define FEATURE_EEPROM ON
 #define FEATURE_SLEEP ON
 #define FEATURE_TIME ON
-#define FEATURE_RTC OFF
+#define FEATURE_RTC ON
 
 /***********************************
  * Load NodeManager Library
@@ -314,10 +314,10 @@ void before() {
   /*
   * Configure your sensors below
   */
-  //node.setReportIntervalSeconds(10);
+  //node.setReportIntervalSeconds(20);
   //node.setReportIntervalMinutes(5);
   //node.setSleepMinutes(5);
-  //node.setSleepSeconds(30);
+  node.setSleepSeconds(10);
   //setTime(1516543198);
 /*
   RTC.set(1516543198);
@@ -350,7 +350,6 @@ void setup() {
 void loop() {
   // call NodeManager loop routine
   node.loop();
-  /*
     tmElements_t tm;
   RTC.read(tm);
   Serial.print(tm.Day);
@@ -382,7 +381,7 @@ void loop() {
     Serial.print(year()); 
     Serial.println(); 
     Serial.println(); 
-*/
+
     
 }
 
