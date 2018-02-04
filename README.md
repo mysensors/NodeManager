@@ -95,7 +95,7 @@ FEATURE_TRACK_LAST_VALUE    | ON      | allow reporting a measure only when diff
 FEATURE_EEPROM              | ON      | allow keeping track of some information in the EEPROM                                            | - 
 FEATURE_SLEEP               | ON      | allow managing automatically the complexity behind battery-powered sleeping sensors              | - 
 FEATURE_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
-FEATURE_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device                        | https://github.com/JChristensen/DS3232RTC
+FEATURE_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device (requires FEATURE_TIME)| https://github.com/JChristensen/DS3232RTC
 
 ## Installation
 

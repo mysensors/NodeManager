@@ -2835,15 +2835,8 @@ void SensorPulseMeter::onSetup() {
 void SensorPulseMeter::onLoop(Child* child) {
   // do not report anything if called by an interrupt
   if (_node->getLastInterruptPin() == _interrupt_pin) return;
-  // time to report the rain so far
+  // time to report the accumulated value so far
   _reportTotal(child);
-  #ifdef NODEMANAGER_DEBUG
-    Serial.print(_name);
-    Serial.print(F(" I="));
-    Serial.print(child->child_id);
-    Serial.print(F(" T="));
-    Serial.println(((ChildFloat*)child)->getValueFloat());
-  #endif
   // reset the counter
   _count = 0;
 }
@@ -2871,6 +2864,13 @@ void SensorPulseMeter::onInterrupt() {
 // return the total based on the pulses counted
 void SensorPulseMeter::_reportTotal(Child* child) {
   ((ChildFloat*)child)->setValueFloat(_count / _pulse_factor);
+  #ifdef NODEMANAGER_DEBUG
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
+    Serial.print(F(" V="));
+    Serial.println(((ChildFloat*)child)->getValueFloat());
+  #endif
 }
 
 /*
@@ -2898,6 +2898,14 @@ SensorPowerMeter::SensorPowerMeter(NodeManager& node_manager, int pin, int child
 // return the total based on the pulses counted
 void SensorPowerMeter::_reportTotal(Child* child) {
   ((ChildDouble*)child)->setValueDouble(_count / _pulse_factor);
+  #ifdef NODEMANAGER_DEBUG
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
+    Serial.print(F(" V="));
+    Serial.println(((ChildDouble*)child)->getValueDouble());
+    Serial.println(_count);
+  #endif
 }
 
 /*
@@ -2914,6 +2922,13 @@ SensorWaterMeter::SensorWaterMeter(NodeManager& node_manager, int pin, int child
 // return the total based on the pulses counted
 void SensorWaterMeter::_reportTotal(Child* child) {
   ((ChildDouble*)child)->setValueDouble(_count / _pulse_factor);
+  #ifdef NODEMANAGER_DEBUG
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
+    Serial.print(F(" V="));
+    Serial.println(((ChildDouble*)child)->getValueDouble());
+  #endif
 }
 #endif
 

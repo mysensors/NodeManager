@@ -79,6 +79,23 @@ SensorVL53L0X       | 1     | USE_VL53L0X        | VL53L0X laser time-of-flight 
 DisplaySSD1306      | 1     | USE_SSD1306        | SSD1306 128x64 OLED display (I²C); By default displays values of all sensors and children         | https://github.com/greiman/SSD1306Ascii.git
 SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperature/humidity based on the attached SHT31 sensor                      | https://github.com/adafruit/Adafruit_SHT31
 
+NodeManager provides useful built-in features which can be disabled if you need to save some storage for your code. 
+To enable/disable a buil-in feature:
+* Install the required library if any
+* Enable the corresponding feature by setting it to ON in the main sketch. To disable it, set it to OFF
+
+A list of buil-in features and the required dependencies is presented below:
+
+Feature                     | Default | Description                                                                                      | Dependencies
+----------------------------|---------|--------------------------------------------------------------------------------------------------|----------------------------------------------------------
+FEATURE_POWER_MANAGER       | ON      | allow powering on your sensors only while the node is awake                                      | - 
+FEATURE_INTERRUPTS          | ON      | allow managing interrupt-based sensors like a PIR or a door sensor                               | - 
+FEATURE_TRACK_LAST_VALUE    | ON      | allow reporting a measure only when different from the previous one                              | - 
+FEATURE_EEPROM              | ON      | allow keeping track of some information in the EEPROM                                            | - 
+FEATURE_SLEEP               | ON      | allow managing automatically the complexity behind battery-powered sleeping sensors              | - 
+FEATURE_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
+FEATURE_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device (requires FEATURE_TIME)| https://github.com/JChristensen/DS3232RTC
+
 /**********************************
  * MySensors node configuration
  */
@@ -87,7 +104,7 @@ SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperat
 #define SKETCH_NAME "NodeManager"
 #define SKETCH_VERSION "1.0"
 //#define MY_DEBUG
-#define MY_NODE_ID 99
+//#define MY_NODE_ID 99
 
 // NRF24 radio settings
 #define MY_RADIO_NRF24
@@ -195,7 +212,7 @@ SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperat
  * NodeManager modules
  */
 
-#define USE_ANALOG_INPUT
+//#define USE_ANALOG_INPUT
 //#define USE_THERMISTOR
 //#define USE_ML8511
 //#define USE_ACS712
@@ -232,14 +249,14 @@ SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperat
 // NodeManager's debug output on serial console when defined
 #define NODEMANAGER_DEBUG
 
-// Enable/disable NodeManager's features
+// Enable/disable NodeManager's advanced features
 #define FEATURE_POWER_MANAGER ON
 #define FEATURE_INTERRUPTS ON
 #define FEATURE_TRACK_LAST_VALUE ON
 #define FEATURE_EEPROM ON
 #define FEATURE_SLEEP ON
-#define FEATURE_TIME ON
-#define FEATURE_RTC ON
+#define FEATURE_TIME OFF
+#define FEATURE_RTC OFF
 
 /***********************************
  * Load NodeManager Library
@@ -259,7 +276,7 @@ NodeManager node;
 //PowerManager power(5,6);
 
 // Attached sensors
-SensorAnalogInput analog(node,A0);
+//SensorAnalogInput analog(node,A0);
 //SensorLDR ldr(node,A0);
 //SensorRain rain(node,A0);
 //SensorSoilMoisture soil(node,A0);
@@ -314,19 +331,19 @@ void before() {
   /*
   * Configure your sensors below
   */
-  node.setReportIntervalSeconds(20);
-  //node.setReportIntervalMinutes(5);
+
+  // report measures of every attached sensors every 10 minutes
+  //node.setReportIntervalMinutes(10);
+  // set the node to sleep in 5 minutes cycles
   //node.setSleepMinutes(5);
-  node.setSleepSeconds(10);
-  //setTime(1516543198);
-/*
-  RTC.set(1516543198);
-  //setSyncProvider(RTC.get);
-  setSyncInterval(0);
-  */
-  //node.setPowerManager(power);
-  //battery.setReportIntervalMinutes(30);
+  // report battery level every 10 minutes
+  //battery.setReportIntervalMinutes(10);
+  // set an offset to -1 to a thermistor sensor
+  //thermistor.setOffset(-1);
+  // Change the id of a the first child of a sht21 sensor
   //sht21.children.get(1)->child_id = 5;
+  // power all the nodes through dedicated pins
+  //node.setPowerManager(power);
   
   /*
   * Configure your sensors above

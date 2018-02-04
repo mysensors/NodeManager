@@ -1296,7 +1296,7 @@ class SensorPulseMeter: public Sensor {
     void onProcess(Request & request);
     void onInterrupt();
   protected:
-    long _count = 20;
+    long _count = 0;
     float _pulse_factor;
     int _initial_value = HIGH;
     int _interrupt_mode = FALLING;
