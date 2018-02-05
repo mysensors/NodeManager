@@ -255,6 +255,7 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
 #define FEATURE_TRACK_LAST_VALUE ON
 #define FEATURE_EEPROM ON
 #define FEATURE_SLEEP ON
+#define FEATURE_SMART_SLEEP ON
 #define FEATURE_TIME OFF
 #define FEATURE_RTC OFF
 

@@ -4237,7 +4237,7 @@ void NodeManager::_sleep() {
   int interrupt_1_pin = _interrupt_1_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_1);
   int interrupt_2_pin = _interrupt_2_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_2);
   // enter smart sleep for the requested sleep interval and with the configured interrupts
-  interrupt = sleep(interrupt_1_pin,_interrupt_1_mode,interrupt_2_pin,_interrupt_2_mode,sleep_time*1000, true);
+  interrupt = sleep(interrupt_1_pin,_interrupt_1_mode,interrupt_2_pin,_interrupt_2_mode,sleep_time*1000, FEATURE_SMART_SLEEP);
   if (interrupt > -1) {
     // woke up by an interrupt
     int pin_number = -1;
