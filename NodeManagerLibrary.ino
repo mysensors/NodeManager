@@ -1512,6 +1512,9 @@ void SensorSwitch::setTriggerTime(int value) {
 void SensorSwitch::setInitial(int value) {
   _initial = value;
 }
+void SensorSwitch::setActiveState(int value) {
+  _active_state = value;
+}
 
 // what to do during setup
 void SensorSwitch::onSetup() {
@@ -1544,6 +1547,8 @@ void SensorSwitch::onInterrupt() {
   int value = digitalRead(_pin);
   // process the value
   if ( (_mode == RISING && value == HIGH ) || (_mode == FALLING && value == LOW) || (_mode == CHANGE) )  {
+    // invert the value if Active State is set to LOW
+    if (_active_state == LOW) value = !value;
     #ifdef NODEMANAGER_DEBUG
       Serial.print(_name);
       Serial.print(F(" I="));
@@ -3465,6 +3470,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           case 102: custom_sensor->setDebounce(request.getValueInt()); break;
           case 103: custom_sensor->setTriggerTime(request.getValueInt()); break;
           case 104: custom_sensor->setInitial(request.getValueInt()); break;
+          case 105: custom_sensor->setActiveState(request.getValueInt()); break;
           default: return;
         }
       }
