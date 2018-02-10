@@ -1610,14 +1610,11 @@ void SensorDs18b20::onLoop(Child* child) {
   // do not wait for conversion, will sleep manually during it
   if (_sleep_during_conversion) _sensors->setWaitForConversion(false);
   // request the temperature
-  // requestTemperatures() reads ALL sensors connected on the bus,
-  // so we only need to do it when reading the first sensor on the bus (index==0)
-  if (index == 0) {_sensors->requestTemperatures();
-    if (_sleep_during_conversion) {
-      // calculate conversion time and sleep
-      int16_t conversion_time = _sensors->millisToWaitForConversion(_sensors->getResolution());
-      sleep(conversion_time);
-    }
+  _sensors->requestTemperatures();
+  if (_sleep_during_conversion) {
+    // calculate conversion time and sleep
+    int16_t conversion_time = _sensors->millisToWaitForConversion(_sensors->getResolution());
+    sleep(conversion_time);
   }
   // read the temperature
   float temperature = _sensors->getTempCByIndex(index);
