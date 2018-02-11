@@ -255,7 +255,7 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
 //#define USE_SSD1306
 //#define USE_SHT31
 //#define USE_SI7021
-#define USE_CHIRP
+//#define USE_CHIRP
 
 /***********************************
  * NodeManager advanced settings
@@ -331,7 +331,7 @@ NodeManager node;
 //SensorVL53L0X vl53l0x(node, /*XSHUT_PIN=*/2);
 //SensorSHT31 sht31(node);
 //SensorSI7021 si7021(node);
-SensorChirp chirp(node);
+//SensorChirp chirp(node);
 
 // Other devices
 //DisplaySSD1306 ssd1306(node);
