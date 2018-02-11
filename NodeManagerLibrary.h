@@ -72,7 +72,7 @@
   Libraries
 */
 
-// include supporting libraries
+// include supporting libraries for enabled sensors
 #ifdef MY_USE_UDP
     #include <WiFiUdp.h>
 #endif
@@ -160,6 +160,12 @@
   #include <Wire.h>
   #include "Adafruit_SHT31.h"
 #endif
+#ifdef USE_SI7021
+  #include <Wire.h>
+  #include "SparkFun_Si7021_Breakout_Library.h"
+#endif
+
+// include third party libraries for enabled features
 #if FEATURE_TIME == ON
   #include <TimeLib.h>
 #endif
@@ -1430,6 +1436,22 @@ class SensorSHT31: public Sensor {
     void onReceive(MyMessage* message);
   protected:
     Adafruit_SHT31* _sht31;
+};
+#endif
+
+/*
+   SensorSI7021: temperature and humidity sensor
+*/
+#ifdef USE_SI7021
+class SensorSI7021: public Sensor {
+  public:
+    SensorSI7021(NodeManager& node_manager, int child_id = -255);
+    // define what to do at each stage of the sketch
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(MyMessage* message);
+  protected:
+    Weather* _si7021;
 };
 #endif
 
