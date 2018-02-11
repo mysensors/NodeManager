@@ -3281,6 +3281,67 @@ void SensorSHT31::onReceive(MyMessage* message) {
 #endif
 
 /*
+   SensorSI7021
+*/
+#ifdef USE_SI7021
+// contructor
+SensorSI7021::SensorSI7021(NodeManager& node_manager, int child_id): Sensor(node_manager) {
+  _name = "SI7021";
+  children.allocateBlocks(2);
+  new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+  new ChildFloat(this,_node->getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
+}
+
+// what to do during setup
+void SensorSI7021::onSetup() {
+  _si7021 = new Weather();
+  _si7021->begin();
+}
+
+// what to do during loop
+void SensorSI7021::onLoop(Child* child) {
+  // temperature sensor
+  if (child->type == V_TEMP) {
+    // read the temperature
+    float temperature = _si7021->getTemp();
+    // convert it
+    temperature = _node->celsiusToFahrenheit(temperature);
+    #ifdef NODEMANAGER_DEBUG
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
+      Serial.print(F(" T="));
+      Serial.println(temperature);
+    #endif
+    // store the value
+    if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
+  }
+  // Humidity Sensor
+  else if (child->type == V_HUM) {
+    // read humidity
+    float humidity = _si7021->getRH();
+    if (isnan(humidity)) return;
+    #ifdef NODEMANAGER_DEBUG
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
+      Serial.print(F(" H="));
+      Serial.println(humidity);
+    #endif
+    // store the value
+   if (! isnan(humidity)) ((ChildFloat*)child)->setValueFloat(humidity);
+  }
+}
+
+// what to do as the main task when receiving a message
+void SensorSI7021::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+}
+#endif
+
+/*
    SensorConfiguration
 */
 // contructor
