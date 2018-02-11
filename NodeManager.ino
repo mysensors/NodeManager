@@ -233,7 +233,7 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
 //#define USE_DHT
 //#define USE_SHT21
 //#define USE_SWITCH
-#define USE_DS18B20
+//#define USE_DS18B20
 //#define USE_BH1750
 //#define USE_MLX90614
 //#define USE_BME280
@@ -307,7 +307,7 @@ NodeManager node;
 //SensorSwitch sensorSwitch(node,3);
 //SensorDoor door(node,3);
 //SensorMotion motion(node,3);
-SensorDs18b20 ds18b20(node,6);
+//SensorDs18b20 ds18b20(node,6);
 //SensorBH1750 bh1750(node);
 //SensorMLX90614 mlx90614(node);
 //SensorBME280 bme280(node);
@@ -341,7 +341,7 @@ SensorDs18b20 ds18b20(node,6);
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
-node.setReportIntervalSeconds(10);
+
   /*
   * Configure your sensors below
   */
