@@ -79,6 +79,7 @@ SensorVL53L0X       | 1     | USE_VL53L0X        | VL53L0X laser time-of-flight 
 DisplaySSD1306      | 1     | USE_SSD1306        | SSD1306 128x64 OLED display (I²C); By default displays values of all sensors and children         | https://github.com/greiman/SSD1306Ascii.git
 SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperature/humidity based on the attached SHT31 sensor                      | https://github.com/adafruit/Adafruit_SHT31
 SensorSI7021        | 2     | USE_SI7021         | SI7021 sensor, return temperature/humidity based on the attached SI7021 sensor                    | https://github.com/sparkfun/SparkFun_Si701_Breakout_Arduino_Library
+SensorChirp         | 3     | USE_CHIRP          | Chirp soil moisture sensor (includes temperature and light sensors)                               |  https://github.com/Apollon77/I2CSoilMoistureSensor
 
 NodeManager provides useful built-in features which can be disabled if you need to save some storage for your code. 
 To enable/disable a buil-in feature:
@@ -254,6 +255,7 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
 //#define USE_SSD1306
 //#define USE_SHT31
 //#define USE_SI7021
+//#define USE_CHIRP
 
 /***********************************
  * NodeManager advanced settings
@@ -329,6 +331,7 @@ NodeManager node;
 //SensorVL53L0X vl53l0x(node, /*XSHUT_PIN=*/2);
 //SensorSHT31 sht31(node);
 //SensorSI7021 si7021(node);
+//SensorChirp chirp(node);
 
 // Other devices
 //DisplaySSD1306 ssd1306(node);

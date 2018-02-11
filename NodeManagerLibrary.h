@@ -164,6 +164,10 @@
   #include <Wire.h>
   #include "SparkFun_Si7021_Breakout_Library.h"
 #endif
+#ifdef USE_CHIRP
+  #include <Wire.h>
+  #include <I2CSoilMoistureSensor.h>
+#endif
 
 // include third party libraries for enabled features
 #if FEATURE_TIME == ON
@@ -1454,6 +1458,34 @@ class SensorSI7021: public Sensor {
     void onReceive(MyMessage* message);
   protected:
     Weather* _si7021;
+};
+#endif
+
+/*
+   SensorChirp: Chirp soil moisture sensor (includes temperature and light sensors)  
+*/
+#ifdef USE_CHIRP
+class SensorChirp: public Sensor {
+  public:
+    SensorChirp(NodeManager& node_manager, int child_id = -255);
+    // [101] set the soil moisture offset (default: 0)
+    void setMoistureOffset(int value);
+    // [102] set the soil moisture range (default: 0)
+    void setMoistureRange(int value);
+    // [103] return the soil moisture normalized (default: false)
+    void setReturnMoistureNormalized(bool value);
+    // [104] reverse the light value (default: true)
+    void setReturnLightReversed(bool value); 
+    // define what to do at each stage of the sketch
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(MyMessage* message);
+  protected:
+  I2CSoilMoistureSensor* _chirp;
+  int _chirp_moistureoffset = 0;
+  int _chirp_moisturerange = 0;
+  bool _chirp_moisturenormalized = false;  
+  bool _chirp_lightreversed = true;
 };
 #endif
 
