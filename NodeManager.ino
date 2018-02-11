@@ -128,6 +128,15 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
 //#define MY_RF69_SPI_CS D2
 //#define MY_RFM69_ATC_MODE_DISABLED
 
+// RFM95 radio settings
+//#define MY_RADIO_RFM95
+//#define MY_RFM95_FREQUENCY (RFM95_868MHZ)
+//#define MY_DEBUG_VERBOSE_RFM95
+//#define MY_RFM95_MAX_POWER_LEVEL_DBM (20)
+//#define MY_RFM95_IRQ_PIN D1
+//#define MY_RFM95_IRQ_NUM MY_RFM95_IRQ_PIN
+//#define MY_RFM95_CS_PIN D8
+
 // RS485 serial transport settings
 //#define MY_RS485
 //#define MY_RS485_BAUD_RATE 9600
@@ -140,6 +149,8 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
 //#define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
 //#define MY_SIGNING_REQUEST_SIGNATURES
 //#define MY_SIGNING_ATSHA204
+//#define MY_SIGNING_ATSHA204_PIN 4
+//#define MY_SIGNING_REQUEST_SIGNATURES
 
 // OTA Firmware update settings
 //#define MY_OTA_FIRMWARE_FEATURE
