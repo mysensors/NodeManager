@@ -1623,7 +1623,7 @@ void SensorDs18b20::onLoop(Child* child) {
   // do not wait for conversion, will sleep manually during it
   if (_sleep_during_conversion) _sensors->setWaitForConversion(false);
   // request the temperature
-  _sensors->requestTemperatures();
+  _sensors->requestTemperaturesByIndex(index);
   if (_sleep_during_conversion) {
     // calculate conversion time and sleep
     int16_t conversion_time = _sensors->millisToWaitForConversion(_sensors->getResolution());
