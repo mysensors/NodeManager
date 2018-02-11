@@ -3368,6 +3368,114 @@ void SensorSI7021::onReceive(MyMessage* message) {
 #endif
 
 /*
+   SensorChirp
+*/
+#ifdef USE_CHIRP
+// contructor
+SensorChirp::SensorChirp(NodeManager& node_manager, int child_id): Sensor(node_manager) {
+  _name = "CHIRP";
+  children.allocateBlocks(3);
+  new ChildFloat(this,_node->getAvailableChildId(child_id),S_HUM,V_HUM,_name);
+  new ChildFloat(this,_node->getAvailableChildId(child_id+1),S_TEMP,V_TEMP,_name);
+  new ChildFloat(this,_node->getAvailableChildId(child_id+2),S_LIGHT_LEVEL,V_LIGHT_LEVEL,_name);
+}
+// setter/getter
+void SensorChirp::setMoistureOffset(int value) {
+  _chirp_moistureoffset = value;
+}
+void SensorChirp::setMoistureRange(int value) {
+  _chirp_moisturerange = value;
+}
+void SensorChirp::setReturnMoistureNormalized(bool value) {
+  _chirp_moisturenormalized = value;  
+} 
+void SensorChirp::setReturnLightReversed(bool value) {
+  _chirp_lightreversed = value;  
+} 
+
+// what to do during setup
+void SensorChirp::onSetup() {
+  // initialize the library
+  Wire.begin();
+  _chirp->begin();
+  wait(1000);
+  #ifdef NODEMANAGER_DEBUG
+    Serial.print(_name);
+    Serial.print(" A=");
+    Serial.print(_chirp->getAddress(),HEX);
+    Serial.print(" F=");
+    Serial.println(_chirp->getVersion(),HEX);
+  #endif
+}
+
+// what to do during loop
+void SensorChirp::onLoop(Child* child) {
+  while (_chirp->isBusy()) wait(50);
+  // temperature sensor
+  if (child->type == V_TEMP) {
+    // read the temperature
+    float temperature = _chirp->getTemperature()/(float)10;
+    // convert it
+    temperature = _node->celsiusToFahrenheit(temperature);
+    #ifdef NODEMANAGER_DEBUG
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
+      Serial.print(F(" T="));
+      Serial.println(temperature);
+    #endif
+    // store the value
+    if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
+  }
+  // Humidity Sensor
+  else if (child->type == V_HUM) {
+    // request the SoilMoisturelevel
+    float capacitance = _chirp->getCapacitance();
+    float capacitance_orig = capacitance;
+    float cap_offsetfree = capacitance - _chirp_moistureoffset;
+    if (cap_offsetfree < 0) cap_offsetfree = 0;
+    if (_chirp_moisturenormalized == true && _chirp_moistureoffset > 0 && _chirp_moisturerange > 0) {
+      capacitance = ((cap_offsetfree/_chirp_moisturerange)*100);
+      if (capacitance > 100) { capacitance = 100; }
+      int tmp_cap = (int)(capacitance+0.5);
+      capacitance = (float)tmp_cap;
+    }    
+    #ifdef NODEMANAGER_DEBUG
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
+      Serial.print(F(" H="));
+      Serial.println(capacitance);
+    #endif
+    // store the value
+   if (! isnan(capacitance)) ((ChildFloat*)child)->setValueFloat(capacitance);
+  }
+  else if (child->type == V_LIGHT_LEVEL) {
+    // read light
+    float light = _chirp->getLight(true);
+    if ( _chirp_lightreversed ) light = 65535 - light;
+    #ifdef NODEMANAGER_DEBUG
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
+      Serial.print(F(" L="));
+      Serial.println(light);
+    #endif
+    // store the value
+   if (! isnan(light)) ((ChildFloat*)child)->setValueFloat(light);
+  }
+}
+
+// what to do as the main task when receiving a message
+void SensorChirp::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+}
+#endif
+
+
+/*
    SensorConfiguration
 */
 // contructor
@@ -3674,11 +3782,23 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         DisplaySSD1306* display_SSD1306 = (DisplaySSD1306*)sensor;
         switch(function) {
           case 102: display_SSD1306->setContrast((uint8_t)request.getValueInt()); break;
-//          case 103: display_SSD1306->setText(request.getValueString()); break;
+          //case 103: display_SSD1306->setText(request.getValueString()); break;
           case 104: display_SSD1306->rotateDisplay((bool)request.getValueInt()); break;
           case 105: display_SSD1306->setFontSize(request.getValueInt()); break;
           case 106: display_SSD1306->setHeaderFontSize(request.getValueInt()); break;
           case 107: display_SSD1306->invertDisplay((bool)request.getValueInt()); break;
+          default: return;
+        }
+      }
+      #endif
+      #ifdef USE_CHIRP
+      if (strcmp(sensor->getName(),"CHIRP") == 0) {
+        SensorChirp* custom_sensor = (SensorChirp*)sensor;
+        switch(function) {
+          case 101: custom_sensor->setMoistureOffset(request.getValueInt()); break;
+          case 102: custom_sensor->setMoistureRange(request.getValueInt()); break;
+          case 103: custom_sensor->setReturnMoistureNormalized(request.getValueInt()); break;
+          case 104: custom_sensor->setReturnLightReversed(request.getValueInt()); break;
           default: return;
         }
       }
