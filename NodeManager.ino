@@ -149,6 +149,8 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
 //#define MY_SIGNING_SOFT_RANDOMSEED_PIN 7
 //#define MY_SIGNING_REQUEST_SIGNATURES
 //#define MY_SIGNING_ATSHA204
+//#define MY_SIGNING_ATSHA204_PIN 4
+//#define MY_SIGNING_REQUEST_SIGNATURES
 
 // OTA Firmware update settings
 //#define MY_OTA_FIRMWARE_FEATURE
