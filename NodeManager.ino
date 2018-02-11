@@ -345,6 +345,8 @@ void before() {
   /*
   * Configure your sensors below
   */
+  // report measures of every attached sensors every 10 seconds
+  //node.setReportIntervalSeconds(10);
   // report measures of every attached sensors every 10 minutes
   //node.setReportIntervalMinutes(10);
   // set the node to sleep in 5 minutes cycles

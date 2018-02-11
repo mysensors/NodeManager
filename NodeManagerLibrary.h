@@ -907,11 +907,13 @@ class SensorDs18b20: public Sensor {
     // [102] sleep while DS18B20 calculates temperature (default: false)
     void setSleepDuringConversion(bool value);
     // define what to do at each stage of the sketch
+    void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
   protected:
     bool _sleep_during_conversion = false;
     DallasTemperature* _sensors;
+    char* _getAddress(int index);
 };
 #endif
 

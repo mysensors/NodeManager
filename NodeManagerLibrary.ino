@@ -1609,7 +1609,15 @@ SensorDs18b20::SensorDs18b20(NodeManager& node_manager, int pin, int child_id): 
   _sensors->begin();
   // register a new child for each sensor on the bus
   for(int i = 0; i < _sensors->getDeviceCount(); i++) {
-    new ChildFloat(this,_node->getAvailableChildId(child_id+i),S_TEMP,V_TEMP,_name);
+    new ChildFloat(this,_node->getAvailableChildId(child_id+i),S_TEMP,V_TEMP,_getAddress(i));
+  }
+}
+
+// what to do during setup
+void SensorDs18b20::onSetup() {
+  for (int i = 1; i <= children.size(); i++) {
+    children.get(i);
+    _node->sendMessage(children.get(i)->child_id,V_ID,_getAddress(i-1));
   }
 }
 
@@ -1631,6 +1639,7 @@ void SensorDs18b20::onLoop(Child* child) {
   }
   // read the temperature
   float temperature = _sensors->getTempCByIndex(index);
+  if (temperature == -127.00 || temperature == 85.00) return;
   // convert it
   temperature = _node->celsiusToFahrenheit(temperature);
   #ifdef NODEMANAGER_DEBUG
@@ -1664,6 +1673,23 @@ void SensorDs18b20::setResolution(int value) {
 // sleep while DS18B20 calculates temperature
 void SensorDs18b20::setSleepDuringConversion(bool value) {
    _sleep_during_conversion = value;
+}
+
+// return the address of a device
+char* SensorDs18b20::_getAddress(int index) {
+  char* charAddr = "                ";
+  DeviceAddress device_address;
+  _sensors->getAddress(device_address,index);
+  String strAddr = String(device_address[0], HEX);
+  byte first ;
+  int j = 0;
+  for (uint8_t i = 1; i < 8; i++) {
+    if (device_address[i] < 16) strAddr = strAddr + 0;
+    strAddr = strAddr + String(device_address[i], HEX);
+    strAddr.toUpperCase();
+  }
+  for (int j = 0; j < 16; j++) charAddr[j] = strAddr[j];
+  return charAddr;
 }
 #endif
 
