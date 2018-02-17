@@ -92,7 +92,7 @@ Feature                     | Default | Description                             
 ----------------------------|---------|--------------------------------------------------------------------------------------------------|----------------------------------------------------------
 FEATURE_POWER_MANAGER       | ON      | allow powering on your sensors only while the node is awake                                      | - 
 FEATURE_INTERRUPTS          | ON      | allow managing interrupt-based sensors like a PIR or a door sensor                               | - 
-FEATURE_TRACK_LAST_VALUE    | ON      | allow reporting a measure only when different from the previous one                              | - 
+FEATURE_CONDITIONAL_REPORTING    | ON      | allow reporting a measure only when different from the previous one                              | - 
 FEATURE_EEPROM              | ON      | allow keeping track of some information in the EEPROM                                            | - 
 FEATURE_SLEEP               | ON      | allow managing automatically the complexity behind battery-powered sleeping sensors              | - 
 FEATURE_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
@@ -267,7 +267,7 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
 // Enable/disable NodeManager's advanced features
 #define FEATURE_POWER_MANAGER ON
 #define FEATURE_INTERRUPTS ON
-#define FEATURE_TRACK_LAST_VALUE ON
+#define FEATURE_CONDITIONAL_REPORTING ON
 #define FEATURE_EEPROM ON
 #define FEATURE_SLEEP ON
 #define FEATURE_TIME OFF

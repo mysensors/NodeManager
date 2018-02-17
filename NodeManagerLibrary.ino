@@ -244,7 +244,7 @@ Child::Child(Sensor* __sensor, int _child_id, int _presentation, int _type, cons
   description = _description;
   _sensor = __sensor;
   _sensor->registerChild(this);
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
   force_update_timer = new Timer(_sensor->_node);
 #endif
 }
@@ -254,7 +254,7 @@ void Child::sendValue() {
 // Print the child's value (variable type depending on the child class) to the given output
 void Child::printOn(Print& p) {
 }
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
 // check if it is an updated value, implemented by the subclasses
 bool Child::isNewValue() {
 }
@@ -284,7 +284,7 @@ int ChildInt::getValueInt() {
 void ChildInt::sendValue() {
   if (_samples == 0) return;
   _sensor->_node->sendMessage(child_id,type,_value);
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
   _last_value = _value;
 #endif
   _total = 0;
@@ -296,7 +296,7 @@ void ChildInt::printOn(Print& p) {
   p.print(_value);
 }
 
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
 // check if it is an updated value
 bool ChildInt::isNewValue() {
   return _last_value != _value;
@@ -327,7 +327,7 @@ float ChildFloat::getValueFloat() {
 void ChildFloat::sendValue() {
   if (_samples == 0) return;
   _sensor->_node->sendMessage(child_id,type,_value);
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
   _last_value = _value;
 #endif
   _total = 0;
@@ -339,7 +339,7 @@ void ChildFloat::printOn(Print& p) {
   p.print(_value);
 }
 
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
 // check if it is an updated value
 bool ChildFloat::isNewValue() {
   return _last_value != _value;
@@ -370,7 +370,7 @@ double ChildDouble::getValueDouble() {
 void ChildDouble::sendValue() {
   if (_samples == 0) return;
   _sensor->_node->sendMessage(child_id,type,_value);
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
   _last_value = _value;
 #endif
   _total = 0;
@@ -382,7 +382,7 @@ void ChildDouble::printOn(Print& p) {
   p.print(_value);
 }
 
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
 // check if it is an updated value
 bool ChildDouble::isNewValue() {
   return _last_value != _value;
@@ -410,7 +410,7 @@ const char* ChildString::getValueString() {
 // send the value back to the controller
 void ChildString::sendValue() {
   _sensor->_node->sendMessage(child_id,type,_value);
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
   _last_value = _value;
 #endif
   _value = "";
@@ -421,7 +421,7 @@ void ChildString::printOn(Print& p) {
   p.print(_value);
 }
 
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
 // check if it is an updated value
 bool ChildString::isNewValue() {
   return strcmp(_value, _last_value) != 0;
@@ -459,7 +459,7 @@ void Sensor::setSamples(int value) {
 void Sensor::setSamplesInterval(int value) {
   _samples_interval = value;
 }
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
 void Sensor::setTrackLastValue(bool value) {
   _track_last_value = value;
 }
@@ -588,7 +588,7 @@ void Sensor::loop(MyMessage* message) {
   // iterates over all the children
   for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
     Child* child = *itr;
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
     // update the force update timer if running
     if (child->force_update_timer->isRunning()) child->force_update_timer->update();
 #endif
@@ -606,7 +606,7 @@ void Sensor::loop(MyMessage* message) {
     // process the result and send a response back if 1) is not a loop 2) not tracking last value 3) tracking last value and there is a new value 4) tracking last value and timer is over
     if (
       message != nullptr 
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
       || ! _track_last_value || 
       _track_last_value && child->isNewValue() || 
       _track_last_value && child->force_update_timer->isRunning() && child->force_update_timer->isOver()
@@ -3561,7 +3561,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         case 1: sensor->setPin(request.getValueInt()); break;
         case 5: sensor->setSamples(request.getValueInt()); break;
         case 6: sensor->setSamplesInterval(request.getValueInt()); break;
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
         case 7: sensor->setTrackLastValue(request.getValueInt()); break;
         case 9: sensor->setForceUpdateMinutes(request.getValueInt()); break;
 #endif

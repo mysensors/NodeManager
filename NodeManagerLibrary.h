@@ -353,7 +353,7 @@ class Child {
     const char* description = "";
     virtual void sendValue();
     virtual void printOn(Print& p);
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
     Timer* force_update_timer;
     virtual bool isNewValue();
 #endif
@@ -369,12 +369,12 @@ class ChildInt: public Child {
     int getValueInt();
     void sendValue();
     void printOn(Print& p);
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
     bool isNewValue();
 #endif
   private:
     int _value;
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
     int _last_value;
 #endif
     int _total = 0;
@@ -387,12 +387,12 @@ class ChildFloat: public Child {
     float getValueFloat();
     void sendValue();
     void printOn(Print& p);
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
     bool isNewValue();
 #endif
   private:
     float _value;
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
     float _last_value;
 #endif
     float _total = 0;
@@ -405,12 +405,12 @@ class ChildDouble: public Child {
     double getValueDouble();
     void sendValue();
     void printOn(Print& p);
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
     bool isNewValue();
 #endif
   private:
     double _value;
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
     double _last_value;
 #endif
     double _total = 0;
@@ -423,12 +423,12 @@ class ChildString: public Child {
     const char* getValueString();
     void sendValue();
     void printOn(Print& p);
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
     bool isNewValue();
 #endif
   private:
     const char* _value = "";
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
     const char* _last_value = "";
 #endif
 };
@@ -450,7 +450,7 @@ class Sensor {
     void setSamples(int value);
     // [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
     void setSamplesInterval(int value);
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
     // [7] if true will report the measure only if different than the previous one (default: false)
     void setTrackLastValue(bool value);
     // [9] if track last value is enabled, force to send an update after the configured number of minutes
@@ -510,7 +510,7 @@ class Sensor {
     int _pin = -1;
     int _samples = 1;
     int _samples_interval = 0;
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORTING == ON
     bool _track_last_value = false;
 #endif
 #if FEATURE_INTERRUPTS == ON
