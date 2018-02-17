@@ -1489,35 +1489,35 @@ SensorHTU21D::SensorHTU21D(NodeManager& nodeManager, int child_id): SensorSHT21(
 }
 #endif 
 
-#ifdef USE_SWITCH
+#ifdef USE_INTERRUPT_BASED
 /*
- * SensorSwitch
+ * SensorInterrupt
  */
-SensorSwitch::SensorSwitch(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
-  _name = "SWITCH";
+SensorInterrupt::SensorInterrupt(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
+  _name = "INTERRUPT";
   children.allocateBlocks(1);
-  new ChildInt(this,_node->getAvailableChildId(child_id),S_CUSTOM,V_TRIPPED,_name);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
 }
 
 // setter/getter
-void SensorSwitch::setMode(int value) {
+void SensorInterrupt::setMode(int value) {
   _mode = value;
 }
-void SensorSwitch::setDebounce(int value) {
+void SensorInterrupt::setDebounce(int value) {
   _debounce = value;
 }
-void SensorSwitch::setTriggerTime(int value) {
+void SensorInterrupt::setTriggerTime(int value) {
   _trigger_time = value;
 }
-void SensorSwitch::setInitial(int value) {
+void SensorInterrupt::setInitial(int value) {
   _initial = value;
 }
-void SensorSwitch::setActiveState(int value) {
+void SensorInterrupt::setActiveState(int value) {
   _active_state = value;
 }
 
 // what to do during setup
-void SensorSwitch::onSetup() {
+void SensorInterrupt::onSetup() {
   // set the interrupt pin so it will be called only when waking up from that interrupt
   setInterrupt(_pin,_mode,_initial);
   // report immediately
@@ -1525,11 +1525,11 @@ void SensorSwitch::onSetup() {
 }
 
 // what to do during loop
-void SensorSwitch::onLoop(Child* child) {
+void SensorInterrupt::onLoop(Child* child) {
 }
 
 // what to do as the main task when receiving a message
-void SensorSwitch::onReceive(MyMessage* message) {
+void SensorInterrupt::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
   if (message->getCommand() == C_REQ && message->type == V_STATUS) {
@@ -1539,7 +1539,7 @@ void SensorSwitch::onReceive(MyMessage* message) {
 }
 
 // what to do when receiving an interrupt
-void SensorSwitch::onInterrupt() {
+void SensorInterrupt::onInterrupt() {
   Child* child = children.get(1);
   // wait to ensure the the input is not floating
   if (_debounce > 0) _node->sleepOrWait(_debounce);
@@ -1570,7 +1570,7 @@ void SensorSwitch::onInterrupt() {
 /*
  * SensorDoor
  */
-SensorDoor::SensorDoor(NodeManager& node_manager, int pin, int child_id): SensorSwitch(node_manager, pin, child_id) {
+SensorDoor::SensorDoor(NodeManager& node_manager, int pin, int child_id): SensorInterrupt(node_manager, pin, child_id) {
   _name = "DOOR";
   children.get(1)->presentation = S_DOOR;
   children.get(1)->type = V_TRIPPED;
@@ -1580,7 +1580,7 @@ SensorDoor::SensorDoor(NodeManager& node_manager, int pin, int child_id): Sensor
 /*
  * SensorMotion
  */
-SensorMotion::SensorMotion(NodeManager& node_manager, int pin, int child_id): SensorSwitch(node_manager, pin, child_id) {
+SensorMotion::SensorMotion(NodeManager& node_manager, int pin, int child_id): SensorInterrupt(node_manager, pin, child_id) {
   _name = "MOTION";
   children.get(1)->presentation = S_MOTION;
   children.get(1)->type = V_TRIPPED;
@@ -1589,7 +1589,7 @@ SensorMotion::SensorMotion(NodeManager& node_manager, int pin, int child_id): Se
 
 // what to do during setup
 void SensorMotion::onSetup() {
-  SensorSwitch::onSetup();
+  SensorInterrupt::onSetup();
   // set initial value to LOW
   setInitial(LOW);
 }
@@ -3658,8 +3658,8 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       }
       #endif
       #ifdef USE_SWITCH
-      if (strcmp(sensor->getName(),"SWITCH") == 0 || strcmp(sensor->getName(),"DOOR") == 0 || strcmp(sensor->getName(),"MOTION") == 0) {
-        SensorSwitch* custom_sensor = (SensorSwitch*)sensor;
+      if (strcmp(sensor->getName(),"INTERRUPT") == 0 || strcmp(sensor->getName(),"DOOR") == 0 || strcmp(sensor->getName(),"MOTION") == 0) {
+        SensorInterrupt* custom_sensor = (SensorInterrupt*)sensor;
         switch(function) {
           case 101: custom_sensor->setMode(request.getValueInt()); break;
           case 102: custom_sensor->setDebounce(request.getValueInt()); break;

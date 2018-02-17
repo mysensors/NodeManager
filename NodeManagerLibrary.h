@@ -851,12 +851,12 @@ class SensorHTU21D: public SensorSHT21 {
 #endif
 
 /*
- * SensorSwitch
+ * SensorInterrupt
  */
-#ifdef USE_SWITCH
-class SensorSwitch: public Sensor {
+#ifdef USE_INTERRUPT_BASED
+class SensorInterrupt: public Sensor {
   public:
-    SensorSwitch(NodeManager& node_manager, int pin, int child_id = -255);
+    SensorInterrupt(NodeManager& node_manager, int pin, int child_id = -255);
     // [101] set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
     void setMode(int value);
     // [102] milliseconds to wait before reading the input (default: 0)
@@ -883,7 +883,7 @@ class SensorSwitch: public Sensor {
 /*
  * SensorDoor
  */
-class SensorDoor: public SensorSwitch {
+class SensorDoor: public SensorInterrupt {
   public:
     SensorDoor(NodeManager& node_manager, int pin, int child_id = -255);
 };
@@ -891,7 +891,7 @@ class SensorDoor: public SensorSwitch {
 /*
  * SensorMotion
  */
-class SensorMotion: public SensorSwitch {
+class SensorMotion: public SensorInterrupt {
   public:
     SensorMotion(NodeManager& node_manager, int pin, int child_id = -255);
     void onSetup();
