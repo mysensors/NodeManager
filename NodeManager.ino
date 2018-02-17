@@ -92,7 +92,7 @@ Feature                     | Default | Description                             
 ----------------------------|---------|--------------------------------------------------------------------------------------------------|----------------------------------------------------------
 FEATURE_POWER_MANAGER       | ON      | allow powering on your sensors only while the node is awake                                      | - 
 FEATURE_INTERRUPTS          | ON      | allow managing interrupt-based sensors like a PIR or a door sensor                               | - 
-FEATURE_TRACK_LAST_VALUE    | ON      | allow reporting a measure only when different from the previous one                              | - 
+FEATURE_CONDITIONAL_REPORT  | ON      | allow reporting a measure only when different from the previous or above/below a given threshold | - 
 FEATURE_EEPROM              | ON      | allow keeping track of some information in the EEPROM                                            | - 
 FEATURE_SLEEP               | ON      | allow managing automatically the complexity behind battery-powered sleeping sensors              | - 
 FEATURE_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
@@ -265,10 +265,10 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
 #define NODEMANAGER_DEBUG
 
 // Enable/disable NodeManager's advanced features
-#define FEATURE_POWER_MANAGER ON
+#define FEATURE_POWER_MANAGER OFF
 #define FEATURE_INTERRUPTS ON
-#define FEATURE_TRACK_LAST_VALUE ON
-#define FEATURE_EEPROM ON
+#define FEATURE_CONDITIONAL_REPORT OFF
+#define FEATURE_EEPROM OFF
 #define FEATURE_SLEEP ON
 #define FEATURE_TIME OFF
 #define FEATURE_RTC OFF
@@ -358,8 +358,10 @@ void before() {
   //battery.setReportIntervalMinutes(10);
   // set an offset to -1 to a thermistor sensor
   //thermistor.setOffset(-1);
-  // Change the id of a the first child of a sht21 sensor
+  // change the id of a the first child of a sht21 sensor
   //sht21.children.get(1)->child_id = 5;
+  // report only when the analog value is above 40%
+  //analog.children.get(1)->min_threshold = 40;
   // power all the nodes through dedicated pins
   //node.setPowerManager(power);
   

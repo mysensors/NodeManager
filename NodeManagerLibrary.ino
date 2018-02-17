@@ -244,7 +244,7 @@ Child::Child(Sensor* __sensor, int _child_id, int _presentation, int _type, cons
   description = _description;
   _sensor = __sensor;
   _sensor->registerChild(this);
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORT == ON
   force_update_timer = new Timer(_sensor->_node);
 #endif
 }
@@ -254,7 +254,7 @@ void Child::sendValue() {
 // Print the child's value (variable type depending on the child class) to the given output
 void Child::printOn(Print& p) {
 }
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORT == ON
 // check if it is an updated value, implemented by the subclasses
 bool Child::isNewValue() {
 }
@@ -283,8 +283,12 @@ int ChildInt::getValueInt() {
 // send the value back to the controller
 void ChildInt::sendValue() {
   if (_samples == 0) return;
+#if FEATURE_CONDITIONAL_REPORT == ON
+  // if below or above the thresholds, do not send the value
+  if (_value < min_threshold || _value > max_threshold) return;
+#endif
   _sensor->_node->sendMessage(child_id,type,_value);
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORT == ON
   _last_value = _value;
 #endif
   _total = 0;
@@ -296,7 +300,7 @@ void ChildInt::printOn(Print& p) {
   p.print(_value);
 }
 
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORT == ON
 // check if it is an updated value
 bool ChildInt::isNewValue() {
   return _last_value != _value;
@@ -326,8 +330,12 @@ float ChildFloat::getValueFloat() {
 // send the value back to the controller
 void ChildFloat::sendValue() {
   if (_samples == 0) return;
+#if FEATURE_CONDITIONAL_REPORT == ON
+  // if below or above the thresholds, do not send the value
+  if (_value < min_threshold || _value > max_threshold) return;
+#endif
   _sensor->_node->sendMessage(child_id,type,_value);
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORT == ON
   _last_value = _value;
 #endif
   _total = 0;
@@ -339,7 +347,7 @@ void ChildFloat::printOn(Print& p) {
   p.print(_value);
 }
 
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORT == ON
 // check if it is an updated value
 bool ChildFloat::isNewValue() {
   return _last_value != _value;
@@ -369,8 +377,12 @@ double ChildDouble::getValueDouble() {
 // send the value back to the controller
 void ChildDouble::sendValue() {
   if (_samples == 0) return;
+#if FEATURE_CONDITIONAL_REPORT == ON
+  // if below or above the thresholds, do not send the value
+  if (_value < min_threshold || _value > max_threshold) return;
+#endif
   _sensor->_node->sendMessage(child_id,type,_value);
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORT == ON
   _last_value = _value;
 #endif
   _total = 0;
@@ -382,7 +394,7 @@ void ChildDouble::printOn(Print& p) {
   p.print(_value);
 }
 
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORT == ON
 // check if it is an updated value
 bool ChildDouble::isNewValue() {
   return _last_value != _value;
@@ -410,7 +422,7 @@ const char* ChildString::getValueString() {
 // send the value back to the controller
 void ChildString::sendValue() {
   _sensor->_node->sendMessage(child_id,type,_value);
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORT == ON
   _last_value = _value;
 #endif
   _value = "";
@@ -421,7 +433,7 @@ void ChildString::printOn(Print& p) {
   p.print(_value);
 }
 
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORT == ON
 // check if it is an updated value
 bool ChildString::isNewValue() {
   return strcmp(_value, _last_value) != 0;
@@ -459,7 +471,7 @@ void Sensor::setSamples(int value) {
 void Sensor::setSamplesInterval(int value) {
   _samples_interval = value;
 }
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORT == ON
 void Sensor::setTrackLastValue(bool value) {
   _track_last_value = value;
 }
@@ -588,7 +600,7 @@ void Sensor::loop(MyMessage* message) {
   // iterates over all the children
   for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
     Child* child = *itr;
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORT == ON
     // update the force update timer if running
     if (child->force_update_timer->isRunning()) child->force_update_timer->update();
 #endif
@@ -606,7 +618,7 @@ void Sensor::loop(MyMessage* message) {
     // process the result and send a response back if 1) is not a loop 2) not tracking last value 3) tracking last value and there is a new value 4) tracking last value and timer is over
     if (
       message != nullptr 
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORT == ON
       || ! _track_last_value || 
       _track_last_value && child->isNewValue() || 
       _track_last_value && child->force_update_timer->isRunning() && child->force_update_timer->isOver()
@@ -3514,6 +3526,8 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       case 4: _node->setSleepMinutes(request.getValueInt()); break;
       case 5: _node->setSleepHours(request.getValueInt()); break;
       case 29: _node->setSleepDays(request.getValueInt()); break;
+      case 20: _node->setSleepBetweenSend(request.getValueInt()); break;
+      case 9: _node->wakeup(); break;
 #endif
 #ifndef MY_GATEWAY_ESP8266
       case 6: _node->reboot(); return;
@@ -3524,13 +3538,11 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       case 40: _node->setSaveSleepSettings(request.getValueInt()); break;
 #endif
       case 8: _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,VERSION); return;
-      case 9: _node->wakeup(); break;
       case 10: _node->setRetries(request.getValueInt()); break;
 #if FEATURE_INTERRUPTS == ON
       case 19: _node->setSleepInterruptPin(request.getValueInt()); break;
       case 28: _node->setInterruptMinDelta(request.getValueInt()); break;
 #endif
-      case 20: _node->setSleepBetweenSend(request.getValueInt()); break;
       case 21: _node->setAck(request.getValueInt()); break;
       case 22: _node->setIsMetric(request.getValueInt()); break;
 #if FEATURE_POWER_MANAGER == ON
@@ -3561,7 +3573,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         case 1: sensor->setPin(request.getValueInt()); break;
         case 5: sensor->setSamples(request.getValueInt()); break;
         case 6: sensor->setSamplesInterval(request.getValueInt()); break;
-#if FEATURE_TRACK_LAST_VALUE == ON
+#if FEATURE_CONDITIONAL_REPORT == ON
         case 7: sensor->setTrackLastValue(request.getValueInt()); break;
         case 9: sensor->setForceUpdateMinutes(request.getValueInt()); break;
 #endif
@@ -3860,6 +3872,9 @@ void NodeManager::setSleepDays(int value) {
 long NodeManager::getSleepSeconds() {
   return _sleep_time;
 }
+void NodeManager::setSleepBetweenSend(int value) {
+  _sleep_between_send = value;
+}
 #endif
 #if FEATURE_INTERRUPTS == ON
 void NodeManager::setSleepInterruptPin(int value) {
@@ -3893,9 +3908,6 @@ void NodeManager::powerOff() {
   _powerManager->powerOff();
 }
 #endif
-void NodeManager::setSleepBetweenSend(int value) {
-  _sleep_between_send = value;
-}
 void NodeManager::setAck(bool value) {
     _ack = value;
 }
@@ -4178,6 +4190,7 @@ void NodeManager::saveToMemory(int index, int value) {
 }
 #endif
 
+#if FEATURE_SLEEP
 // wake up the board
 void NodeManager::wakeup() {
   #ifdef NODEMANAGER_DEBUG
@@ -4185,6 +4198,7 @@ void NodeManager::wakeup() {
   #endif
   _status = AWAKE;
 }
+#endif
 
 // return vcc in V
 float NodeManager::getVcc() {
@@ -4441,6 +4455,7 @@ long NodeManager::getTime() {
 }
 #endif
 
+#if FEATURE_SLEEP == ON
 // wrapper of smart sleep
 void NodeManager::_sleep() {
   long sleep_time = _sleep_time;
@@ -4515,6 +4530,8 @@ void NodeManager::_sleep() {
 #endif
 }
 
+#endif
+
 #if FEATURE_EEPROM == ON
 // load the configuration stored in the eeprom
 void NodeManager::_loadSleepSettings() {
@@ -4551,10 +4568,9 @@ void NodeManager::_saveSleepSettings() {
   saveState(EEPROM_SLEEP_2,bit_2);
   saveState(EEPROM_SLEEP_3,bit_3);
 }
+#endif
 
 // sleep between send()
 void NodeManager::_sleepBetweenSend() {
   if (_sleep_between_send > 0) sleep(_sleep_between_send);
 }
-
-#endif

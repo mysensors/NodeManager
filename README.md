@@ -92,10 +92,10 @@ A list of buil-in features and the required dependencies is presented below:
 
 Feature                     | Default | Description                                                                                      | Dependencies
 ----------------------------|---------|--------------------------------------------------------------------------------------------------|----------------------------------------------------------
-FEATURE_POWER_MANAGER       | ON      | allow powering on your sensors only while the node is awake                                      | - 
+FEATURE_POWER_MANAGER       | OFF     | allow powering on your sensors only while the node is awake                                      | - 
 FEATURE_INTERRUPTS          | ON      | allow managing interrupt-based sensors like a PIR or a door sensor                               | - 
-FEATURE_TRACK_LAST_VALUE    | ON      | allow reporting a measure only when different from the previous one                              | - 
-FEATURE_EEPROM              | ON      | allow keeping track of some information in the EEPROM                                            | - 
+FEATURE_CONDITIONAL_REPORT  | OFF     | allow reporting a measure only when different from the previous or above/below a given threshold | - 
+FEATURE_EEPROM              | OFF     | allow keeping track of some information in the EEPROM                                            | - 
 FEATURE_SLEEP               | ON      | allow managing automatically the complexity behind battery-powered sleeping sensors              | - 
 FEATURE_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
 FEATURE_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device (requires FEATURE_TIME)| https://github.com/JChristensen/DS3232RTC
@@ -213,6 +213,10 @@ You can interact with each class provided by NodeManager through a set of API fu
     void setSleepHours(int value);
     // [29] set the duration (in days) of a sleep cycle
     void setSleepDays(int value);
+    // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
+    void setSleepBetweenSend(int value);
+    // [9] wake up the board
+    void wakeup();
 #endif
 #if FEATURE_INTERRUPTS == ON
     // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
@@ -222,8 +226,6 @@ You can interact with each class provided by NodeManager through a set of API fu
     // [28] ignore two consecutive interrupts if happening within this timeframe in milliseconds (default: 100)
     void setInterruptMinDelta(long value);
 #endif
-    // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
-    void setSleepBetweenSend(int value);
     // register a sensor
     void registerSensor(Sensor* sensor);
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
@@ -250,8 +252,6 @@ You can interact with each class provided by NodeManager through a set of API fu
     void hello();
     // [6] reboot the board
     void reboot();
-    // [9] wake up the board
-    void wakeup();
 #if FEATURE_EEPROM == ON
     // [7] clear the EEPROM
     void clearEeprom();
@@ -371,6 +371,25 @@ The following methods are available for all the sensors:
     // register a child
     void registerChild(Child* child);
     NodeManager* _node;
+~~~
+
+### Child API
+
+The following methods are available for all the child:
+~~~c
+    Child(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
+    int child_id;
+    int presentation = S_CUSTOM;
+    int type = V_CUSTOM;
+    const char* description = "";
+    virtual void sendValue();
+    virtual void printOn(Print& p);
+#if FEATURE_CONDITIONAL_REPORT == ON
+    Timer* force_update_timer;
+    virtual bool isNewValue();
+    float min_threshold = FLT_MIN;
+    float max_threshold = FLT_MAX;
+#endif
 ~~~
 
 ### Built-in sensors API
