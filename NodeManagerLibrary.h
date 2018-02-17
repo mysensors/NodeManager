@@ -177,6 +177,10 @@
   #define FEATURE_TIME ON
   #include <DS3232RTC.h>
 #endif
+#if FEATURE_CONDITIONAL_REPORTING == ON
+  #include <float.h>
+#endif
+
 /*******************************************************************
    Classes
 */
@@ -356,6 +360,8 @@ class Child {
 #if FEATURE_CONDITIONAL_REPORTING == ON
     Timer* force_update_timer;
     virtual bool isNewValue();
+    float min_threshold = FLT_MIN;
+    float max_threshold = FLT_MAX;
 #endif
   protected:
     int _samples = 0;

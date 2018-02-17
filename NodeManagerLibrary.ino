@@ -283,6 +283,10 @@ int ChildInt::getValueInt() {
 // send the value back to the controller
 void ChildInt::sendValue() {
   if (_samples == 0) return;
+#if FEATURE_CONDITIONAL_REPORTING == ON
+  // if below or above the thresholds, do not send the value
+  if (_value < min_threshold || _value > max_threshold) return;
+#endif
   _sensor->_node->sendMessage(child_id,type,_value);
 #if FEATURE_CONDITIONAL_REPORTING == ON
   _last_value = _value;
@@ -326,6 +330,10 @@ float ChildFloat::getValueFloat() {
 // send the value back to the controller
 void ChildFloat::sendValue() {
   if (_samples == 0) return;
+#if FEATURE_CONDITIONAL_REPORTING == ON
+  // if below or above the thresholds, do not send the value
+  if (_value < min_threshold || _value > max_threshold) return;
+#endif
   _sensor->_node->sendMessage(child_id,type,_value);
 #if FEATURE_CONDITIONAL_REPORTING == ON
   _last_value = _value;
@@ -369,6 +377,10 @@ double ChildDouble::getValueDouble() {
 // send the value back to the controller
 void ChildDouble::sendValue() {
   if (_samples == 0) return;
+#if FEATURE_CONDITIONAL_REPORTING == ON
+  // if below or above the thresholds, do not send the value
+  if (_value < min_threshold || _value > max_threshold) return;
+#endif
   _sensor->_node->sendMessage(child_id,type,_value);
 #if FEATURE_CONDITIONAL_REPORTING == ON
   _last_value = _value;

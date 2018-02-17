@@ -225,7 +225,7 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
  * NodeManager modules
  */
 
-//#define USE_ANALOG_INPUT
+#define USE_ANALOG_INPUT
 //#define USE_THERMISTOR
 //#define USE_ML8511
 //#define USE_ACS712
@@ -291,7 +291,7 @@ NodeManager node;
 //PowerManager power(5,6);
 
 // Attached sensors
-//SensorAnalogInput analog(node,A0);
+SensorAnalogInput analog(node,A0);
 //SensorLDR ldr(node,A0);
 //SensorRain rain(node,A0);
 //SensorSoilMoisture soil(node,A0);
@@ -344,12 +344,12 @@ NodeManager node;
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
-
+  analog.children.get(1)->min_threshold = 40;
   /*
   * Configure your sensors below
   */
   // report measures of every attached sensors every 10 seconds
-  //node.setReportIntervalSeconds(10);
+  node.setReportIntervalSeconds(10);
   // report measures of every attached sensors every 10 minutes
   //node.setReportIntervalMinutes(10);
   // set the node to sleep in 5 minutes cycles
