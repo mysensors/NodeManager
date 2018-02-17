@@ -94,7 +94,7 @@ Feature                     | Default | Description                             
 ----------------------------|---------|--------------------------------------------------------------------------------------------------|----------------------------------------------------------
 FEATURE_POWER_MANAGER       | ON      | allow powering on your sensors only while the node is awake                                      | - 
 FEATURE_INTERRUPTS          | ON      | allow managing interrupt-based sensors like a PIR or a door sensor                               | - 
-FEATURE_TRACK_LAST_VALUE    | ON      | allow reporting a measure only when different from the previous one                              | - 
+FEATURE_CONDITIONAL_REPORT  | ON      | allow reporting a measure only when different from the previous or above/below a given threshold | - 
 FEATURE_EEPROM              | ON      | allow keeping track of some information in the EEPROM                                            | - 
 FEATURE_SLEEP               | ON      | allow managing automatically the complexity behind battery-powered sleeping sensors              | - 
 FEATURE_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
@@ -384,7 +384,7 @@ The following methods are available for all the child:
     const char* description = "";
     virtual void sendValue();
     virtual void printOn(Print& p);
-#if FEATURE_CONDITIONAL_REPORTING == ON
+#if FEATURE_CONDITIONAL_REPORT == ON
     Timer* force_update_timer;
     virtual bool isNewValue();
     float min_threshold = FLT_MIN;
