@@ -1489,35 +1489,35 @@ SensorHTU21D::SensorHTU21D(NodeManager& nodeManager, int child_id): SensorSHT21(
 }
 #endif 
 
-#ifdef USE_SWITCH
+#ifdef USE_INTERRUPT
 /*
- * SensorSwitch
+ * SensorInterrupt
  */
-SensorSwitch::SensorSwitch(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
-  _name = "SWITCH";
+SensorInterrupt::SensorInterrupt(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
+  _name = "INTERRUPT";
   children.allocateBlocks(1);
-  new ChildInt(this,_node->getAvailableChildId(child_id),S_CUSTOM,V_TRIPPED,_name);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
 }
 
 // setter/getter
-void SensorSwitch::setMode(int value) {
+void SensorInterrupt::setMode(int value) {
   _mode = value;
 }
-void SensorSwitch::setDebounce(int value) {
+void SensorInterrupt::setDebounce(int value) {
   _debounce = value;
 }
-void SensorSwitch::setTriggerTime(int value) {
+void SensorInterrupt::setTriggerTime(int value) {
   _trigger_time = value;
 }
-void SensorSwitch::setInitial(int value) {
+void SensorInterrupt::setInitial(int value) {
   _initial = value;
 }
-void SensorSwitch::setActiveState(int value) {
+void SensorInterrupt::setActiveState(int value) {
   _active_state = value;
 }
 
 // what to do during setup
-void SensorSwitch::onSetup() {
+void SensorInterrupt::onSetup() {
   // set the interrupt pin so it will be called only when waking up from that interrupt
   setInterrupt(_pin,_mode,_initial);
   // report immediately
@@ -1525,11 +1525,11 @@ void SensorSwitch::onSetup() {
 }
 
 // what to do during loop
-void SensorSwitch::onLoop(Child* child) {
+void SensorInterrupt::onLoop(Child* child) {
 }
 
 // what to do as the main task when receiving a message
-void SensorSwitch::onReceive(MyMessage* message) {
+void SensorInterrupt::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
   if (message->getCommand() == C_REQ && message->type == V_STATUS) {
@@ -1539,12 +1539,12 @@ void SensorSwitch::onReceive(MyMessage* message) {
 }
 
 // what to do when receiving an interrupt
-void SensorSwitch::onInterrupt() {
+void SensorInterrupt::onInterrupt() {
   Child* child = children.get(1);
   // wait to ensure the the input is not floating
   if (_debounce > 0) _node->sleepOrWait(_debounce);
   // read the value of the pin
-  int value = digitalRead(_pin);
+  int value = _node->getLastInterruptValue();
   // process the value
   if ( (_mode == RISING && value == HIGH ) || (_mode == FALLING && value == LOW) || (_mode == CHANGE) )  {
     // invert the value if Active State is set to LOW
@@ -1570,7 +1570,7 @@ void SensorSwitch::onInterrupt() {
 /*
  * SensorDoor
  */
-SensorDoor::SensorDoor(NodeManager& node_manager, int pin, int child_id): SensorSwitch(node_manager, pin, child_id) {
+SensorDoor::SensorDoor(NodeManager& node_manager, int pin, int child_id): SensorInterrupt(node_manager, pin, child_id) {
   _name = "DOOR";
   children.get(1)->presentation = S_DOOR;
   children.get(1)->type = V_TRIPPED;
@@ -1580,7 +1580,7 @@ SensorDoor::SensorDoor(NodeManager& node_manager, int pin, int child_id): Sensor
 /*
  * SensorMotion
  */
-SensorMotion::SensorMotion(NodeManager& node_manager, int pin, int child_id): SensorSwitch(node_manager, pin, child_id) {
+SensorMotion::SensorMotion(NodeManager& node_manager, int pin, int child_id): SensorInterrupt(node_manager, pin, child_id) {
   _name = "MOTION";
   children.get(1)->presentation = S_MOTION;
   children.get(1)->type = V_TRIPPED;
@@ -1589,7 +1589,7 @@ SensorMotion::SensorMotion(NodeManager& node_manager, int pin, int child_id): Se
 
 // what to do during setup
 void SensorMotion::onSetup() {
-  SensorSwitch::onSetup();
+  SensorInterrupt::onSetup();
   // set initial value to LOW
   setInitial(LOW);
 }
@@ -3658,8 +3658,8 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       }
       #endif
       #ifdef USE_SWITCH
-      if (strcmp(sensor->getName(),"SWITCH") == 0 || strcmp(sensor->getName(),"DOOR") == 0 || strcmp(sensor->getName(),"MOTION") == 0) {
-        SensorSwitch* custom_sensor = (SensorSwitch*)sensor;
+      if (strcmp(sensor->getName(),"INTERRUPT") == 0 || strcmp(sensor->getName(),"DOOR") == 0 || strcmp(sensor->getName(),"MOTION") == 0) {
+        SensorInterrupt* custom_sensor = (SensorInterrupt*)sensor;
         switch(function) {
           case 101: custom_sensor->setMode(request.getValueInt()); break;
           case 102: custom_sensor->setDebounce(request.getValueInt()); break;
@@ -3823,6 +3823,7 @@ NodeManager::NodeManager(int sensorcount) {
 
 #if FEATURE_INTERRUPTS == ON
 int NodeManager::_last_interrupt_pin = -1;
+int NodeManager::_last_interrupt_value = LOW;
 long NodeManager::_last_interrupt_1 = millis();
 long NodeManager::_last_interrupt_2 = millis();
 long NodeManager::_interrupt_min_delta = 100;
@@ -4247,6 +4248,11 @@ void NodeManager::setupInterrupts() {
 int NodeManager::getLastInterruptPin() {
   return _last_interrupt_pin;
 }
+
+// return the value of the pin from which the last interrupt came
+int NodeManager::getLastInterruptValue() {
+  return _last_interrupt_value;
+}
 #endif
 
 // set the default interval in seconds all the sensors will report their measures
@@ -4313,9 +4319,12 @@ void NodeManager::_onInterrupt_1() {
   long now = millis();
   if ( (now - _last_interrupt_1 > _interrupt_min_delta) || (now < _last_interrupt_1) ) {
     _last_interrupt_pin = INTERRUPT_PIN_1;
+    _last_interrupt_value = digitalRead(INTERRUPT_PIN_1);
     #ifdef NODEMANAGER_DEBUG
       Serial.print(F("INT P="));
-      Serial.println(INTERRUPT_PIN_1);
+      Serial.print(INTERRUPT_PIN_1);
+      Serial.print(" V=");
+      Serial.println(_last_interrupt_value);
     #endif
     _last_interrupt_1 = now;
   }
@@ -4324,9 +4333,12 @@ void NodeManager::_onInterrupt_2() {
   long now = millis();
   if ( (now - _last_interrupt_2 > _interrupt_min_delta) || (now < _last_interrupt_2) ) {
     _last_interrupt_pin = INTERRUPT_PIN_2;
+    _last_interrupt_value = digitalRead(INTERRUPT_PIN_2);
     #ifdef NODEMANAGER_DEBUG
       Serial.print(F("INT P="));
-      Serial.println(INTERRUPT_PIN_2);
+      Serial.print(INTERRUPT_PIN_2);
+      Serial.print(" V=");
+      Serial.println(_last_interrupt_value);
     #endif
     _last_interrupt_2 = now;
   }
@@ -4465,11 +4477,14 @@ void NodeManager::_sleep() {
       interrupt_mode = _interrupt_2_mode;
     }
     _last_interrupt_pin = pin_number;
+    _last_interrupt_value = digitalRead(pin_number);
     #ifdef NODEMANAGER_DEBUG
       Serial.print(F("INT P="));
       Serial.print(pin_number);
       Serial.print(F(", M="));
-      Serial.println(interrupt_mode);
+      Serial.print(interrupt_mode);
+      Serial.print(F(", V="));
+      Serial.println(_last_interrupt_value);
     #endif
     // when waking up from an interrupt on the wakup pin, stop sleeping
     if (_sleep_interrupt_pin == pin_number) _status = AWAKE;
