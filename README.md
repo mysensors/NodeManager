@@ -213,6 +213,10 @@ You can interact with each class provided by NodeManager through a set of API fu
     void setSleepHours(int value);
     // [29] set the duration (in days) of a sleep cycle
     void setSleepDays(int value);
+    // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
+    void setSleepBetweenSend(int value);
+    // [9] wake up the board
+    void wakeup();
 #endif
 #if FEATURE_INTERRUPTS == ON
     // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
@@ -222,8 +226,6 @@ You can interact with each class provided by NodeManager through a set of API fu
     // [28] ignore two consecutive interrupts if happening within this timeframe in milliseconds (default: 100)
     void setInterruptMinDelta(long value);
 #endif
-    // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
-    void setSleepBetweenSend(int value);
     // register a sensor
     void registerSensor(Sensor* sensor);
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
@@ -250,8 +252,6 @@ You can interact with each class provided by NodeManager through a set of API fu
     void hello();
     // [6] reboot the board
     void reboot();
-    // [9] wake up the board
-    void wakeup();
 #if FEATURE_EEPROM == ON
     // [7] clear the EEPROM
     void clearEeprom();
@@ -371,6 +371,25 @@ The following methods are available for all the sensors:
     // register a child
     void registerChild(Child* child);
     NodeManager* _node;
+~~~
+
+### Child API
+
+The following methods are available for all the child:
+~~~c
+    Child(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
+    int child_id;
+    int presentation = S_CUSTOM;
+    int type = V_CUSTOM;
+    const char* description = "";
+    virtual void sendValue();
+    virtual void printOn(Print& p);
+#if FEATURE_CONDITIONAL_REPORTING == ON
+    Timer* force_update_timer;
+    virtual bool isNewValue();
+    float min_threshold = FLT_MIN;
+    float max_threshold = FLT_MAX;
+#endif
 ~~~
 
 ### Built-in sensors API

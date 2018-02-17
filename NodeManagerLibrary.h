@@ -170,6 +170,9 @@
 #endif
 
 // include third party libraries for enabled features
+#ifdef MY_GATEWAY_SERIAL
+  #define FEATURE_SLEEP OFF
+#endif
 #if FEATURE_TIME == ON
   #include <TimeLib.h>
 #endif
@@ -1514,6 +1517,10 @@ class NodeManager {
     void setSleepHours(int value);
     // [29] set the duration (in days) of a sleep cycle
     void setSleepDays(int value);
+    // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
+    void setSleepBetweenSend(int value);
+    // [9] wake up the board
+    void wakeup();
 #endif
 #if FEATURE_INTERRUPTS == ON
     // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
@@ -1523,8 +1530,6 @@ class NodeManager {
     // [28] ignore two consecutive interrupts if happening within this timeframe in milliseconds (default: 100)
     void setInterruptMinDelta(long value);
 #endif
-    // [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
-    void setSleepBetweenSend(int value);
     // register a sensor
     void registerSensor(Sensor* sensor);
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
@@ -1551,8 +1556,6 @@ class NodeManager {
     void hello();
     // [6] reboot the board
     void reboot();
-    // [9] wake up the board
-    void wakeup();
 #if FEATURE_EEPROM == ON
     // [7] clear the EEPROM
     void clearEeprom();
@@ -1628,8 +1631,8 @@ class NodeManager {
     int _status = AWAKE;
     long _sleep_time = 0;
     int _sleep_interrupt_pin = -1;
-    int _sleep_between_send = 0;
     int _retries = 1;
+    int _sleep_between_send = 0;
 #if FEATURE_INTERRUPTS == ON
     int _interrupt_1_mode = MODE_NOT_DEFINED;
     int _interrupt_2_mode = MODE_NOT_DEFINED;
@@ -1642,7 +1645,9 @@ class NodeManager {
     static long _last_interrupt_2;
 #endif
     bool _ack = false;
+#if FEATURE_SLEEP == ON
     void _sleep();
+#endif
     void _present(int child_id, int type);
     bool _get_controller_config = true;
     int _is_metric = 1;

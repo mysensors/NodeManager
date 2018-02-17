@@ -225,7 +225,7 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
  * NodeManager modules
  */
 
-#define USE_ANALOG_INPUT
+//#define USE_ANALOG_INPUT
 //#define USE_THERMISTOR
 //#define USE_ML8511
 //#define USE_ACS712
@@ -265,10 +265,10 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
 #define NODEMANAGER_DEBUG
 
 // Enable/disable NodeManager's advanced features
-#define FEATURE_POWER_MANAGER ON
+#define FEATURE_POWER_MANAGER OFF
 #define FEATURE_INTERRUPTS ON
-#define FEATURE_CONDITIONAL_REPORTING ON
-#define FEATURE_EEPROM ON
+#define FEATURE_CONDITIONAL_REPORTING OFF
+#define FEATURE_EEPROM OFF
 #define FEATURE_SLEEP ON
 #define FEATURE_TIME OFF
 #define FEATURE_RTC OFF
@@ -291,7 +291,7 @@ NodeManager node;
 //PowerManager power(5,6);
 
 // Attached sensors
-SensorAnalogInput analog(node,A0);
+//SensorAnalogInput analog(node,A0);
 //SensorLDR ldr(node,A0);
 //SensorRain rain(node,A0);
 //SensorSoilMoisture soil(node,A0);
@@ -344,7 +344,7 @@ SensorAnalogInput analog(node,A0);
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
-  analog.children.get(1)->min_threshold = 40;
+
   /*
   * Configure your sensors below
   */
@@ -358,8 +358,10 @@ void before() {
   //battery.setReportIntervalMinutes(10);
   // set an offset to -1 to a thermistor sensor
   //thermistor.setOffset(-1);
-  // Change the id of a the first child of a sht21 sensor
+  // change the id of a the first child of a sht21 sensor
   //sht21.children.get(1)->child_id = 5;
+  // report only when the analog value is above 40%
+  //analog.children.get(1)->min_threshold = 40;
   // power all the nodes through dedicated pins
   //node.setPowerManager(power);
   

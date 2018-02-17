@@ -3526,6 +3526,8 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       case 4: _node->setSleepMinutes(request.getValueInt()); break;
       case 5: _node->setSleepHours(request.getValueInt()); break;
       case 29: _node->setSleepDays(request.getValueInt()); break;
+      case 20: _node->setSleepBetweenSend(request.getValueInt()); break;
+      case 9: _node->wakeup(); break;
 #endif
 #ifndef MY_GATEWAY_ESP8266
       case 6: _node->reboot(); return;
@@ -3536,13 +3538,11 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       case 40: _node->setSaveSleepSettings(request.getValueInt()); break;
 #endif
       case 8: _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,VERSION); return;
-      case 9: _node->wakeup(); break;
       case 10: _node->setRetries(request.getValueInt()); break;
 #if FEATURE_INTERRUPTS == ON
       case 19: _node->setSleepInterruptPin(request.getValueInt()); break;
       case 28: _node->setInterruptMinDelta(request.getValueInt()); break;
 #endif
-      case 20: _node->setSleepBetweenSend(request.getValueInt()); break;
       case 21: _node->setAck(request.getValueInt()); break;
       case 22: _node->setIsMetric(request.getValueInt()); break;
 #if FEATURE_POWER_MANAGER == ON
@@ -3872,6 +3872,9 @@ void NodeManager::setSleepDays(int value) {
 long NodeManager::getSleepSeconds() {
   return _sleep_time;
 }
+void NodeManager::setSleepBetweenSend(int value) {
+  _sleep_between_send = value;
+}
 #endif
 #if FEATURE_INTERRUPTS == ON
 void NodeManager::setSleepInterruptPin(int value) {
@@ -3905,9 +3908,6 @@ void NodeManager::powerOff() {
   _powerManager->powerOff();
 }
 #endif
-void NodeManager::setSleepBetweenSend(int value) {
-  _sleep_between_send = value;
-}
 void NodeManager::setAck(bool value) {
     _ack = value;
 }
@@ -4190,6 +4190,7 @@ void NodeManager::saveToMemory(int index, int value) {
 }
 #endif
 
+#if FEATURE_SLEEP
 // wake up the board
 void NodeManager::wakeup() {
   #ifdef NODEMANAGER_DEBUG
@@ -4197,6 +4198,7 @@ void NodeManager::wakeup() {
   #endif
   _status = AWAKE;
 }
+#endif
 
 // return vcc in V
 float NodeManager::getVcc() {
@@ -4453,6 +4455,7 @@ long NodeManager::getTime() {
 }
 #endif
 
+#if FEATURE_SLEEP == ON
 // wrapper of smart sleep
 void NodeManager::_sleep() {
   long sleep_time = _sleep_time;
@@ -4527,6 +4530,8 @@ void NodeManager::_sleep() {
 #endif
 }
 
+#endif
+
 #if FEATURE_EEPROM == ON
 // load the configuration stored in the eeprom
 void NodeManager::_loadSleepSettings() {
@@ -4563,10 +4568,9 @@ void NodeManager::_saveSleepSettings() {
   saveState(EEPROM_SLEEP_2,bit_2);
   saveState(EEPROM_SLEEP_3,bit_3);
 }
+#endif
 
 // sleep between send()
 void NodeManager::_sleepBetweenSend() {
   if (_sleep_between_send > 0) sleep(_sleep_between_send);
 }
-
-#endif
