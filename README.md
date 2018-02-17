@@ -53,9 +53,9 @@ SensorDHT11         | 2     | USE_DHT            | DHT11 sensor, return temperat
 SensorDHT22         | 2     | USE_DHT            | DHT22 sensor, return temperature/humidity based on the attached DHT sensor                        | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/DHT
 SensorSHT21         | 2     | USE_SHT21          | SHT21 sensor, return temperature/humidity based on the attached SHT21 sensor                      | https://github.com/SodaqMoja/Sodaq_SHT2x
 SensorHTU21D        | 2     | USE_SHT21          | HTU21D sensor, return temperature/humidity based on the attached HTU21D sensor                    | https://github.com/SodaqMoja/Sodaq_SHT2x
-SensorInterrupt     | 1     | USE_INTERRUPT_BASED| Generic interrupt-based sensor, wake up the board when a pin changes status                                       | -
-SensorDoor          | 1     | USE_INTERRUPT_BASED| Door sensor, wake up the board and report when an attached magnetic sensor has been opened/closed | -
-SensorMotion        | 1     | USE_INTERRUPT_BASED| Motion sensor, wake up the board and report when an attached PIR has triggered                    | -
+SensorInterrupt     | 1     | USE_INTERRUPT      | Generic interrupt-based sensor, wake up the board when a pin changes status                                       | -
+SensorDoor          | 1     | USE_INTERRUPT      | Door sensor, wake up the board and report when an attached magnetic sensor has been opened/closed | -
+SensorMotion        | 1     | USE_INTERRUPT      | Motion sensor, wake up the board and report when an attached PIR has triggered                    | -
 SensorDs18b20       | 1+    | USE_DS18B20        | DS18B20 sensor, return the temperature based on the attached sensor                               | https://github.com/milesburton/Arduino-Temperature-Control-Library
 SensorBH1750        | 1     | USE_BH1750         | BH1750 sensor, return light level in lux                                                          | https://github.com/claws/BH1750
 SensorMLX90614      | 2     | USE_MLX90614       | MLX90614 contactless temperature sensor, return ambient and object temperature                    | https://github.com/adafruit/Adafruit-MLX90614-Library
@@ -269,6 +269,8 @@ You can interact with each class provided by NodeManager through a set of API fu
     void setupInterrupts();
     // return the pin from which the last interrupt came
     int getLastInterruptPin();
+    // return the value of the pin from which the last interrupt came
+    int getLastInterruptValue();
 #endif
     // [36] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
     void setReportIntervalSeconds(int value);
@@ -836,7 +838,7 @@ The following sketch can be used to report back to the controller when a motion 
  * NodeManager modules
  */
 
-#define USE_INTERRUPT_BASED
+#define USE_INTERRUPT
 
 /***********************************
  * Load NodeManager Library

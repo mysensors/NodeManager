@@ -853,7 +853,7 @@ class SensorHTU21D: public SensorSHT21 {
 /*
  * SensorInterrupt
  */
-#ifdef USE_INTERRUPT_BASED
+#ifdef USE_INTERRUPT
 class SensorInterrupt: public Sensor {
   public:
     SensorInterrupt(NodeManager& node_manager, int pin, int child_id = -255);
@@ -1564,6 +1564,8 @@ class NodeManager {
     void setupInterrupts();
     // return the pin from which the last interrupt came
     int getLastInterruptPin();
+    // return the value of the pin from which the last interrupt came
+    int getLastInterruptValue();
 #endif
     // [36] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
     void setReportIntervalSeconds(int value);
@@ -1628,6 +1630,7 @@ class NodeManager {
     int _interrupt_1_initial = -1;
     int _interrupt_2_initial = -1;
     static int _last_interrupt_pin;
+    static int _last_interrupt_value;
     static long _interrupt_min_delta;
     static long _last_interrupt_1;
     static long _last_interrupt_2;

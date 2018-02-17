@@ -1489,7 +1489,7 @@ SensorHTU21D::SensorHTU21D(NodeManager& nodeManager, int child_id): SensorSHT21(
 }
 #endif 
 
-#ifdef USE_INTERRUPT_BASED
+#ifdef USE_INTERRUPT
 /*
  * SensorInterrupt
  */
@@ -1544,7 +1544,7 @@ void SensorInterrupt::onInterrupt() {
   // wait to ensure the the input is not floating
   if (_debounce > 0) _node->sleepOrWait(_debounce);
   // read the value of the pin
-  int value = digitalRead(_pin);
+  int value = _node->getLastInterruptValue();
   // process the value
   if ( (_mode == RISING && value == HIGH ) || (_mode == FALLING && value == LOW) || (_mode == CHANGE) )  {
     // invert the value if Active State is set to LOW
@@ -3823,6 +3823,7 @@ NodeManager::NodeManager(int sensorcount) {
 
 #if FEATURE_INTERRUPTS == ON
 int NodeManager::_last_interrupt_pin = -1;
+int NodeManager::_last_interrupt_value = LOW;
 long NodeManager::_last_interrupt_1 = millis();
 long NodeManager::_last_interrupt_2 = millis();
 long NodeManager::_interrupt_min_delta = 100;
@@ -4247,6 +4248,11 @@ void NodeManager::setupInterrupts() {
 int NodeManager::getLastInterruptPin() {
   return _last_interrupt_pin;
 }
+
+// return the value of the pin from which the last interrupt came
+int NodeManager::getLastInterruptValue() {
+  return _last_interrupt_value;
+}
 #endif
 
 // set the default interval in seconds all the sensors will report their measures
@@ -4313,9 +4319,12 @@ void NodeManager::_onInterrupt_1() {
   long now = millis();
   if ( (now - _last_interrupt_1 > _interrupt_min_delta) || (now < _last_interrupt_1) ) {
     _last_interrupt_pin = INTERRUPT_PIN_1;
+    _last_interrupt_value = digitalRead(INTERRUPT_PIN_1);
     #ifdef NODEMANAGER_DEBUG
       Serial.print(F("INT P="));
-      Serial.println(INTERRUPT_PIN_1);
+      Serial.print(INTERRUPT_PIN_1);
+      Serial.print(" V=");
+      Serial.println(_last_interrupt_value);
     #endif
     _last_interrupt_1 = now;
   }
@@ -4324,9 +4333,12 @@ void NodeManager::_onInterrupt_2() {
   long now = millis();
   if ( (now - _last_interrupt_2 > _interrupt_min_delta) || (now < _last_interrupt_2) ) {
     _last_interrupt_pin = INTERRUPT_PIN_2;
+    _last_interrupt_value = digitalRead(INTERRUPT_PIN_2);
     #ifdef NODEMANAGER_DEBUG
       Serial.print(F("INT P="));
-      Serial.println(INTERRUPT_PIN_2);
+      Serial.print(INTERRUPT_PIN_2);
+      Serial.print(" V=");
+      Serial.println(_last_interrupt_value);
     #endif
     _last_interrupt_2 = now;
   }
@@ -4465,11 +4477,14 @@ void NodeManager::_sleep() {
       interrupt_mode = _interrupt_2_mode;
     }
     _last_interrupt_pin = pin_number;
+    _last_interrupt_value = digitalRead(pin_number);
     #ifdef NODEMANAGER_DEBUG
       Serial.print(F("INT P="));
       Serial.print(pin_number);
       Serial.print(F(", M="));
-      Serial.println(interrupt_mode);
+      Serial.print(interrupt_mode);
+      Serial.print(F(", V="));
+      Serial.println(_last_interrupt_value);
     #endif
     // when waking up from an interrupt on the wakup pin, stop sleeping
     if (_sleep_interrupt_pin == pin_number) _status = AWAKE;
