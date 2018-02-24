@@ -3136,7 +3136,7 @@ Display::Display(NodeManager& node_manager, int child_id): Sensor(node_manager) 
 }
 // setter/getter
 void Display::setCaption(const char* value) {
-  ((ChildString*)children.get(1))->setValueString(value);
+  _caption = value;
 }
 
 // what to do during setup
@@ -3144,23 +3144,19 @@ void Display::onSetup() {
 }
 
 // display specific function. Subclassess have to implement
-void Display::printCaption(const char* value) {
-}
-void Display::print(const char* value) {
-}
-void Display::println(const char* value) {
-}
-void Display::printChild(Child* child) {
-}
-void Display::clear() {
-}
+void Display::printCaption(const char* value) {}
+void Display::print(const char* value) {}
+void Display::println(const char* value) {}
+void Display::printChild(Child* child) {}
+void Display::clear() {}
+void Display::setCursor(int col,int row) {}
 
 // what to do during loop
 void Display::onLoop(Child*child) {
   // clear the screen
   clear();  
   // print caption
-  printCaption(((ChildString*)child)->getValueString());
+  printCaption(_caption);
   // cycle through all the sensors and children
   for (List<Sensor*>::iterator itr = _node->sensors.begin(); itr != _node->sensors.end(); ++itr) {
     Sensor* sensor = *itr;
@@ -3178,11 +3174,18 @@ void Display::onLoop(Child*child) {
       printChild(ch);
       // print type
       if (ch->type == V_TEMP) {
-        print((char)223);
         if (_node->getIsMetric()) print("C");
         else print("F");
       }
       else if (ch->type == V_HUM || ch->type == V_PERCENTAGE) print("%");
+      else if (ch->type == V_PRESSURE) print("Pa");
+      else if (ch->type == V_WIND || ch->type == V_GUST) print("Km/h");
+      else if (ch->type == V_VOLTAGE) print("V");
+      else if (ch->type == V_CURRENT) print("A");
+      else if (ch->type == V_LEVEL && ch->presentation == S_SOUND) print("dB");
+      else if (ch->type == V_LIGHT_LEVEL && ch->presentation == S_LIGHT_LEVEL) print("%");
+      else if (ch->type == V_RAINRATE) print("%");
+      else if (ch->type == V_LEVEL && ch->presentation == S_MOISTURE) print("%");
       println(nullptr);
     }
   }
@@ -3190,15 +3193,18 @@ void Display::onLoop(Child*child) {
 
 // what to do as the main task when receiving a message
 void Display::onReceive(MyMessage* message) {
-  Serial.println("->");
-
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
   if (message->getCommand() == C_SET && message->type == child->type) {
-    Serial.println("-->");
-    Serial.println(message->getString());
-    clear();
-    print(message->getString());
+    int text_start = 0;
+    // if the string contains a "," at the second position, it means the first char is the row number
+    if (strncmp(message->getString()+1,",",1) == 0) {
+      setCursor(0,atoi(message->getString()));
+      // text starts at position 2
+      text_start = 2;
+    }
+    // print the received text
+    print(message->getString()+text_start);
   }
 }
 #endif
@@ -3289,6 +3295,10 @@ void DisplaySSD1306::clear() {
   _oled->clear();
 }
 
+void DisplaySSD1306::setCursor(int col,int row) {
+  _oled->setCursor(col,row);
+}
+
 // what to do during setup
 void DisplaySSD1306::onSetup() {
   _oled = new SSD1306AsciiAvrI2c();
@@ -3297,70 +3307,6 @@ void DisplaySSD1306::onSetup() {
   if (_contrast > -1) _oled->setContrast(_contrast);
   clear();
 }
-
-/*
-// what to do during loop
-void DisplaySSD1306::onLoop(Child*child) {
-  if (child) {
-    _display(((ChildString*)child)->getValueString());
-  } else {
-    _display();
-  }
-  #ifdef NODEMANAGER_DEBUG
-    Serial.print(_name);
-    Serial.println(F(" UPD"));
-  #endif
-}
-*/
-
-void DisplaySSD1306::updateDisplay() {
-  _display(((ChildString*)children.get(1))->getValueString());
-}
-
-void DisplaySSD1306::_display(const char*displaystr) {
-  _oled->setCursor(0, 0);
-  if (displaystr) {
-    if (_caption_fontsize >= 2 )
-      _oled->set2X();
-    else
-      _oled->set1X();
-    _oled->print(displaystr);
-    _oled->clearToEOL();
-    _oled->println();
-  }
-
-  if (_fontsize >= 2 )
-    _oled->set2X();
-  else
-    _oled->set1X();
-
-  for (List<Sensor*>::iterator itr = _node->sensors.begin(); itr != _node->sensors.end(); ++itr) {
-    Sensor* sensor = *itr;
-    // Display sensor name
-    _oled->print(sensor->getName());
-//    _oled->clearToEOL();
-//    _oled->println();
-
-    // Loop through all children and show name, value (and type)
-    for (List<Child*>::iterator chitr = sensor->children.begin(); chitr != sensor->children.end(); ++chitr) {
-      Child* ch = *chitr;
-      if (strlen(ch->description) > 0) {
-        _oled->print(F(" "));
-        _oled->print(ch->description);
-      }
-      _oled->print(F(": "));
-      ch->printOn(*_oled);
-      _oled->clearToEOL();
-      _oled->println();
-    }
-  }
-  // The current row starts with index 0, so we need to offset by one
-  if (_oled->row() + 1 < _oled->displayRows()) {
-    _oled->clear(0, _oled->displayWidth() - 1, _oled->row() + 1, _oled->displayRows());
-  }
-}
-
-
 #endif
 
 /*

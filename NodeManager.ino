@@ -285,7 +285,7 @@ NodeManager node;
  */
 
 // built-in sensors
-//SensorBattery battery(node);
+SensorBattery battery(node);
 //SensorConfiguration configuration(node);
 //SensorSignal signal(node);
 //PowerManager power(5,6);
@@ -344,6 +344,8 @@ DisplaySSD1306 ssd1306(node);
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
+  ssd1306.setCaption("Display");
+node.setReportIntervalSeconds(10);
 
   /*
   * Configure your sensors below

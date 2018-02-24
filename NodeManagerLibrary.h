@@ -1417,11 +1417,14 @@ class Display: public Sensor {
     virtual void printChild(Child* child);
     // clear the display
     virtual void clear();
+    // set the cursor to the given position
+    virtual void setCursor(int col,int row);
     // define what to do at each stage of the sketch
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
   protected:
+  const char* _caption = "";
 };
 #endif
 
@@ -1448,17 +1451,16 @@ class DisplaySSD1306: public Display {
     void setCaptionFontSize(int fontsize);
     // [107] Invert display (black text on color background; use invert=false to revert)
     void invertDisplay(bool invert = true);
-    // display specific functions, subclasses have to implement
-    virtual void printCaption(const char* value);
-    virtual void print(const char* value);
-    virtual void println(const char* value);
-    virtual void printChild(Child* child);
-    virtual void clear();
+    // display specific functions
+    void printCaption(const char* value);
+    void print(const char* value);
+    void println(const char* value);
+    void printChild(Child* child);
+    void clear();
+    void setCursor(int col,int row);
     // define what to do at each stage of the sketch
     void onSetup();
-    void updateDisplay();
   protected:
-    virtual void _display(const char*displaystr = 0);
     SSD1306AsciiAvrI2c *_oled;
     const DevType* _dev = &Adafruit128x64;
     uint8_t _i2caddress = 0x3c;
