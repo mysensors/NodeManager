@@ -227,7 +227,7 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
  */
 
 //#define USE_ANALOG_INPUT
-#define USE_THERMISTOR
+//#define USE_THERMISTOR
 //#define USE_ML8511
 //#define USE_ACS712
 //#define USE_DIGITAL_INPUT
@@ -257,7 +257,7 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
 //#define USE_SHT31
 //#define USE_SI7021
 //#define USE_CHIRP
-#define USE_HD44780
+//#define USE_HD44780
 
 /***********************************
  * NodeManager advanced settings
@@ -287,7 +287,7 @@ NodeManager node;
  */
 
 // built-in sensors
-SensorBattery battery(node);
+//SensorBattery battery(node);
 //SensorConfiguration configuration(node);
 //SensorSignal signal(node);
 //PowerManager power(5,6);
@@ -297,7 +297,7 @@ SensorBattery battery(node);
 //SensorLDR ldr(node,A0);
 //SensorRain rain(node,A0);
 //SensorSoilMoisture soil(node,A0);
-SensorThermistor thermistor(node,A0);
+//SensorThermistor thermistor(node,A0);
 //SensorML8511 ml8511(node,A0);
 //SensorACS712 acs712(node,A0);
 //SensorDigitalInput digitalIn(node,6);
@@ -335,10 +335,7 @@ SensorThermistor thermistor(node,A0);
 //SensorSHT31 sht31(node);
 //SensorSI7021 si7021(node);
 //SensorChirp chirp(node);
-DisplayHD44780 hd44780(node);
-
-// Other devices
-
+//DisplayHD44780 hd44780(node);
 
 /***********************************
  * Main Sketch
@@ -348,9 +345,8 @@ DisplayHD44780 hd44780(node);
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
-  hd44780.setI2CAddress(0x3f);
 
-//node.setReportIntervalSeconds(10);
+
 
   /*
   * Configure your sensors below

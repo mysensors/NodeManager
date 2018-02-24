@@ -1409,8 +1409,8 @@ class SensorVL53L0X: public Sensor {
 class Display: public Sensor {
   public:
     Display(NodeManager& node_manager, int child_id = -255);
+    // set a static caption text on header of the display
     void setCaption(const char* value);
-    // display specific functions, subclasses have to implement
     // print a static caption on top of the screen
     virtual void printCaption(const char* value);
     // print the given string

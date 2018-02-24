@@ -3773,8 +3773,8 @@ void SensorConfiguration::onReceive(MyMessage* message) {
             case 201: custom_sensor_2->setPulseWidth(request.getValueInt()); break;
             case 202: custom_sensor_2->setPinOff(request.getValueInt()); break;
             case 203: custom_sensor_2->setPinOn(request.getValueInt()); break;
-          default: return;
-        }
+            default: return;
+          }
         }
       }
       #endif
