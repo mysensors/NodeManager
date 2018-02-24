@@ -615,15 +615,15 @@ void Sensor::loop(MyMessage* message) {
       // wait between samples
       if (_samples_interval > 0) _node->sleepOrWait(_samples_interval);
     }
+#if FEATURE_CONDITIONAL_REPORT == ON
     // process the result and send a response back if 1) is not a loop 2) not tracking last value 3) tracking last value and there is a new value 4) tracking last value and timer is over
     if (
-      message != nullptr 
-#if FEATURE_CONDITIONAL_REPORT == ON
+      message != nullptr
       || ! _track_last_value || 
       _track_last_value && child->isNewValue() || 
       _track_last_value && child->force_update_timer->isRunning() && child->force_update_timer->isOver()
-#endif
       ) 
+#endif
         child->sendValue();
   }
   // turn the sensor off
@@ -643,9 +643,9 @@ void Sensor::interrupt() {
 #endif
 
 // receive a message from the radio network
-void Sensor::receive(MyMessage &message) {
+void Sensor::receive(MyMessage* message) {
   // a request would make the sensor executing its main task passing along the message
-  loop(&message);
+  loop(message);
 }
 
 // return the requested child 
@@ -3124,15 +3124,93 @@ int SensorVL53L0X::_getDistance() {
 #endif
 
 /*
+ * Display
+ */
+#if defined(USE_SSD1306)
+// constructor
+Display::Display(NodeManager& node_manager, int child_id): Sensor(node_manager) {
+  _name = "";
+  // We don't need any sensors, but we need a child, otherwise the loop will never be executed
+  children.allocateBlocks(1);
+  new ChildString(this, _node->getAvailableChildId(child_id), S_INFO, V_TEXT,_name);
+}
+// setter/getter
+void Display::setCaption(const char* value) {
+  ((ChildString*)children.get(1))->setValueString(value);
+}
+
+// what to do during setup
+void Display::onSetup() {
+}
+
+// display specific function. Subclassess have to implement
+void Display::printCaption(const char* value) {
+}
+void Display::print(const char* value) {
+}
+void Display::println(const char* value) {
+}
+void Display::printChild(Child* child) {
+}
+void Display::clear() {
+}
+
+// what to do during loop
+void Display::onLoop(Child*child) {
+  // clear the screen
+  clear();  
+  // print caption
+  printCaption(((ChildString*)child)->getValueString());
+  // cycle through all the sensors and children
+  for (List<Sensor*>::iterator itr = _node->sensors.begin(); itr != _node->sensors.end(); ++itr) {
+    Sensor* sensor = *itr;
+    // skip this display sensor
+    if (sensor == this) continue;
+    // Loop through all children and show name, value (and type)
+    for (List<Child*>::iterator chitr = sensor->children.begin(); chitr != sensor->children.end(); ++chitr) {
+      Child* ch = *chitr;
+      // print description if any
+      if (strlen(ch->description) > 0) {
+        print(ch->description);
+        print(": ");
+      }
+      // print value
+      printChild(ch);
+      // print type
+      if (ch->type == V_TEMP) {
+        print((char)223);
+        if (_node->getIsMetric()) print("C");
+        else print("F");
+      }
+      else if (ch->type == V_HUM || ch->type == V_PERCENTAGE) print("%");
+      println(nullptr);
+    }
+  }
+}
+
+// what to do as the main task when receiving a message
+void Display::onReceive(MyMessage* message) {
+  Serial.println("->");
+
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_SET && message->type == child->type) {
+    Serial.println("-->");
+    Serial.println(message->getString());
+    clear();
+    print(message->getString());
+  }
+}
+#endif
+
+/*
  * DisplaySSD1306 OLED displays (I²C)
  */
 #ifdef USE_SSD1306
 // constructor
-DisplaySSD1306::DisplaySSD1306(NodeManager& node_manager, int child_id): Sensor(node_manager) {
+DisplaySSD1306::DisplaySSD1306(NodeManager& node_manager, int child_id): Display(node_manager, child_id) {
   _name = "SSD1306";
-  // We don't need any sensors, but we need a child, otherwise the loop will never be executed
-  children.allocateBlocks(1);
-  new Child(this, _node->getAvailableChildId(child_id), S_INFO, V_TEXT,_name);
+  children.get(1)->description = _name;
 }
 
 // setter/getter
@@ -3143,16 +3221,12 @@ void DisplaySSD1306::setI2CAddress(uint8_t i2caddress) {
   _i2caddress = i2caddress;
 }
 // [101] set text font (default: Adafruit5x7)
-void DisplaySSD1306::setFont(const uint8_t* font) {
-  _oled->setFont(font);
+void DisplaySSD1306::setFont(const uint8_t* value) {
+  _font = value;
 }
 // [102] set the contrast of the display
 void DisplaySSD1306::setContrast(uint8_t value) {
-  _oled->setContrast(value);
-}
-// [103] set the displayed text
-void DisplaySSD1306::setText(const char* value) {
-  ((ChildString*)children.get(1))->setValueString(value);
+  _contrast = value;
 }
 // [104] Rotate the display 180 degree
 void DisplaySSD1306::rotateDisplay(bool rotate) {
@@ -3169,7 +3243,7 @@ void DisplaySSD1306::setFontSize(int fontsize) {
   _fontsize = (fontsize>=2) ? 2 : 1;
 }
 // [106] Text caption font size (possible are 1 and 2; default is 2)
-void DisplaySSD1306::setHeaderFontSize(int fontsize) {
+void DisplaySSD1306::setCaptionFontSize(int fontsize) {
   _caption_fontsize = (fontsize>=2) ? 2 : 1;
 }
 // [107] Invert display (black text on color background)
@@ -3181,13 +3255,50 @@ void DisplaySSD1306::invertDisplay(bool invert) {
   }
 }
 
+// display specific function
+void DisplaySSD1306::printCaption(const char* value) {
+  // set caption font size
+  if (_caption_fontsize >= 2) _oled->set2X();
+  // print caption
+  print(value);
+  _oled->println();
+  // if using a small font add an empty line
+  if (_caption_fontsize == 1) _oled->println();
+  // restore small font
+  _oled->set1X();
+}
+
+void DisplaySSD1306::print(const char* value) {
+  // set the font size
+  if (_fontsize >= 2 && _oled->magFactor() != 2) _oled->set2X();
+  // print the string
+  _oled->print(value);
+  _oled->clearToEOL();
+}
+
+void DisplaySSD1306::println(const char* value) {
+  if (value != nullptr) print(value);
+  _oled->println();
+}
+
+void DisplaySSD1306::printChild(Child* child) {
+  child->printOn(*_oled);
+}
+
+void DisplaySSD1306::clear() {
+  _oled->clear();
+}
+
 // what to do during setup
 void DisplaySSD1306::onSetup() {
   _oled = new SSD1306AsciiAvrI2c();
   _oled->begin(_dev, _i2caddress);
-  _oled->setFont(Adafruit5x7);
+  _oled->setFont(_font);
+  if (_contrast > -1) _oled->setContrast(_contrast);
+  clear();
 }
 
+/*
 // what to do during loop
 void DisplaySSD1306::onLoop(Child*child) {
   if (child) {
@@ -3200,6 +3311,7 @@ void DisplaySSD1306::onLoop(Child*child) {
     Serial.println(F(" UPD"));
   #endif
 }
+*/
 
 void DisplaySSD1306::updateDisplay() {
   _display(((ChildString*)children.get(1))->getValueString());
@@ -3248,12 +3360,7 @@ void DisplaySSD1306::_display(const char*displaystr) {
   }
 }
 
-// what to do as the main task when receiving a message
-void DisplaySSD1306::onReceive(MyMessage* message) {
-  Child* child = getChild(message->sensor);
-  if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
-}
+
 #endif
 
 /*
@@ -3794,10 +3901,9 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         DisplaySSD1306* display_SSD1306 = (DisplaySSD1306*)sensor;
         switch(function) {
           case 102: display_SSD1306->setContrast((uint8_t)request.getValueInt()); break;
-          //case 103: display_SSD1306->setText(request.getValueString()); break;
           case 104: display_SSD1306->rotateDisplay((bool)request.getValueInt()); break;
           case 105: display_SSD1306->setFontSize(request.getValueInt()); break;
-          case 106: display_SSD1306->setHeaderFontSize(request.getValueInt()); break;
+          case 106: display_SSD1306->setCaptionFontSize(request.getValueInt()); break;
           case 107: display_SSD1306->invertDisplay((bool)request.getValueInt()); break;
           default: return;
         }
@@ -4094,7 +4200,7 @@ void NodeManager::loop() {
 }
 
 // dispacth inbound messages
-void NodeManager::receive(MyMessage &message) {
+void NodeManager::receive(const MyMessage &message) {
   #ifdef NODEMANAGER_DEBUG
     Serial.print(F("RECV S="));
     Serial.print(message.sender);
@@ -4115,7 +4221,7 @@ void NodeManager::receive(MyMessage &message) {
       powerOn();
     #endif
     // call the sensor's receive()
-    sensor->receive(message);
+    sensor->receive(&message);
     // turn off the pin powering all the sensors
     #if FEATURE_POWER_MANAGER == ON
       powerOff();

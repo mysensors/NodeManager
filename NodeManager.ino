@@ -106,7 +106,7 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
 #define SKETCH_NAME "NodeManager"
 #define SKETCH_VERSION "1.0"
 //#define MY_DEBUG
-//#define MY_NODE_ID 99
+#define MY_NODE_ID 99
 
 // NRF24 radio settings
 #define MY_RADIO_NRF24
@@ -225,8 +225,8 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
  * NodeManager modules
  */
 
-#define USE_ANALOG_INPUT
-//#define USE_THERMISTOR
+//#define USE_ANALOG_INPUT
+#define USE_THERMISTOR
 //#define USE_ML8511
 //#define USE_ACS712
 //#define USE_DIGITAL_INPUT
@@ -291,11 +291,11 @@ NodeManager node;
 //PowerManager power(5,6);
 
 // Attached sensors
-SensorAnalogInput analog(node,A0);
+//SensorAnalogInput analog(node,A0);
 //SensorLDR ldr(node,A0);
 //SensorRain rain(node,A0);
 //SensorSoilMoisture soil(node,A0);
-//SensorThermistor thermistor(node,A0);
+SensorThermistor thermistor(node,A0);
 //SensorML8511 ml8511(node,A0);
 //SensorACS712 acs712(node,A0);
 //SensorDigitalInput digitalIn(node,6);
@@ -328,7 +328,7 @@ SensorAnalogInput analog(node,A0);
 //SensorPowerMeter powerMeter(node,3);
 //SensorWaterMeter waterMeter(node,3);
 //SensorPlantowerPMS pms(node,6,7);
-//SensorVL53L0X vl53l0x(node, /*XSHUT_PIN=*/2);
+//SensorVL53L0X vl53l0x(node,3);
 //SensorSHT31 sht31(node);
 //SensorSI7021 si7021(node);
 //SensorChirp chirp(node);
@@ -349,7 +349,7 @@ void before() {
   * Configure your sensors below
   */
   // report measures of every attached sensors every 10 seconds
-  node.setReportIntervalSeconds(10);
+  //node.setReportIntervalSeconds(10);
   // report measures of every attached sensors every 10 minutes
   //node.setReportIntervalMinutes(10);
   // set the node to sleep in 5 minutes cycles
@@ -390,7 +390,7 @@ void loop() {
 }
 
 // receive
-void receive(MyMessage &message) {
+void receive(const MyMessage &message) {
   // call NodeManager receive routine
   node.receive(message);
 }
