@@ -168,6 +168,10 @@
   #include <Wire.h>
   #include <I2CSoilMoistureSensor.h>
 #endif
+#ifdef USE_HD44780
+  #include <Wire.h> 
+  #include <LiquidCrystal_I2C.h>
+#endif
 
 // include third party libraries for enabled features
 #ifdef MY_GATEWAY_SERIAL
@@ -507,7 +511,7 @@ class Sensor {
     void presentation();
     void setup();
     void loop(MyMessage* message);
-    void receive(MyMessage &message);
+    void receive(MyMessage* message);
     // abstract functions, subclasses need to implement
     virtual void onBefore();
     virtual void onSetup();
@@ -1399,10 +1403,40 @@ class SensorVL53L0X: public Sensor {
 #endif
 
 /*
+ * Display class
+ */
+#if defined(USE_SSD1306) || defined(USE_HD44780)
+class Display: public Sensor {
+  public:
+    Display(NodeManager& node_manager, int child_id = -255);
+    // set a static caption text on header of the display
+    void setCaption(const char* value);
+    // print a static caption on top of the screen
+    virtual void printCaption(const char* value);
+    // print the given string
+    virtual void print(const char* value);
+    // print the given string and goes to the next line
+    virtual void println(const char* value);
+    // print the value of the given child
+    virtual void printChild(Child* child);
+    // clear the display
+    virtual void clear();
+    // set the cursor to the given position
+    virtual void setCursor(int col,int row);
+    // define what to do at each stage of the sketch
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(MyMessage* message);
+  protected:
+  const char* _caption = "";
+};
+#endif
+
+/*
  * SSD1306 OLED display
  */
 #ifdef USE_SSD1306
-class DisplaySSD1306: public Sensor {
+class DisplaySSD1306: public Display {
   public:
     DisplaySSD1306(NodeManager& node_manager, int child_id = -255);
     // set device
@@ -1413,28 +1447,58 @@ class DisplaySSD1306: public Sensor {
     void setFont(const uint8_t* font);
     // [102] set the contrast of the display (0-255)
     void setContrast(uint8_t value);
-    // [103] set the displayed text
-    void setText(const char* value);
     // [104] Rotate the display 180 degree (use rotate=false to revert)
     void rotateDisplay(bool rotate = true);
     // [105] Text font size (possible are 1 and 2; default is 1)
     void setFontSize(int fontsize);
     // [106] Text caption font size (possible are 1 and 2; default is 2)
-    void setHeaderFontSize(int fontsize);
+    void setCaptionFontSize(int fontsize);
     // [107] Invert display (black text on color background; use invert=false to revert)
     void invertDisplay(bool invert = true);
+    // display specific functions
+    void printCaption(const char* value);
+    void print(const char* value);
+    void println(const char* value);
+    void printChild(Child* child);
+    void clear();
+    void setCursor(int col,int row);
     // define what to do at each stage of the sketch
     void onSetup();
-    void onLoop(Child* child);
-    void onReceive(MyMessage* message);
-    void updateDisplay();
   protected:
-    virtual void _display(const char*displaystr = 0);
     SSD1306AsciiAvrI2c *_oled;
     const DevType* _dev = &Adafruit128x64;
     uint8_t _i2caddress = 0x3c;
     int _fontsize = 1;
     int _caption_fontsize = 2;
+    uint8_t* _font = Adafruit5x7;
+    uint8_t _contrast = -1;
+};
+#endif
+
+/*
+ * Hitachi HD44780 display
+ */
+#ifdef USE_HD44780
+class DisplayHD44780: public Display {
+  public:
+    DisplayHD44780(NodeManager& node_manager, int child_id = -255);
+    // set i2c address (default: 0x38)
+    void setI2CAddress(uint8_t i2caddress);
+    // set the backlight (default: HIGH)
+    void setBacklight(uint8_t value);
+    // display specific functions
+    void printCaption(const char* value);
+    void print(const char* value);
+    void println(const char* value);
+    void printChild(Child* child);
+    void clear();
+    void setCursor(int col,int row);
+    // define what to do at each stage of the sketch
+    void onSetup();
+  protected:
+    LiquidCrystal_I2C* _lcd;
+    uint8_t _i2caddress = 0x38;
+    int _column = 0;
 };
 #endif
 
@@ -1621,7 +1685,7 @@ class NodeManager {
     void presentation();
     void setup();
     void loop();
-    void receive(MyMessage & msg);
+    void receive(const MyMessage & msg);
   private:
 #if FEATURE_POWER_MANAGER == ON
     PowerManager* _powerManager = nullptr;

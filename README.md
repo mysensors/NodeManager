@@ -80,6 +80,7 @@ DisplaySSD1306      | 1     | USE_SSD1306        | SSD1306 128x64 OLED display (
 SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperature/humidity based on the attached SHT31 sensor                      | https://github.com/adafruit/Adafruit_SHT31
 SensorSI7021        | 2     | USE_SI7021         | SI7021 sensor, return temperature/humidity based on the attached SI7021 sensor                    | https://github.com/sparkfun/SparkFun_Si701_Breakout_Arduino_Library
 SensorChirp         | 3     | USE_CHIRP          | Chirp soil moisture sensor (includes temperature and light sensors)                               |  https://github.com/Apollon77/I2CSoilMoistureSensor
+DisplayHD44780      | 1     | USE_HD44780        | Supports most Hitachi HD44780 based LCDs, by default displays values of all sensors and children  | https://github.com/cyberang3l/NewLiquidCrystal
 
 ### Advanced features
 
@@ -610,8 +611,6 @@ Each sensor class exposes additional methods.
     void setFont(const uint8_t* font);
     // [102] set the contrast of the display (0-255)
     void setContrast(uint8_t value);
-    // [103] set the displayed text
-    void setText(const char* value);
     // [104] Rotate the display 180 degree (use rotate=false to revert)
     void rotateDisplay(bool rotate = true);
     // [105] Text font size (possible are 1 and 2; default is 1)
