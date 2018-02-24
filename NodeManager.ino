@@ -79,7 +79,8 @@ SensorVL53L0X       | 1     | USE_VL53L0X        | VL53L0X laser time-of-flight 
 DisplaySSD1306      | 1     | USE_SSD1306        | SSD1306 128x64 OLED display (I²C); By default displays values of all sensors and children         | https://github.com/greiman/SSD1306Ascii.git
 SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperature/humidity based on the attached SHT31 sensor                      | https://github.com/adafruit/Adafruit_SHT31
 SensorSI7021        | 2     | USE_SI7021         | SI7021 sensor, return temperature/humidity based on the attached SI7021 sensor                    | https://github.com/sparkfun/SparkFun_Si701_Breakout_Arduino_Library
-SensorChirp         | 3     | USE_CHIRP          | Chirp soil moisture sensor (includes temperature and light sensors)                               |  https://github.com/Apollon77/I2CSoilMoistureSensor
+SensorChirp         | 3     | USE_CHIRP          | Chirp soil moisture sensor (includes temperature and light sensors)                               | https://github.com/Apollon77/I2CSoilMoistureSensor
+DisplayHD44780      | 1     | USE_HD44780        | Supports most Hitachi HD44780 based LCDs, by default displays values of all sensors and children  | https://github.com/cyberang3l/NewLiquidCrystal
 
 NodeManager provides useful built-in features which can be disabled if you need to save some storage for your code. 
 To enable/disable a buil-in feature:
@@ -106,7 +107,7 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
 #define SKETCH_NAME "NodeManager"
 #define SKETCH_VERSION "1.0"
 //#define MY_DEBUG
-#define MY_NODE_ID 99
+//#define MY_NODE_ID 99
 
 // NRF24 radio settings
 #define MY_RADIO_NRF24
@@ -252,10 +253,11 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
 //#define USE_PULSE_METER
 //#define USE_PMS
 //#define USE_VL53L0X
-#define USE_SSD1306
+//#define USE_SSD1306
 //#define USE_SHT31
 //#define USE_SI7021
 //#define USE_CHIRP
+#define USE_HD44780
 
 /***********************************
  * NodeManager advanced settings
@@ -329,12 +331,14 @@ SensorThermistor thermistor(node,A0);
 //SensorWaterMeter waterMeter(node,3);
 //SensorPlantowerPMS pms(node,6,7);
 //SensorVL53L0X vl53l0x(node,3);
+//DisplaySSD1306 ssd1306(node);
 //SensorSHT31 sht31(node);
 //SensorSI7021 si7021(node);
 //SensorChirp chirp(node);
+DisplayHD44780 hd44780(node);
 
 // Other devices
-DisplaySSD1306 ssd1306(node);
+
 
 /***********************************
  * Main Sketch
@@ -344,8 +348,9 @@ DisplaySSD1306 ssd1306(node);
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
-  ssd1306.setCaption("Display");
-node.setReportIntervalSeconds(10);
+  hd44780.setI2CAddress(0x3f);
+
+//node.setReportIntervalSeconds(10);
 
   /*
   * Configure your sensors below

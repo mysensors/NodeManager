@@ -3126,7 +3126,7 @@ int SensorVL53L0X::_getDistance() {
 /*
  * Display
  */
-#if defined(USE_SSD1306)
+#if defined(USE_SSD1306) || defined(USE_HD44780)
 // constructor
 Display::Display(NodeManager& node_manager, int child_id): Sensor(node_manager) {
   _name = "";
@@ -3305,6 +3305,62 @@ void DisplaySSD1306::onSetup() {
   _oled->begin(_dev, _i2caddress);
   _oled->setFont(_font);
   if (_contrast > -1) _oled->setContrast(_contrast);
+  clear();
+}
+#endif
+
+/*
+ * Hitachi HD44780 display
+ */
+#ifdef USE_HD44780
+// constructor
+DisplayHD44780::DisplayHD44780(NodeManager& node_manager, int child_id): Display(node_manager, child_id) {
+  _name = "HD44780";
+  children.get(1)->description = _name;
+}
+
+// setter/getter
+void DisplayHD44780::setI2CAddress(uint8_t i2caddress) {
+  _i2caddress = i2caddress;
+}
+void DisplayHD44780::setBacklight(uint8_t value) {
+  _lcd->setBacklight(value);
+}
+
+// display specific function
+void DisplayHD44780::printCaption(const char* value) {
+  if (strlen(value) > 0) println(value);
+}
+
+void DisplayHD44780::print(const char* value) {
+  // print the string
+  _lcd->print(value);
+}
+
+void DisplayHD44780::println(const char* value) {
+  if (value != nullptr) print(value);
+  _column = _column + 1;
+  setCursor(0,_column);
+}
+
+void DisplayHD44780::printChild(Child* child) {
+  child->printOn(*_lcd);
+}
+
+void DisplayHD44780::clear() {
+  _column = 0;
+  _lcd->clear();
+}
+
+void DisplayHD44780::setCursor(int col,int row) {
+  _lcd->setCursor(col,row);
+}
+
+// what to do during setup
+void DisplayHD44780::onSetup() {
+  _lcd = new LiquidCrystal_I2C(_i2caddress, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);
+  _lcd->begin(16,2);
+  _lcd->home();
   clear();
 }
 #endif

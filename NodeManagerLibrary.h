@@ -168,6 +168,10 @@
   #include <Wire.h>
   #include <I2CSoilMoistureSensor.h>
 #endif
+#ifdef USE_HD44780
+  #include <Wire.h> 
+  #include <LiquidCrystal_I2C.h>
+#endif
 
 // include third party libraries for enabled features
 #ifdef MY_GATEWAY_SERIAL
@@ -1401,7 +1405,7 @@ class SensorVL53L0X: public Sensor {
 /*
  * Display class
  */
-#if defined(USE_SSD1306)
+#if defined(USE_SSD1306) || defined(USE_HD44780)
 class Display: public Sensor {
   public:
     Display(NodeManager& node_manager, int child_id = -255);
@@ -1468,6 +1472,33 @@ class DisplaySSD1306: public Display {
     int _caption_fontsize = 2;
     uint8_t* _font = Adafruit5x7;
     uint8_t _contrast = -1;
+};
+#endif
+
+/*
+ * Hitachi HD44780 display
+ */
+#ifdef USE_HD44780
+class DisplayHD44780: public Display {
+  public:
+    DisplayHD44780(NodeManager& node_manager, int child_id = -255);
+    // set i2c address (default: 0x38)
+    void setI2CAddress(uint8_t i2caddress);
+    // set the backlight (default: HIGH)
+    void setBacklight(uint8_t value);
+    // display specific functions
+    void printCaption(const char* value);
+    void print(const char* value);
+    void println(const char* value);
+    void printChild(Child* child);
+    void clear();
+    void setCursor(int col,int row);
+    // define what to do at each stage of the sketch
+    void onSetup();
+  protected:
+    LiquidCrystal_I2C* _lcd;
+    uint8_t _i2caddress = 0x38;
+    int _column = 0;
 };
 #endif
 
