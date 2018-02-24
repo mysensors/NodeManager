@@ -225,7 +225,7 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
  * NodeManager modules
  */
 
-//#define USE_ANALOG_INPUT
+#define USE_ANALOG_INPUT
 //#define USE_THERMISTOR
 //#define USE_ML8511
 //#define USE_ACS712
@@ -252,7 +252,7 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
 //#define USE_PULSE_METER
 //#define USE_PMS
 //#define USE_VL53L0X
-//#define USE_SSD1306
+#define USE_SSD1306
 //#define USE_SHT31
 //#define USE_SI7021
 //#define USE_CHIRP
@@ -291,7 +291,7 @@ NodeManager node;
 //PowerManager power(5,6);
 
 // Attached sensors
-//SensorAnalogInput analog(node,A0);
+SensorAnalogInput analog(node,A0);
 //SensorLDR ldr(node,A0);
 //SensorRain rain(node,A0);
 //SensorSoilMoisture soil(node,A0);
@@ -334,7 +334,7 @@ NodeManager node;
 //SensorChirp chirp(node);
 
 // Other devices
-//DisplaySSD1306 ssd1306(node);
+DisplaySSD1306 ssd1306(node);
 
 /***********************************
  * Main Sketch
@@ -349,7 +349,7 @@ void before() {
   * Configure your sensors below
   */
   // report measures of every attached sensors every 10 seconds
-  //node.setReportIntervalSeconds(10);
+  node.setReportIntervalSeconds(10);
   // report measures of every attached sensors every 10 minutes
   //node.setReportIntervalMinutes(10);
   // set the node to sleep in 5 minutes cycles
