@@ -3814,6 +3814,62 @@ void SensorAPDS9960::onInterrupt() {
 #endif
 
 /*
+ * SensorNeopixel
+ */
+#ifdef USE_NEOPIXEL
+// constructor
+SensorNeopixel::SensorNeopixel(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
+  _name = "NEOPIXEL";
+  children.allocateBlocks(1);
+  new ChildInt(this, _node->getAvailableChildId(child_id), S_COLOR_SENSOR, V_RGB ,_name);
+}
+
+// setter/getter
+void SensorNeopixel::setNumPixels(int value) {
+  _num_pixels = value;
+}
+
+// what to do during setup
+void SensorNeopixel::onSetup() {
+  _pixels = new Adafruit_NeoPixel(_num_pixels, _pin, NEO_GRB + NEO_KHZ800);
+  _pixels->begin();
+}
+
+// what to do during loop
+void SensorNeopixel::onLoop(Child *child) {
+}
+
+// what to do as the main task when receiving a message
+void SensorNeopixel::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) {
+    setColor(message->getString());
+  }
+}
+
+void SensorNeopixel::setColor(char* string) {
+    Child* child = children.get(1);
+    // if the second char is not a comma, return
+    if (strncmp(string+1,",",1) != 0) return;
+    int pixel_num = atoi(string);
+    int color = atoi(string+2);
+    #ifdef NODEMANAGER_DEBUG
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
+      Serial.print(F(" N="));
+      Serial.print(pixel_num);
+      Serial.print(F(" C="));
+      Serial.println(color);
+    #endif
+    _pixels->setPixelColor(pixel_num,color);
+    _pixels->show();
+    ((ChildInt*)child)->setValueInt(color);
+}
+#endif
+
+/*
    SensorConfiguration
 */
 // contructor

@@ -84,6 +84,7 @@ DisplayHD44780      | 1     | USE_HD44780        | Supports most Hitachi HD44780
 SensorTTP           | 1     | USE_TTP            | TTP226/TTP229 Touch control sensor                                                                | -
 SensorServo         | 1     | USE_SERVO          | Control a generic Servo motor sensor                                                              | -
 SensorAPDS9960      | 1     | USE_APDS9960       | SparkFun RGB and Gesture Sensor                                                                   | https://github.com/sparkfun/APDS-9960_RGB_and_Gesture_Sensor
+SensorNeopixel      | 1     | USE_NEOPIXEL       | Control a Neopixel LED                                                                            | https://github.com/adafruit/Adafruit_NeoPixel
 
 ### Advanced features
 
@@ -670,6 +671,14 @@ Each sensor class exposes additional methods.
 ~~~c
     // set the servo to the given percentage
     void setPercentage(int value);
+~~~
+
+* SensorNeopixel
+~~~c
+    // set how many NeoPixels are attached
+    void setNumPixels(int value);
+    // format expeted is "<pixel_number>,<RGB color in a packed 32 bit format>"
+    void setColor(char* string);
 ~~~
 
 ### Remote API
