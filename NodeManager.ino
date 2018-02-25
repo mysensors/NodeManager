@@ -81,6 +81,7 @@ SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperat
 SensorSI7021        | 2     | USE_SI7021         | SI7021 sensor, return temperature/humidity based on the attached SI7021 sensor                    | https://github.com/sparkfun/SparkFun_Si701_Breakout_Arduino_Library
 SensorChirp         | 3     | USE_CHIRP          | Chirp soil moisture sensor (includes temperature and light sensors)                               | https://github.com/Apollon77/I2CSoilMoistureSensor
 DisplayHD44780      | 1     | USE_HD44780        | Supports most Hitachi HD44780 based LCDs, by default displays values of all sensors and children  | https://github.com/cyberang3l/NewLiquidCrystal
+SensorTTP           | 1     | USE_TTP            | TTP226/TTP229 Touch control sensor                                                                | -
 
 NodeManager provides useful built-in features which can be disabled if you need to save some storage for your code. 
 To enable/disable a buil-in feature:
@@ -259,6 +260,7 @@ FEATURE_SD                  | OFF     | allow for reading from and writing to SD
 //#define USE_SI7021
 //#define USE_CHIRP
 //#define USE_HD44780
+//#define USE_TTP
 
 /***********************************
  * NodeManager advanced settings
@@ -338,6 +340,7 @@ NodeManager node;
 //SensorSI7021 si7021(node);
 //SensorChirp chirp(node);
 //DisplayHD44780 hd44780(node);
+//SensorTTP ttp(node);
 
 /***********************************
  * Main Sketch
@@ -347,7 +350,6 @@ NodeManager node;
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
-
 
 
   /*

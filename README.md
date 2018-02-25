@@ -81,6 +81,7 @@ SensorSHT31         | 2     | USE_SHT31          | SHT31 sensor, return temperat
 SensorSI7021        | 2     | USE_SI7021         | SI7021 sensor, return temperature/humidity based on the attached SI7021 sensor                    | https://github.com/sparkfun/SparkFun_Si701_Breakout_Arduino_Library
 SensorChirp         | 3     | USE_CHIRP          | Chirp soil moisture sensor (includes temperature and light sensors)                               |  https://github.com/Apollon77/I2CSoilMoistureSensor
 DisplayHD44780      | 1     | USE_HD44780        | Supports most Hitachi HD44780 based LCDs, by default displays values of all sensors and children  | https://github.com/cyberang3l/NewLiquidCrystal
+SensorTTP           | 1     | USE_TTP            | TTP226/TTP229 Touch control sensor                                                                | -
 
 ### Advanced features
 
@@ -638,6 +639,29 @@ Each sensor class exposes additional methods.
     void setReturnMoistureNormalized(bool value);
     // [104] reverse the light value (default: true)
     void setReturnLightReversed(bool value); 
+~~~
+
+* DisplayHD44780
+~~~c
+    // set i2c address (default: 0x38)
+    void setI2CAddress(uint8_t i2caddress);
+    // set the backlight (default: HIGH)
+    void setBacklight(uint8_t value);
+~~~
+
+
+* SensorTTP
+~~~c
+    // set the passcode length. Passcode will be sent to the controller only after this number of digits have been pressed (default: 4)
+    void setPasscodeLength(int value);
+    // set the clock pin (default: 6)
+    void setClockPin(int value);
+    // set the SDO pin (default: 5)
+    void setSdoPin(int value);
+    // set the DV pin (default: 3)
+    void setDvPin(int value);
+    // set the RST pin (default: 4)
+    void setRstPin(int value);
 ~~~
 
 ### Remote API
