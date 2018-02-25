@@ -3712,6 +3712,62 @@ int SensorTTP::_fetchData() {
 /*
  * SensorServo
  */
+#ifdef USE_APDS9960
+// constructor
+SensorAPDS9960::SensorAPDS9960(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
+  _name = "APDS9960";
+  children.allocateBlocks(1);
+  new ChildString(this,_node->getAvailableChildId(child_id),S_INFO,V_TEXT,_name);
+}
+
+// what to do during setup
+void SensorAPDS9960::onSetup() {
+  _apds = new SparkFun_APDS9960();
+  pinMode(_pin, INPUT);
+  // set the interrupt
+  setInterrupt(_pin,FALLING,HIGH);
+  // report immediately
+  _report_timer->unset();
+  // initialize the library
+  _apds->init();
+  _apds->enableGestureSensor(true);
+}
+
+// what to do during loop
+void SensorAPDS9960::onLoop(Child *child) {
+}
+
+// what to do on interrupt
+void SensorAPDS9960::onInterrupt() {
+  char* gesture = "";
+  Child* child = children.get(1);
+  if ( _apds->isGestureAvailable() ) {
+    switch ( _apds->readGesture() ) {
+      case DIR_UP: gesture = "UP"; break;
+      case DIR_DOWN: gesture = "DOWN"; break;
+      case DIR_LEFT: gesture = "LEFT"; break;
+      case DIR_RIGHT: gesture = "RIGHT"; break;
+      case DIR_NEAR: gesture = "NEAR"; break;
+      case DIR_FAR: gesture = "FAR"; break;
+      default: gesture = "NONE"; break;
+    }
+    #ifdef NODEMANAGER_DEBUG
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
+      Serial.print(F(" G="));
+      Serial.println(gesture);
+    #endif
+    // store it in the child so it will be sent back 
+    ((ChildString*)child)->setValueString(gesture);
+  }
+}
+
+#endif
+
+/*
+ * SensorServo
+ */
 #ifdef USE_SERVO
 // constructor
 SensorServo::SensorServo(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {

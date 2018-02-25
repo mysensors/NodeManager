@@ -265,7 +265,7 @@ FEATURE_SD                  | OFF     | allow for reading from and writing to SD
 //#define USE_HD44780
 //#define USE_TTP
 //#define USE_SERVO
-#define USE_APDS9960
+//#define USE_APDS9960
 
 /***********************************
  * NodeManager advanced settings
@@ -348,7 +348,7 @@ NodeManager node;
 //DisplayHD44780 hd44780(node);
 //SensorTTP ttp(node);
 //SensorServo servo(node,6);
-SensorAPDS9960 apsd9960(node,3);
+//SensorAPDS9960 apsd9960(node,3);
 
 /***********************************
  * Main Sketch
