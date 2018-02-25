@@ -260,7 +260,7 @@ FEATURE_SD                  | OFF     | allow for reading from and writing to SD
 //#define USE_SI7021
 //#define USE_CHIRP
 //#define USE_HD44780
-#define USE_TTP
+//#define USE_TTP
 
 /***********************************
  * NodeManager advanced settings
@@ -340,7 +340,7 @@ NodeManager node;
 //SensorSI7021 si7021(node);
 //SensorChirp chirp(node);
 //DisplayHD44780 hd44780(node);
-SensorTTP ttp(node);
+//SensorTTP ttp(node);
 
 /***********************************
  * Main Sketch
@@ -350,7 +350,6 @@ SensorTTP ttp(node);
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
-node.setSleepMinutes(5);
 
 
   /*

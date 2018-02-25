@@ -1486,33 +1486,6 @@ class DisplaySSD1306: public Display {
 #endif
 
 /*
- * Hitachi HD44780 display
- */
-#ifdef USE_HD44780
-class DisplayHD44780: public Display {
-  public:
-    DisplayHD44780(NodeManager& node_manager, int child_id = -255);
-    // set i2c address (default: 0x38)
-    void setI2CAddress(uint8_t i2caddress);
-    // set the backlight (default: HIGH)
-    void setBacklight(uint8_t value);
-    // display specific functions
-    void printCaption(const char* value);
-    void print(const char* value);
-    void println(const char* value);
-    void printChild(Child* child);
-    void clear();
-    void setCursor(int col,int row);
-    // define what to do at each stage of the sketch
-    void onSetup();
-  protected:
-    LiquidCrystal_I2C* _lcd;
-    uint8_t _i2caddress = 0x38;
-    int _column = 0;
-};
-#endif
-
-/*
    SensorSHT31: temperature and humidity sensor
 */
 #ifdef USE_SHT31
@@ -1569,6 +1542,33 @@ class SensorChirp: public Sensor {
   int _chirp_moisturerange = 0;
   bool _chirp_moisturenormalized = false;  
   bool _chirp_lightreversed = true;
+};
+#endif
+
+/*
+ * Hitachi HD44780 display
+ */
+#ifdef USE_HD44780
+class DisplayHD44780: public Display {
+  public:
+    DisplayHD44780(NodeManager& node_manager, int child_id = -255);
+    // set i2c address (default: 0x38)
+    void setI2CAddress(uint8_t i2caddress);
+    // set the backlight (default: HIGH)
+    void setBacklight(uint8_t value);
+    // display specific functions
+    void printCaption(const char* value);
+    void print(const char* value);
+    void println(const char* value);
+    void printChild(Child* child);
+    void clear();
+    void setCursor(int col,int row);
+    // define what to do at each stage of the sketch
+    void onSetup();
+  protected:
+    LiquidCrystal_I2C* _lcd;
+    uint8_t _i2caddress = 0x38;
+    int _column = 0;
 };
 #endif
 
