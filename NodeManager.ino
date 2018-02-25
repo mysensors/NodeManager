@@ -83,6 +83,7 @@ SensorChirp         | 3     | USE_CHIRP          | Chirp soil moisture sensor (i
 DisplayHD44780      | 1     | USE_HD44780        | Supports most Hitachi HD44780 based LCDs, by default displays values of all sensors and children  | https://github.com/cyberang3l/NewLiquidCrystal
 SensorTTP           | 1     | USE_TTP            | TTP226/TTP229 Touch control sensor                                                                | -
 SensorServo         | 1     | USE_SERVO          | Control a generic Servo motor sensor                                                              | -
+SensorAPDS9960      | 1     | USE_APDS9960       | SparkFun RGB and Gesture Sensor                                                                   | https://github.com/sparkfun/APDS-9960_RGB_and_Gesture_Sensor
 
 NodeManager provides useful built-in features which can be disabled if you need to save some storage for your code. 
 To enable/disable a buil-in feature:
@@ -264,6 +265,7 @@ FEATURE_SD                  | OFF     | allow for reading from and writing to SD
 //#define USE_HD44780
 //#define USE_TTP
 //#define USE_SERVO
+//#define USE_APDS9960
 
 /***********************************
  * NodeManager advanced settings
@@ -346,6 +348,7 @@ NodeManager node;
 //DisplayHD44780 hd44780(node);
 //SensorTTP ttp(node);
 //SensorServo servo(node,6);
+//SensorAPDS9960 apsd9960(node,3);
 
 /***********************************
  * Main Sketch
