@@ -179,6 +179,9 @@
   #include <Wire.h>
   #include <SparkFun_APDS9960.h>
 #endif
+#ifdef USE_NEOPIXEL
+  #include <Adafruit_NeoPixel.h>
+#endif
 
 // include third party libraries for enabled features
 #ifdef MY_GATEWAY_SERIAL
@@ -1646,6 +1649,27 @@ class SensorAPDS9960: public Sensor {
     void onInterrupt();
   protected:
   SparkFun_APDS9960* _apds;
+};
+#endif
+
+/*
+ * Neopixel LED Sensor
+ */
+#ifdef USE_NEOPIXEL
+class SensorNeopixel: public Sensor {
+  public:
+    SensorNeopixel(NodeManager& node_manager, int pin, int child_id = -255);
+    // set how many NeoPixels are attached
+    void setNumPixels(int value);
+    // format expeted is "<pixel_number>,<RGB color in a packed 32 bit format>"
+    void setColor(char* string);
+    // define what to do at each stage of the sketch
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(MyMessage* message);
+  protected:
+  Adafruit_NeoPixel* _pixels;
+  int _num_pixels = 16;
 };
 #endif
 
