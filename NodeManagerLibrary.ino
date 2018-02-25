@@ -3717,7 +3717,7 @@ int SensorTTP::_fetchData() {
 SensorServo::SensorServo(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "SERVO";
   children.allocateBlocks(1);
-  new ChildInt(this, _node->getAvailableChildId(child_id), S_DISTANCE, V_DISTANCE,_name);
+  new ChildInt(this, _node->getAvailableChildId(child_id), S_DIMMER, V_PERCENTAGE ,_name);
 }
 
 // what to do during setup
@@ -3738,10 +3738,10 @@ void SensorServo::onReceive(MyMessage* message) {
 }
 
 // set the servo to the given value
-void SensorServo::set(int value) {
+void SensorServo::setPercentage(int value) {
    _value = value;
   // set the servo to the given value
-  _servo.write(_value);
+  _servo.write(map(_value,0,100,0,180));
   // set the value so to send it back
   Child* child = children.get(1);
   if (child == nullptr) return;

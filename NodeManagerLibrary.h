@@ -1618,7 +1618,7 @@ class SensorServo: public Sensor {
   public:
     SensorServo(NodeManager& node_manager, int pin, int child_id = -255);
     // set the servo to the given value
-    void set(int value);
+    void setPercentage(int value);
     // define what to do at each stage of the sketch
     void onSetup();
     void onLoop(Child* child);
