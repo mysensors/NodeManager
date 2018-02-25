@@ -3595,6 +3595,121 @@ void SensorChirp::onReceive(MyMessage* message) {
 }
 #endif
 
+/*
+   SensorTTP
+*/
+#ifdef USE_TTP
+// contructor
+SensorTTP::SensorTTP(NodeManager& node_manager, int child_id): Sensor(node_manager) {
+  _name = "TTP";
+  children.allocateBlocks(1);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_INFO,V_TEXT,_name);
+}
+// setter/getter
+void SensorTTP::setPasscodeLength(int value) {
+  _passcode_length = value;
+}
+void SensorTTP::setClockPin(int value) {
+  _clock_pin = value;
+}
+void SensorTTP::setSdoPin(int value) {
+  _sdo_pin = value;
+}
+void SensorTTP::setDvPin(int value) {
+  _dv_pin = value;
+}
+void SensorTTP::setRstPin(int value) {
+  _rst_pin = value;
+}
+
+// what to do during setup
+void SensorTTP::onSetup() {
+  // setup passcode array  
+  _passcode.allocateBlocks(_passcode_length);
+  // initialize pins
+  pinMode(_dv_pin, INPUT);
+  pinMode(_sdo_pin, INPUT);
+  pinMode(_rst_pin, OUTPUT); 
+  pinMode(_clock_pin, OUTPUT);
+  // set the interrupt on the DV pin
+  setInterrupt(_dv_pin,RISING,LOW);
+  // report immediately
+  _report_timer->unset();
+  digitalWrite(_rst_pin, LOW);
+}
+
+// what to do during loop
+void SensorTTP::onLoop(Child* child) {
+}
+
+// what to do when receiving an interrupt
+void SensorTTP::onInterrupt() {
+  Child* child = children.get(1);
+  // fetch the key pressed from the keypad
+  int value = _fetchData();
+  // invalid value, return
+  if (value == 0) return;
+  #ifdef NODEMANAGER_DEBUG
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
+    Serial.print(F(" D="));
+    Serial.println(value);
+  #endif
+  // add the value to the passcode array
+  _passcode.push(value);
+  Serial.println(_passcode.size());
+  // time to send the passcode back
+  if (_passcode.size() == _passcode_length) {
+    int passcode = 0;
+    // build up the passcode
+    for (int i = 1; i <= _passcode.size(); i++) {
+      passcode *= 10;
+      passcode += (int) _passcode.get(i);
+    }
+    #ifdef NODEMANAGER_DEBUG
+      Serial.print(_name);
+      Serial.print(F(" I="));
+      Serial.print(child->child_id);
+      Serial.print(F(" V="));
+      Serial.println(passcode);
+    #endif
+    // store it in the child so it will be sent back 
+    ((ChildInt*)child)->setValueInt(passcode);
+    // clear the passcode array
+    _passcode.clear();
+  }
+}
+
+// what to do as the main task when receiving a message
+void SensorTTP::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+}
+
+// fetch data from the keypad
+int SensorTTP::_fetchData() {
+  int Key = 0;
+  int Ziro = 0;
+  // Send 8 clock pulses and check each data bit as it arrives
+  for(int i = 1; i < 9; i++) {       
+    digitalWrite(_clock_pin,1);
+    delayMicroseconds(1000);
+    // If data bit, high, then that key was pressed.
+    if(digitalRead(_sdo_pin) == HIGH)  
+      Key=i; 
+    else 
+      Ziro++;
+    digitalWrite(_clock_pin,0);
+    // Don't use delay(1) as it will mess up interrupts
+    delayMicroseconds(1000);  
+  }
+  if(Key>0 && Ziro==7) return Key;
+  return 0;
+}
+#endif
+
 
 /*
    SensorConfiguration

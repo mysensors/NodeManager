@@ -229,6 +229,13 @@ public:
     if (position > _endPosition) position = _endPosition;
     return _internalArray[position];
   }
+  void clear() {
+    T* newArray = NULL;
+    if (_allocBlocks > 0) newArray = new T[_allocBlocks];
+    delete[] _internalArray;
+    _internalArray = newArray;
+    _endPosition = 0;
+  }
   inline iterator begin() { return _internalArray; }
   inline iterator end() { return _internalArray + _endPosition; }
   inline bool empty() { return (_endPosition == 0); }
@@ -1562,6 +1569,39 @@ class SensorChirp: public Sensor {
   int _chirp_moisturerange = 0;
   bool _chirp_moisturenormalized = false;  
   bool _chirp_lightreversed = true;
+};
+#endif
+
+/*
+   SensorTTP: TTP226/TTP229 Touch control sensor
+*/
+#ifdef USE_TTP
+class SensorTTP: public Sensor {
+  public:
+    SensorTTP(NodeManager& node_manager, int child_id = -255);
+    // set the passcode length. Passcode will be sent to the controller only after this number of digits have been pressed (default: 4)
+    void setPasscodeLength(int value);
+    // set the clock pin (default: 6)
+    void setClockPin(int value);
+    // set the SDO pin (default: 5)
+    void setSdoPin(int value);
+    // set the DV pin (default: 3)
+    void setDvPin(int value);
+    // set the RST pin (default: 4)
+    void setRstPin(int value);
+    // define what to do at each stage of the sketch
+    void onSetup();
+    void onLoop(Child* child);
+    void onInterrupt();
+    void onReceive(MyMessage* message);
+  protected:
+    int _clock_pin = 6;
+    int _sdo_pin = 5;
+    int _dv_pin = 3;
+    int _rst_pin = 4;
+    int _fetchData();
+    List<int> _passcode;
+    int _passcode_length = 4;
 };
 #endif
 
