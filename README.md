@@ -99,6 +99,7 @@ FEATURE_INTERRUPTS          | ON      | allow managing interrupt-based sensors l
 FEATURE_CONDITIONAL_REPORT  | OFF     | allow reporting a measure only when different from the previous or above/below a given threshold | - 
 FEATURE_EEPROM              | OFF     | allow keeping track of some information in the EEPROM                                            | - 
 FEATURE_SLEEP               | ON      | allow managing automatically the complexity behind battery-powered sleeping sensors              | - 
+FEATURE_RECEIVE             | ON      | allow the node to receive messages; can be used by the remote API or for triggering the sensors  | - 
 FEATURE_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
 FEATURE_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device (requires FEATURE_TIME)| https://github.com/JChristensen/DS3232RTC
 FEATURE_SD                  | OFF     | allow for reading from and writing to SD cards                                                   | -
