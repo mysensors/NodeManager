@@ -275,7 +275,7 @@ FEATURE_SD                  | OFF     | allow for reading from and writing to SD
 #define FEATURE_SLEEP ON
 #define FEATURE_TIME OFF
 #define FEATURE_RTC OFF
-#define FEATURE_SD ON
+#define FEATURE_SD OFF
 
 /***********************************
  * Load NodeManager Library

@@ -4148,6 +4148,28 @@ void NodeManager::setup() {
   // sync the time with the controller
   syncTime();
 #endif
+#if FEATURE_SD == ON
+  // initialize connection to the SD card
+  if (sd_card.init(SPI_HALF_SPEED)) {
+    #ifdef NODEMANAGER_DEBUG
+      Serial.print(F("SD T="));
+      switch(sd_card.type()) {
+        case SD_CARD_TYPE_SD1:
+          Serial.println("SD1"); break;
+        case SD_CARD_TYPE_SD2:
+          Serial.println("SD2"); break;
+        case SD_CARD_TYPE_SDHC:
+        Serial.println("SDHC"); break;
+        default:
+        Serial.println("Unknown");
+      }
+    #endif
+    // initialize the volume
+    sd_volume.init(sd_card);
+    // open up the volume
+    sd_root.openRoot(sd_volume);
+  }
+#endif
   // run setup for all the registered sensors
   for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
     Sensor* sensor = *itr;
