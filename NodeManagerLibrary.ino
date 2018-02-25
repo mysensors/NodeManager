@@ -3709,6 +3709,54 @@ int SensorTTP::_fetchData() {
 }
 #endif
 
+/*
+ * SensorServo
+ */
+#ifdef USE_SERVO
+// constructor
+SensorServo::SensorServo(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
+  _name = "SERVO";
+  children.allocateBlocks(1);
+  new ChildInt(this, _node->getAvailableChildId(child_id), S_DISTANCE, V_DISTANCE,_name);
+}
+
+// what to do during setup
+void SensorServo::onSetup() {
+  _servo.attach(_pin);
+}
+
+// what to do during loop
+void SensorServo::onLoop(Child *child) {
+}
+
+// what to do as the main task when receiving a message
+void SensorServo::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_SET) set(message->getInt());
+  if (message->getCommand() == C_REQ) ((ChildInt*)child)->setValueInt(_value);
+}
+
+// set the servo to the given value
+void SensorServo::set(int value) {
+   _value = value;
+  // set the servo to the given value
+  _servo.write(_value);
+  // set the value so to send it back
+  Child* child = children.get(1);
+  if (child == nullptr) return;
+  ((ChildInt*)child)->setValueInt(_value);
+  #ifdef NODEMANAGER_DEBUG
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->child_id);
+    Serial.print(F(" P="));
+    Serial.print(_pin);
+    Serial.print(F(" V="));
+    Serial.println(_value);
+  #endif
+}
+#endif
 
 /*
    SensorConfiguration
