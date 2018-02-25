@@ -187,6 +187,9 @@
 #if FEATURE_CONDITIONAL_REPORT == ON
   #include <float.h>
 #endif
+#if FEATURE_SD == ON
+  #include <SD.h>
+#endif
 
 /*******************************************************************
    Classes
@@ -1680,6 +1683,12 @@ class NodeManager {
     List<Sensor*> sensors;
     Child* getChild(int child_id);
     Sensor* getSensorWithChild(int child_id);
+#if FEATURE_SD == ON
+    Sd2Card sd_card;
+    SdVolume sd_volume;
+    SdFile sd_root;
+    SdFile sd_file;
+#endif
     // hook into the main sketch functions
     void before();
     void presentation();
