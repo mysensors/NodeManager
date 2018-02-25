@@ -667,8 +667,8 @@ Each sensor class exposes additional methods.
 
 * SensorServo
 ~~~c
-    // set the servo to the given value
-    void set(int value);
+    // set the servo to the given percentage
+    void setPercentage(int value);
 ~~~
 
 ### Remote API

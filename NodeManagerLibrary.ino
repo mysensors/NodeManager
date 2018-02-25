@@ -3733,11 +3733,11 @@ void SensorServo::onLoop(Child *child) {
 void SensorServo::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_SET) set(message->getInt());
+  if (message->getCommand() == C_SET) setPercentage(message->getInt());
   if (message->getCommand() == C_REQ) ((ChildInt*)child)->setValueInt(_value);
 }
 
-// set the servo to the given value
+// set the servo to the given percentage
 void SensorServo::setPercentage(int value) {
    _value = value;
   // set the servo to the given value
