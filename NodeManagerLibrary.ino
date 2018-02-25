@@ -642,11 +642,13 @@ void Sensor::interrupt() {
 }
 #endif
 
+#if FEATURE_RECEIVE == ON
 // receive a message from the radio network
 void Sensor::receive(MyMessage* message) {
   // a request would make the sensor executing its main task passing along the message
   loop(message);
 }
+#endif
 
 // return the requested child 
 Child* Sensor::getChild(int child_id) {
@@ -4335,6 +4337,7 @@ void NodeManager::loop() {
 #endif
 }
 
+#if FEATURE_RECEIVE == ON
 // dispacth inbound messages
 void NodeManager::receive(const MyMessage &message) {
   #ifdef NODEMANAGER_DEBUG
@@ -4364,6 +4367,7 @@ void NodeManager::receive(const MyMessage &message) {
     #endif
   }
 }
+#endif
 
 #if FEATURE_TIME == ON
 // receive the time from the controller and save it
