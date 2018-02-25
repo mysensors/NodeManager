@@ -3533,9 +3533,6 @@ void SensorChirp::onLoop(Child* child) {
 
 // what to do as the main task when receiving a message
 void SensorChirp::onReceive(MyMessage* message) {
-  Child* child = getChild(message->sensor);
-  if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
 #endif
 
