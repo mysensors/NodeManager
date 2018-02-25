@@ -98,6 +98,7 @@ FEATURE_EEPROM              | ON      | allow keeping track of some information 
 FEATURE_SLEEP               | ON      | allow managing automatically the complexity behind battery-powered sleeping sensors              | - 
 FEATURE_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
 FEATURE_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device (requires FEATURE_TIME)| https://github.com/JChristensen/DS3232RTC
+FEATURE_SD                  | OFF     | allow for reading from and writing to SD cards                                                   | -
 
 /**********************************
  * MySensors node configuration
@@ -274,6 +275,7 @@ FEATURE_RTC                 | OFF     | allow keeping the current system time in
 #define FEATURE_SLEEP ON
 #define FEATURE_TIME OFF
 #define FEATURE_RTC OFF
+#define FEATURE_SD OFF
 
 /***********************************
  * Load NodeManager Library

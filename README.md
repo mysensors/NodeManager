@@ -100,6 +100,7 @@ FEATURE_EEPROM              | OFF     | allow keeping track of some information 
 FEATURE_SLEEP               | ON      | allow managing automatically the complexity behind battery-powered sleeping sensors              | - 
 FEATURE_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
 FEATURE_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device (requires FEATURE_TIME)| https://github.com/JChristensen/DS3232RTC
+FEATURE_SD                  | OFF     | allow for reading from and writing to SD cards                                                   | -
 
 ## Installation
 
@@ -313,6 +314,12 @@ You can interact with each class provided by NodeManager through a set of API fu
     List<Sensor*> sensors;
     Child* getChild(int child_id);
     Sensor* getSensorWithChild(int child_id);
+#if FEATURE_SD == ON
+    Sd2Card sd_card;
+    SdVolume sd_volume;
+    SdFile sd_root;
+    SdFile sd_file;
+#endif
 ~~~
 
 ### Sensor API
