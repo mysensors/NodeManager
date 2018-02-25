@@ -521,7 +521,9 @@ class Sensor {
     void presentation();
     void setup();
     void loop(MyMessage* message);
+#if FEATURE_RECEIVE == ON
     void receive(MyMessage* message);
+#endif
     // abstract functions, subclasses need to implement
     virtual void onBefore();
     virtual void onSetup();
@@ -1734,7 +1736,9 @@ class NodeManager {
     void presentation();
     void setup();
     void loop();
+#if FEATURE_RECEIVE == ON
     void receive(const MyMessage & msg);
+#endif
   private:
 #if FEATURE_POWER_MANAGER == ON
     PowerManager* _powerManager = nullptr;
