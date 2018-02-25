@@ -172,6 +172,9 @@
   #include <Wire.h> 
   #include <LiquidCrystal_I2C.h>
 #endif
+#ifdef USE_SERVO
+  #include <Servo.h>
+#endif
 
 // include third party libraries for enabled features
 #ifdef MY_GATEWAY_SERIAL
@@ -1606,6 +1609,26 @@ class SensorTTP: public Sensor {
     int _passcode_length = 4;
 };
 #endif
+
+/*
+ * Servo motor sensor
+ */
+#ifdef USE_SERVO
+class SensorServo: public Sensor {
+  public:
+    SensorServo(NodeManager& node_manager, int pin, int child_id = -255);
+    // set the servo to the given percentage
+    void setPercentage(int value);
+    // define what to do at each stage of the sketch
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(MyMessage* message);
+  protected:
+    Servo _servo;
+    int _value;
+};
+#endif
+
 
 /***************************************
    NodeManager: manages all the aspects of the node

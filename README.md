@@ -82,6 +82,7 @@ SensorSI7021        | 2     | USE_SI7021         | SI7021 sensor, return tempera
 SensorChirp         | 3     | USE_CHIRP          | Chirp soil moisture sensor (includes temperature and light sensors)                               |  https://github.com/Apollon77/I2CSoilMoistureSensor
 DisplayHD44780      | 1     | USE_HD44780        | Supports most Hitachi HD44780 based LCDs, by default displays values of all sensors and children  | https://github.com/cyberang3l/NewLiquidCrystal
 SensorTTP           | 1     | USE_TTP            | TTP226/TTP229 Touch control sensor                                                                | -
+SensorServo         | 1     | USE_SERVO          | Control a generic Servo motor sensor                                                              | -
 
 ### Advanced features
 
@@ -650,7 +651,6 @@ Each sensor class exposes additional methods.
     void setBacklight(uint8_t value);
 ~~~
 
-
 * SensorTTP
 ~~~c
     // set the passcode length. Passcode will be sent to the controller only after this number of digits have been pressed (default: 4)
@@ -663,6 +663,12 @@ Each sensor class exposes additional methods.
     void setDvPin(int value);
     // set the RST pin (default: 4)
     void setRstPin(int value);
+~~~
+
+* SensorServo
+~~~c
+    // set the servo to the given percentage
+    void setPercentage(int value);
 ~~~
 
 ### Remote API
