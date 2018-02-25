@@ -175,6 +175,10 @@
 #ifdef USE_SERVO
   #include <Servo.h>
 #endif
+#ifdef USE_APDS9960
+  #include <Wire.h>
+  #include <SparkFun_APDS9960.h>
+#endif
 
 // include third party libraries for enabled features
 #ifdef MY_GATEWAY_SERIAL
@@ -1626,6 +1630,22 @@ class SensorServo: public Sensor {
   protected:
     Servo _servo;
     int _value;
+};
+#endif
+
+/*
+ * SparkFun RGB and Gesture Sensor
+ */
+#ifdef USE_APDS9960
+class SensorAPDS9960: public Sensor {
+  public:
+    SensorAPDS9960(NodeManager& node_manager, int pin, int child_id = -255);
+    // define what to do at each stage of the sketch
+    void onSetup();
+    void onLoop(Child* child);
+    void onInterrupt();
+  protected:
+  SparkFun_APDS9960* _apds;
 };
 #endif
 
