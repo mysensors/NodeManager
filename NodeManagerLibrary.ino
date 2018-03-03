@@ -2791,6 +2791,9 @@ void SensorDimmer::setDuration(int value) {
 void SensorDimmer::setStepDuration(int value) {
   _duration = value;
 }
+void SensorDimmer::setReverse(bool value) {
+  _reverse = value;
+}
 
 // what to do during setup
 void SensorDimmer::onSetup() {
@@ -2872,7 +2875,8 @@ void SensorDimmer::_fadeTo(Child* child, int target_percentage) {
     // calculate the smooth transition and adjust it in the 0-255 range
     int value_to_write = (int)(_getEasing(current_step,start_from,delta,steps) / 100. * 255);
     // write to the PWM output
-    analogWrite(_pin,value_to_write);
+    if (_reverse) analogWrite(_pin,255 - value_to_write);
+    else analogWrite(_pin,value_to_write);
     // wait at the end of this step
     wait(_step_duration);
   }
@@ -4193,6 +4197,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           case 101: custom_sensor->setEasing(request.getValueInt()); break;
           case 102: custom_sensor->setDuration(request.getValueInt()); break;
           case 103: custom_sensor->setStepDuration(request.getValueInt()); break;
+          case 104: custom_sensor->setReverse(request.getValueInt()); break;
           default: return;
         }
       }
