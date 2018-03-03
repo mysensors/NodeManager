@@ -506,6 +506,12 @@ Each sensor class exposes additional methods.
     void setInitial(int value);
     // [105] Set active state (default: HIGH) 
     void setActiveState(int value);    
+    // [106] Set armed, if false the sensor will not trigger until armed (default: true) 
+    void setArmed(bool value);
+#if FEATURE_TIME == ON
+    // [107] when keeping track of the time, trigger only after X consecutive interrupts within the same minute (default: 1)
+    void setThreshold(int value);
+#endif
 ~~~
 
 *  SensorDs18b20
