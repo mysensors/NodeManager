@@ -4635,7 +4635,7 @@ void NodeManager::saveToMemory(int index, int value) {
 }
 #endif
 
-#if FEATURE_SLEEP
+#if FEATURE_SLEEP == ON
 // wake up the board
 void NodeManager::wakeup() {
   #if FEATURE_DEBUG == ON
@@ -4643,6 +4643,12 @@ void NodeManager::wakeup() {
   #endif
   _status = AWAKE;
 }
+
+// use smart sleep for sleeping boards
+void NodeManager::setSmartSleep(bool value) {
+  _smart_sleep = value;
+}
+
 #endif
 
 // return vcc in V
@@ -4922,7 +4928,7 @@ void NodeManager::_sleep() {
   int interrupt_1_pin = _interrupt_1_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_1);
   int interrupt_2_pin = _interrupt_2_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_2);
   // enter smart sleep for the requested sleep interval and with the configured interrupts
-  interrupt = sleep(interrupt_1_pin,_interrupt_1_mode,interrupt_2_pin,_interrupt_2_mode,sleep_time*1000, true);
+  interrupt = sleep(interrupt_1_pin,_interrupt_1_mode,interrupt_2_pin,_interrupt_2_mode,sleep_time*1000,_smart_sleep);
   if (interrupt > -1) {
     // woke up by an interrupt
     int pin_number = -1;
@@ -4950,7 +4956,7 @@ void NodeManager::_sleep() {
     if (_sleep_interrupt_pin == pin_number) _status = AWAKE;
   }
 #else
-  sleep(INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,sleep_time*1000, true);
+  sleep(INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,sleep_time*1000,_smart_sleep);
 #endif
   // coming out of sleep
   #if FEATURE_DEBUG == ON

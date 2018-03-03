@@ -1731,6 +1731,8 @@ class NodeManager {
     void setSleepBetweenSend(int value);
     // [9] wake up the board
     void wakeup();
+    // use smart sleep for sleeping boards (default: true)
+    void setSmartSleep(bool value);
 #endif
 #if FEATURE_INTERRUPTS == ON
     // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
