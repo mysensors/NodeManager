@@ -337,7 +337,7 @@ NodeManager node;
 //SensorAM2320 am2320(node);
 //SensorTSL2561 tsl2561(node);
 //SensorPT100 pt100(node,6);
-//SensorDimmer dimmer(node,A0);
+//SensorDimmer dimmer(node,3);
 //SensorRainGauge rainGauge(node,3);
 //SensorPowerMeter powerMeter(node,3);
 //SensorWaterMeter waterMeter(node,3);

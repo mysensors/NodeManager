@@ -2776,7 +2776,8 @@ void SensorPT100::onReceive(MyMessage* message) {
 // contructor
 SensorDimmer::SensorDimmer(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "DIMMER";
-  children.allocateBlocks(1);
+  children.allocateBlocks(2);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_DIMMER,V_STATUS,_name);
   new ChildInt(this,_node->getAvailableChildId(child_id),S_DIMMER,V_PERCENTAGE,_name);
 }
 
@@ -2789,6 +2790,9 @@ void SensorDimmer::setDuration(int value) {
 }
 void SensorDimmer::setStepDuration(int value) {
   _duration = value;
+}
+void SensorDimmer::setReverse(bool value) {
+  _reverse = value;
 }
 
 // what to do during setup
@@ -2804,18 +2808,51 @@ void SensorDimmer::onLoop(Child* child) {
 void SensorDimmer::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
+  // heandle a SET command
   if (message->getCommand() == C_SET && message->type == child->type) {
-    int percentage = message->getInt();
-    // normalize the provided percentage
-    if (percentage < 0) percentage = 0;
-    if (percentage > 100) percentage = 100;
-    _fadeTo(child,percentage);
-    ((ChildInt*)child)->setValueInt(_percentage);
+    // if changing the status
+    if (child->type == V_STATUS) setStatus(message->getInt());
+    // if changing the percentage of the dimmer
+    if (child->type == V_PERCENTAGE) setPercentage(message->getInt());
   }
-  if (message->getCommand() == C_REQ) {
+  // handle REQ command
+  if (message->getCommand() == C_REQ && message->type == child->type) {
     // return the current status
-    ((ChildInt*)child)->setValueInt(_percentage);
+    if (child->type == V_STATUS) ((ChildInt*)child)->setValueInt(_status);
+    if (child->type == V_PERCENTAGE) ((ChildInt*)child)->setValueInt(_percentage);
   }
+}
+
+// set the status
+void SensorDimmer::setStatus(int value) {
+  // get the V_STATUS child
+  Child* child = children.get(1);
+  if (value == ON) {
+    // fade the dimmer to the percentage last set
+    _fadeTo(child,_percentage);
+  }
+  else if (value == OFF) {
+    // fade the dimmer to 0
+    _fadeTo(child,0);
+  }
+  else return;
+  // send the status back
+  _status = value;
+  ((ChildInt*)child)->setValueInt(_status);
+}
+
+// set the percentage
+void SensorDimmer::setPercentage(int value) {
+  // get the V_PERCENTAGE child
+  Child* child = children.get(2);
+  int percentage = value;
+  // normalize the provided percentage
+  if (percentage < 0) percentage = 0;
+  if (percentage > 100) percentage = 100;
+  // fade to it
+  _fadeTo(child,percentage);
+  _percentage = percentage;
+  ((ChildInt*)child)->setValueInt(_percentage);
 }
 
 // fade to the provided value
@@ -2829,18 +2866,20 @@ void SensorDimmer::_fadeTo(Child* child, int target_percentage) {
   #endif
   // count how many steps we need to do
   int steps = _duration / _step_duration;
+  int start_from = _percentage;
+  if (_status == OFF) start_from = 0;
   // for each step
   for (int current_step = 1; current_step <= steps; current_step++) {
     // calculate the delta between the target value and the current
-    int delta = target_percentage - _percentage;
+    int delta = target_percentage - start_from;
     // calculate the smooth transition and adjust it in the 0-255 range
-    int value_to_write = (int)(_getEasing(current_step,_percentage,delta,steps) / 100. * 255);
+    int value_to_write = (int)(_getEasing(current_step,start_from,delta,steps) / 100. * 255);
     // write to the PWM output
-    analogWrite(_pin,value_to_write);
+    if (_reverse) analogWrite(_pin,255 - value_to_write);
+    else analogWrite(_pin,value_to_write);
     // wait at the end of this step
     wait(_step_duration);
   }
-  _percentage = target_percentage;
 }
 
 // for smooth transitions. t: current time, b: beginning value, c: change in value, d: duration
@@ -4158,6 +4197,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           case 101: custom_sensor->setEasing(request.getValueInt()); break;
           case 102: custom_sensor->setDuration(request.getValueInt()); break;
           case 103: custom_sensor->setStepDuration(request.getValueInt()); break;
+          case 104: custom_sensor->setReverse(request.getValueInt()); break;
           default: return;
         }
       }
