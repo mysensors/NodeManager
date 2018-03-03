@@ -407,6 +407,7 @@ class Child {
     int child_id;
     int presentation = S_CUSTOM;
     int type = V_CUSTOM;
+    int float_precision;
     const char* description = "";
     virtual void sendValue();
     virtual void printOn(Print& p);
@@ -1818,8 +1819,8 @@ class NodeManager {
 #endif
     // send a message by providing the source child, type of the message and value
 	  void sendMessage(int child_id, int type, int value);
-    void sendMessage(int child_id, int type, float value);
-    void sendMessage(int child_id, int type, double value);
+    void sendMessage(int child_id, int type, float value, int precision);
+    void sendMessage(int child_id, int type, double value, int precision);
     void sendMessage(int child_id, int type, const char* value);
 #if FEATURE_POWER_MANAGER == ON
     void setPowerManager(PowerManager& powerManager);

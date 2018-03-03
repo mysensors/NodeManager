@@ -234,7 +234,7 @@ FEATURE_SD                  | OFF     | allow reading from and writing to SD car
  */
 
 //#define USE_ANALOG_INPUT
-//#define USE_THERMISTOR
+#define USE_THERMISTOR
 //#define USE_ML8511
 //#define USE_ACS712
 //#define USE_DIGITAL_INPUT
@@ -308,7 +308,7 @@ NodeManager node;
 //SensorLDR ldr(node,A0);
 //SensorRain rain(node,A0);
 //SensorSoilMoisture soil(node,A0);
-//SensorThermistor thermistor(node,A0);
+SensorThermistor thermistor(node,A0);
 //SensorML8511 ml8511(node,A0);
 //SensorACS712 acs712(node,A0);
 //SensorDigitalInput digitalIn(node,6);
@@ -361,7 +361,7 @@ void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
   
-
+  
   
   /*
   * Configure your sensors below

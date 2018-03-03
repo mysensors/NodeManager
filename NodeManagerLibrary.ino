@@ -313,6 +313,7 @@ bool ChildInt::isNewValue() {
 
 // ChildFloat class
 ChildFloat::ChildFloat(Sensor* sensor, int child_id, int presentation, int type, const char* description): Child(sensor, child_id, presentation, type, description)  {
+  float_precision = 2;
 }
 
 // store a new value and update the total
@@ -334,7 +335,7 @@ void ChildFloat::sendValue() {
   // if below or above the thresholds, do not send the value
   if (_value < min_threshold || _value > max_threshold) return;
 #endif
-  _sensor->_node->sendMessage(child_id,type,_value);
+  _sensor->_node->sendMessage(child_id,type,_value,float_precision);
 #if FEATURE_CONDITIONAL_REPORT == ON
   _last_value = _value;
 #endif
@@ -344,7 +345,7 @@ void ChildFloat::sendValue() {
 
 // Print the child's value (variable type depending on the child class) to the given output
 void ChildFloat::printOn(Print& p) {
-  p.print(_value);
+  p.print(_value,float_precision);
 }
 
 #if FEATURE_CONDITIONAL_REPORT == ON
@@ -360,6 +361,7 @@ bool ChildFloat::isNewValue() {
 
 // ChildDouble class
 ChildDouble::ChildDouble(Sensor* sensor, int child_id, int presentation, int type, const char* description): Child(sensor, child_id, presentation, type, description)  {
+  float_precision = 4;
 }
 
 // store a new value and update the total
@@ -381,7 +383,7 @@ void ChildDouble::sendValue() {
   // if below or above the thresholds, do not send the value
   if (_value < min_threshold || _value > max_threshold) return;
 #endif
-  _sensor->_node->sendMessage(child_id,type,_value);
+  _sensor->_node->sendMessage(child_id,type,_value,float_precision);
 #if FEATURE_CONDITIONAL_REPORT == ON
   _last_value = _value;
 #endif
@@ -391,7 +393,7 @@ void ChildDouble::sendValue() {
 
 // Print the child's value (variable type depending on the child class) to the given output
 void ChildDouble::printOn(Print& p) {
-  p.print(_value);
+  p.print(_value,float_precision);
 }
 
 #if FEATURE_CONDITIONAL_REPORT == ON
@@ -4816,14 +4818,14 @@ void NodeManager::sendMessage(int child_id, int type, int value) {
   _message.set(value);
   _sendMessage(child_id,type);
 }
-void NodeManager::sendMessage(int child_id, int type, float value) {
+void NodeManager::sendMessage(int child_id, int type, float value, int precision) {
   _message.clear();
-  _message.set(value,2);
+  _message.set(value,precision);
   _sendMessage(child_id,type);
 }
-void NodeManager::sendMessage(int child_id, int type, double value) {
+void NodeManager::sendMessage(int child_id, int type, double value, int precision) {
   _message.clear();
-  _message.set(value,4);
+  _message.set(value,precision);
   _sendMessage(child_id,type);
 }
 void NodeManager::sendMessage(int child_id, int type, const char* value) {
