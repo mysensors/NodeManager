@@ -599,8 +599,10 @@ Each sensor class exposes additional methods.
     void setDuration(int value);
     // [103] the duration of a single step of the transition in milliseconds (default: 100)
     void setStepDuration(int value);
-    // fade the output from the current value to the target provided in the range 0-100
-    void fadeTo(int value);
+    // set the status of the dimmer
+    void setStatus(int value);
+    // set the percentage of the dimmer
+    void setPercentage(int value);
 ~~~
 
 * SensorRainGauge / SensorPowerMeter / SensorWaterMeter

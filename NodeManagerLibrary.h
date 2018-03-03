@@ -1307,6 +1307,10 @@ class SensorDimmer: public Sensor {
     void setDuration(int value);
     // [103] the duration of a single step of the transition in milliseconds (default: 100)
     void setStepDuration(int value);
+    // set the status of the dimmer
+    void setStatus(int value);
+    // set the percentage of the dimmer
+    void setPercentage(int value);
     // define what to do at each stage of the sketch
     void onSetup();
     void onLoop(Child* child);

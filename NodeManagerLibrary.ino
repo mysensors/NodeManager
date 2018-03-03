@@ -2776,7 +2776,7 @@ void SensorPT100::onReceive(MyMessage* message) {
 // contructor
 SensorDimmer::SensorDimmer(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "DIMMER";
-  children.allocateBlocks(1);
+  children.allocateBlocks(2);
   new ChildInt(this,_node->getAvailableChildId(child_id),S_DIMMER,V_STATUS,_name);
   new ChildInt(this,_node->getAvailableChildId(child_id),S_DIMMER,V_PERCENTAGE,_name);
 }
@@ -2806,38 +2806,50 @@ void SensorDimmer::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
   // heandle a SET command
-  if (message->getCommand() == C_SET) {
-    // if changing the percentage of the dimmer
-    if (child->type == V_PERCENTAGE) {
-      _percentage = message->getInt();
-      // normalize the provided percentage
-      if (_percentage < 0) _percentage = 0;
-      if (_percentage > 100) _percentage = 100;
-      // fade to it
-      _fadeTo(child,_percentage);
-      ((ChildInt*)child)->setValueInt(_percentage);
-    }
+  if (message->getCommand() == C_SET && message->type == child->type) {
     // if changing the status
-    if (child->type == V_STATUS) {
-      if (message->getInt() == ON) {
-        // fade the dimmer to the percentage last set
-        _fadeTo(child,_percentage);
-      }
-      else if (message->getInt() == OFF) {
-        // fade the dimmer to 0
-        _fadeTo(child,0);
-      }
-      else return;
-      _status = message->getInt();
-      ((ChildInt*)child)->setValueInt(_status);
-    }
+    if (child->type == V_STATUS) setStatus(message->getInt());
+    // if changing the percentage of the dimmer
+    if (child->type == V_PERCENTAGE) setPercentage(message->getInt());
   }
   // handle REQ command
-  if (message->getCommand() == C_REQ) {
+  if (message->getCommand() == C_REQ && message->type == child->type) {
     // return the current status
-    if (child->type = V_STATUS) ((ChildInt*)child)->setValueInt(_status);
-    if (child->type = V_PERCENTAGE) ((ChildInt*)child)->setValueInt(_percentage);
+    if (child->type == V_STATUS) ((ChildInt*)child)->setValueInt(_status);
+    if (child->type == V_PERCENTAGE) ((ChildInt*)child)->setValueInt(_percentage);
   }
+}
+
+// set the status
+void SensorDimmer::setStatus(int value) {
+  // get the V_STATUS child
+  Child* child = children.get(1);
+  if (value == ON) {
+    // fade the dimmer to the percentage last set
+    _fadeTo(child,_percentage);
+  }
+  else if (value == OFF) {
+    // fade the dimmer to 0
+    _fadeTo(child,0);
+  }
+  else return;
+  // send the status back
+  _status = value;
+  ((ChildInt*)child)->setValueInt(_status);
+}
+
+// set the percentage
+void SensorDimmer::setPercentage(int value) {
+  // get the V_PERCENTAGE child
+  Child* child = children.get(2);
+  int percentage = value;
+  // normalize the provided percentage
+  if (percentage < 0) percentage = 0;
+  if (percentage > 100) percentage = 100;
+  // fade to it
+  _fadeTo(child,percentage);
+  _percentage = percentage;
+  ((ChildInt*)child)->setValueInt(_percentage);
 }
 
 // fade to the provided value
