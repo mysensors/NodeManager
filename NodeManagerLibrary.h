@@ -1307,6 +1307,12 @@ class SensorDimmer: public Sensor {
     void setDuration(int value);
     // [103] the duration of a single step of the transition in milliseconds (default: 100)
     void setStepDuration(int value);
+    // [104] reverse cathod and anode (default: false)
+    void setReverse(bool value);
+    // set the status of the dimmer
+    void setStatus(int value);
+    // set the percentage of the dimmer
+    void setPercentage(int value);
     // define what to do at each stage of the sketch
     void onSetup();
     void onLoop(Child* child);
@@ -1320,10 +1326,12 @@ class SensorDimmer: public Sensor {
       EASE_OUTSINE,
       EASE_INOUTSINE,
     };
-    int _percentage = 0;
+    int _percentage = 100;
+    int _status = OFF;
     int _easing = EASE_LINEAR;
     int _duration = 1000;
     int _step_duration = 100;
+    int _reverse = false;
     float _getEasing(float t, float b, float c, float d);
 };
 #endif
