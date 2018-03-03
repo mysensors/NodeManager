@@ -1,6 +1,6 @@
 NodeManager is intended to take care on your behalf of all those common tasks a MySensors node has to accomplish, speeding up the development cycle of your projects.
 
-NodeManager includes the following main features:
+NodeManager will help you with the following:
 
 * Sleep manager: allows managing automatically the complexity behind battery-powered sensors spending most of their time sleeping
 * Power manager: allows powering on your sensors only while the node is awake
@@ -86,9 +86,9 @@ SensorServo         | 1     | USE_SERVO          | Control a generic Servo motor
 SensorAPDS9960      | 1     | USE_APDS9960       | SparkFun RGB and Gesture Sensor                                                                   | https://github.com/sparkfun/APDS-9960_RGB_and_Gesture_Sensor
 SensorNeopixel      | 1     | USE_NEOPIXEL       | Control a Neopixel LED                                                                            | https://github.com/adafruit/Adafruit_NeoPixel
 
-### Advanced features
+### Built-in features
 
-NodeManager provides useful built-in features which can be disabled if you need to save some storage for your code. 
+NodeManager built-in features can be enabled/disabled also when you need to save some storage for your code. 
 To enable/disable a buil-in feature:
 * Install the required library if any
 * Enable the corresponding feature by setting it to ON in the main sketch. To disable it, set it to OFF
@@ -97,6 +97,7 @@ A list of buil-in features and the required dependencies is presented below:
 
 Feature                     | Default | Description                                                                                      | Dependencies
 ----------------------------|---------|--------------------------------------------------------------------------------------------------|----------------------------------------------------------
+FEATURE_DEBUG               | ON      | NodeManager's debug output on serial console                                                     | - 
 FEATURE_POWER_MANAGER       | OFF     | allow powering on your sensors only while the node is awake                                      | - 
 FEATURE_INTERRUPTS          | ON      | allow managing interrupt-based sensors like a PIR or a door sensor                               | - 
 FEATURE_CONDITIONAL_REPORT  | OFF     | allow reporting a measure only when different from the previous or above/below a given threshold | - 
@@ -105,7 +106,7 @@ FEATURE_SLEEP               | ON      | allow managing automatically the complex
 FEATURE_RECEIVE             | ON      | allow the node to receive messages; can be used by the remote API or for triggering the sensors  | - 
 FEATURE_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
 FEATURE_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device (requires FEATURE_TIME)| https://github.com/JChristensen/DS3232RTC
-FEATURE_SD                  | OFF     | allow for reading from and writing to SD cards                                                   | -
+FEATURE_SD                  | OFF     | allow reading from and writing to SD cards                                                   | -
 
 ## Installation
 
@@ -125,6 +126,8 @@ You need to install the library ONLY if you are planning to enable to use the se
 * Download the latest version of NodeManager
 * Replace the NodeManagerLibrary.ino and NodeManagerLibrary.h of your project with those just downloaded
 * Review the release notes in case there is any manual change required to the main sketch
+
+Please be aware when upgrading to v1.7 from an older version this procedure is not supported and must be manual.
 
 ## Configuration
 
@@ -157,7 +160,7 @@ SensorSHT21 sht21(node);
 The sensor will be then registered automatically with NodeManager which will take care of it all along its lifecycle. Please ensure the corresponding module has been previously enabled for a successful compilation of the code.
 NodeManager will present each sensor for you to the controller, query each sensor and report the measure back to the gateway/controller. For actuators (e.g. relays) those can be triggered by sending a `REQ` message with the expected type to their assigned child id.
 
-### Configuring your sensors
+### Configure your sensors
 
 NodeManager and all the sensors can be configured from within `before()` in the main sketch. Find `Configure your sensors below` to customize the behavior of any sensor by calling one of the functions available.
 
@@ -180,12 +183,12 @@ If not instructed differently, the node will stay awake and all the sensors will
 
 Please note, if you configure a sleep cycle, this may have an impact on the reporting interval since the sensor will be able to report its measures ONLY when awake. For example if you set a report interval of 5 minutes and a sleep cycle of 10 minutes, the sensors will report every 10 minutes.
 
-## Running the node
+## Running your code
 
 Once finished configuring your node, upload your sketch to your arduino board as you are used to.
 
 Check your gateway's logs to ensure the node is working as expected. You should see the node presenting itself, presenting all the registered sensors and reporting new measures at the configured reporting interval.
-When `DEBUG` is enabled, detailed information will be available through the serial port. Remember to disable debug once the tests have been completed to save additional storage.
+When `FEATURE_DEBUG` is enabled, detailed information will be available through the serial port. Remember to disable debug once the tests have been completed to save additional storage.
 
 ## Communicate with the sensors
 
@@ -224,6 +227,8 @@ You can interact with each class provided by NodeManager through a set of API fu
     void setSleepBetweenSend(int value);
     // [9] wake up the board
     void wakeup();
+    // use smart sleep for sleeping boards (default: true)
+    void setSmartSleep(bool value);
 #endif
 #if FEATURE_INTERRUPTS == ON
     // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
@@ -800,7 +805,6 @@ Even if the sensor is sleeping most of the time, it can be potentially woke up b
 #define SKETCH_VERSION "1.0"
 #define MY_BAUD_RATE 9600
 #define MY_NODE_ID 99
-#define MY_SPLASH_SCREEN_DISABLED
 
 // NRF24 radio settings
 #define MY_RADIO_NRF24
@@ -816,8 +820,6 @@ Even if the sensor is sleeping most of the time, it can be potentially woke up b
  * Load NodeManager Library
  */
 
-// enable NodeManager's debug on serial port
-#define NODEMANAGER_DEBUG
 // include NodeManager's library
 #include "NodeManagerLibrary.h"
 NodeManager node;
@@ -872,17 +874,21 @@ void loop() {
   node.loop();
 }
 
+#if FEATURE_RECEIVE == ON
 // receive
-void receive(MyMessage &message) {
+void receive(const MyMessage &message) {
   // call NodeManager receive routine
   node.receive(message);
 }
+#endif
 
+#if FEATURE_TIME == ON
 // receiveTime
 void receiveTime(unsigned long ts) {
   // call NodeManager receiveTime routine
   node.receiveTime(ts);
 }
+#endif
 ~~~
 
 * Motion Sensor
@@ -899,7 +905,6 @@ The following sketch can be used to report back to the controller when a motion 
 #define SKETCH_VERSION "1.0"
 #define MY_BAUD_RATE 9600
 #define MY_NODE_ID 99
-#define MY_SPLASH_SCREEN_DISABLED
 
 // NRF24 radio settings
 #define MY_RADIO_NRF24
@@ -914,8 +919,6 @@ The following sketch can be used to report back to the controller when a motion 
  * Load NodeManager Library
  */
 
-// enable NodeManager's debug on serial port
-#define NODEMANAGER_DEBUG
 // include NodeManager's library
 #include "NodeManagerLibrary.h"
 NodeManager node;
@@ -965,17 +968,21 @@ void loop() {
   node.loop();
 }
 
+#if FEATURE_RECEIVE == ON
 // receive
-void receive(MyMessage &message) {
+void receive(const MyMessage &message) {
   // call NodeManager receive routine
   node.receive(message);
 }
+#endif
 
+#if FEATURE_TIME == ON
 // receiveTime
 void receiveTime(unsigned long ts) {
   // call NodeManager receiveTime routine
   node.receiveTime(ts);
 }
+#endif
 ~~~
 
 * Boiler Sensor
@@ -997,7 +1004,6 @@ The board will be put to sleep just after startup and will report back to the co
 #define SKETCH_VERSION "1.0"
 #define MY_BAUD_RATE 9600
 #define MY_NODE_ID 99
-#define MY_SPLASH_SCREEN_DISABLED
 
 // NRF24 radio settings
 #define MY_RADIO_NRF24
@@ -1012,8 +1018,6 @@ The board will be put to sleep just after startup and will report back to the co
  * Load NodeManager Library
  */
 
-// enable NodeManager's debug on serial port
-#define NODEMANAGER_DEBUG
 // include NodeManager's library
 #include "NodeManagerLibrary.h"
 NodeManager node;
@@ -1067,17 +1071,21 @@ void loop() {
   node.loop();
 }
 
+#if FEATURE_RECEIVE == ON
 // receive
-void receive(MyMessage &message) {
+void receive(const MyMessage &message) {
   // call NodeManager receive routine
   node.receive(message);
 }
+#endif
 
+#if FEATURE_TIME == ON
 // receiveTime
 void receiveTime(unsigned long ts) {
   // call NodeManager receiveTime routine
   node.receiveTime(ts);
 }
+#endif
 ~~~
 
 ## Contributing
@@ -1125,6 +1133,13 @@ If there are changes introduced to the development branch that conflicts with an
 * Rebase the branch you filed the PR from against your updated development branch: `git rebase development`
 * Resolve the conflicts and commit again
 * Force push your updated branch so the PR gets updated: `git push HEAD:<yourbranch> -f`
+
+## Compatibility
+
+This version of NodeManager has been tested and is compatibile with the following MySensors library:
+* v2.1.1
+* v2.2.0-beta
+* v2.2.0
 
 ## Release Notes
 
@@ -1211,3 +1226,32 @@ v1.6:
 * DHT sensor now using MySensors' DHT library
 
 v1.7:
+* Reviewed the entire NodeManager's architecture with children now automatically created from within each sensor
+* Optimized the code so to use the memory in a more efficient manner
+* Improved the overall user experience also with sensors' patterns in the main sketch
+* NodeManager's advanced features can be enabled/disabled by setting the corresponding FEATURE_* define
+* Sensors can now be enabled by uncommenting the corresponding USE_* define and requiring a single line to be created and initialized
+* Simplified the configuration of each sensor, now without the need of getting the sensor back through a nasty casting
+* Merged config.h into the main sketch so to centralize the configuration in a single place
+* Added time-aware capability, with or without an attached RTC
+* SensorBattery, SensorSignal and SensorConfiguration are now regular sensors
+* Fixed bug preventing negative temperatures to be reported for all the sensors
+* Added ability for each sensor to report only when value is above or below a configured threshold
+* Addded support for SD card reader
+* Added support for RFM95 radio
+* Added supoport for MySensors Sensebender Gateway and Sensebender Micro boards
+* Added support for generic LCD devices through an abstract Display class
+* SensorDimmer now supports both V_STATUS and V_PERCENTAGE
+* SensorPulseMeter now supports running on batteries
+* SensorDs18B20 optimized and now supporting V_ID
+* SensorSwitch (now renamed into SensorInterrupt) now catches interrupt in a more reliable way
+* Added support for HD44780 i2c LCD
+* Added support for MG996R Servo sensor
+* Added support for VL53L0X laser time-of-flight distance sensor
+* Added SensorPlantowerPMS particulate matter sensors
+* Added support for SHT31 temperature and humidity sensor
+* Added support for SI7021 temperature and humidity sensor
+* Added support for for Neopixel LED
+* Added support for Chirp Sensor soil moisture sensor
+* Added support for SparkFun RGB and Gesture Sensor
+* Added support for TTP226/TTP229 Touch control sensor

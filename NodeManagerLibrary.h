@@ -13,7 +13,7 @@
 /***********************************
    Constants
 */
-// define board status
+// define board sleep status
 #define AWAKE 0
 #define SLEEP 1
 
@@ -26,12 +26,6 @@
 // define on/off
 #define OFF 0
 #define ON 1
-
-// define value type
-#define TYPE_INTEGER 0
-#define TYPE_FLOAT 1
-#define TYPE_STRING 2
-#define TYPE_DOUBLE 2
 
 // define interrupt pins
 #define INTERRUPT_PIN_1 3
@@ -47,25 +41,57 @@
 /***********************************
    Default configuration settings
 */
-// if enabled, allow modifying the configuration remotely by interacting with the configuration child id
-// the child id used to allow remote configuration
-#ifndef CONFIGURATION_CHILD_ID
-  #define CONFIGURATION_CHILD_ID 200
-#endif
-// the child id used to report the battery voltage to the controller
-#ifndef BATTERY_CHILD_ID
-  #define BATTERY_CHILD_ID 201
-#endif
-// the child id used to report the rssi level to the controller
-#ifndef SIGNAL_CHILD_ID
-  #define SIGNAL_CHILD_ID 202
-#endif
 // define default sketch name and version
 #ifndef SKETCH_NAME
   #define SKETCH_NAME "NodeManager"
 #endif
 #ifndef SKETCH_VERSION
   #define SKETCH_VERSION "1.0"
+#endif
+
+// SensorConfiguration default child_id
+#ifndef CONFIGURATION_CHILD_ID
+  #define CONFIGURATION_CHILD_ID 200
+#endif
+// SensorBattery default child_id
+#ifndef BATTERY_CHILD_ID
+  #define BATTERY_CHILD_ID 201
+#endif
+// SensorSignal default child_id
+#ifndef SIGNAL_CHILD_ID
+  #define SIGNAL_CHILD_ID 202
+#endif
+
+// default built-in features if not defined
+#ifndef FEATURE_DEBUG
+  #define FEATURE_DEBUG ON
+#endif
+#ifndef FEATURE_POWER_MANAGER
+  #define FEATURE_POWER_MANAGER OFF
+#endif
+#ifndef FEATURE_INTERRUPTS
+  #define FEATURE_INTERRUPTS ON
+#endif
+#ifndef FEATURE_CONDITIONAL_REPORT
+  #define FEATURE_CONDITIONAL_REPORT OFF
+#endif
+#ifndef FEATURE_EEPROM
+  #define FEATURE_EEPROM OFF
+#endif
+#ifndef FEATURE_SLEEP
+  #define FEATURE_SLEEP ON
+#endif
+#ifndef FEATURE_RECEIVE
+  #define FEATURE_RECEIVE ON
+#endif
+#ifndef FEATURE_TIME
+  #define FEATURE_TIME OFF
+#endif
+#ifndef FEATURE_RTC
+  #define FEATURE_RTC OFF
+#endif
+#ifndef FEATURE_SD
+  #define FEATURE_SD OFF
 #endif
 
 /***********************************
@@ -381,6 +407,7 @@ class Child {
     int child_id;
     int presentation = S_CUSTOM;
     int type = V_CUSTOM;
+    int float_precision;
     const char* description = "";
     virtual void sendValue();
     virtual void printOn(Print& p);
@@ -1705,6 +1732,8 @@ class NodeManager {
     void setSleepBetweenSend(int value);
     // [9] wake up the board
     void wakeup();
+    // use smart sleep for sleeping boards (default: true)
+    void setSmartSleep(bool value);
 #endif
 #if FEATURE_INTERRUPTS == ON
     // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
@@ -1790,8 +1819,8 @@ class NodeManager {
 #endif
     // send a message by providing the source child, type of the message and value
 	  void sendMessage(int child_id, int type, int value);
-    void sendMessage(int child_id, int type, float value);
-    void sendMessage(int child_id, int type, double value);
+    void sendMessage(int child_id, int type, float value, int precision);
+    void sendMessage(int child_id, int type, double value, int precision);
     void sendMessage(int child_id, int type, const char* value);
 #if FEATURE_POWER_MANAGER == ON
     void setPowerManager(PowerManager& powerManager);
@@ -1839,6 +1868,7 @@ class NodeManager {
     bool _ack = false;
 #if FEATURE_SLEEP == ON
     void _sleep();
+    bool _smart_sleep = true;
 #endif
     void _present(int child_id, int type);
     bool _get_controller_config = true;
