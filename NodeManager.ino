@@ -255,7 +255,7 @@ FEATURE_SD                  | OFF     | allow for reading from and writing to SD
 //#define USE_AM2320
 //#define USE_TSL2561
 //#define USE_PT100
-//#define USE_DIMMER
+#define USE_DIMMER
 //#define USE_PULSE_METER
 //#define USE_PMS
 //#define USE_VL53L0X
@@ -337,7 +337,7 @@ NodeManager node;
 //SensorAM2320 am2320(node);
 //SensorTSL2561 tsl2561(node);
 //SensorPT100 pt100(node,6);
-//SensorDimmer dimmer(node,A0);
+SensorDimmer dimmer(node,3);
 //SensorRainGauge rainGauge(node,3);
 //SensorPowerMeter powerMeter(node,3);
 //SensorWaterMeter waterMeter(node,3);
@@ -361,7 +361,7 @@ NodeManager node;
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
-
+node.setReportIntervalSeconds(10);
 
   /*
   * Configure your sensors below

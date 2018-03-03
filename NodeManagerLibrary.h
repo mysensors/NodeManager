@@ -1320,7 +1320,8 @@ class SensorDimmer: public Sensor {
       EASE_OUTSINE,
       EASE_INOUTSINE,
     };
-    int _percentage = 0;
+    int _percentage = 100;
+    int _status = OFF;
     int _easing = EASE_LINEAR;
     int _duration = 1000;
     int _step_duration = 100;
