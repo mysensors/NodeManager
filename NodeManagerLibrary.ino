@@ -1534,6 +1534,11 @@ void SensorInterrupt::setActiveState(int value) {
 void SensorInterrupt::setArmed(bool value) {
   _armed = value;
 }
+#if FEATURE_TIME == ON
+void SensorInterrupt::setThreshold(int value) {
+  _threshold = value;      
+}
+#endif
 
 
 // what to do during setup
@@ -1560,6 +1565,12 @@ void SensorInterrupt::onReceive(MyMessage* message) {
 
 // what to do when receiving an interrupt
 void SensorInterrupt::onInterrupt() {
+#if FEATURE_TIME == ON
+  // if this interrupt came in a new minute, reset the counter
+  if (minute() != _current_minute) _counter = 0;
+  // increase the counter
+  _counter = _counter + 1;
+#endif
   Child* child = children.get(1);
   // wait to ensure the the input is not floating
   if (_debounce > 0) _node->sleepOrWait(_debounce);
@@ -1578,7 +1589,12 @@ void SensorInterrupt::onInterrupt() {
       Serial.print(F(" V="));
       Serial.println(value);
     #endif
-    if (_armed) ((ChildInt*)child)->setValueInt(value);
+    if (! _armed) return;
+#if FEATURE_TIME == ON
+    // report only when there are at least _threshold triggers
+    if (_counter < _threshold) return;
+#endif
+    ((ChildInt*)child)->setValueInt(value);
     // allow the signal to be restored to its normal value
     if (_trigger_time > 0) _node->sleepOrWait(_trigger_time);
   } else {
@@ -4106,6 +4122,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           case 104: custom_sensor->setInitial(request.getValueInt()); break;
           case 105: custom_sensor->setActiveState(request.getValueInt()); break;
           case 106: custom_sensor->setArmed(request.getValueInt()); break;
+          case 107: custom_sensor->setThreshold(request.getValueInt()); break;
           default: return;
         }
       }

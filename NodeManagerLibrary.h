@@ -931,6 +931,10 @@ class SensorInterrupt: public Sensor {
     void setActiveState(int value);
     // [106] Set armed, if false the sensor will not trigger until armed (default: true) 
     void setArmed(bool value);
+#if FEATURE_TIME == ON
+    // [107] when keeping track of the time, trigger only after X consecutive interrupts within the same minute (default: 1)
+    void setThreshold(int value);
+#endif
     // define what to do at each stage of the sketch
     void onSetup();
     void onLoop(Child* child);
@@ -943,6 +947,11 @@ class SensorInterrupt: public Sensor {
     int _initial = HIGH;
     int _active_state = HIGH;
     bool _armed = true;
+#if FEATURE_TIME == ON
+    int _threshold = 1;
+    int _counter = 0;
+    int _current_minute = minute();
+#endif
 };
 
 /*
