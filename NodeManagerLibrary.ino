@@ -1531,6 +1531,10 @@ void SensorInterrupt::setInitial(int value) {
 void SensorInterrupt::setActiveState(int value) {
   _active_state = value;
 }
+void SensorInterrupt::setArmed(bool value) {
+  _armed = value;
+}
+
 
 // what to do during setup
 void SensorInterrupt::onSetup() {
@@ -1574,7 +1578,7 @@ void SensorInterrupt::onInterrupt() {
       Serial.print(F(" V="));
       Serial.println(value);
     #endif
-    ((ChildInt*)child)->setValueInt(value);
+    if (_armed) ((ChildInt*)child)->setValueInt(value);
     // allow the signal to be restored to its normal value
     if (_trigger_time > 0) _node->sleepOrWait(_trigger_time);
   } else {
@@ -4101,6 +4105,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           case 103: custom_sensor->setTriggerTime(request.getValueInt()); break;
           case 104: custom_sensor->setInitial(request.getValueInt()); break;
           case 105: custom_sensor->setActiveState(request.getValueInt()); break;
+          case 106: custom_sensor->setArmed(request.getValueInt()); break;
           default: return;
         }
       }

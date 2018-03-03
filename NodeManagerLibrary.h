@@ -929,6 +929,8 @@ class SensorInterrupt: public Sensor {
     void setInitial(int value);
     // [105] Set active state (default: HIGH) 
     void setActiveState(int value);
+    // [106] Set armed, if false the sensor will not trigger until armed (default: true) 
+    void setArmed(bool value);
     // define what to do at each stage of the sketch
     void onSetup();
     void onLoop(Child* child);
@@ -940,6 +942,7 @@ class SensorInterrupt: public Sensor {
     int _mode = CHANGE;
     int _initial = HIGH;
     int _active_state = HIGH;
+    bool _armed = true;
 };
 
 /*

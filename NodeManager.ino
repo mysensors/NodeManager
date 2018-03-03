@@ -241,7 +241,7 @@ FEATURE_SD                  | OFF     | allow reading from and writing to SD car
 //#define USE_DIGITAL_OUTPUT
 //#define USE_DHT
 //#define USE_SHT21
-//#define USE_INTERRUPT
+#define USE_INTERRUPT
 //#define USE_DS18B20
 //#define USE_BH1750
 //#define USE_MLX90614
@@ -321,7 +321,7 @@ NodeManager node;
 //SensorHTU21D htu21(node);
 //SensorInterrupt interrupt(node,3);
 //SensorDoor door(node,3);
-//SensorMotion motion(node,3);
+SensorMotion motion(node,3);
 //SensorDs18b20 ds18b20(node,6);
 //SensorBH1750 bh1750(node);
 //SensorMLX90614 mlx90614(node);

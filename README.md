@@ -506,6 +506,8 @@ Each sensor class exposes additional methods.
     void setInitial(int value);
     // [105] Set active state (default: HIGH) 
     void setActiveState(int value);    
+    // [106] Set armed, if false the sensor will not trigger until armed (default: true) 
+    void setArmed(bool value);
 ~~~
 
 *  SensorDs18b20
