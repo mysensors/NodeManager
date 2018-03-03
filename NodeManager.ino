@@ -95,6 +95,7 @@ A list of buil-in features and the required dependencies is presented below:
 
 Feature                     | Default | Description                                                                                      | Dependencies
 ----------------------------|---------|--------------------------------------------------------------------------------------------------|----------------------------------------------------------
+FEATURE_DEBUG               | ON      | NodeManager's debug output on serial console                                                     | - 
 FEATURE_POWER_MANAGER       | ON      | allow powering on your sensors only while the node is awake                                      | - 
 FEATURE_INTERRUPTS          | ON      | allow managing interrupt-based sensors like a PIR or a door sensor                               | - 
 FEATURE_CONDITIONAL_REPORT  | ON      | allow reporting a measure only when different from the previous or above/below a given threshold | - 
@@ -103,7 +104,7 @@ FEATURE_SLEEP               | ON      | allow managing automatically the complex
 FEATURE_RECEIVE             | ON      | allow the node to receive messages; can be used by the remote API or for triggering the sensors  | - 
 FEATURE_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
 FEATURE_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device (requires FEATURE_TIME)| https://github.com/JChristensen/DS3232RTC
-FEATURE_SD                  | OFF     | allow for reading from and writing to SD cards                                                   | -
+FEATURE_SD                  | OFF     | allow reading from and writing to SD cards                                                   | -
 
 /**********************************
  * MySensors node configuration
@@ -229,7 +230,7 @@ FEATURE_SD                  | OFF     | allow for reading from and writing to SD
 //#define MY_DEFAULT_TX_LED_PIN  6
 
 /***********************************
- * NodeManager modules
+ * NodeManager modules for supported sensors
  */
 
 //#define USE_ANALOG_INPUT
@@ -270,13 +271,11 @@ FEATURE_SD                  | OFF     | allow for reading from and writing to SD
 //#define USE_NEOPIXEL
 
 /***********************************
- * NodeManager advanced settings
+ * NodeManager built-in features
  */
 
-// NodeManager's debug output on serial console when defined
-#define NODEMANAGER_DEBUG
-
-// Enable/disable NodeManager's advanced features
+// Enable/disable NodeManager's features
+#define FEATURE_DEBUG ON
 #define FEATURE_POWER_MANAGER OFF
 #define FEATURE_INTERRUPTS ON
 #define FEATURE_CONDITIONAL_REPORT OFF
@@ -361,8 +360,9 @@ NodeManager node;
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
-
-
+  
+  
+  
   /*
   * Configure your sensors below
   */
