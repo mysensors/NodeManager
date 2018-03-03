@@ -15,7 +15,7 @@ PowerManager::PowerManager(int ground_pin, int vcc_pin, int wait_time) {
 void PowerManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
   _ground_pin = ground_pin;
   _vcc_pin = vcc_pin;
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(F("PWR G="));
     Serial.print(_ground_pin);
     Serial.print(F(" V="));
@@ -38,7 +38,7 @@ void PowerManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
 // turn on the sensor by activating its power pins
 void PowerManager::powerOn() {
   if (_vcc_pin == -1) return;
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(F("ON P="));
     Serial.println(_vcc_pin);
   #endif
@@ -51,7 +51,7 @@ void PowerManager::powerOn() {
 // turn off the sensor
 void PowerManager::powerOff() {
   if (_vcc_pin == -1) return;
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(F("OFF P="));
     Serial.println(_vcc_pin);
   #endif
@@ -188,7 +188,7 @@ Request::Request(int recipient_child_id, const char* string) {
   _function = atoi(strtok_r(NULL, ",", &ptr));
   // tokenize the string and get the value
   _value = atof(strtok_r(NULL, ",", &ptr));
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(F("REQ C="));
     Serial.print(_child_id);
     Serial.print(F(" F="));
@@ -545,7 +545,7 @@ void Sensor::registerChild(Child* child) {
 void Sensor::presentation() {
   for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
     Child* child = *itr;
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(F("PRES I="));
       Serial.print(child->child_id);
       Serial.print(F(" T="));
@@ -563,7 +563,7 @@ void Sensor::before() {
   onBefore();
   for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
     Child* child = *itr;
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -721,7 +721,7 @@ void SensorBattery::onLoop(Child* child) {
   int percentage = ((volt - _battery_min) / (_battery_max - _battery_min)) * 100;
   if (percentage > 100) percentage = 100;
   if (percentage < 0) percentage = 0;
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" V="));
     Serial.print(volt);
@@ -762,7 +762,7 @@ void SensorSignal::setSignalCommand(int value) {
 // what to do during loop
 void SensorSignal::onLoop(Child* child) {
   int16_t value = transportGetSignalReport((signalReport_t)_signal_command);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" V="));
     Serial.println(value);
@@ -821,7 +821,7 @@ void SensorAnalogInput::onLoop(Child* child) {
   // calculate the percentage
   int percentage = 0;
   if (_output_percentage) percentage = _getPercentage(adc);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -978,7 +978,7 @@ void SensorThermistor::onLoop(Child* child) {
   temperature = 1.0 / temperature;                 // Invert
   temperature -= 273.15;                         // convert to C
   temperature = _node->celsiusToFahrenheit(temperature);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -1026,7 +1026,7 @@ void SensorML8511::onLoop(Child* child) {
   float outputVoltage = 3.3 / refLevel * uvLevel;
   //Convert the voltage to a UV intensity level
   float uvIntensity = _mapfloat(outputVoltage, 0.99, 2.8, 0.0, 15.0); 
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -1085,7 +1085,7 @@ void SensorACS712::onLoop(Child* child) {
   double voltage = (value / 1024.0) * 5000; 
   // convert voltage in amps
   float value_float = ((voltage - _ACS_offset) / _mv_per_amp);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -1126,7 +1126,7 @@ void SensorDigitalInput::onSetup() {
 void SensorDigitalInput::onLoop(Child* child) {
   // read the value
   int value = digitalRead(_pin);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -1254,7 +1254,7 @@ void SensorDigitalOutput::_setStatus(Child* child, int value) {
   int value_to_write = _getValueToWrite(value);
   // set the value to the pin
   digitalWrite(_pin, value_to_write);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -1327,7 +1327,7 @@ void SensorLatchingRelay::_setStatus(Child* child, int value) {
   // wait for the given time before restoring the value to the original value after the pulse
   _node->sleepOrWait(_pulse_width);
   digitalWrite(pin, ! _on_value);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(F("LAT I="));
     Serial.print(child->child_id);
     Serial.print(F(" P="));
@@ -1374,7 +1374,7 @@ void SensorDHT::onLoop(Child* child) {
     // read the temperature
     float temperature = _dht->getTemperature();
     if (! _node->getIsMetric()) temperature = _dht->toFahrenheit(temperature);
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -1388,7 +1388,7 @@ void SensorDHT::onLoop(Child* child) {
   else if (child->type == V_HUM) {
     // read humidity
     float humidity = _dht->getHumidity();
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -1458,7 +1458,7 @@ void SensorSHT21::onLoop(Child* child) {
     float temperature = SHT2x.GetTemperature();
     // convert it
     temperature = _node->celsiusToFahrenheit(temperature);
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -1473,7 +1473,7 @@ void SensorSHT21::onLoop(Child* child) {
     // read humidity
     float humidity = SHT2x.GetHumidity();
     if (isnan(humidity)) return;
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -1563,7 +1563,7 @@ void SensorInterrupt::onInterrupt() {
   if ( (_mode == RISING && value == HIGH ) || (_mode == FALLING && value == LOW) || (_mode == CHANGE) )  {
     // invert the value if Active State is set to LOW
     if (_active_state == LOW) value = !value;
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -1656,7 +1656,7 @@ void SensorDs18b20::onLoop(Child* child) {
   if (temperature == -127.00 || temperature == 85.00) return;
   // convert it
   temperature = _node->celsiusToFahrenheit(temperature);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -1732,7 +1732,7 @@ void SensorBH1750::onSetup() {
 void SensorBH1750::onLoop(Child* child) {
   // request the light level
   int value = _lightSensor->readLightLevel();
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -1777,7 +1777,7 @@ void SensorMLX90614::onLoop(Child* child) {
   else temperature = _mlx->readObjectTempC();
   // convert it
   temperature = _node->celsiusToFahrenheit(temperature);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(F("MLX I="));
     Serial.print(child->child_id);
     Serial.print(F(" T="));
@@ -1881,7 +1881,7 @@ char* SensorBosch::_forecast(float pressure) {
   else if ((_dP_dt > 0.05) && (_dP_dt < 0.25)) forecast = 1;
   else if ((_dP_dt >(-0.05)) && (_dP_dt < 0.05)) forecast = 0;
   else forecast = 5;
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" M="));
     Serial.print(_minute_count);
@@ -1914,7 +1914,7 @@ uint8_t SensorBosch::GetI2CAddress(uint8_t chip_id) {
     Wire.requestFrom((uint8_t)i2c_address, (byte)1);
     value = Wire.read();
     if (value == chip_id) {
-      #ifdef NODEMANAGER_DEBUG
+      #if FEATURE_DEBUG == ON
         Serial.print(F("I2C=")); 
         Serial.println(i2c_address);
       #endif
@@ -1942,7 +1942,7 @@ SensorBME280::SensorBME280(NodeManager& node_manager, int child_id): SensorBosch
 void SensorBME280::onSetup() {
   _bm = new Adafruit_BME280();
   if (! _bm->begin(SensorBosch::GetI2CAddress(0x60))) {
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.println(F("ERR"));
     #endif
   }
@@ -1955,7 +1955,7 @@ void SensorBME280::onLoop(Child* child) {
     float temperature = _bm->readTemperature();
     // convert it
     temperature = _node->celsiusToFahrenheit(temperature);
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -1969,7 +1969,7 @@ void SensorBME280::onLoop(Child* child) {
   else if (child->type == V_HUM) {
     // read humidity
     float humidity = _bm->readHumidity();
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -1983,7 +1983,7 @@ void SensorBME280::onLoop(Child* child) {
   else if (child->type == V_PRESSURE) {
     // read pressure
     float pressure = _bm->readPressure() / 100.0F;
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -2018,7 +2018,7 @@ SensorBMP085::SensorBMP085(NodeManager& node_manager, int child_id): SensorBosch
 void SensorBMP085::onSetup() {
   _bm = new Adafruit_BMP085();
   if (! _bm->begin(SensorBosch::GetI2CAddress(0x55))) {
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.println(F("ERR"));
     #endif
   }
@@ -2032,7 +2032,7 @@ void SensorBMP085::onLoop(Child* child) {
     float temperature = _bm->readTemperature();
     // convert it
     temperature = _node->celsiusToFahrenheit(temperature);
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -2046,7 +2046,7 @@ void SensorBMP085::onLoop(Child* child) {
   else if (child->type == V_PRESSURE) {
     // read pressure
     float pressure = _bm->readPressure() / 100.0F;
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -2081,7 +2081,7 @@ SensorBMP280::SensorBMP280(NodeManager& node_manager, int child_id): SensorBosch
 void SensorBMP280::onSetup() {
   _bm = new Adafruit_BMP280();
   if (! _bm->begin(SensorBosch::GetI2CAddress(0x58))) {
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.println(F("ERR"));
     #endif
   }
@@ -2094,7 +2094,7 @@ void SensorBMP280::onLoop(Child* child) {
     float temperature = _bm->readTemperature();
     // convert it
     temperature = _node->celsiusToFahrenheit(temperature);
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -2108,7 +2108,7 @@ void SensorBMP280::onLoop(Child* child) {
   else if (child->type == V_PRESSURE) {
     // read pressure
     float pressure = _bm->readPressure() / 100.0F;
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -2201,7 +2201,7 @@ void SensorSonoff::_toggle(Child* child) {
   digitalWrite(_relay_pin, _state? _relay_on: _relay_off);
   // Change LED state
   digitalWrite(_led_pin, _state? _led_on: _led_off);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -2256,7 +2256,7 @@ void SensorHCSR04::onSetup() {
 // what to do during loop
 void SensorHCSR04::onLoop(Child* child) {
   int distance = _node->getIsMetric() ? _sonar->ping_cm() : _sonar->ping_in();
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -2295,7 +2295,7 @@ void SensorMCP9808::onLoop(Child* child) {
   float temperature = _mcp->readTempC();
   // convert it
   temperature = _node->celsiusToFahrenheit(temperature);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -2387,7 +2387,7 @@ void SensorMQ::onLoop(Child* child) {
   if (_target_gas == _gas_lpg) value = lpg;
   if (_target_gas == _gas_co) value = co;
   if (_target_gas == _gas_smoke) value = smoke;
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -2491,7 +2491,7 @@ void SensorMHZ19::onSetup() {
 void SensorMHZ19::onLoop(Child* child) {
   // Read the ppm value
   int co2ppm = _readCO2(); 
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -2519,7 +2519,7 @@ int SensorMHZ19::_readCO2() {
   _ser->write(cmd, 9); //request PPM CO2
   // Then for 1 second listen for 9 bytes of data.
   _ser->readBytes(response, 9);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
   for (int i=0; i<9; i++) {
     Serial.print(response[i], HEX);
     Serial.print(F("-"));
@@ -2567,7 +2567,7 @@ void SensorAM2320::onLoop(Child* child) {
   // temperature sensor
   if (child->type == V_TEMP) {
     float temperature = _th->t;
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -2581,7 +2581,7 @@ void SensorAM2320::onLoop(Child* child) {
   else if (child->type == V_HUM) {
     // read humidity
     float humidity = _th->h;
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -2661,7 +2661,7 @@ void SensorTSL2561::onSetup() {
     }
   }
   else {
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.println(F("ERROR"));
     #endif
   } 
@@ -2687,7 +2687,7 @@ void SensorTSL2561::onLoop(Child* child) {
       ir = lum >> 16;
       full = lum & 0xFFFF;
       ((ChildInt*)child)->setValueInt(_tsl->calculateLux(full, ir));
-      #ifdef NODEMANAGER_DEBUG
+      #if FEATURE_DEBUG == ON
         Serial.print(_name);
         Serial.print(F(" I="));
         Serial.print(child->child_id);
@@ -2702,7 +2702,7 @@ void SensorTSL2561::onLoop(Child* child) {
       #endif
       break; 
   }
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     if (_tsl_spectrum < 3) {
       Serial.print(_name);
       Serial.print(F(" I="));
@@ -2749,7 +2749,7 @@ void SensorPT100::onSetup() {
 void SensorPT100::onLoop(Child* child) {
   // read the PT100 sensor
   int temperature = _PT100->readTemperature(_pin);  
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -2857,7 +2857,7 @@ void SensorDimmer::setPercentage(int value) {
 
 // fade to the provided value
 void SensorDimmer::_fadeTo(Child* child, int target_percentage) {
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -2941,7 +2941,7 @@ void SensorPulseMeter::onReceive(MyMessage* message) {
 void SensorPulseMeter::onInterrupt() {
   // increase the counter
   _count++;
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.println(F("+"));
   #endif
@@ -2950,7 +2950,7 @@ void SensorPulseMeter::onInterrupt() {
 // return the total based on the pulses counted
 void SensorPulseMeter::_reportTotal(Child* child) {
   ((ChildFloat*)child)->setValueFloat(_count / _pulse_factor);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -2984,7 +2984,7 @@ SensorPowerMeter::SensorPowerMeter(NodeManager& node_manager, int pin, int child
 // return the total based on the pulses counted
 void SensorPowerMeter::_reportTotal(Child* child) {
   ((ChildDouble*)child)->setValueDouble(_count / _pulse_factor);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -3008,7 +3008,7 @@ SensorWaterMeter::SensorWaterMeter(NodeManager& node_manager, int pin, int child
 // return the total based on the pulses counted
 void SensorWaterMeter::_reportTotal(Child* child) {
   ((ChildDouble*)child)->setValueDouble(_count / _pulse_factor);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -3072,7 +3072,7 @@ void SensorPlantowerPMS::onLoop(Child* child) {
   }
   // store the value
   ((ChildInt*)child)->setValueInt(val);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -3116,7 +3116,7 @@ void SensorVL53L0X::onSetup() {
 void SensorVL53L0X::onLoop(Child *child) {
   int val = _getDistance();
   ((ChildInt*)child)->setValueInt(val);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -3377,7 +3377,7 @@ void SensorSHT31::onLoop(Child* child) {
     float temperature = _sht31->readTemperature();
     // convert it
     temperature = _node->celsiusToFahrenheit(temperature);
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -3392,7 +3392,7 @@ void SensorSHT31::onLoop(Child* child) {
     // read humidity
     float humidity = _sht31->readHumidity();
     if (isnan(humidity)) return;
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -3438,7 +3438,7 @@ void SensorSI7021::onLoop(Child* child) {
     float temperature = _si7021->getTemp();
     // convert it
     temperature = _node->celsiusToFahrenheit(temperature);
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -3453,7 +3453,7 @@ void SensorSI7021::onLoop(Child* child) {
     // read humidity
     float humidity = _si7021->getRH();
     if (isnan(humidity)) return;
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -3505,7 +3505,7 @@ void SensorChirp::onSetup() {
   Wire.begin();
   _chirp->begin();
   wait(1000);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(" A=");
     Serial.print(_chirp->getAddress(),HEX);
@@ -3523,7 +3523,7 @@ void SensorChirp::onLoop(Child* child) {
     float temperature = _chirp->getTemperature()/(float)10;
     // convert it
     temperature = _node->celsiusToFahrenheit(temperature);
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -3546,7 +3546,7 @@ void SensorChirp::onLoop(Child* child) {
       int tmp_cap = (int)(capacitance+0.5);
       capacitance = (float)tmp_cap;
     }    
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -3560,7 +3560,7 @@ void SensorChirp::onLoop(Child* child) {
     // read light
     float light = _chirp->getLight(true);
     if ( _chirp_lightreversed ) light = 65535 - light;
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -3687,7 +3687,7 @@ void SensorTTP::onInterrupt() {
   int value = _fetchData();
   // invalid value, return
   if (value == 0) return;
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -3705,7 +3705,7 @@ void SensorTTP::onInterrupt() {
       passcode *= 10;
       passcode += (int) _passcode.get(i);
     }
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -3785,7 +3785,7 @@ void SensorServo::setPercentage(int value) {
   Child* child = children.get(1);
   if (child == nullptr) return;
   ((ChildInt*)child)->setValueInt(_value);
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->child_id);
@@ -3839,7 +3839,7 @@ void SensorAPDS9960::onInterrupt() {
       case DIR_FAR: gesture = "FAR"; break;
       default: gesture = "NONE"; break;
     }
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -3893,7 +3893,7 @@ void SensorNeopixel::setColor(char* string) {
     if (strncmp(string+1,",",1) != 0) return;
     int pixel_num = atoi(string);
     int color = atoi(string+2);
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
@@ -4371,13 +4371,13 @@ void NodeManager::registerSensor(Sensor* sensor) {
 // setup NodeManager
 void NodeManager::before() {
   // print out the version
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(F("NodeManager v"));
     Serial.println(VERSION);
   #endif
   // setup the reboot pin if needed
   if (_reboot_pin > -1) {
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print("REB P=");
       Serial.println(_reboot_pin);
     #endif
@@ -4385,7 +4385,7 @@ void NodeManager::before() {
     digitalWrite(_reboot_pin, HIGH);
   }
   // print out MySensors' library capabilities
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(F("LIB V="));
     Serial.print(MYSENSORS_LIBRARY_VERSION);
     Serial.print(F(" R="));
@@ -4415,14 +4415,14 @@ void NodeManager::before() {
     // call each sensor's before()
     sensor->before();
   }
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(F("RADIO..."));
   #endif
 }
 
 // present NodeManager and its sensors
 void NodeManager::presentation() {
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.println(F("OK"));
   #endif
   // Send the sketch version information to the gateway and Controller
@@ -4436,7 +4436,7 @@ void NodeManager::presentation() {
     sensor->presentation();
     _sleepBetweenSend();
   }
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.println(F("READY"));
     Serial.println("");
   #endif
@@ -4451,7 +4451,7 @@ void NodeManager::presentation() {
 void NodeManager::setup() {
   // retrieve and store isMetric from the controller
   if (_get_controller_config) _is_metric = getControllerConfig().isMetric;
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(F("MY I="));
     Serial.print(getNodeId());
     Serial.print(F(" M="));
@@ -4464,7 +4464,7 @@ void NodeManager::setup() {
 #if FEATURE_SD == ON
   // initialize connection to the SD card
   if (sd_card.init(SPI_HALF_SPEED)) {
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(F("SD T="));
       switch(sd_card.type()) {
         case SD_CARD_TYPE_SD1:
@@ -4539,7 +4539,7 @@ void NodeManager::loop() {
 #if FEATURE_RECEIVE == ON
 // dispacth inbound messages
 void NodeManager::receive(const MyMessage &message) {
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(F("RECV S="));
     Serial.print(message.sender);
     Serial.print(F(" I="));
@@ -4571,7 +4571,7 @@ void NodeManager::receive(const MyMessage &message) {
 #if FEATURE_TIME == ON
 // receive the time from the controller and save it
 void NodeManager::receiveTime(unsigned long ts) {
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(F("TIME T="));
     Serial.println(ts);
   #endif
@@ -4598,7 +4598,7 @@ void NodeManager::hello() {
 // reboot the board
 void NodeManager::reboot() {
   #ifndef MY_GATEWAY_ESP8266
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.println(F("REBOOT"));
   #endif
   if (_reboot_pin > -1) {
@@ -4618,7 +4618,7 @@ void NodeManager::reboot() {
 #if FEATURE_EEPROM == ON
 // clear the EEPROM
 void NodeManager::clearEeprom() {
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.println(F("CLEAR"));
   #endif
   for (uint16_t i=0; i<EEPROM_LOCAL_CONFIG_ADDRESS; i++) saveState(i, 0xFF);
@@ -4638,7 +4638,7 @@ void NodeManager::saveToMemory(int index, int value) {
 #if FEATURE_SLEEP
 // wake up the board
 void NodeManager::wakeup() {
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.println(F("WAKEUP"));
   #endif
   _status = AWAKE;
@@ -4691,7 +4691,7 @@ void NodeManager::setupInterrupts() {
     // for non sleeping nodes, we need to handle the interrupt by ourselves  
     if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, _interrupt_2_mode);
   }
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(F("INT P="));
     Serial.print(INTERRUPT_PIN_1);
     Serial.print(F(" M="));
@@ -4779,7 +4779,7 @@ void NodeManager::_onInterrupt_1() {
   if ( (now - _last_interrupt_1 > _interrupt_min_delta) || (now < _last_interrupt_1) ) {
     _last_interrupt_pin = INTERRUPT_PIN_1;
     _last_interrupt_value = digitalRead(INTERRUPT_PIN_1);
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(F("INT P="));
       Serial.print(INTERRUPT_PIN_1);
       Serial.print(" V=");
@@ -4793,7 +4793,7 @@ void NodeManager::_onInterrupt_2() {
   if ( (now - _last_interrupt_2 > _interrupt_min_delta) || (now < _last_interrupt_2) ) {
     _last_interrupt_pin = INTERRUPT_PIN_2;
     _last_interrupt_value = digitalRead(INTERRUPT_PIN_2);
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(F("INT P="));
       Serial.print(INTERRUPT_PIN_2);
       Serial.print(" V=");
@@ -4833,7 +4833,7 @@ void NodeManager::_sendMessage(int child_id, int type) {
   _message.setType(type);
   // send the message, multiple times if requested
   for (int i = 0; i < _retries; i++) {
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(F("SEND D="));
       Serial.print(_message.destination);
       Serial.print(F(" I="));
@@ -4885,7 +4885,7 @@ void NodeManager::syncTime() {
   int retries = 10;
   // ask the controller for the time up to 10 times until received
   while ( ! _time_is_valid && retries >= 0) {
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.println(F("REQ TIME"));
     #endif
     requestTime();
@@ -4908,7 +4908,7 @@ void NodeManager::_sleep() {
   // if there is time still to sleep, sleep for that timeframe only
   if (_remainder_sleep_time > 0) sleep_time = _remainder_sleep_time;
 #endif
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.print(F("SLEEP "));
     Serial.print(sleep_time);
     Serial.println(F("s"));
@@ -4938,7 +4938,7 @@ void NodeManager::_sleep() {
     }
     _last_interrupt_pin = pin_number;
     _last_interrupt_value = digitalRead(pin_number);
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(F("INT P="));
       Serial.print(pin_number);
       Serial.print(F(", M="));
@@ -4953,7 +4953,7 @@ void NodeManager::_sleep() {
   sleep(INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,sleep_time*1000, true);
 #endif
   // coming out of sleep
-  #ifdef NODEMANAGER_DEBUG
+  #if FEATURE_DEBUG == ON
     Serial.println(F("AWAKE"));
   #endif
 #if FEATURE_TIME == ON
@@ -4986,7 +4986,7 @@ void NodeManager::_loadSleepSettings() {
     int bit_2 = loadState(EEPROM_SLEEP_2);
     int bit_3 = loadState(EEPROM_SLEEP_3);
     _sleep_time = bit_3*255*255 + bit_2*255 + bit_1;
-    #ifdef NODEMANAGER_DEBUG
+    #if FEATURE_DEBUG == ON
       Serial.print(F("LOADSLP T="));
       Serial.println(_sleep_time);
     #endif

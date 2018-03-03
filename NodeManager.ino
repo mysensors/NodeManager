@@ -95,6 +95,7 @@ A list of buil-in features and the required dependencies is presented below:
 
 Feature                     | Default | Description                                                                                      | Dependencies
 ----------------------------|---------|--------------------------------------------------------------------------------------------------|----------------------------------------------------------
+FEATURE_DEBUG               | ON      | NodeManager's debug output on serial console                                                     | - 
 FEATURE_POWER_MANAGER       | ON      | allow powering on your sensors only while the node is awake                                      | - 
 FEATURE_INTERRUPTS          | ON      | allow managing interrupt-based sensors like a PIR or a door sensor                               | - 
 FEATURE_CONDITIONAL_REPORT  | ON      | allow reporting a measure only when different from the previous or above/below a given threshold | - 
@@ -273,10 +274,8 @@ FEATURE_SD                  | OFF     | allow reading from and writing to SD car
  * NodeManager built-in features
  */
 
-// NodeManager's debug output on serial console when defined
-#define NODEMANAGER_DEBUG
-
 // Enable/disable NodeManager's features
+#define FEATURE_DEBUG ON
 #define FEATURE_POWER_MANAGER OFF
 #define FEATURE_INTERRUPTS ON
 #define FEATURE_CONDITIONAL_REPORT OFF

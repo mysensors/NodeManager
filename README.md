@@ -97,6 +97,7 @@ A list of buil-in features and the required dependencies is presented below:
 
 Feature                     | Default | Description                                                                                      | Dependencies
 ----------------------------|---------|--------------------------------------------------------------------------------------------------|----------------------------------------------------------
+FEATURE_DEBUG               | ON      | NodeManager's debug output on serial console                                                     | - 
 FEATURE_POWER_MANAGER       | OFF     | allow powering on your sensors only while the node is awake                                      | - 
 FEATURE_INTERRUPTS          | ON      | allow managing interrupt-based sensors like a PIR or a door sensor                               | - 
 FEATURE_CONDITIONAL_REPORT  | OFF     | allow reporting a measure only when different from the previous or above/below a given threshold | - 
@@ -187,7 +188,7 @@ Please note, if you configure a sleep cycle, this may have an impact on the repo
 Once finished configuring your node, upload your sketch to your arduino board as you are used to.
 
 Check your gateway's logs to ensure the node is working as expected. You should see the node presenting itself, presenting all the registered sensors and reporting new measures at the configured reporting interval.
-When `DEBUG` is enabled, detailed information will be available through the serial port. Remember to disable debug once the tests have been completed to save additional storage.
+When `FEATURE_DEBUG` is enabled, detailed information will be available through the serial port. Remember to disable debug once the tests have been completed to save additional storage.
 
 ## Communicate with the sensors
 
@@ -802,7 +803,6 @@ Even if the sensor is sleeping most of the time, it can be potentially woke up b
 #define SKETCH_VERSION "1.0"
 #define MY_BAUD_RATE 9600
 #define MY_NODE_ID 99
-#define MY_SPLASH_SCREEN_DISABLED
 
 // NRF24 radio settings
 #define MY_RADIO_NRF24
@@ -818,8 +818,6 @@ Even if the sensor is sleeping most of the time, it can be potentially woke up b
  * Load NodeManager Library
  */
 
-// enable NodeManager's debug on serial port
-#define NODEMANAGER_DEBUG
 // include NodeManager's library
 #include "NodeManagerLibrary.h"
 NodeManager node;
@@ -874,17 +872,21 @@ void loop() {
   node.loop();
 }
 
+#if FEATURE_RECEIVE == ON
 // receive
-void receive(MyMessage &message) {
+void receive(const MyMessage &message) {
   // call NodeManager receive routine
   node.receive(message);
 }
+#endif
 
+#if FEATURE_TIME == ON
 // receiveTime
 void receiveTime(unsigned long ts) {
   // call NodeManager receiveTime routine
   node.receiveTime(ts);
 }
+#endif
 ~~~
 
 * Motion Sensor
@@ -901,7 +903,6 @@ The following sketch can be used to report back to the controller when a motion 
 #define SKETCH_VERSION "1.0"
 #define MY_BAUD_RATE 9600
 #define MY_NODE_ID 99
-#define MY_SPLASH_SCREEN_DISABLED
 
 // NRF24 radio settings
 #define MY_RADIO_NRF24
@@ -916,8 +917,6 @@ The following sketch can be used to report back to the controller when a motion 
  * Load NodeManager Library
  */
 
-// enable NodeManager's debug on serial port
-#define NODEMANAGER_DEBUG
 // include NodeManager's library
 #include "NodeManagerLibrary.h"
 NodeManager node;
@@ -967,17 +966,21 @@ void loop() {
   node.loop();
 }
 
+#if FEATURE_RECEIVE == ON
 // receive
-void receive(MyMessage &message) {
+void receive(const MyMessage &message) {
   // call NodeManager receive routine
   node.receive(message);
 }
+#endif
 
+#if FEATURE_TIME == ON
 // receiveTime
 void receiveTime(unsigned long ts) {
   // call NodeManager receiveTime routine
   node.receiveTime(ts);
 }
+#endif
 ~~~
 
 * Boiler Sensor
@@ -999,7 +1002,6 @@ The board will be put to sleep just after startup and will report back to the co
 #define SKETCH_VERSION "1.0"
 #define MY_BAUD_RATE 9600
 #define MY_NODE_ID 99
-#define MY_SPLASH_SCREEN_DISABLED
 
 // NRF24 radio settings
 #define MY_RADIO_NRF24
@@ -1014,8 +1016,6 @@ The board will be put to sleep just after startup and will report back to the co
  * Load NodeManager Library
  */
 
-// enable NodeManager's debug on serial port
-#define NODEMANAGER_DEBUG
 // include NodeManager's library
 #include "NodeManagerLibrary.h"
 NodeManager node;
@@ -1069,17 +1069,21 @@ void loop() {
   node.loop();
 }
 
+#if FEATURE_RECEIVE == ON
 // receive
-void receive(MyMessage &message) {
+void receive(const MyMessage &message) {
   // call NodeManager receive routine
   node.receive(message);
 }
+#endif
 
+#if FEATURE_TIME == ON
 // receiveTime
 void receiveTime(unsigned long ts) {
   // call NodeManager receiveTime routine
   node.receiveTime(ts);
 }
+#endif
 ~~~
 
 ## Contributing
