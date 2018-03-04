@@ -104,7 +104,8 @@ FEATURE_SLEEP               | ON      | allow managing automatically the complex
 FEATURE_RECEIVE             | ON      | allow the node to receive messages; can be used by the remote API or for triggering the sensors  | - 
 FEATURE_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
 FEATURE_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device (requires FEATURE_TIME)| https://github.com/JChristensen/DS3232RTC
-FEATURE_SD                  | OFF     | allow reading from and writing to SD cards                                                   | -
+FEATURE_SD                  | OFF     | allow reading from and writing to SD cards                                                       | -
+FEATURE_HOOKING             | OFF     | allow cusotm code to be hooked in the out of the box sensors                                     | -
 
 /**********************************
  * MySensors node configuration
@@ -237,8 +238,8 @@ FEATURE_SD                  | OFF     | allow reading from and writing to SD car
 //#define USE_THERMISTOR
 //#define USE_ML8511
 //#define USE_ACS712
-//#define USE_DIGITAL_INPUT
-//#define USE_DIGITAL_OUTPUT
+#define USE_DIGITAL_INPUT
+#define USE_DIGITAL_OUTPUT
 //#define USE_DHT
 //#define USE_SHT21
 //#define USE_INTERRUPT
@@ -285,6 +286,7 @@ FEATURE_SD                  | OFF     | allow reading from and writing to SD car
 #define FEATURE_TIME OFF
 #define FEATURE_RTC OFF
 #define FEATURE_SD OFF
+#define FEATURE_HOOKING ON
 
 /***********************************
  * Load NodeManager Library
@@ -311,8 +313,8 @@ NodeManager node;
 //SensorThermistor thermistor(node,A0);
 //SensorML8511 ml8511(node,A0);
 //SensorACS712 acs712(node,A0);
-//SensorDigitalInput digitalIn(node,6);
-//SensorDigitalOutput digitalOut(node,6);
+SensorDigitalInput digitalIn(node,6);
+SensorDigitalOutput digitalOut(node,7);
 //SensorRelay relay(node,6);
 //SensorLatchingRelay latching(node,6);
 //SensorDHT11 dht11(node,6);
@@ -356,13 +358,23 @@ NodeManager node;
  * Main Sketch
  */
 
+void hook(Sensor* sensor) {
+  Serial.print("INPUT: ");
+  int digital_in = ((ChildInt*)sensor->children.get(1))->getValueInt();
+  Serial.println(digital_in);
+  Serial.print("OUTPUT: ");
+  Serial.println(digital_in);
+  digitalOut.setStatus(digitalOut.children.get(1),digital_in);
+}
+
 // before
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
   
-  
-  
+  uint16_t ptr = &hook;
+  digitalIn.setPostLoopFunction(ptr);
+  node.setReportIntervalSeconds(10);
   /*
   * Configure your sensors below
   */

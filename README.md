@@ -53,7 +53,7 @@ SensorDHT11         | 2     | USE_DHT            | DHT11 sensor, return temperat
 SensorDHT22         | 2     | USE_DHT            | DHT22 sensor, return temperature/humidity based on the attached DHT sensor                        | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/DHT
 SensorSHT21         | 2     | USE_SHT21          | SHT21 sensor, return temperature/humidity based on the attached SHT21 sensor                      | https://github.com/SodaqMoja/Sodaq_SHT2x
 SensorHTU21D        | 2     | USE_SHT21          | HTU21D sensor, return temperature/humidity based on the attached HTU21D sensor                    | https://github.com/SodaqMoja/Sodaq_SHT2x
-SensorInterrupt     | 1     | USE_INTERRUPT      | Generic interrupt-based sensor, wake up the board when a pin changes status                                       | -
+SensorInterrupt     | 1     | USE_INTERRUPT      | Generic interrupt-based sensor, wake up the board when a pin changes status                       | -
 SensorDoor          | 1     | USE_INTERRUPT      | Door sensor, wake up the board and report when an attached magnetic sensor has been opened/closed | -
 SensorMotion        | 1     | USE_INTERRUPT      | Motion sensor, wake up the board and report when an attached PIR has triggered                    | -
 SensorDs18b20       | 1+    | USE_DS18B20        | DS18B20 sensor, return the temperature based on the attached sensor                               | https://github.com/milesburton/Arduino-Temperature-Control-Library

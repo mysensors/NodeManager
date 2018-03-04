@@ -93,6 +93,9 @@
 #ifndef FEATURE_SD
   #define FEATURE_SD OFF
 #endif
+#ifndef FEATURE_HOOKING
+  #define FEATURE_HOOKING OFF
+#endif
 
 /***********************************
   Libraries
@@ -544,6 +547,12 @@ class Sensor {
     // set a previously configured PowerManager to the sensor so to powering it up with custom pins
     void setPowerManager(PowerManager& powerManager);
 #endif
+#if FEATURE_HOOKING == ON
+    // set a custom hook function to be called just before the sensor executes its loop() function
+    void setPreLoopFunction(void (*function)(Sensor* sensor));
+    // set a custom hook function to be called just after the sensor executes its loop() function
+    void setPostLoopFunction(void (*function)(Sensor* sensor));
+#endif
     // list of configured child
     List<Child*> children;
 #if FEATURE_INTERRUPTS == ON
@@ -582,6 +591,10 @@ class Sensor {
     PowerManager* _powerManager = nullptr;
 #endif
     Timer* _report_timer;
+#if FEATURE_HOOKING == ON
+    void (*_pre_loop_function)(Sensor* sensor);
+    void (*_post_loop_function)(Sensor* sensor);
+#endif
 };
 
 /*

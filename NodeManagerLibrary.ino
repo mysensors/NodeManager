@@ -595,6 +595,10 @@ void Sensor::loop(MyMessage* message) {
       if (! _report_timer->isOver() && ! first_run) return;
     }
   }
+#if FEATURE_HOOKING == ON
+  // if a hook function is defined, call it
+  if (_pre_loop_function != 0) _pre_loop_function(this); 
+#endif
   // turn the sensor on
 #if FEATURE_POWER_MANAGER == ON
   powerOn();
@@ -628,6 +632,10 @@ void Sensor::loop(MyMessage* message) {
 #endif
         child->sendValue();
   }
+#if FEATURE_HOOKING == ON
+  // if a hook function is defined, call it
+  if (_post_loop_function != 0) _post_loop_function(this); 
+#endif
   // turn the sensor off
 #if FEATURE_POWER_MANAGER == ON
   powerOff();
@@ -664,6 +672,14 @@ Child* Sensor::getChild(int child_id) {
 #if FEATURE_POWER_MANAGER == ON
 void Sensor::setPowerManager(PowerManager& powerManager) {
   _powerManager = &powerManager;
+}
+#endif
+#if FEATURE_HOOKING == ON
+void Sensor::setPreLoopFunction(void (*function)(Sensor* sensor)) {
+  _pre_loop_function = function;
+}
+void Sensor::setPostLoopFunction(void (*function)(Sensor* sensor)) {
+  _post_loop_function = function;
 }
 #endif
 
