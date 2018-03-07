@@ -3909,17 +3909,26 @@ void SensorNeopixel::onLoop(Child *child) {
 void SensorNeopixel::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) {
-    setColor(message->getString());
-  }
+  if (message->getCommand() == C_SET && message->type == child->type) {
+      char* string = (char*)message->getString();
+      setColor(string);
+ 		//setColor(message->getString());
+	  }
 }
 
 void SensorNeopixel::setColor(char* string) {
-    Child* child = children.get(1);
-    // if the second char is not a comma, return
-    if (strncmp(string+1,",",1) != 0) return;
-    int pixel_num = atoi(string);
-    int color = atoi(string+2);
+  Child* child = children.get(1);
+  long color = 0;
+  char * p = strstr(string, ",");
+  if (p){ 
+    char pixelnum[6];
+    int pos = (int) (p - string);
+    strncpy(pixelnum, string, pos);
+    pixelnum[pos] = 0;
+
+    int pixel_num = atoi(pixelnum);
+
+    color = strtol(string + pos+1, NULL, 16);
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
@@ -3930,9 +3939,18 @@ void SensorNeopixel::setColor(char* string) {
       Serial.println(color);
     #endif
     _pixels->setPixelColor(pixel_num,color);
-    _pixels->show();
-    ((ChildInt*)child)->setValueInt(color);
+  }
+  else //set All pixels to single color
+  {
+    color = strtol(string, NULL, 16);
+    for(int i=0;i<_num_pixels;i++)
+        _pixels->setPixelColor(i,color);
+  }
+    
+  _pixels->show();
+  ((ChildInt*)child)->setValueInt(color);
 }
+
 #endif
 
 /*
