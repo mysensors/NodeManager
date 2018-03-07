@@ -3892,8 +3892,13 @@ void SensorNeopixel::setNumPixels(int value) {
 
 // what to do during setup
 void SensorNeopixel::onSetup() {
+#if defined(ARDUINO_ARCH_STM32F0) || defined(ARDUINO_ARCH_STM32F1) || defined(ARDUINO_ARCH_STM32F3) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32L4)
+  _pixels = new NeoMaple(_num_pixels, NEO_GRB + NEO_KHZ800);
+#else  
   _pixels = new Adafruit_NeoPixel(_num_pixels, _pin, NEO_GRB + NEO_KHZ800);
+#endif
   _pixels->begin();
+  _pixels->show();
 }
 
 // what to do during loop
