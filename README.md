@@ -491,12 +491,12 @@ Each sensor class exposes additional methods.
     void setInputIsElapsed(bool value);
     // [107] optionally wait for the given number of milliseconds after changing the status (default: 0)
     void setWaitAfterSet(int value);
+    // [108] when switching on, turns the output off after the given number of milliseconds. For latching relay controls the pulse width (default: 0)
+    void setPulseWidth(int value);
 ~~~
 
 * SensorLatchingRelay (in addition to those available for SensorDigitalOutput / SensorRelay)
 ~~~c
-    // [201] set the duration of the pulse to send in ms to activate the relay (default: 50)
-    void setPulseWidth(int value);
     // [202] set the pin which turns the relay off (default: the pin provided while registering the sensor)
     void setPinOff(int value);
     // [203] set the pin which turns the relay on (default: the pin provided while registering the sensor + 1)

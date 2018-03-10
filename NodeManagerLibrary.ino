@@ -1223,8 +1223,8 @@ void SensorDigitalOutput::setInputIsElapsed(bool value) {
 void SensorDigitalOutput::setWaitAfterSet(int value) {
   _wait_after_set = value;
 }
-void SensorDigitalOutput::setOnDuration(int value) {
-  _on_duration = value*1000;
+void SensorDigitalOutput::setPulseWidth(int value) {
+  _pulse_width = value;
 }
 
 // main task
@@ -1305,6 +1305,11 @@ void SensorDigitalOutput::_setStatus(int value) {
     Serial.print(F(" V="));
     Serial.println(value_to_write);
   #endif
+  // if pulse width is set and status is on, turn it off after the configured interval
+  if (_pulse_width > 0 && value == ON) {
+    _node->sleepOrWait(_pulse_width);
+    digitalWrite(_pin, !value_to_write);
+  }
 }
 
 // reverse the value if needed based on the _on_value
@@ -1341,12 +1346,11 @@ SensorLatchingRelay::SensorLatchingRelay(NodeManager& node_manager, int pin, int
   _pin_on = pin;
   _pin_off = pin + 1;
   children.get(1)->description = _name;
+  // set pulse duration
+  _pulse_width = 50;
 }
 
 // setter/getter
-void SensorLatchingRelay::setPulseWidth(int value) {
-  _pulse_width = value;
-}
 void SensorLatchingRelay::setPinOn(int value) {
   _pin_on = value;
 }
@@ -4163,12 +4167,12 @@ void SensorConfiguration::onReceive(MyMessage* message) {
             case 105: custom_sensor->setSafeguard(request.getValueInt()); break;
             case 106: custom_sensor->setInputIsElapsed(request.getValueInt()); break;
             case 107: custom_sensor->setWaitAfterSet(request.getValueInt()); break;
+            case 108: custom_sensor->setPulseWidth(request.getValueInt()); break;
           default: return;
         }
         if (function > 200 && strcmp(sensor->getName(),"LATCHING") == 0) {
           SensorLatchingRelay* custom_sensor_2 = (SensorLatchingRelay*)sensor;
           switch(function) {
-            case 201: custom_sensor_2->setPulseWidth(request.getValueInt()); break;
             case 202: custom_sensor_2->setPinOff(request.getValueInt()); break;
             case 203: custom_sensor_2->setPinOn(request.getValueInt()); break;
             default: return;
