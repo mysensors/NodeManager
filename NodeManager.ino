@@ -20,8 +20,10 @@
 
  DESCRIPTION
 
-NodeManager is intended to take care on your behalf of all those common tasks a MySensors node has to accomplish, 
-speeding up the development cycle of your projects.
+NodeManager is intended to take care on your behalf of all those common tasks that a MySensors node has to accomplish, speeding up the development cycle of your projects. 
+Consider it as a sort of frontend for your MySensors projects. When you need to add a sensor (which requires just uncommeting a single line),
+NodeManager will take care of importing the required library, presenting the sensor to the gateway/controller, executing periodically the main function of the sensor 
+(e.g. measure a temperature, detect a motion, etc.), allowing you to interact with the sensor and even configuring it remotely.
 
 Documentation available on: https://github.com/mysensors/NodeManager
 NodeManager provides built-in implementation of a number of sensors through ad-hoc classes. 
@@ -314,7 +316,7 @@ NodeManager node;
 //SensorML8511 ml8511(node,A0);
 //SensorACS712 acs712(node,A0);
 //SensorDigitalInput digitalIn(node,6);
-//SensorDigitalOutput digitalOut(node,7);
+//SensorDigitalOutput digitalOut(node,6);
 //SensorRelay relay(node,6);
 //SensorLatchingRelay latching(node,6);
 //SensorDHT11 dht11(node,6);
