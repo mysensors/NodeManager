@@ -714,7 +714,6 @@ void Sensor::onInterrupt(){}
 /*
    SensorBattery
 */
-#ifndef MY_GATEWAY_ESP8266
 // contructor
 SensorBattery::SensorBattery(NodeManager& node_manager, int child_id): Sensor(node_manager) {
   _name = "BATTERY";
@@ -741,12 +740,14 @@ void SensorBattery::setBatteryVoltsPerBit(float value) {
 
 // what to do during setup
 void SensorBattery::onSetup() {
+#ifdef CHIP_AVR
   // when measuring the battery from a pin, analog reference must be internal
   if (! _battery_internal_vcc && _battery_pin > -1)
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+#ifdef CHIP_MEGA
     analogReference(INTERNAL1V1);
 #else
     analogReference(INTERNAL);
+#endif
 #endif
 }
 
@@ -778,13 +779,11 @@ void SensorBattery::onReceive(MyMessage* message) {
   if (child == nullptr) return;
   if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
-#endif
 
-#ifdef MY_SIGNAL_REPORT_ENABLED
+#ifdef USE_SIGNAL
 /*
    SensorSignal
 */
-#ifndef MY_GATEWAY_ESP8266
 // contructor
 SensorSignal::SensorSignal(NodeManager& node_manager, int child_id): Sensor(node_manager) {
   _name = "SIGNAL";
@@ -815,7 +814,6 @@ void SensorSignal::onReceive(MyMessage* message) {
   if (child == nullptr) return;
   if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
-#endif
 #endif
 
 #ifdef USE_ANALOG_INPUT
@@ -4681,7 +4679,7 @@ void NodeManager::hello() {
 
 // reboot the board
 void NodeManager::reboot() {
-  #ifndef MY_GATEWAY_ESP8266
+#ifdef CHIP_AVR
   #if FEATURE_DEBUG == ON
     Serial.println(F("REBOOT"));
   #endif
@@ -4696,7 +4694,7 @@ void NodeManager::reboot() {
     // Infinite loop until watchdog reset after 16 ms
     while(true){}
   }
-  #endif
+#endif
 }
 
 #if FEATURE_EEPROM == ON
@@ -4737,13 +4735,13 @@ void NodeManager::setSmartSleep(bool value) {
 
 // return vcc in V
 float NodeManager::getVcc() {
-  #ifndef MY_GATEWAY_ESP8266
+#ifdef CHIP_AVR
     // Measure Vcc against 1.1V Vref
-    #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+    #if defined(CHIP_MEGA)
       ADMUX = (_BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
-    #elif defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
+    #elif defined (CHIP_TINYX4)
       ADMUX = (_BV(MUX5) | _BV(MUX0));
-    #elif defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
+    #elif defined (CHIP_TINYX5)
       ADMUX = (_BV(MUX3) | _BV(MUX2));
     #else
       ADMUX = (_BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
@@ -4755,9 +4753,9 @@ float NodeManager::getVcc() {
     while (bit_is_set(ADCSRA, ADSC)) {};
     // return Vcc in mV
     return (float)((1125300UL) / ADC) / 1000;
-  #else
+#else
     return (float)0;
-  #endif
+#endif
 }
 
 #if FEATURE_INTERRUPTS == ON
@@ -4836,12 +4834,12 @@ void NodeManager::setRebootPin(int value) {
 
 // turn the ADC off so to save 0.2 mA
 void NodeManager::setADCOff() {
-  #ifndef MY_GATEWAY_ESP8266
+#ifdef CHIP_AVR
     // Disable the ADC by setting the ADEN bit (bit 7) to zero
     ADCSRA = ADCSRA & B01111111;
     // Disable the analog comparator by setting the ACD bit (bit 7) to one
     ACSR = B10000000;
-  #endif
+#endif
 }
 
 // sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 

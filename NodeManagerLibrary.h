@@ -55,9 +55,9 @@
   #define CHIP_STM32
 #endif
 #if defined(ESP8266) || defined(MY_GATEWAY_ESP8266)
-  #define CHIP_ESP
+  #define CHIP_ESP8266
 #endif
-#if !defined(CHIP_ESP) && !defined(CHIP_STM32)
+#if !defined(CHIP_ESP8266) && !defined(CHIP_STM32)
   #define CHIP_AVR
 #endif
 
@@ -128,13 +128,16 @@
 #ifdef MY_USE_UDP
     #include <WiFiUdp.h>
 #endif
-#ifdef MY_GATEWAY_ESP8266
+#ifdef CHIP_ESP8266
   #include <ESP8266WiFi.h>
 #endif
 // load MySensors library
 #include <MySensors.h>
 
 // include third party libraries
+#ifdef USE_SIGNAL
+  #define MY_SIGNAL_REPORT_ENABLED
+#endif
 #ifdef USE_DHT
   #include <DHT.h>
 #endif
@@ -661,7 +664,7 @@ class SensorBattery: public Sensor {
       float _battery_volts_per_bit = 0.003363075;
 };
 
-#ifdef MY_SIGNAL_REPORT_ENABLED
+#ifdef USE_SIGNAL
 /*
    SensorSignal: report RSSI signal strength from the radio
 */
