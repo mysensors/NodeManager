@@ -241,7 +241,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define USE_ML8511
 //#define USE_ACS712
 //#define USE_DIGITAL_INPUT
-//#define USE_DIGITAL_OUTPUT
+#define USE_DIGITAL_OUTPUT
 //#define USE_DHT
 //#define USE_SHT21
 //#define USE_INTERRUPT
@@ -316,7 +316,7 @@ NodeManager node;
 //SensorML8511 ml8511(node,A0);
 //SensorACS712 acs712(node,A0);
 //SensorDigitalInput digitalIn(node,6);
-//SensorDigitalOutput digitalOut(node,6);
+SensorDigitalOutput digitalOut(node,6);
 //SensorRelay relay(node,6);
 //SensorLatchingRelay latching(node,6);
 //SensorDHT11 dht11(node,6);

@@ -831,8 +831,10 @@ class SensorDigitalOutput: public Sensor {
     void setInputIsElapsed(bool value);
     // [107] optionally wait for the given number of milliseconds after changing the status (default: 0)
     void setWaitAfterSet(int value);
+    // [108] when switching on, turns the output off after the given number of seconds (default: 0)
+    void setOnDuration(int value);
     // manually switch the output to the provided value
-    void setStatus(Child* child, int value);
+    void setStatus(int value);
     // get the current state
     int getStatus();
     void onSetup();
@@ -844,9 +846,10 @@ class SensorDigitalOutput: public Sensor {
     bool _legacy_mode = false;
     bool _input_is_elapsed = false;
     int _wait_after_set = 0;
+    int _on_duration = 0;
     Timer* _safeguard_timer;
     void _setupPin(Child* child, int pin);
-    virtual void _setStatus(Child* child, int value);
+    virtual void _setStatus(int value);
     int _getValueToWrite(int value);
 };
 
@@ -876,7 +879,7 @@ class SensorLatchingRelay: public SensorRelay {
     int _pin_on;
     int _pin_off;
     int _pulse_width = 50;
-    void _setStatus(Child* child, int value);
+    void _setStatus(int value);
 };
 #endif
 
