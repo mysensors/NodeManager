@@ -371,6 +371,7 @@ void before() {
   button.setInterruptHook(&toggleRelay);
   button.setInitial(HIGH);
   button.setMode(FALLING);
+  button.setTriggerTime(5000);
   
     
   /*

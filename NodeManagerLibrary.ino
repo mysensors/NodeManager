@@ -1202,6 +1202,8 @@ SensorDigitalOutput::SensorDigitalOutput(NodeManager& node_manager, int pin, int
 void SensorDigitalOutput::onSetup() {
   _setupPin(children.get(1), _pin);
   _safeguard_timer = new Timer(_node);
+  // report immediately
+  _report_timer->unset();
 }
 
 // setter/getter
@@ -1278,8 +1280,6 @@ void SensorDigitalOutput::setStatus(int value) {
   // store the new status so it will be sent to the controller
   _status = value;
   ((ChildInt*)children.get(1))->setValueInt(value);
-  Serial.println(value);
-  Serial.println(((ChildInt*)children.get(1))->getValueInt());
 }
 
 // toggle the status
@@ -1369,6 +1369,8 @@ void SensorLatchingRelay::setPinOff(int value) {
 void SensorLatchingRelay::onSetup() {
   _setupPin(children.get(1),_pin_on);
   _setupPin(children.get(1),_pin_off);
+  // report immediately
+  _report_timer->unset();
 }
 
 // switch to the requested status
@@ -1571,9 +1573,6 @@ SensorInterrupt::SensorInterrupt(NodeManager& node_manager, int pin, int child_i
 void SensorInterrupt::setMode(int value) {
   _mode = value;
 }
-void SensorInterrupt::setDebounce(int value) {
-  _debounce = value;
-}
 void SensorInterrupt::setTriggerTime(int value) {
   _trigger_time = value;
 }
@@ -1624,8 +1623,6 @@ void SensorInterrupt::onInterrupt() {
   _counter = _counter + 1;
 #endif
   Child* child = children.get(1);
-  // wait to ensure the the input is not floating
-  if (_debounce > 0) _node->sleepOrWait(_debounce);
   // read the value of the pin
   int value = _node->getLastInterruptValue();
   // process the value
@@ -1649,9 +1646,6 @@ void SensorInterrupt::onInterrupt() {
     ((ChildInt*)child)->setValueInt(value);
     // allow the signal to be restored to its normal value
     if (_trigger_time > 0) _node->sleepOrWait(_trigger_time);
-  } else {
-    // invalid
-    ((ChildInt*)child)->setValueInt(-255);
   }
 }
 
@@ -2872,6 +2866,8 @@ void SensorDimmer::setReverse(bool value) {
 // what to do during setup
 void SensorDimmer::onSetup() {
   pinMode(_pin, OUTPUT);
+  // report immediately
+  _report_timer->unset();
 }
 
 // what to do during loop
@@ -3836,6 +3832,8 @@ SensorServo::SensorServo(NodeManager& node_manager, int pin, int child_id): Sens
 // what to do during setup
 void SensorServo::onSetup() {
   _servo.attach(_pin);
+  // report immediately
+  _report_timer->unset();
 }
 
 // what to do during loop
@@ -4059,7 +4057,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       case 10: _node->setRetries(request.getValueInt()); break;
 #if FEATURE_INTERRUPTS == ON
       case 19: _node->setSleepInterruptPin(request.getValueInt()); break;
-      case 28: _node->setInterruptMinDelta(request.getValueInt()); break;
+      case 28: _node->setInterruptDebounce(request.getValueInt()); break;
 #endif
       case 21: _node->setAck(request.getValueInt()); break;
       case 22: _node->setIsMetric(request.getValueInt()); break;
@@ -4192,7 +4190,6 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         SensorInterrupt* custom_sensor = (SensorInterrupt*)sensor;
         switch(function) {
           case 101: custom_sensor->setMode(request.getValueInt()); break;
-          case 102: custom_sensor->setDebounce(request.getValueInt()); break;
           case 103: custom_sensor->setTriggerTime(request.getValueInt()); break;
           case 104: custom_sensor->setInitial(request.getValueInt()); break;
           case 105: custom_sensor->setActiveState(request.getValueInt()); break;
@@ -4358,7 +4355,7 @@ int NodeManager::_last_interrupt_pin = -1;
 int NodeManager::_last_interrupt_value = LOW;
 long NodeManager::_last_interrupt_1 = millis();
 long NodeManager::_last_interrupt_2 = millis();
-long NodeManager::_interrupt_min_delta = 100;
+long NodeManager::_interrupt_debounce = 100;
 #endif
 
 // setter/getter
@@ -4410,8 +4407,8 @@ void NodeManager::setInterrupt(int pin, int mode, int initial) {
     _interrupt_2_initial = initial;
   }
 }
-void NodeManager::setInterruptMinDelta(long value) {
-  _interrupt_min_delta = value;
+void NodeManager::setInterruptDebounce(long value) {
+  _interrupt_debounce = value;
 }
 #endif
 #if FEATURE_POWER_MANAGER == ON
@@ -4881,7 +4878,7 @@ int NodeManager::getAvailableChildId(int child_id) {
 // handle an interrupt
 void NodeManager::_onInterrupt_1() {
   long now = millis();
-  if ( (now - _last_interrupt_1 > _interrupt_min_delta) || (now < _last_interrupt_1) ) {
+  if ( (now - _last_interrupt_1 > _interrupt_debounce) || (now < _last_interrupt_1) ) {
     _last_interrupt_pin = INTERRUPT_PIN_1;
     _last_interrupt_value = digitalRead(INTERRUPT_PIN_1);
     #if FEATURE_DEBUG == ON
@@ -4895,7 +4892,7 @@ void NodeManager::_onInterrupt_1() {
 }
 void NodeManager::_onInterrupt_2() {
   long now = millis();
-  if ( (now - _last_interrupt_2 > _interrupt_min_delta) || (now < _last_interrupt_2) ) {
+  if ( (now - _last_interrupt_2 > _interrupt_debounce) || (now < _last_interrupt_2) ) {
     _last_interrupt_pin = INTERRUPT_PIN_2;
     _last_interrupt_value = digitalRead(INTERRUPT_PIN_2);
     #if FEATURE_DEBUG == ON
