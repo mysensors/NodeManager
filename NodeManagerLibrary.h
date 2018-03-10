@@ -206,7 +206,11 @@
   #include <SparkFun_APDS9960.h>
 #endif
 #ifdef USE_NEOPIXEL
+#if defined(ARDUINO_ARCH_STM32F0) || defined(ARDUINO_ARCH_STM32F1) || defined(ARDUINO_ARCH_STM32F3) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32L4)
+  #include <NeoMaple.h>
+#else
   #include <Adafruit_NeoPixel.h>
+#endif
 #endif
 
 // include third party libraries for enabled features
@@ -1715,7 +1719,11 @@ class SensorNeopixel: public Sensor {
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
   protected:
+#if defined(ARDUINO_ARCH_STM32F0) || defined(ARDUINO_ARCH_STM32F1) || defined(ARDUINO_ARCH_STM32F3) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32L4)
+  NeoMaple* _pixels;
+#else  
   Adafruit_NeoPixel* _pixels;
+#endif
   int _num_pixels = 16;
 };
 #endif
