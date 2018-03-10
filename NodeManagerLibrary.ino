@@ -580,6 +580,10 @@ void Sensor::before() {
 // call the sensor-specific implementation of setup
 void Sensor::setup() {
   onSetup();
+#if FEATURE_HOOKING == ON
+  // if a hook function is defined, call it
+  if (_setup_hook != 0) _setup_hook(this); 
+#endif
 }
 
 // call the sensor-specific implementation of loop
@@ -595,6 +599,10 @@ void Sensor::loop(MyMessage* message) {
       if (! _report_timer->isOver() && ! first_run) return;
     }
   }
+#if FEATURE_HOOKING == ON
+  // if a hook function is defined, call it
+  if (_pre_loop_hook != 0) _pre_loop_hook(this); 
+#endif
   // turn the sensor on
 #if FEATURE_POWER_MANAGER == ON
   powerOn();
@@ -628,6 +636,10 @@ void Sensor::loop(MyMessage* message) {
 #endif
         child->sendValue();
   }
+#if FEATURE_HOOKING == ON
+  // if a hook function is defined, call it
+  if (_post_loop_hook != 0) _post_loop_hook(this); 
+#endif
   // turn the sensor off
 #if FEATURE_POWER_MANAGER == ON
   powerOff();
@@ -641,6 +653,10 @@ void Sensor::loop(MyMessage* message) {
 void Sensor::interrupt() {
   // call the implementation of onInterrupt()
   onInterrupt();
+#if FEATURE_HOOKING == ON
+  // if a hook function is defined, call it
+  if (_interrupt_hook != 0) _interrupt_hook(this); 
+#endif
 }
 #endif
 
@@ -649,6 +665,10 @@ void Sensor::interrupt() {
 void Sensor::receive(MyMessage* message) {
   // a request would make the sensor executing its main task passing along the message
   loop(message);
+#if FEATURE_HOOKING == ON
+  // if a hook function is defined, call it
+  if (_receive_hook != 0) _receive_hook(this,message); 
+#endif
 }
 #endif
 
@@ -664,6 +684,23 @@ Child* Sensor::getChild(int child_id) {
 #if FEATURE_POWER_MANAGER == ON
 void Sensor::setPowerManager(PowerManager& powerManager) {
   _powerManager = &powerManager;
+}
+#endif
+#if FEATURE_HOOKING == ON
+void Sensor::setSetupHook(void (*function)(Sensor* sensor)) {
+  _setup_hook = function;
+}
+void Sensor::setPreLoopHook(void (*function)(Sensor* sensor)) {
+  _pre_loop_hook = function;
+}
+void Sensor::setPostLoopHook(void (*function)(Sensor* sensor)) {
+  _post_loop_hook = function;
+}
+void Sensor::setInterruptHook(void (*function)(Sensor* sensor)) {
+  _interrupt_hook = function;
+}
+void Sensor::setReceiveHook(void (*function)(Sensor* sensor, MyMessage* message)) {
+  _receive_hook = function;
 }
 #endif
 
@@ -1188,6 +1225,9 @@ void SensorDigitalOutput::setInputIsElapsed(bool value) {
 void SensorDigitalOutput::setWaitAfterSet(int value) {
   _wait_after_set = value;
 }
+void SensorDigitalOutput::setPulseWidth(int value) {
+  _pulse_width = value;
+}
 
 // main task
 void SensorDigitalOutput::onLoop(Child* child) {
@@ -1196,7 +1236,7 @@ void SensorDigitalOutput::onLoop(Child* child) {
     // update the timer
     _safeguard_timer->update();
     // if the time is over, turn the output off
-    if (_safeguard_timer->isOver()) setStatus(child,OFF);
+    if (_safeguard_timer->isOver()) setStatus(OFF);
   }
 }
 
@@ -1207,7 +1247,7 @@ void SensorDigitalOutput::onReceive(MyMessage* message) {
   // by default handle a SET message but when legacy mode is set when a REQ message is expected instead
   if ( (message->getCommand() == C_SET && ! _legacy_mode) || (message->getCommand() == C_REQ && _legacy_mode)) {
     // switch the output
-    setStatus(child, message->getInt());
+    setStatus(message->getInt());
   }
   if (message->getCommand() == C_REQ && ! _legacy_mode) {
     // just return the current status
@@ -1216,7 +1256,7 @@ void SensorDigitalOutput::onReceive(MyMessage* message) {
 }
 
 // write the value to the output
-void SensorDigitalOutput::setStatus(Child* child, int value) {
+void SensorDigitalOutput::setStatus(int value) {
   // pre-process the input value
   if (_input_is_elapsed) {
     // the input provided is an elapsed time
@@ -1234,12 +1274,12 @@ void SensorDigitalOutput::setStatus(Child* child, int value) {
     // if turning the output on and a safeguard timer is configured, start it
     if (value == ON && _safeguard_timer->isConfigured() && ! _safeguard_timer->isRunning()) _safeguard_timer->start();
   }
-  _setStatus(child, value);
+  _setStatus(value);
   // wait if needed for relay drawing a lot of current
   if (_wait_after_set > 0) _node->sleepOrWait(_wait_after_set);
   // store the new status so it will be sent to the controller
   _status = value;
-  ((ChildInt*)child)->setValueInt(value);
+  ((ChildInt*)children.get(1))->setValueInt(value);
 }
 
 // setup the provided pin for output
@@ -1254,19 +1294,24 @@ void SensorDigitalOutput::_setupPin(Child* child, int pin) {
 }
 
 // switch to the requested status
-void SensorDigitalOutput::_setStatus(Child* child, int value) {
+void SensorDigitalOutput::_setStatus(int value) {
   int value_to_write = _getValueToWrite(value);
   // set the value to the pin
   digitalWrite(_pin, value_to_write);
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(children.get(1)->child_id);
     Serial.print(F(" P="));
     Serial.print(_pin);
     Serial.print(F(" V="));
     Serial.println(value_to_write);
   #endif
+  // if pulse width is set and status is on, turn it off after the configured interval
+  if (_pulse_width > 0 && value == ON) {
+    _node->sleepOrWait(_pulse_width);
+    digitalWrite(_pin, !value_to_write);
+  }
 }
 
 // reverse the value if needed based on the _on_value
@@ -1303,12 +1348,11 @@ SensorLatchingRelay::SensorLatchingRelay(NodeManager& node_manager, int pin, int
   _pin_on = pin;
   _pin_off = pin + 1;
   children.get(1)->description = _name;
+  // set pulse duration
+  _pulse_width = 50;
 }
 
 // setter/getter
-void SensorLatchingRelay::setPulseWidth(int value) {
-  _pulse_width = value;
-}
 void SensorLatchingRelay::setPinOn(int value) {
   _pin_on = value;
 }
@@ -1323,7 +1367,7 @@ void SensorLatchingRelay::onSetup() {
 }
 
 // switch to the requested status
-void SensorLatchingRelay::_setStatus(Child* child, int value) {
+void SensorLatchingRelay::_setStatus(int value) {
   // select the right pin to send the pulse to
   int pin = value == OFF ? _pin_off : _pin_on;
   // set the value
@@ -1332,8 +1376,9 @@ void SensorLatchingRelay::_setStatus(Child* child, int value) {
   _node->sleepOrWait(_pulse_width);
   digitalWrite(pin, ! _on_value);
   #if FEATURE_DEBUG == ON
-    Serial.print(F("LAT I="));
-    Serial.print(child->child_id);
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(children.get(1)->child_id);
     Serial.print(F(" P="));
     Serial.print(pin);
     Serial.print(F(" S="));
@@ -4126,12 +4171,12 @@ void SensorConfiguration::onReceive(MyMessage* message) {
             case 105: custom_sensor->setSafeguard(request.getValueInt()); break;
             case 106: custom_sensor->setInputIsElapsed(request.getValueInt()); break;
             case 107: custom_sensor->setWaitAfterSet(request.getValueInt()); break;
+            case 108: custom_sensor->setPulseWidth(request.getValueInt()); break;
           default: return;
         }
         if (function > 200 && strcmp(sensor->getName(),"LATCHING") == 0) {
           SensorLatchingRelay* custom_sensor_2 = (SensorLatchingRelay*)sensor;
           switch(function) {
-            case 201: custom_sensor_2->setPulseWidth(request.getValueInt()); break;
             case 202: custom_sensor_2->setPinOff(request.getValueInt()); break;
             case 203: custom_sensor_2->setPinOn(request.getValueInt()); break;
             default: return;

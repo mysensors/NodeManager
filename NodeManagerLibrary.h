@@ -99,6 +99,9 @@
 #ifndef FEATURE_SD
   #define FEATURE_SD OFF
 #endif
+#ifndef FEATURE_HOOKING
+  #define FEATURE_HOOKING OFF
+#endif
 
 /***********************************
   Libraries
@@ -554,6 +557,18 @@ class Sensor {
     // set a previously configured PowerManager to the sensor so to powering it up with custom pins
     void setPowerManager(PowerManager& powerManager);
 #endif
+#if FEATURE_HOOKING == ON
+    // set a custom hook function to be called when the sensor executes its setup() function
+    void setSetupHook(void (*function)(Sensor* sensor));
+    // set a custom hook function to be called just before the sensor executes its loop() function
+    void setPreLoopHook(void (*function)(Sensor* sensor));
+    // set a custom hook function to be called just after the sensor executes its loop() function
+    void setPostLoopHook(void (*function)(Sensor* sensor));
+    // set a custom hook function to be called when the sensor executes its interrupt() function
+    void setInterruptHook(void (*function)(Sensor* sensor));
+    // set a custom hook function to be called when the sensor executes its receive() function
+    void setReceiveHook(void (*function)(Sensor* sensor, MyMessage* message));
+#endif
     // list of configured child
     List<Child*> children;
 #if FEATURE_INTERRUPTS == ON
@@ -592,6 +607,13 @@ class Sensor {
     PowerManager* _powerManager = nullptr;
 #endif
     Timer* _report_timer;
+#if FEATURE_HOOKING == ON
+    void (*_setup_hook)(Sensor* sensor);
+    void (*_pre_loop_hook)(Sensor* sensor);
+    void (*_post_loop_hook)(Sensor* sensor);
+    void (*_interrupt_hook)(Sensor* sensor);
+    void (*_receive_hook)(Sensor* sensor, MyMessage* message);
+#endif
 };
 
 /*
@@ -815,8 +837,10 @@ class SensorDigitalOutput: public Sensor {
     void setInputIsElapsed(bool value);
     // [107] optionally wait for the given number of milliseconds after changing the status (default: 0)
     void setWaitAfterSet(int value);
+    // [108] when switching on, turns the output off after the given number of milliseconds. For latching relay controls the pulse width (default: 0)
+    void setPulseWidth(int value);
     // manually switch the output to the provided value
-    void setStatus(Child* child, int value);
+    void setStatus(int value);
     // get the current state
     int getStatus();
     void onSetup();
@@ -828,9 +852,10 @@ class SensorDigitalOutput: public Sensor {
     bool _legacy_mode = false;
     bool _input_is_elapsed = false;
     int _wait_after_set = 0;
+    int _pulse_width = 0;
     Timer* _safeguard_timer;
     void _setupPin(Child* child, int pin);
-    virtual void _setStatus(Child* child, int value);
+    virtual void _setStatus(int value);
     int _getValueToWrite(int value);
 };
 
@@ -848,8 +873,6 @@ class SensorRelay: public SensorDigitalOutput {
 class SensorLatchingRelay: public SensorRelay {
   public:
     SensorLatchingRelay(NodeManager& node_manager, int pin, int child_id = -255);
-    // [201] set the duration of the pulse to send in ms to activate the relay (default: 50)
-    void setPulseWidth(int value);
     // [202] set the pin which turns the relay off (default: the pin provided while registering the sensor)
     void setPinOff(int value);
     // [203] set the pin which turns the relay on (default: the pin provided while registering the sensor + 1)
@@ -859,8 +882,7 @@ class SensorLatchingRelay: public SensorRelay {
   protected:
     int _pin_on;
     int _pin_off;
-    int _pulse_width = 50;
-    void _setStatus(Child* child, int value);
+    void _setStatus(int value);
 };
 #endif
 
