@@ -28,8 +28,14 @@
 #define ON 1
 
 // define interrupt pins
+
+#if defined(ARDUINO_ARCH_STM32F0) || defined(ARDUINO_ARCH_STM32F1) || defined(ARDUINO_ARCH_STM32F3) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32L4)
+#define INTERRUPT_PIN_1 PB8
+#define INTERRUPT_PIN_2 2
+#else
 #define INTERRUPT_PIN_1 3
 #define INTERRUPT_PIN_2 2
+#endif
 
 // define eeprom addresses
 #define EEPROM_SLEEP_SAVED 0

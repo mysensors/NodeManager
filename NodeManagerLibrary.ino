@@ -705,11 +705,13 @@ void SensorBattery::setBatteryVoltsPerBit(float value) {
 // what to do during setup
 void SensorBattery::onSetup() {
   // when measuring the battery from a pin, analog reference must be internal
+#if defined(ARDUINO_ARCH_AVR)  
   if (! _battery_internal_vcc && _battery_pin > -1)
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
     analogReference(INTERNAL1V1);
 #else
     analogReference(INTERNAL);
+#endif
 #endif
 }
 
@@ -4646,14 +4648,15 @@ void NodeManager::hello() {
 
 // reboot the board
 void NodeManager::reboot() {
-  #ifndef MY_GATEWAY_ESP8266
   #if FEATURE_DEBUG == ON
     Serial.println(F("REBOOT"));
   #endif
   if (_reboot_pin > -1) {
     // reboot the board through the reboot pin which is connected to RST by setting it to low
     digitalWrite(_reboot_pin, LOW);
-  } else {
+  }
+  #if defined(ARDUINO_ARCH_AVR)
+  else {
     // Software reboot with watchdog timer. Enter Watchdog Configuration mode:
     WDTCSR |= (1<<WDCE) | (1<<WDE);
     // Reset enable
@@ -4702,7 +4705,7 @@ void NodeManager::setSmartSleep(bool value) {
 
 // return vcc in V
 float NodeManager::getVcc() {
-  #ifndef MY_GATEWAY_ESP8266
+  #if defined(ARDUINO_ARCH_AVR)
     // Measure Vcc against 1.1V Vref
     #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
       ADMUX = (_BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
@@ -4721,7 +4724,7 @@ float NodeManager::getVcc() {
     // return Vcc in mV
     return (float)((1125300UL) / ADC) / 1000;
   #else
-    return (float)0;
+    return 0;
   #endif
 }
 
@@ -4738,13 +4741,21 @@ void NodeManager::setupInterrupts() {
     pinMode(INTERRUPT_PIN_1,INPUT);
     if (_interrupt_1_initial > -1) digitalWrite(INTERRUPT_PIN_1,_interrupt_1_initial);
     // for non sleeping nodes, we need to handle the interrupt by ourselves  
+#if defined(ARDUINO_ARCH_STM32F0) || defined(ARDUINO_ARCH_STM32F1) || defined(ARDUINO_ARCH_STM32F3) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32L4)
+    if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, (ExtIntTriggerMode)_interrupt_1_mode);
+#else
     if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, _interrupt_1_mode);
+#endif
   }
   if (_interrupt_2_mode != MODE_NOT_DEFINED) {
     pinMode(INTERRUPT_PIN_2, INPUT);
     if (_interrupt_2_initial > -1) digitalWrite(INTERRUPT_PIN_2,_interrupt_2_initial);
     // for non sleeping nodes, we need to handle the interrupt by ourselves  
+#if defined(ARDUINO_ARCH_STM32F0) || defined(ARDUINO_ARCH_STM32F1) || defined(ARDUINO_ARCH_STM32F3) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32L4)
+    if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, (ExtIntTriggerMode)_interrupt_2_mode);
+#else
     if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, _interrupt_2_mode);
+#endif
   }
   #if FEATURE_DEBUG == ON
     Serial.print(F("INT P="));
@@ -4801,7 +4812,7 @@ void NodeManager::setRebootPin(int value) {
 
 // turn the ADC off so to save 0.2 mA
 void NodeManager::setADCOff() {
-  #ifndef MY_GATEWAY_ESP8266
+  #if defined(ARDUINO_ARCH_AVR)
     // Disable the ADC by setting the ADEN bit (bit 7) to zero
     ADCSRA = ADCSRA & B01111111;
     // Disable the analog comparator by setting the ACD bit (bit 7) to one
@@ -4862,7 +4873,7 @@ void NodeManager::_onInterrupt_2() {
 // send a message by providing the source child, type of the message and value
 void NodeManager::sendMessage(int child_id, int type, int value) {
   _message.clear();
-  _message.set(value);
+  _message.set((int16_t)value);
   _sendMessage(child_id,type);
 }
 void NodeManager::sendMessage(int child_id, int type, float value, int precision) {
