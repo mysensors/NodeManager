@@ -241,10 +241,10 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define USE_ML8511
 //#define USE_ACS712
 //#define USE_DIGITAL_INPUT
-//#define USE_DIGITAL_OUTPUT
+#define USE_DIGITAL_OUTPUT
 //#define USE_DHT
 //#define USE_SHT21
-//#define USE_INTERRUPT
+#define USE_INTERRUPT
 //#define USE_DS18B20
 //#define USE_BH1750
 //#define USE_MLX90614
@@ -288,7 +288,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 #define FEATURE_TIME OFF
 #define FEATURE_RTC OFF
 #define FEATURE_SD OFF
-#define FEATURE_HOOKING OFF
+#define FEATURE_HOOKING ON
 
 /***********************************
  * Load NodeManager Library
@@ -317,7 +317,7 @@ NodeManager node;
 //SensorACS712 acs712(node,A0);
 //SensorDigitalInput digitalIn(node,6);
 //SensorDigitalOutput digitalOut(node,6);
-//SensorRelay relay(node,6);
+SensorRelay relay(node,6);
 //SensorLatchingRelay latching(node,6);
 //SensorDHT11 dht11(node,6);
 //SensorDHT22 dht22(node,6);
@@ -360,11 +360,17 @@ NodeManager node;
  * Main Sketch
  */
 
+SensorInterrupt button(node,3);
+void toggleRelay(Sensor* sensor) {
+  relay.toggleStatus();
+}
 // before
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
-  
+  button.setInterruptHook(&toggleRelay);
+  button.setInitial(HIGH);
+  button.setMode(FALLING);
   
     
   /*

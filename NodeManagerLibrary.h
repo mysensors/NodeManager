@@ -835,6 +835,8 @@ class SensorDigitalOutput: public Sensor {
     void setPulseWidth(int value);
     // manually switch the output to the provided value
     void setStatus(int value);
+    // toggle the status
+    void toggleStatus();
     // get the current state
     int getStatus();
     void onSetup();

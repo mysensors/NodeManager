@@ -493,6 +493,10 @@ Each sensor class exposes additional methods.
     void setWaitAfterSet(int value);
     // [108] when switching on, turns the output off after the given number of milliseconds. For latching relay controls the pulse width (default: 0)
     void setPulseWidth(int value);
+    // manually switch the output to the provided value
+    void setStatus(int value);
+    // toggle the status
+    void toggleStatus(int value);
 ~~~
 
 * SensorLatchingRelay (in addition to those available for SensorDigitalOutput / SensorRelay)

@@ -1278,6 +1278,13 @@ void SensorDigitalOutput::setStatus(int value) {
   // store the new status so it will be sent to the controller
   _status = value;
   ((ChildInt*)children.get(1))->setValueInt(value);
+  Serial.println(value);
+  Serial.println(((ChildInt*)children.get(1))->getValueInt());
+}
+
+// toggle the status
+void SensorDigitalOutput::toggleStatus() {
+  setStatus(!_status);
 }
 
 // setup the provided pin for output
