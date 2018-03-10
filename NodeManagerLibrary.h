@@ -93,6 +93,9 @@
 #ifndef FEATURE_SD
   #define FEATURE_SD OFF
 #endif
+#ifndef FEATURE_HOOKING
+  #define FEATURE_HOOKING OFF
+#endif
 
 /***********************************
   Libraries
@@ -548,6 +551,18 @@ class Sensor {
     // set a previously configured PowerManager to the sensor so to powering it up with custom pins
     void setPowerManager(PowerManager& powerManager);
 #endif
+#if FEATURE_HOOKING == ON
+    // set a custom hook function to be called when the sensor executes its setup() function
+    void setSetupHook(void (*function)(Sensor* sensor));
+    // set a custom hook function to be called just before the sensor executes its loop() function
+    void setPreLoopHook(void (*function)(Sensor* sensor));
+    // set a custom hook function to be called just after the sensor executes its loop() function
+    void setPostLoopHook(void (*function)(Sensor* sensor));
+    // set a custom hook function to be called when the sensor executes its interrupt() function
+    void setInterruptHook(void (*function)(Sensor* sensor));
+    // set a custom hook function to be called when the sensor executes its receive() function
+    void setReceiveHook(void (*function)(Sensor* sensor, MyMessage* message));
+#endif
     // list of configured child
     List<Child*> children;
 #if FEATURE_INTERRUPTS == ON
@@ -586,6 +601,13 @@ class Sensor {
     PowerManager* _powerManager = nullptr;
 #endif
     Timer* _report_timer;
+#if FEATURE_HOOKING == ON
+    void (*_setup_hook)(Sensor* sensor);
+    void (*_pre_loop_hook)(Sensor* sensor);
+    void (*_post_loop_hook)(Sensor* sensor);
+    void (*_interrupt_hook)(Sensor* sensor);
+    void (*_receive_hook)(Sensor* sensor, MyMessage* message);
+#endif
 };
 
 /*
