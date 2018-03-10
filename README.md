@@ -31,9 +31,9 @@ A list of buil-in sensors, module to enable, required dependencies and the numbe
 
 Sensor Name         |#Child | Module to enable   | Description                                                                                       | Dependencies
 --------------------|-------|--------------------|---------------------------------------------------------------------------------------------------|----------------------------------------------------------
-SensorBattery       | 1     | -                  | Built-in sensor for automatic battery reporting                                                   | - 
-SensorSignal        | 1     | -                  | Built-in sensor for automatic signal level reporting                                              | -
-SensorConfiguration | 1     | -                  | Built-in sensor for OTA remote configuration of any registered sensor                             | -
+SensorBattery       | 1     | USE_BATTERY        | Built-in sensor for automatic battery reporting                                                   | - 
+SensorSignal        | 1     | USE_SIGNAL         | Built-in sensor for automatic signal level reporting                                              | -
+SensorConfiguration | 1     | USE_CONFIGURATION  | Built-in sensor for OTA remote configuration of any registered sensor                             | -
 SensorAnalogInput   | 1     | USE_ANALOG_INPUT   | Generic analog sensor, return a pin's analog value or its percentage                              | -
 SensorLDR           | 1     | USE_ANALOG_INPUT   | LDR sensor, return the light level of an attached light resistor in percentage                    | -
 SensorRain          | 1     | USE_ANALOG_INPUT   | Rain sensor, return the percentage of rain from an attached analog sensor                         | -

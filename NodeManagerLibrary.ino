@@ -711,6 +711,8 @@ void Sensor::onLoop(Child* child){}
 void Sensor::onReceive(MyMessage* message){}
 void Sensor::onInterrupt(){}
 
+
+#ifdef USE_BATTERY
 /*
    SensorBattery
 */
@@ -779,6 +781,7 @@ void SensorBattery::onReceive(MyMessage* message) {
   if (child == nullptr) return;
   if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
+#endif
 
 #ifdef USE_SIGNAL
 /*
@@ -880,7 +883,7 @@ void SensorAnalogInput::onReceive(MyMessage* message) {
 
 // read the analog input
 int SensorAnalogInput::_getAnalogRead() {
-#ifndef MY_GATEWAY_ESP8266
+#ifdef CHIP_AVR
   // set the reference
   if (_reference != -1) {
     analogReference(_reference);
@@ -3988,6 +3991,7 @@ void SensorNeopixel::setColor(char* string) {
 
 #endif
 
+#ifdef USE_CONFIGURATION
 /*
    SensorConfiguration
 */
@@ -4030,7 +4034,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       case 20: _node->setSleepBetweenSend(request.getValueInt()); break;
       case 9: _node->wakeup(); break;
 #endif
-#ifndef MY_GATEWAY_ESP8266
+#ifdef CHIP_AVR
       case 6: _node->reboot(); return;
 #endif
 #if FEATURE_EEPROM == ON
@@ -4089,8 +4093,8 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         default: return;
       }
     } else {
-      #ifndef MY_GATEWAY_ESP8266
       // the message is for a function specific to a sensor
+      #ifdef USE_BATTERY
       if (strcmp(sensor->getName(),"BATTERY") == 0) {
         SensorBattery* custom_sensor = (SensorBattery*)sensor;
         switch(function) {
@@ -4102,7 +4106,8 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           default: return;
         }
       }
-      #ifdef MY_SIGNAL_REPORT_ENABLED
+      #endif
+      #ifdef USE_SIGNAL
       if (strcmp(sensor->getName(),"SIGNAL") == 0) {
         SensorSignal* custom_sensor = (SensorSignal*)sensor;
         switch(function) {
@@ -4110,7 +4115,6 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           default: return;
         }
       }
-      #endif
       #endif
       #ifdef USE_ANALOG_INPUT
       if (strcmp(sensor->getName(),"ANALOG_I") == 0 || strcmp(sensor->getName(),"LDR") == 0 || strcmp(sensor->getName(),"RAIN") == 0 || strcmp(sensor->getName(),"SOIL") == 0) {
@@ -4322,6 +4326,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
   }
   _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,function);
 }
+#endif
 
 /*******************************************
    NodeManager
@@ -4895,7 +4900,7 @@ void NodeManager::_onInterrupt_2() {
 // send a message by providing the source child, type of the message and value
 void NodeManager::sendMessage(int child_id, int type, int value) {
   _message.clear();
-  _message.set(value);
+  _message.set((uint32_t) value);
   _sendMessage(child_id,type);
 }
 void NodeManager::sendMessage(int child_id, int type, float value, int precision) {

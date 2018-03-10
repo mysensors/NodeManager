@@ -636,6 +636,7 @@ class Sensor {
 #endif
 };
 
+#ifdef USE_BATTERY
 /*
    SensorBattery: report battery level
 */
@@ -663,6 +664,7 @@ class SensorBattery: public Sensor {
       int _battery_pin = -1;
       float _battery_volts_per_bit = 0.003363075;
 };
+#endif
 
 #ifdef USE_SIGNAL
 /*
@@ -681,6 +683,7 @@ class SensorSignal: public Sensor {
 };
 #endif
 
+#ifdef USE_CONFIGURATION
 /*
    SensorConfiguration: allow remote configuration of the board and any configured sensor
 */
@@ -694,6 +697,7 @@ class SensorConfiguration: public Sensor {
     void onReceive(MyMessage* message);
   protected:
 };
+#endif
 
 #ifdef USE_ANALOG_INPUT
 /*
