@@ -4643,7 +4643,7 @@ void NodeManager::receive(const MyMessage &message) {
       powerOn();
     #endif
     // call the sensor's receive()
-    sensor->receive(&message);
+    sensor->receive((MyMessage*) &message);
     // turn off the pin powering all the sensors
     #if FEATURE_POWER_MANAGER == ON
       powerOff();

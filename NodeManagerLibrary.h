@@ -39,6 +39,29 @@
 #define EEPROM_USER_START 100
 
 /***********************************
+   Chip type
+*/
+// 168 and 328 Arduinos
+#if defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
+  #define CHIP_TINYX4
+#endif
+#if defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
+  #define CHIP_TINYX5
+#endif
+#if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+  #define CHIP_MEGA
+#endif
+#if defined(ARDUINO_ARCH_STM32F0) || defined(ARDUINO_ARCH_STM32F1) || defined(ARDUINO_ARCH_STM32F3) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32L4)
+  #define CHIP_STM32
+#endif
+#if defined(ESP8266) || defined(MY_GATEWAY_ESP8266)
+  #define CHIP_ESP
+#endif
+#if !defined(CHIP_ESP) && !defined(CHIP_STM32)
+  #define CHIP_AVR
+#endif
+
+/***********************************
    Default configuration settings
 */
 // define default sketch name and version
