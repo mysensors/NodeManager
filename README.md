@@ -1,15 +1,13 @@
-NodeManager is intended to take care on your behalf of all those common tasks a MySensors node has to accomplish, speeding up the development cycle of your projects.
-
-NodeManager will help you with the following:
-
-* Sleep manager: allows managing automatically the complexity behind battery-powered sensors spending most of their time sleeping
-* Power manager: allows powering on your sensors only while the node is awake
-* Battery manager: provides common functionalities to read and report the battery level
-* Remote configuration: allows configuring remotely the node without the need to have physical access to it
-* Built-in sensors: for the most common sensors, provide embedded code so to allow their configuration with a single line
+NodeManager is intended to take care on your behalf of all those common tasks that a MySensors node has to accomplish, speeding up the development cycle of your projects. 
+Consider it as a sort of frontend for your MySensors projects. When you need to add a sensor (which requires just uncommeting a single line),
+NodeManager will take care of importing the required library, presenting the sensor to the gateway/controller, executing periodically the main function of the sensor 
+(e.g. measure a temperature, detect a motion, etc.), allowing you to interact with the sensor and even configuring it remotely.
 
 ## Features
 
+* Allows managing automatically the complexity behind battery-powered sensors spending most of their time sleeping
+* Provides common functionalities to read and report the battery level
+* For the most common sensors, provide embedded code so to allow their configuration with a single line
 * Manage all the aspects of a sleeping cycle by leveraging smart sleep
 * Allow configuring the node and any attached sensors remotely
 * Allow waking up a sleeping node remotely at the end of a sleeping cycle
@@ -17,8 +15,6 @@ NodeManager will help you with the following:
 * Report battery level periodically and automatically or on demand
 * Calculate battery level without requiring an additional pin and the resistors
 * Report signal level periodically and automatically or on demand
-* Allow rebooting the board remotely
-* Provide out-of-the-box sensors personalities and automatically execute their main task at each cycle
 * Allow collecting and averaging multiple samples, tracking the last value and forcing periodic updates for any sensor
 * Provide buil-in capabilities to handle interrupt-based sensors 
 
@@ -106,7 +102,8 @@ FEATURE_SLEEP               | ON      | allow managing automatically the complex
 FEATURE_RECEIVE             | ON      | allow the node to receive messages; can be used by the remote API or for triggering the sensors  | - 
 FEATURE_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
 FEATURE_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device (requires FEATURE_TIME)| https://github.com/JChristensen/DS3232RTC
-FEATURE_SD                  | OFF     | allow reading from and writing to SD cards                                                   | -
+FEATURE_SD                  | OFF     | allow reading from and writing to SD cards                                                       | -
+FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the out of the box sensors                                     | -
 
 ## Installation
 
@@ -384,6 +381,18 @@ The following methods are available for all the sensors:
     List<Child*> children;
 #if FEATURE_INTERRUPTS == ON
     void interrupt();
+#endif
+#if FEATURE_HOOKING == ON
+    // set a custom hook function to be called when the sensor executes its setup() function
+    void setSetupHook(void (*function)(Sensor* sensor));
+    // set a custom hook function to be called just before the sensor executes its loop() function
+    void setPreLoopHook(void (*function)(Sensor* sensor));
+    // set a custom hook function to be called just after the sensor executes its loop() function
+    void setPostLoopHook(void (*function)(Sensor* sensor));
+    // set a custom hook function to be called when the sensor executes its interrupt() function
+    void setInterruptHook(void (*function)(Sensor* sensor));
+    // set a custom hook function to be called when the sensor executes its receive() function
+    void setReceiveHook(void (*function)(Sensor* sensor, MyMessage* message));
 #endif
     Child* getChild(int child_id);
     // register a child
@@ -1234,13 +1243,15 @@ v1.6:
 v1.7:
 * Reviewed the entire NodeManager's architecture with children now automatically created from within each sensor
 * Optimized the code so to use the memory in a more efficient manner
-* Improved the overall user experience also with sensors' patterns in the main sketch
-* NodeManager's advanced features can be enabled/disabled by setting the corresponding FEATURE_* define
+* Improved the overall user experience, also with sensors' patterns in the main sketch
 * Sensors can now be enabled by uncommenting the corresponding USE_* define and requiring a single line to be created and initialized
+* NodeManager's advanced features can be enabled/disabled by setting the corresponding FEATURE_* define
 * Simplified the configuration of each sensor, now without the need of getting the sensor back through a nasty casting
 * Merged config.h into the main sketch so to centralize the configuration in a single place
 * Added time-aware capability, with or without an attached RTC
-* SensorBattery, SensorSignal and SensorConfiguration are now regular sensors
+* Intra-sensor communication now possible with the possibility for the user to nicely hook into the sensor's code
+* Batery and signal reports are now available through the regular sensors SensorBattery and SensorSignal
+* Remote API interaction for all the sensors has been moved into the regular sensor SensorConfiguration
 * Fixed bug preventing negative temperatures to be reported for all the sensors
 * Added ability for each sensor to report only when value is above or below a configured threshold
 * Addded support for SD card reader
@@ -1254,7 +1265,7 @@ v1.7:
 * Added support for HD44780 i2c LCD
 * Added support for MG996R Servo sensor
 * Added support for VL53L0X laser time-of-flight distance sensor
-* Added SensorPlantowerPMS particulate matter sensors
+* Added support for SensorPlantowerPMS particulate matter sensors
 * Added support for SHT31 temperature and humidity sensor
 * Added support for SI7021 temperature and humidity sensor
 * Added support for for Neopixel LED

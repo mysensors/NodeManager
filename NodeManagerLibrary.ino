@@ -580,6 +580,10 @@ void Sensor::before() {
 // call the sensor-specific implementation of setup
 void Sensor::setup() {
   onSetup();
+#if FEATURE_HOOKING == ON
+  // if a hook function is defined, call it
+  if (_setup_hook != 0) _setup_hook(this); 
+#endif
 }
 
 // call the sensor-specific implementation of loop
@@ -597,7 +601,7 @@ void Sensor::loop(MyMessage* message) {
   }
 #if FEATURE_HOOKING == ON
   // if a hook function is defined, call it
-  if (_pre_loop_function != 0) _pre_loop_function(this); 
+  if (_pre_loop_hook != 0) _pre_loop_hook(this); 
 #endif
   // turn the sensor on
 #if FEATURE_POWER_MANAGER == ON
@@ -634,7 +638,7 @@ void Sensor::loop(MyMessage* message) {
   }
 #if FEATURE_HOOKING == ON
   // if a hook function is defined, call it
-  if (_post_loop_function != 0) _post_loop_function(this); 
+  if (_post_loop_hook != 0) _post_loop_hook(this); 
 #endif
   // turn the sensor off
 #if FEATURE_POWER_MANAGER == ON
@@ -649,6 +653,10 @@ void Sensor::loop(MyMessage* message) {
 void Sensor::interrupt() {
   // call the implementation of onInterrupt()
   onInterrupt();
+#if FEATURE_HOOKING == ON
+  // if a hook function is defined, call it
+  if (_interrupt_hook != 0) _interrupt_hook(this); 
+#endif
 }
 #endif
 
@@ -657,6 +665,10 @@ void Sensor::interrupt() {
 void Sensor::receive(MyMessage* message) {
   // a request would make the sensor executing its main task passing along the message
   loop(message);
+#if FEATURE_HOOKING == ON
+  // if a hook function is defined, call it
+  if (_receive_hook != 0) _receive_hook(this,message); 
+#endif
 }
 #endif
 
@@ -675,11 +687,20 @@ void Sensor::setPowerManager(PowerManager& powerManager) {
 }
 #endif
 #if FEATURE_HOOKING == ON
-void Sensor::setPreLoopFunction(void (*function)(Sensor* sensor)) {
-  _pre_loop_function = function;
+void Sensor::setSetupHook(void (*function)(Sensor* sensor)) {
+  _setup_hook = function;
 }
-void Sensor::setPostLoopFunction(void (*function)(Sensor* sensor)) {
-  _post_loop_function = function;
+void Sensor::setPreLoopHook(void (*function)(Sensor* sensor)) {
+  _pre_loop_hook = function;
+}
+void Sensor::setPostLoopHook(void (*function)(Sensor* sensor)) {
+  _post_loop_hook = function;
+}
+void Sensor::setInterruptHook(void (*function)(Sensor* sensor)) {
+  _interrupt_hook = function;
+}
+void Sensor::setReceiveHook(void (*function)(Sensor* sensor, MyMessage* message)) {
+  _receive_hook = function;
 }
 #endif
 

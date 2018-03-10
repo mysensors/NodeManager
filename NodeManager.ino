@@ -22,6 +22,7 @@
 
 NodeManager is intended to take care on your behalf of all those common tasks a MySensors node has to accomplish, 
 speeding up the development cycle of your projects.
+
 Documentation available on: https://github.com/mysensors/NodeManager
 NodeManager provides built-in implementation of a number of sensors through ad-hoc classes. 
 
@@ -53,7 +54,7 @@ SensorDHT11         | 2     | USE_DHT            | DHT11 sensor, return temperat
 SensorDHT22         | 2     | USE_DHT            | DHT22 sensor, return temperature/humidity based on the attached DHT sensor                        | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/DHT
 SensorSHT21         | 2     | USE_SHT21          | SHT21 sensor, return temperature/humidity based on the attached SHT21 sensor                      | https://github.com/SodaqMoja/Sodaq_SHT2x
 SensorHTU21D        | 2     | USE_SHT21          | HTU21D sensor, return temperature/humidity based on the attached HTU21D sensor                    | https://github.com/SodaqMoja/Sodaq_SHT2x
-SensorInterrupt     | 1     | USE_INTERRUPT      | Generic interrupt-based sensor, wake up the board when a pin changes status                                       | -
+SensorInterrupt     | 1     | USE_INTERRUPT      | Generic interrupt-based sensor, wake up the board when a pin changes status                       | -
 SensorDoor          | 1     | USE_INTERRUPT      | Door sensor, wake up the board and report when an attached magnetic sensor has been opened/closed | -
 SensorMotion        | 1     | USE_INTERRUPT      | Motion sensor, wake up the board and report when an attached PIR has triggered                    | -
 SensorDs18b20       | 1+    | USE_DS18B20        | DS18B20 sensor, return the temperature based on the attached sensor                               | https://github.com/milesburton/Arduino-Temperature-Control-Library
@@ -105,7 +106,7 @@ FEATURE_RECEIVE             | ON      | allow the node to receive messages; can 
 FEATURE_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
 FEATURE_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device (requires FEATURE_TIME)| https://github.com/JChristensen/DS3232RTC
 FEATURE_SD                  | OFF     | allow reading from and writing to SD cards                                                       | -
-FEATURE_HOOKING             | OFF     | allow cusotm code to be hooked in the out of the box sensors                                     | -
+FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the out of the box sensors                                     | -
 
 /**********************************
  * MySensors node configuration
@@ -127,8 +128,7 @@ FEATURE_HOOKING             | OFF     | allow cusotm code to be hooked in the ou
 
 // RFM69 radio settings
 //#define MY_RADIO_RFM69
-//#define MY_RFM69_FREQUENCY RF69_868MHZ
-//#define MY_RFM69_FREQUENCY RFM69_868MHZ
+//#define MY_RFM69_FREQUENCY RFM69_433MHZ
 //#define MY_IS_RFM69HW
 //#define MY_RFM69_NEW_DRIVER
 //#define MY_RFM69_ENABLE_ENCRYPTION
@@ -238,8 +238,8 @@ FEATURE_HOOKING             | OFF     | allow cusotm code to be hooked in the ou
 //#define USE_THERMISTOR
 //#define USE_ML8511
 //#define USE_ACS712
-#define USE_DIGITAL_INPUT
-#define USE_DIGITAL_OUTPUT
+//#define USE_DIGITAL_INPUT
+//#define USE_DIGITAL_OUTPUT
 //#define USE_DHT
 //#define USE_SHT21
 //#define USE_INTERRUPT
@@ -286,7 +286,7 @@ FEATURE_HOOKING             | OFF     | allow cusotm code to be hooked in the ou
 #define FEATURE_TIME OFF
 #define FEATURE_RTC OFF
 #define FEATURE_SD OFF
-#define FEATURE_HOOKING ON
+#define FEATURE_HOOKING OFF
 
 /***********************************
  * Load NodeManager Library
@@ -313,8 +313,8 @@ NodeManager node;
 //SensorThermistor thermistor(node,A0);
 //SensorML8511 ml8511(node,A0);
 //SensorACS712 acs712(node,A0);
-SensorDigitalInput digitalIn(node,6);
-SensorDigitalOutput digitalOut(node,7);
+//SensorDigitalInput digitalIn(node,6);
+//SensorDigitalOutput digitalOut(node,7);
 //SensorRelay relay(node,6);
 //SensorLatchingRelay latching(node,6);
 //SensorDHT11 dht11(node,6);
@@ -351,30 +351,20 @@ SensorDigitalOutput digitalOut(node,7);
 //DisplayHD44780 hd44780(node);
 //SensorTTP ttp(node);
 //SensorServo servo(node,6);
-//SensorAPDS9960 apsd9960(node,3);
+//SensorAPDS9960 apds9960(node,3);
 //SensorNeopixel neopixel(node,6);
 
 /***********************************
  * Main Sketch
  */
 
-void hook(Sensor* sensor) {
-  Serial.print("INPUT: ");
-  int digital_in = ((ChildInt*)sensor->children.get(1))->getValueInt();
-  Serial.println(digital_in);
-  Serial.print("OUTPUT: ");
-  Serial.println(digital_in);
-  digitalOut.setStatus(digitalOut.children.get(1),digital_in);
-}
-
 // before
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
   
-  uint16_t ptr = &hook;
-  digitalIn.setPostLoopFunction(ptr);
-  node.setReportIntervalSeconds(10);
+  
+  
   /*
   * Configure your sensors below
   */
