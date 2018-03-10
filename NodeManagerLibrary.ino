@@ -3882,7 +3882,7 @@ void SensorAPDS9960::onInterrupt() {
 SensorNeopixel::SensorNeopixel(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "NEOPIXEL";
   children.allocateBlocks(1);
-  new ChildInt(this, _node->getAvailableChildId(child_id), S_COLOR_SENSOR, V_RGB ,_name);
+  new ChildString(this, _node->getAvailableChildId(child_id), S_COLOR_SENSOR, V_RGB ,_name);
 }
 
 // setter/getter
@@ -3939,16 +3939,18 @@ void SensorNeopixel::setColor(char* string) {
       Serial.println(color);
     #endif
     _pixels->setPixelColor(pixel_num,color);
+    //((ChildString*)child)->setValueString(string + pos+1);
   }
   else //set All pixels to single color
   {
     color = strtol(string, NULL, 16);
     for(int i=0;i<_num_pixels;i++)
         _pixels->setPixelColor(i,color);
+    //((ChildString*)child)->setValueString(string);
+
   }
     
   _pixels->show();
-  ((ChildInt*)child)->setValueInt(color);
 }
 
 #endif
@@ -4606,7 +4608,7 @@ void NodeManager::receive(const MyMessage &message) {
       powerOn();
     #endif
     // call the sensor's receive()
-    sensor->receive(&message);
+    sensor->receive((MyMessage*)&message);
     // turn off the pin powering all the sensors
     #if FEATURE_POWER_MANAGER == ON
       powerOff();
