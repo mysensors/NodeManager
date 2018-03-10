@@ -20,8 +20,11 @@
 
  DESCRIPTION
 
-NodeManager is intended to take care on your behalf of all those common tasks a MySensors node has to accomplish, 
-speeding up the development cycle of your projects.
+NodeManager is intended to take care on your behalf of all those common tasks that a MySensors node has to accomplish, speeding up the development cycle of your projects. 
+Consider it as a sort of frontend for your MySensors projects. When you need to add a sensor (which requires just uncommeting a single line),
+NodeManager will take care of importing the required library, presenting the sensor to the gateway/controller, executing periodically the main function of the sensor 
+(e.g. measure a temperature, detect a motion, etc.), allowing you to interact with the sensor and even configuring it remotely.
+
 Documentation available on: https://github.com/mysensors/NodeManager
 NodeManager provides built-in implementation of a number of sensors through ad-hoc classes. 
 
@@ -53,7 +56,7 @@ SensorDHT11         | 2     | USE_DHT            | DHT11 sensor, return temperat
 SensorDHT22         | 2     | USE_DHT            | DHT22 sensor, return temperature/humidity based on the attached DHT sensor                        | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/DHT
 SensorSHT21         | 2     | USE_SHT21          | SHT21 sensor, return temperature/humidity based on the attached SHT21 sensor                      | https://github.com/SodaqMoja/Sodaq_SHT2x
 SensorHTU21D        | 2     | USE_SHT21          | HTU21D sensor, return temperature/humidity based on the attached HTU21D sensor                    | https://github.com/SodaqMoja/Sodaq_SHT2x
-SensorInterrupt     | 1     | USE_INTERRUPT      | Generic interrupt-based sensor, wake up the board when a pin changes status                                       | -
+SensorInterrupt     | 1     | USE_INTERRUPT      | Generic interrupt-based sensor, wake up the board when a pin changes status                       | -
 SensorDoor          | 1     | USE_INTERRUPT      | Door sensor, wake up the board and report when an attached magnetic sensor has been opened/closed | -
 SensorMotion        | 1     | USE_INTERRUPT      | Motion sensor, wake up the board and report when an attached PIR has triggered                    | -
 SensorDs18b20       | 1+    | USE_DS18B20        | DS18B20 sensor, return the temperature based on the attached sensor                               | https://github.com/milesburton/Arduino-Temperature-Control-Library
@@ -104,7 +107,8 @@ FEATURE_SLEEP               | ON      | allow managing automatically the complex
 FEATURE_RECEIVE             | ON      | allow the node to receive messages; can be used by the remote API or for triggering the sensors  | - 
 FEATURE_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
 FEATURE_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device (requires FEATURE_TIME)| https://github.com/JChristensen/DS3232RTC
-FEATURE_SD                  | OFF     | allow reading from and writing to SD cards                                                   | -
+FEATURE_SD                  | OFF     | allow reading from and writing to SD cards                                                       | -
+FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the out of the box sensors                                     | -
 
 /**********************************
  * MySensors node configuration
@@ -126,8 +130,7 @@ FEATURE_SD                  | OFF     | allow reading from and writing to SD car
 
 // RFM69 radio settings
 //#define MY_RADIO_RFM69
-//#define MY_RFM69_FREQUENCY RF69_868MHZ
-//#define MY_RFM69_FREQUENCY RFM69_868MHZ
+//#define MY_RFM69_FREQUENCY RFM69_433MHZ
 //#define MY_IS_RFM69HW
 //#define MY_RFM69_NEW_DRIVER
 //#define MY_RFM69_ENABLE_ENCRYPTION
@@ -285,6 +288,7 @@ FEATURE_SD                  | OFF     | allow reading from and writing to SD car
 #define FEATURE_TIME OFF
 #define FEATURE_RTC OFF
 #define FEATURE_SD OFF
+#define FEATURE_HOOKING OFF
 
 /***********************************
  * Load NodeManager Library
@@ -349,7 +353,7 @@ NodeManager node;
 //DisplayHD44780 hd44780(node);
 //SensorTTP ttp(node);
 //SensorServo servo(node,6);
-//SensorAPDS9960 apsd9960(node,3);
+//SensorAPDS9960 apds9960(node,3);
 //SensorNeopixel neopixel(node,6);
 
 /***********************************
