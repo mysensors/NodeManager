@@ -4661,11 +4661,7 @@ void NodeManager::receive(const MyMessage &message) {
       powerOn();
     #endif
     // call the sensor's receive()
-<<<<<<< HEAD
-    sensor->receive((MyMessage*)&message);
-=======
     sensor->receive((MyMessage*) &message);
->>>>>>> upstream/development
     // turn off the pin powering all the sensors
     #if FEATURE_POWER_MANAGER == ON
       powerOff();
@@ -4703,10 +4699,6 @@ void NodeManager::hello() {
 
 // reboot the board
 void NodeManager::reboot() {
-<<<<<<< HEAD
-=======
-#ifdef CHIP_AVR
->>>>>>> upstream/development
   #if FEATURE_DEBUG == ON
     Serial.println(F("REBOOT"));
   #endif
@@ -4714,7 +4706,7 @@ void NodeManager::reboot() {
     // reboot the board through the reboot pin which is connected to RST by setting it to low
     digitalWrite(_reboot_pin, LOW);
   }
-  #if defined(ARDUINO_ARCH_AVR)
+#ifdef CHIP_AVR
   else {
     // Software reboot with watchdog timer. Enter Watchdog Configuration mode:
     WDTCSR |= (1<<WDCE) | (1<<WDE);
@@ -4764,11 +4756,7 @@ void NodeManager::setSmartSleep(bool value) {
 
 // return vcc in V
 float NodeManager::getVcc() {
-<<<<<<< HEAD
-  #if defined(ARDUINO_ARCH_AVR)
-=======
 #ifdef CHIP_AVR
->>>>>>> upstream/development
     // Measure Vcc against 1.1V Vref
     #if defined(CHIP_MEGA)
       ADMUX = (_BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
@@ -4786,15 +4774,9 @@ float NodeManager::getVcc() {
     while (bit_is_set(ADCSRA, ADSC)) {};
     // return Vcc in mV
     return (float)((1125300UL) / ADC) / 1000;
-<<<<<<< HEAD
-  #else
-    return 0;
-  #endif
-=======
 #else
     return (float)0;
 #endif
->>>>>>> upstream/development
 }
 
 #if FEATURE_INTERRUPTS == ON
@@ -4881,11 +4863,7 @@ void NodeManager::setRebootPin(int value) {
 
 // turn the ADC off so to save 0.2 mA
 void NodeManager::setADCOff() {
-<<<<<<< HEAD
-  #if defined(ARDUINO_ARCH_AVR)
-=======
 #ifdef CHIP_AVR
->>>>>>> upstream/development
     // Disable the ADC by setting the ADEN bit (bit 7) to zero
     ADCSRA = ADCSRA & B01111111;
     // Disable the analog comparator by setting the ACD bit (bit 7) to one
@@ -4950,11 +4928,7 @@ void NodeManager::_onInterrupt_2() {
 // send a message by providing the source child, type of the message and value
 void NodeManager::sendMessage(int child_id, int type, int value) {
   _message.clear();
-<<<<<<< HEAD
-  _message.set((int16_t)value);
-=======
   _message.set((uint32_t) value);
->>>>>>> upstream/development
   _sendMessage(child_id,type);
 }
 void NodeManager::sendMessage(int child_id, int type, float value, int precision) {
