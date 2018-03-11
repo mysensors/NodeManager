@@ -744,7 +744,6 @@ void SensorBattery::setBatteryVoltsPerBit(float value) {
 void SensorBattery::onSetup() {
 #ifdef CHIP_AVR
   // when measuring the battery from a pin, analog reference must be internal
-#if defined(ARDUINO_ARCH_AVR)  
   if (! _battery_internal_vcc && _battery_pin > -1)
 #ifdef CHIP_MEGA
     analogReference(INTERNAL1V1);
@@ -3941,10 +3940,9 @@ SensorNeopixel::SensorNeopixel(NodeManager& node_manager, int pin, int child_id)
 void SensorNeopixel::setNumPixels(int value) {
   _num_pixels = value;
 }
-
 // what to do during setup
 void SensorNeopixel::onSetup() {
-#if defined(ARDUINO_ARCH_STM32F0) || defined(ARDUINO_ARCH_STM32F1) || defined(ARDUINO_ARCH_STM32F3) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32L4)
+#if defined(CHIP_STM32)
   _pixels = new NeoMaple(_num_pixels, NEO_GRB + NEO_KHZ800);
 #else  
   _pixels = new Adafruit_NeoPixel(_num_pixels, _pin, NEO_GRB + NEO_KHZ800);
@@ -4792,7 +4790,7 @@ void NodeManager::setupInterrupts() {
     pinMode(INTERRUPT_PIN_1,INPUT);
     if (_interrupt_1_initial > -1) digitalWrite(INTERRUPT_PIN_1,_interrupt_1_initial);
     // for non sleeping nodes, we need to handle the interrupt by ourselves  
-#if defined(ARDUINO_ARCH_STM32F0) || defined(ARDUINO_ARCH_STM32F1) || defined(ARDUINO_ARCH_STM32F3) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32L4)
+#if defined(CHIP_STM32)
     if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, (ExtIntTriggerMode)_interrupt_1_mode);
 #else
     if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, _interrupt_1_mode);
@@ -4802,7 +4800,7 @@ void NodeManager::setupInterrupts() {
     pinMode(INTERRUPT_PIN_2, INPUT);
     if (_interrupt_2_initial > -1) digitalWrite(INTERRUPT_PIN_2,_interrupt_2_initial);
     // for non sleeping nodes, we need to handle the interrupt by ourselves  
-#if defined(ARDUINO_ARCH_STM32F0) || defined(ARDUINO_ARCH_STM32F1) || defined(ARDUINO_ARCH_STM32F3) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32L4)
+#if defined(CHIP_STM32)
     if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, (ExtIntTriggerMode)_interrupt_2_mode);
 #else
     if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, _interrupt_2_mode);
