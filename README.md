@@ -1,3 +1,5 @@
+# NodeManager
+
 NodeManager is intended to take care on your behalf of all those common tasks that a MySensors node has to accomplish, speeding up the development cycle of your projects. 
 Consider it as a sort of frontend for your MySensors projects. When you need to add a sensor (which requires just uncommeting a single line),
 NodeManager will take care of importing the required library, presenting the sensor to the gateway/controller, executing periodically the main function of the sensor 
