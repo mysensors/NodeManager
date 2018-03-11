@@ -39,6 +39,29 @@
 #define EEPROM_USER_START 100
 
 /***********************************
+   Chip type
+*/
+// 168 and 328 Arduinos
+#if defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
+  #define CHIP_TINYX4
+#endif
+#if defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
+  #define CHIP_TINYX5
+#endif
+#if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+  #define CHIP_MEGA
+#endif
+#if defined(ARDUINO_ARCH_STM32F0) || defined(ARDUINO_ARCH_STM32F1) || defined(ARDUINO_ARCH_STM32F3) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32L4)
+  #define CHIP_STM32
+#endif
+#if defined(ESP8266) || defined(MY_GATEWAY_ESP8266)
+  #define CHIP_ESP8266
+#endif
+#if !defined(CHIP_ESP8266) && !defined(CHIP_STM32)
+  #define CHIP_AVR
+#endif
+
+/***********************************
    Default configuration settings
 */
 // define default sketch name and version
@@ -105,13 +128,16 @@
 #ifdef MY_USE_UDP
     #include <WiFiUdp.h>
 #endif
-#ifdef MY_GATEWAY_ESP8266
+#ifdef CHIP_ESP8266
   #include <ESP8266WiFi.h>
 #endif
 // load MySensors library
 #include <MySensors.h>
 
 // include third party libraries
+#ifdef USE_SIGNAL
+  #define MY_SIGNAL_REPORT_ENABLED
+#endif
 #ifdef USE_DHT
   #include <DHT.h>
 #endif
@@ -610,6 +636,7 @@ class Sensor {
 #endif
 };
 
+#ifdef USE_BATTERY
 /*
    SensorBattery: report battery level
 */
@@ -637,8 +664,9 @@ class SensorBattery: public Sensor {
       int _battery_pin = -1;
       float _battery_volts_per_bit = 0.003363075;
 };
+#endif
 
-#ifdef MY_SIGNAL_REPORT_ENABLED
+#ifdef USE_SIGNAL
 /*
    SensorSignal: report RSSI signal strength from the radio
 */
@@ -655,6 +683,7 @@ class SensorSignal: public Sensor {
 };
 #endif
 
+#ifdef USE_CONFIGURATION
 /*
    SensorConfiguration: allow remote configuration of the board and any configured sensor
 */
@@ -668,6 +697,7 @@ class SensorConfiguration: public Sensor {
     void onReceive(MyMessage* message);
   protected:
 };
+#endif
 
 #ifdef USE_ANALOG_INPUT
 /*
