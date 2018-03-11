@@ -4593,6 +4593,17 @@ void NodeManager::setup() {
 
 // run the main function for all the register sensors
 void NodeManager::loop() {
+#if FEATURE_INTERRUPTS == ON
+  // there has been an interrupt
+  if (_last_interrupt_pin != -1) {
+    #if FEATURE_DEBUG == ON
+      Serial.print(F("INT P="));
+      Serial.print(_last_interrupt_pin);
+      Serial.print(F(", V="));
+      Serial.println(_last_interrupt_value);
+    #endif
+  }
+#endif
 #if FEATURE_TIME == ON
   // if the time was last updated more than 60 minutes ago, update it
   if (_time_is_valid && (now() - _time_last_sync) > 60*60) syncTime();
@@ -4878,29 +4889,21 @@ int NodeManager::getAvailableChildId(int child_id) {
 // handle an interrupt
 void NodeManager::_onInterrupt_1() {
   long now = millis();
+  // debounce the interrupt
   if ( (now - _last_interrupt_1 > _interrupt_debounce) || (now < _last_interrupt_1) ) {
+    // register interrupt pin and value
     _last_interrupt_pin = INTERRUPT_PIN_1;
     _last_interrupt_value = digitalRead(INTERRUPT_PIN_1);
-    #if FEATURE_DEBUG == ON
-      Serial.print(F("INT P="));
-      Serial.print(INTERRUPT_PIN_1);
-      Serial.print(" V=");
-      Serial.println(_last_interrupt_value);
-    #endif
     _last_interrupt_1 = now;
   }
 }
 void NodeManager::_onInterrupt_2() {
   long now = millis();
+  // debounce the interrupt
   if ( (now - _last_interrupt_2 > _interrupt_debounce) || (now < _last_interrupt_2) ) {
+    // register interrupt pin and value
     _last_interrupt_pin = INTERRUPT_PIN_2;
     _last_interrupt_value = digitalRead(INTERRUPT_PIN_2);
-    #if FEATURE_DEBUG == ON
-      Serial.print(F("INT P="));
-      Serial.print(INTERRUPT_PIN_2);
-      Serial.print(" V=");
-      Serial.println(_last_interrupt_value);
-    #endif
     _last_interrupt_2 = now;
   }
 }
@@ -5025,31 +5028,15 @@ void NodeManager::_sleep() {
   int interrupt_2_pin = _interrupt_2_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_2);
   // enter smart sleep for the requested sleep interval and with the configured interrupts
   interrupt = sleep(interrupt_1_pin,_interrupt_1_mode,interrupt_2_pin,_interrupt_2_mode,sleep_time*1000,_smart_sleep);
+  // woke up by an interrupt
   if (interrupt > -1) {
-    // woke up by an interrupt
-    int pin_number = -1;
-    int interrupt_mode = -1;
-    // map the interrupt to the pin
-    if (digitalPinToInterrupt(INTERRUPT_PIN_1) == interrupt) {
-      pin_number = INTERRUPT_PIN_1;
-      interrupt_mode = _interrupt_1_mode;
-    }
-    if (digitalPinToInterrupt(INTERRUPT_PIN_2) == interrupt) {
-      pin_number = INTERRUPT_PIN_2;
-      interrupt_mode = _interrupt_2_mode;
-    }
-    _last_interrupt_pin = pin_number;
-    _last_interrupt_value = digitalRead(pin_number);
-    #if FEATURE_DEBUG == ON
-      Serial.print(F("INT P="));
-      Serial.print(pin_number);
-      Serial.print(F(", M="));
-      Serial.print(interrupt_mode);
-      Serial.print(F(", V="));
-      Serial.println(_last_interrupt_value);
-    #endif
+    // register the interrupt pin
+    if (digitalPinToInterrupt(INTERRUPT_PIN_1) == interrupt) _last_interrupt_pin = INTERRUPT_PIN_1;
+    if (digitalPinToInterrupt(INTERRUPT_PIN_2) == interrupt) _last_interrupt_pin = INTERRUPT_PIN_2;
+    // register the interrupt value
+    _last_interrupt_value = digitalRead(_last_interrupt_pin);
     // when waking up from an interrupt on the wakup pin, stop sleeping
-    if (_sleep_interrupt_pin == pin_number) _status = AWAKE;
+    if (_sleep_interrupt_pin == _last_interrupt_pin) _status = AWAKE;
   }
 #else
   sleep(INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,sleep_time*1000,_smart_sleep);

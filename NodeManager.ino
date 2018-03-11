@@ -371,8 +371,8 @@ void before() {
   button.setInterruptHook(&toggleRelay);
   button.setInitial(HIGH);
   button.setMode(FALLING);
-  button.setTriggerTime(5000);
-  
+  node.setInterruptDebounce(1000);
+//  node.setSleepMinutes(60);
     
   /*
   * Configure your sensors below
