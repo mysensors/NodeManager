@@ -4593,17 +4593,6 @@ void NodeManager::setup() {
 
 // run the main function for all the register sensors
 void NodeManager::loop() {
-#if FEATURE_INTERRUPTS == ON
-  // there has been an interrupt
-  if (_last_interrupt_pin != -1) {
-    #if FEATURE_DEBUG == ON
-      Serial.print(F("INT P="));
-      Serial.print(_last_interrupt_pin);
-      Serial.print(F(", V="));
-      Serial.println(_last_interrupt_value);
-    #endif
-  }
-#endif
 #if FEATURE_TIME == ON
   // if the time was last updated more than 60 minutes ago, update it
   if (_time_is_valid && (now() - _time_last_sync) > 60*60) syncTime();
@@ -4621,7 +4610,7 @@ void NodeManager::loop() {
       _message.clear();
       sensor->interrupt();
       sensor->loop(nullptr);
-        // reset the last interrupt pin
+      // reset the last interrupt pin
       _last_interrupt_pin = -1;
     }
     else if (_last_interrupt_pin == -1) {
@@ -4895,6 +4884,12 @@ void NodeManager::_onInterrupt_1() {
     _last_interrupt_pin = INTERRUPT_PIN_1;
     _last_interrupt_value = digitalRead(INTERRUPT_PIN_1);
     _last_interrupt_1 = now;
+    #if FEATURE_DEBUG == ON
+      Serial.print(F("INT P="));
+      Serial.print(_last_interrupt_pin);
+      Serial.print(F(", V="));
+      Serial.println(_last_interrupt_value);
+    #endif
   }
 }
 void NodeManager::_onInterrupt_2() {
@@ -4905,6 +4900,12 @@ void NodeManager::_onInterrupt_2() {
     _last_interrupt_pin = INTERRUPT_PIN_2;
     _last_interrupt_value = digitalRead(INTERRUPT_PIN_2);
     _last_interrupt_2 = now;
+    #if FEATURE_DEBUG == ON
+      Serial.print(F("INT P="));
+      Serial.print(_last_interrupt_pin);
+      Serial.print(F(", V="));
+      Serial.println(_last_interrupt_value);
+    #endif
   }
 }
 #endif
@@ -5035,6 +5036,12 @@ void NodeManager::_sleep() {
     if (digitalPinToInterrupt(INTERRUPT_PIN_2) == interrupt) _last_interrupt_pin = INTERRUPT_PIN_2;
     // register the interrupt value
     _last_interrupt_value = digitalRead(_last_interrupt_pin);
+    #if FEATURE_DEBUG == ON
+      Serial.print(F("INT P="));
+      Serial.print(_last_interrupt_pin);
+      Serial.print(F(", V="));
+      Serial.println(_last_interrupt_value);
+    #endif
     // when waking up from an interrupt on the wakup pin, stop sleeping
     if (_sleep_interrupt_pin == _last_interrupt_pin) _status = AWAKE;
   }
