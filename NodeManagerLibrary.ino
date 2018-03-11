@@ -711,10 +711,11 @@ void Sensor::onLoop(Child* child){}
 void Sensor::onReceive(MyMessage* message){}
 void Sensor::onInterrupt(){}
 
+
+#ifdef USE_BATTERY
 /*
    SensorBattery
 */
-#ifndef MY_GATEWAY_ESP8266
 // contructor
 SensorBattery::SensorBattery(NodeManager& node_manager, int child_id): Sensor(node_manager) {
   _name = "BATTERY";
@@ -741,12 +742,14 @@ void SensorBattery::setBatteryVoltsPerBit(float value) {
 
 // what to do during setup
 void SensorBattery::onSetup() {
+#ifdef CHIP_AVR
   // when measuring the battery from a pin, analog reference must be internal
   if (! _battery_internal_vcc && _battery_pin > -1)
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+#ifdef CHIP_MEGA
     analogReference(INTERNAL1V1);
 #else
     analogReference(INTERNAL);
+#endif
 #endif
 }
 
@@ -780,11 +783,10 @@ void SensorBattery::onReceive(MyMessage* message) {
 }
 #endif
 
-#ifdef MY_SIGNAL_REPORT_ENABLED
+#ifdef USE_SIGNAL
 /*
    SensorSignal
 */
-#ifndef MY_GATEWAY_ESP8266
 // contructor
 SensorSignal::SensorSignal(NodeManager& node_manager, int child_id): Sensor(node_manager) {
   _name = "SIGNAL";
@@ -815,7 +817,6 @@ void SensorSignal::onReceive(MyMessage* message) {
   if (child == nullptr) return;
   if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
 }
-#endif
 #endif
 
 #ifdef USE_ANALOG_INPUT
@@ -882,7 +883,7 @@ void SensorAnalogInput::onReceive(MyMessage* message) {
 
 // read the analog input
 int SensorAnalogInput::_getAnalogRead() {
-#ifndef MY_GATEWAY_ESP8266
+#ifdef CHIP_AVR
   // set the reference
   if (_reference != -1) {
     analogReference(_reference);
@@ -4003,6 +4004,7 @@ void SensorNeopixel::setColor(char* string) {
 
 #endif
 
+#ifdef USE_CONFIGURATION
 /*
    SensorConfiguration
 */
@@ -4045,7 +4047,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       case 20: _node->setSleepBetweenSend(request.getValueInt()); break;
       case 9: _node->wakeup(); break;
 #endif
-#ifndef MY_GATEWAY_ESP8266
+#ifdef CHIP_AVR
       case 6: _node->reboot(); return;
 #endif
 #if FEATURE_EEPROM == ON
@@ -4104,8 +4106,8 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         default: return;
       }
     } else {
-      #ifndef MY_GATEWAY_ESP8266
       // the message is for a function specific to a sensor
+      #ifdef USE_BATTERY
       if (strcmp(sensor->getName(),"BATTERY") == 0) {
         SensorBattery* custom_sensor = (SensorBattery*)sensor;
         switch(function) {
@@ -4117,7 +4119,8 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           default: return;
         }
       }
-      #ifdef MY_SIGNAL_REPORT_ENABLED
+      #endif
+      #ifdef USE_SIGNAL
       if (strcmp(sensor->getName(),"SIGNAL") == 0) {
         SensorSignal* custom_sensor = (SensorSignal*)sensor;
         switch(function) {
@@ -4125,7 +4128,6 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           default: return;
         }
       }
-      #endif
       #endif
       #ifdef USE_ANALOG_INPUT
       if (strcmp(sensor->getName(),"ANALOG_I") == 0 || strcmp(sensor->getName(),"LDR") == 0 || strcmp(sensor->getName(),"RAIN") == 0 || strcmp(sensor->getName(),"SOIL") == 0) {
@@ -4336,6 +4338,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
   }
   _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,function);
 }
+#endif
 
 /*******************************************
    NodeManager
@@ -4655,7 +4658,7 @@ void NodeManager::receive(const MyMessage &message) {
       powerOn();
     #endif
     // call the sensor's receive()
-    sensor->receive(&message);
+    sensor->receive((MyMessage*) &message);
     // turn off the pin powering all the sensors
     #if FEATURE_POWER_MANAGER == ON
       powerOff();
@@ -4693,7 +4696,7 @@ void NodeManager::hello() {
 
 // reboot the board
 void NodeManager::reboot() {
-  #ifndef MY_GATEWAY_ESP8266
+#ifdef CHIP_AVR
   #if FEATURE_DEBUG == ON
     Serial.println(F("REBOOT"));
   #endif
@@ -4708,7 +4711,7 @@ void NodeManager::reboot() {
     // Infinite loop until watchdog reset after 16 ms
     while(true){}
   }
-  #endif
+#endif
 }
 
 #if FEATURE_EEPROM == ON
@@ -4749,13 +4752,13 @@ void NodeManager::setSmartSleep(bool value) {
 
 // return vcc in V
 float NodeManager::getVcc() {
-  #ifndef MY_GATEWAY_ESP8266
+#ifdef CHIP_AVR
     // Measure Vcc against 1.1V Vref
-    #if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+    #if defined(CHIP_MEGA)
       ADMUX = (_BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
-    #elif defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
+    #elif defined (CHIP_TINYX4)
       ADMUX = (_BV(MUX5) | _BV(MUX0));
-    #elif defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
+    #elif defined (CHIP_TINYX5)
       ADMUX = (_BV(MUX3) | _BV(MUX2));
     #else
       ADMUX = (_BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
@@ -4767,9 +4770,9 @@ float NodeManager::getVcc() {
     while (bit_is_set(ADCSRA, ADSC)) {};
     // return Vcc in mV
     return (float)((1125300UL) / ADC) / 1000;
-  #else
+#else
     return (float)0;
-  #endif
+#endif
 }
 
 #if FEATURE_INTERRUPTS == ON
@@ -4848,12 +4851,12 @@ void NodeManager::setRebootPin(int value) {
 
 // turn the ADC off so to save 0.2 mA
 void NodeManager::setADCOff() {
-  #ifndef MY_GATEWAY_ESP8266
+#ifdef CHIP_AVR
     // Disable the ADC by setting the ADEN bit (bit 7) to zero
     ADCSRA = ADCSRA & B01111111;
     // Disable the analog comparator by setting the ACD bit (bit 7) to one
     ACSR = B10000000;
-  #endif
+#endif
 }
 
 // sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 
@@ -4913,7 +4916,7 @@ void NodeManager::_onInterrupt_2() {
 // send a message by providing the source child, type of the message and value
 void NodeManager::sendMessage(int child_id, int type, int value) {
   _message.clear();
-  _message.set(value);
+  _message.set((uint32_t) value);
   _sendMessage(child_id,type);
 }
 void NodeManager::sendMessage(int child_id, int type, float value, int precision) {
