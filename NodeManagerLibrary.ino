@@ -1202,6 +1202,8 @@ SensorDigitalOutput::SensorDigitalOutput(NodeManager& node_manager, int pin, int
 void SensorDigitalOutput::onSetup() {
   _setupPin(children.get(1), _pin);
   _safeguard_timer = new Timer(_node);
+  // report immediately
+  _report_timer->unset();
 }
 
 // setter/getter
@@ -1278,6 +1280,11 @@ void SensorDigitalOutput::setStatus(int value) {
   // store the new status so it will be sent to the controller
   _status = value;
   ((ChildInt*)children.get(1))->setValueInt(value);
+}
+
+// toggle the status
+void SensorDigitalOutput::toggleStatus() {
+  setStatus(!_status);
 }
 
 // setup the provided pin for output
@@ -1362,6 +1369,8 @@ void SensorLatchingRelay::setPinOff(int value) {
 void SensorLatchingRelay::onSetup() {
   _setupPin(children.get(1),_pin_on);
   _setupPin(children.get(1),_pin_off);
+  // report immediately
+  _report_timer->unset();
 }
 
 // switch to the requested status
@@ -1564,9 +1573,6 @@ SensorInterrupt::SensorInterrupt(NodeManager& node_manager, int pin, int child_i
 void SensorInterrupt::setMode(int value) {
   _mode = value;
 }
-void SensorInterrupt::setDebounce(int value) {
-  _debounce = value;
-}
 void SensorInterrupt::setTriggerTime(int value) {
   _trigger_time = value;
 }
@@ -1617,8 +1623,6 @@ void SensorInterrupt::onInterrupt() {
   _counter = _counter + 1;
 #endif
   Child* child = children.get(1);
-  // wait to ensure the the input is not floating
-  if (_debounce > 0) _node->sleepOrWait(_debounce);
   // read the value of the pin
   int value = _node->getLastInterruptValue();
   // process the value
@@ -1642,9 +1646,6 @@ void SensorInterrupt::onInterrupt() {
     ((ChildInt*)child)->setValueInt(value);
     // allow the signal to be restored to its normal value
     if (_trigger_time > 0) _node->sleepOrWait(_trigger_time);
-  } else {
-    // invalid
-    ((ChildInt*)child)->setValueInt(-255);
   }
 }
 
@@ -2865,6 +2866,8 @@ void SensorDimmer::setReverse(bool value) {
 // what to do during setup
 void SensorDimmer::onSetup() {
   pinMode(_pin, OUTPUT);
+  // report immediately
+  _report_timer->unset();
 }
 
 // what to do during loop
@@ -3829,6 +3832,8 @@ SensorServo::SensorServo(NodeManager& node_manager, int pin, int child_id): Sens
 // what to do during setup
 void SensorServo::onSetup() {
   _servo.attach(_pin);
+  // report immediately
+  _report_timer->unset();
 }
 
 // what to do during loop
@@ -4052,7 +4057,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       case 10: _node->setRetries(request.getValueInt()); break;
 #if FEATURE_INTERRUPTS == ON
       case 19: _node->setSleepInterruptPin(request.getValueInt()); break;
-      case 28: _node->setInterruptMinDelta(request.getValueInt()); break;
+      case 28: _node->setInterruptDebounce(request.getValueInt()); break;
 #endif
       case 21: _node->setAck(request.getValueInt()); break;
       case 22: _node->setIsMetric(request.getValueInt()); break;
@@ -4185,7 +4190,6 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         SensorInterrupt* custom_sensor = (SensorInterrupt*)sensor;
         switch(function) {
           case 101: custom_sensor->setMode(request.getValueInt()); break;
-          case 102: custom_sensor->setDebounce(request.getValueInt()); break;
           case 103: custom_sensor->setTriggerTime(request.getValueInt()); break;
           case 104: custom_sensor->setInitial(request.getValueInt()); break;
           case 105: custom_sensor->setActiveState(request.getValueInt()); break;
@@ -4351,7 +4355,7 @@ int NodeManager::_last_interrupt_pin = -1;
 int NodeManager::_last_interrupt_value = LOW;
 long NodeManager::_last_interrupt_1 = millis();
 long NodeManager::_last_interrupt_2 = millis();
-long NodeManager::_interrupt_min_delta = 100;
+long NodeManager::_interrupt_debounce = 100;
 #endif
 
 // setter/getter
@@ -4403,8 +4407,8 @@ void NodeManager::setInterrupt(int pin, int mode, int initial) {
     _interrupt_2_initial = initial;
   }
 }
-void NodeManager::setInterruptMinDelta(long value) {
-  _interrupt_min_delta = value;
+void NodeManager::setInterruptDebounce(long value) {
+  _interrupt_debounce = value;
 }
 #endif
 #if FEATURE_POWER_MANAGER == ON
@@ -4606,7 +4610,7 @@ void NodeManager::loop() {
       _message.clear();
       sensor->interrupt();
       sensor->loop(nullptr);
-        // reset the last interrupt pin
+      // reset the last interrupt pin
       _last_interrupt_pin = -1;
     }
     else if (_last_interrupt_pin == -1) {
@@ -4874,30 +4878,34 @@ int NodeManager::getAvailableChildId(int child_id) {
 // handle an interrupt
 void NodeManager::_onInterrupt_1() {
   long now = millis();
-  if ( (now - _last_interrupt_1 > _interrupt_min_delta) || (now < _last_interrupt_1) ) {
+  // debounce the interrupt
+  if ( (now - _last_interrupt_1 > _interrupt_debounce) || (now < _last_interrupt_1) ) {
+    // register interrupt pin and value
     _last_interrupt_pin = INTERRUPT_PIN_1;
     _last_interrupt_value = digitalRead(INTERRUPT_PIN_1);
+    _last_interrupt_1 = now;
     #if FEATURE_DEBUG == ON
       Serial.print(F("INT P="));
-      Serial.print(INTERRUPT_PIN_1);
-      Serial.print(" V=");
+      Serial.print(_last_interrupt_pin);
+      Serial.print(F(", V="));
       Serial.println(_last_interrupt_value);
     #endif
-    _last_interrupt_1 = now;
   }
 }
 void NodeManager::_onInterrupt_2() {
   long now = millis();
-  if ( (now - _last_interrupt_2 > _interrupt_min_delta) || (now < _last_interrupt_2) ) {
+  // debounce the interrupt
+  if ( (now - _last_interrupt_2 > _interrupt_debounce) || (now < _last_interrupt_2) ) {
+    // register interrupt pin and value
     _last_interrupt_pin = INTERRUPT_PIN_2;
     _last_interrupt_value = digitalRead(INTERRUPT_PIN_2);
+    _last_interrupt_2 = now;
     #if FEATURE_DEBUG == ON
       Serial.print(F("INT P="));
-      Serial.print(INTERRUPT_PIN_2);
-      Serial.print(" V=");
+      Serial.print(_last_interrupt_pin);
+      Serial.print(F(", V="));
       Serial.println(_last_interrupt_value);
     #endif
-    _last_interrupt_2 = now;
   }
 }
 #endif
@@ -5021,31 +5029,21 @@ void NodeManager::_sleep() {
   int interrupt_2_pin = _interrupt_2_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_2);
   // enter smart sleep for the requested sleep interval and with the configured interrupts
   interrupt = sleep(interrupt_1_pin,_interrupt_1_mode,interrupt_2_pin,_interrupt_2_mode,sleep_time*1000,_smart_sleep);
+  // woke up by an interrupt
   if (interrupt > -1) {
-    // woke up by an interrupt
-    int pin_number = -1;
-    int interrupt_mode = -1;
-    // map the interrupt to the pin
-    if (digitalPinToInterrupt(INTERRUPT_PIN_1) == interrupt) {
-      pin_number = INTERRUPT_PIN_1;
-      interrupt_mode = _interrupt_1_mode;
-    }
-    if (digitalPinToInterrupt(INTERRUPT_PIN_2) == interrupt) {
-      pin_number = INTERRUPT_PIN_2;
-      interrupt_mode = _interrupt_2_mode;
-    }
-    _last_interrupt_pin = pin_number;
-    _last_interrupt_value = digitalRead(pin_number);
+    // register the interrupt pin
+    if (digitalPinToInterrupt(INTERRUPT_PIN_1) == interrupt) _last_interrupt_pin = INTERRUPT_PIN_1;
+    if (digitalPinToInterrupt(INTERRUPT_PIN_2) == interrupt) _last_interrupt_pin = INTERRUPT_PIN_2;
+    // register the interrupt value
+    _last_interrupt_value = digitalRead(_last_interrupt_pin);
     #if FEATURE_DEBUG == ON
       Serial.print(F("INT P="));
-      Serial.print(pin_number);
-      Serial.print(F(", M="));
-      Serial.print(interrupt_mode);
+      Serial.print(_last_interrupt_pin);
       Serial.print(F(", V="));
       Serial.println(_last_interrupt_value);
     #endif
     // when waking up from an interrupt on the wakup pin, stop sleeping
-    if (_sleep_interrupt_pin == pin_number) _status = AWAKE;
+    if (_sleep_interrupt_pin == _last_interrupt_pin) _status = AWAKE;
   }
 #else
   sleep(INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,sleep_time*1000,_smart_sleep);

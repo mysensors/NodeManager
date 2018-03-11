@@ -233,7 +233,7 @@ You can interact with each class provided by NodeManager through a set of API fu
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
     void setInterrupt(int pin, int mode, int initial = -1);
     // [28] ignore two consecutive interrupts if happening within this timeframe in milliseconds (default: 100)
-    void setInterruptMinDelta(long value);
+    void setInterruptDebounce(long value);
 #endif
     // register a sensor
     void registerSensor(Sensor* sensor);
@@ -493,6 +493,10 @@ Each sensor class exposes additional methods.
     void setWaitAfterSet(int value);
     // [108] when switching on, turns the output off after the given number of milliseconds. For latching relay controls the pulse width (default: 0)
     void setPulseWidth(int value);
+    // manually switch the output to the provided value
+    void setStatus(int value);
+    // toggle the status
+    void toggleStatus(int value);
 ~~~
 
 * SensorLatchingRelay (in addition to those available for SensorDigitalOutput / SensorRelay)
@@ -507,8 +511,6 @@ Each sensor class exposes additional methods.
 ~~~c
     // [101] set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
     void setMode(int value);
-    // [102] milliseconds to wait before reading the input (default: 0)
-    void setDebounce(int value);
     // [103] time to wait in milliseconds after a change is detected to allow the signal to be restored to its normal value (default: 0)
     void setTriggerTime(int value);
     // [104] Set initial value on the interrupt pin (default: HIGH)
