@@ -20,27 +20,33 @@
 
  DESCRIPTION
 
-NodeManager is intended to take care on your behalf of all those common tasks that a MySensors node has to accomplish, speeding up the development cycle of your projects. 
-Consider it as a sort of frontend for your MySensors projects. When you need to add a sensor (which requires just uncommeting a single line),
-NodeManager will take care of importing the required library, presenting the sensor to the gateway/controller, executing periodically the main function of the sensor 
-(e.g. measure a temperature, detect a motion, etc.), allowing you to interact with the sensor and even configuring it remotely.
+NodeManager is intended to take care on your behalf of all those common tasks that a 
+MySensors node has to accomplish, speeding up the development cycle of your projects. 
+Consider it as a sort of frontend for your MySensors projects. When you need to add 
+a sensor (which requires just uncommeting a single line),
+NodeManager will take care of importing the required library, presenting the sensor 
+to the gateway/controller, executing periodically the main function of the sensor 
+(e.g. measure a temperature, detect a motion, etc.), allowing you to interact with 
+the sensor and even configuring it remotely.
 
 Documentation available on: https://github.com/mysensors/NodeManager
-NodeManager provides built-in implementation of a number of sensors through ad-hoc classes. 
+NodeManager provides built-in implementation of a number of sensors through ad-hoc 
+classes. 
 
 To use a buil-in sensor:
 * Install the required library if any
 * Enable the corresponding module (uncomment it) in the main sketch
 * Declare the sensor (uncomment it) in the main sketch
 
-Once created, the sensor will automatically present one or more child to the gateway and controller.
-A list of buil-in sensors, module to enable, required dependencies and the number of child automatically created is presented below:
+Once created, the sensor will automatically present one or more child to the gateway 
+and controller. A list of buil-in sensors, module to enable, required dependencies 
+and the number of child automatically created is presented below:
 
 Sensor Name         |#Child | Module to enable   | Description                                                                                       | Dependencies
 --------------------|-------|--------------------|---------------------------------------------------------------------------------------------------|----------------------------------------------------------
-SensorBattery       | 1     | -                  | Built-in sensor for automatic battery reporting                                                   | - 
-SensorSignal        | 1     | -                  | Built-in sensor for automatic signal level reporting                                              | -
-SensorConfiguration | 1     | -                  | Built-in sensor for OTA remote configuration of any registered sensor                             | -
+SensorBattery       | 1     | USE_BATTERY        | Built-in sensor for automatic battery reporting                                                   | - 
+SensorSignal        | 1     | USE_SIGNAL         | Built-in sensor for automatic signal level reporting                                              | -
+SensorConfiguration | 1     | USE_CONFIGURATION  | Built-in sensor for OTA remote configuration of any registered sensor                             | -
 SensorAnalogInput   | 1     | USE_ANALOG_INPUT   | Generic analog sensor, return a pin's analog value or its percentage                              | -
 SensorLDR           | 1     | USE_ANALOG_INPUT   | LDR sensor, return the light level of an attached light resistor in percentage                    | -
 SensorRain          | 1     | USE_ANALOG_INPUT   | Rain sensor, return the percentage of rain from an attached analog sensor                         | -
@@ -89,10 +95,11 @@ SensorServo         | 1     | USE_SERVO          | Control a generic Servo motor
 SensorAPDS9960      | 1     | USE_APDS9960       | SparkFun RGB and Gesture Sensor                                                                   | https://github.com/sparkfun/APDS-9960_RGB_and_Gesture_Sensor
 SensorNeopixel      | 1     | USE_NEOPIXEL       | Control a Neopixel LED                                                                            | https://github.com/adafruit/Adafruit_NeoPixel
 
-NodeManager provides useful built-in features which can be disabled if you need to save some storage for your code. 
-To enable/disable a buil-in feature:
+NodeManager provides useful built-in features which can be disabled if you need 
+to save some storage for your code. To enable/disable a buil-in feature:
 * Install the required library if any
-* Enable the corresponding feature by setting it to ON in the main sketch. To disable it, set it to OFF
+* Enable the corresponding feature by setting it to ON in the main sketch. To 
+disable it, set it to OFF
 
 A list of buil-in features and the required dependencies is presented below:
 
@@ -236,6 +243,9 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
  * NodeManager modules for supported sensors
  */
 
+//#define USE_BATTERY
+//#define USE_SIGNAL
+//#define USE_CONFIGURATION
 //#define USE_ANALOG_INPUT
 //#define USE_THERMISTOR
 //#define USE_ML8511
@@ -365,8 +375,8 @@ void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
   
+
   
-    
   /*
   * Configure your sensors below
   */

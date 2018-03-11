@@ -1,3 +1,5 @@
+# NodeManager
+
 NodeManager is intended to take care on your behalf of all those common tasks that a MySensors node has to accomplish, speeding up the development cycle of your projects. 
 Consider it as a sort of frontend for your MySensors projects. When you need to add a sensor (which requires just uncommeting a single line),
 NodeManager will take care of importing the required library, presenting the sensor to the gateway/controller, executing periodically the main function of the sensor 
@@ -31,9 +33,9 @@ A list of buil-in sensors, module to enable, required dependencies and the numbe
 
 Sensor Name         |#Child | Module to enable   | Description                                                                                       | Dependencies
 --------------------|-------|--------------------|---------------------------------------------------------------------------------------------------|----------------------------------------------------------
-SensorBattery       | 1     | -                  | Built-in sensor for automatic battery reporting                                                   | - 
-SensorSignal        | 1     | -                  | Built-in sensor for automatic signal level reporting                                              | -
-SensorConfiguration | 1     | -                  | Built-in sensor for OTA remote configuration of any registered sensor                             | -
+SensorBattery       | 1     | USE_BATTERY        | Built-in sensor for automatic battery reporting                                                   | - 
+SensorSignal        | 1     | USE_SIGNAL         | Built-in sensor for automatic signal level reporting                                              | -
+SensorConfiguration | 1     | USE_CONFIGURATION  | Built-in sensor for OTA remote configuration of any registered sensor                             | -
 SensorAnalogInput   | 1     | USE_ANALOG_INPUT   | Generic analog sensor, return a pin's analog value or its percentage                              | -
 SensorLDR           | 1     | USE_ANALOG_INPUT   | LDR sensor, return the light level of an attached light resistor in percentage                    | -
 SensorRain          | 1     | USE_ANALOG_INPUT   | Rain sensor, return the percentage of rain from an attached analog sensor                         | -
@@ -233,7 +235,7 @@ You can interact with each class provided by NodeManager through a set of API fu
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
     void setInterrupt(int pin, int mode, int initial = -1);
     // [28] ignore two consecutive interrupts if happening within this timeframe in milliseconds (default: 100)
-    void setInterruptMinDelta(long value);
+    void setInterruptDebounce(long value);
 #endif
     // register a sensor
     void registerSensor(Sensor* sensor);
@@ -493,6 +495,10 @@ Each sensor class exposes additional methods.
     void setWaitAfterSet(int value);
     // [108] when switching on, turns the output off after the given number of milliseconds. For latching relay controls the pulse width (default: 0)
     void setPulseWidth(int value);
+    // manually switch the output to the provided value
+    void setStatus(int value);
+    // toggle the status
+    void toggleStatus(int value);
 ~~~
 
 * SensorLatchingRelay (in addition to those available for SensorDigitalOutput / SensorRelay)
@@ -507,8 +513,6 @@ Each sensor class exposes additional methods.
 ~~~c
     // [101] set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
     void setMode(int value);
-    // [102] milliseconds to wait before reading the input (default: 0)
-    void setDebounce(int value);
     // [103] time to wait in milliseconds after a change is detected to allow the signal to be restored to its normal value (default: 0)
     void setTriggerTime(int value);
     // [104] Set initial value on the interrupt pin (default: HIGH)

@@ -45,6 +45,29 @@
 #define EEPROM_USER_START 100
 
 /***********************************
+   Chip type
+*/
+// 168 and 328 Arduinos
+#if defined (__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
+  #define CHIP_TINYX4
+#endif
+#if defined (__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
+  #define CHIP_TINYX5
+#endif
+#if defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
+  #define CHIP_MEGA
+#endif
+#if defined(ARDUINO_ARCH_STM32F0) || defined(ARDUINO_ARCH_STM32F1) || defined(ARDUINO_ARCH_STM32F3) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32L4)
+  #define CHIP_STM32
+#endif
+#if defined(ESP8266) || defined(MY_GATEWAY_ESP8266)
+  #define CHIP_ESP8266
+#endif
+#if !defined(CHIP_ESP8266) && !defined(CHIP_STM32)
+  #define CHIP_AVR
+#endif
+
+/***********************************
    Default configuration settings
 */
 // define default sketch name and version
@@ -111,13 +134,16 @@
 #ifdef MY_USE_UDP
     #include <WiFiUdp.h>
 #endif
-#ifdef MY_GATEWAY_ESP8266
+#ifdef CHIP_ESP8266
   #include <ESP8266WiFi.h>
 #endif
 // load MySensors library
 #include <MySensors.h>
 
 // include third party libraries
+#ifdef USE_SIGNAL
+  #define MY_SIGNAL_REPORT_ENABLED
+#endif
 #ifdef USE_DHT
   #include <DHT.h>
 #endif
@@ -616,6 +642,7 @@ class Sensor {
 #endif
 };
 
+#ifdef USE_BATTERY
 /*
    SensorBattery: report battery level
 */
@@ -643,8 +670,9 @@ class SensorBattery: public Sensor {
       int _battery_pin = -1;
       float _battery_volts_per_bit = 0.003363075;
 };
+#endif
 
-#ifdef MY_SIGNAL_REPORT_ENABLED
+#ifdef USE_SIGNAL
 /*
    SensorSignal: report RSSI signal strength from the radio
 */
@@ -661,6 +689,7 @@ class SensorSignal: public Sensor {
 };
 #endif
 
+#ifdef USE_CONFIGURATION
 /*
    SensorConfiguration: allow remote configuration of the board and any configured sensor
 */
@@ -674,6 +703,7 @@ class SensorConfiguration: public Sensor {
     void onReceive(MyMessage* message);
   protected:
 };
+#endif
 
 #ifdef USE_ANALOG_INPUT
 /*
@@ -841,6 +871,8 @@ class SensorDigitalOutput: public Sensor {
     void setPulseWidth(int value);
     // manually switch the output to the provided value
     void setStatus(int value);
+    // toggle the status
+    void toggleStatus();
     // get the current state
     int getStatus();
     void onSetup();
@@ -953,8 +985,6 @@ class SensorInterrupt: public Sensor {
     SensorInterrupt(NodeManager& node_manager, int pin, int child_id = -255);
     // [101] set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
     void setMode(int value);
-    // [102] milliseconds to wait before reading the input (default: 0)
-    void setDebounce(int value);
     // [103] time to wait in milliseconds after a change is detected to allow the signal to be restored to its normal value (default: 0)
     void setTriggerTime(int value);
     // [104] Set initial value on the interrupt pin (default: HIGH)
@@ -973,7 +1003,6 @@ class SensorInterrupt: public Sensor {
     void onReceive(MyMessage* message);
     void onInterrupt();
   protected:
-    int _debounce = 0;
     int _trigger_time = 0;
     int _mode = CHANGE;
     int _initial = HIGH;
@@ -1789,7 +1818,7 @@ class NodeManager {
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
     void setInterrupt(int pin, int mode, int initial = -1);
     // [28] ignore two consecutive interrupts if happening within this timeframe in milliseconds (default: 100)
-    void setInterruptMinDelta(long value);
+    void setInterruptDebounce(long value);
 #endif
     // register a sensor
     void registerSensor(Sensor* sensor);
@@ -1909,7 +1938,7 @@ class NodeManager {
     int _interrupt_2_initial = -1;
     static int _last_interrupt_pin;
     static int _last_interrupt_value;
-    static long _interrupt_min_delta;
+    static long _interrupt_debounce;
     static long _last_interrupt_1;
     static long _last_interrupt_2;
 #endif
