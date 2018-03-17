@@ -251,10 +251,10 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define USE_ML8511
 //#define USE_ACS712
 //#define USE_DIGITAL_INPUT
-//#define USE_DIGITAL_OUTPUT
+#define USE_DIGITAL_OUTPUT
 //#define USE_DHT
 //#define USE_SHT21
-//#define USE_INTERRUPT
+#define USE_INTERRUPT
 //#define USE_DS18B20
 //#define USE_BH1750
 //#define USE_MLX90614
@@ -270,7 +270,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define USE_TSL2561
 //#define USE_PT100
 //#define USE_DIMMER
-//#define USE_PULSE_METER
+#define USE_PULSE_METER
 //#define USE_PMS
 //#define USE_VL53L0X
 //#define USE_SSD1306
@@ -327,13 +327,13 @@ NodeManager node;
 //SensorACS712 acs712(node,A0);
 //SensorDigitalInput digitalIn(node,6);
 //SensorDigitalOutput digitalOut(node,6);
-//SensorRelay relay(node,6);
+SensorRelay relay(node,6);
 //SensorLatchingRelay latching(node,6);
 //SensorDHT11 dht11(node,6);
 //SensorDHT22 dht22(node,6);
 //SensorSHT21 sht21(node);
 //SensorHTU21D htu21(node);
-//SensorInterrupt interrupt(node,3);
+SensorInterrupt interrupt(node,3);
 //SensorDoor door(node,3);
 //SensorMotion motion(node,3);
 //SensorDs18b20 ds18b20(node,6);
@@ -351,7 +351,7 @@ NodeManager node;
 //SensorTSL2561 tsl2561(node);
 //SensorPT100 pt100(node,6);
 //SensorDimmer dimmer(node,3);
-//SensorRainGauge rainGauge(node,3);
+SensorRainGauge rainGauge(node,3);
 //SensorPowerMeter powerMeter(node,3);
 //SensorWaterMeter waterMeter(node,3);
 //SensorPlantowerPMS pms(node,6,7);
