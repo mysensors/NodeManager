@@ -633,8 +633,15 @@ void Sensor::loop(MyMessage* message) {
       _track_last_value && child->isNewValue() || 
       _track_last_value && child->force_update_timer->isRunning() && child->force_update_timer->isOver()
       ) 
-#endif
         child->sendValue();
+#else      
+      //recive OR send message
+      // we've been called from NOT from receive(), pass the message along
+      if (message == nullptr)
+        child->sendValue();
+
+#endif
+     
   }
 #if FEATURE_HOOKING == ON
   // if a hook function is defined, call it
