@@ -4008,17 +4008,13 @@ void SensorNeopixel::setColor(char* string) {
     #endif
     for(int i=pixel_num;i<=pixel_end;i++)
         _pixels->setPixelColor(i,color);
-    //((ChildString*)child)->setValueString(string + pos+1);
   }
   else //set All pixels to single color
   {
     color = strtol(string, NULL, 16);
     for(int i=0;i<_num_pixels;i++)
         _pixels->setPixelColor(i,color);
-    //((ChildString*)child)->setValueString(string);
-
   }
-    
   _pixels->show();
 }
 
