@@ -1108,7 +1108,7 @@ class SensorBosch: public Sensor {
     void setForecastSamplesCount(int value);
     // define what to do at each stage of the sketch
     void onReceive(MyMessage* message);
-    static uint8_t GetI2CAddress(uint8_t chip_id);
+    uint8_t GetI2CAddress(uint8_t chip_id);
   protected:
     char* _weather[6] = { "stable", "sunny", "cloudy", "unstable", "thunderstorm", "unknown" };
     int _forecast_samples_count = 5;
