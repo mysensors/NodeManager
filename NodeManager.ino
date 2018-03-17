@@ -255,7 +255,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define USE_DHT
 //#define USE_SHT21
 //#define USE_INTERRUPT
-//#define USE_DS18B20
+#define USE_DS18B20
 //#define USE_BH1750
 //#define USE_MLX90614
 //#define USE_BME280
@@ -336,7 +336,7 @@ NodeManager node;
 //SensorInterrupt interrupt(node,3);
 //SensorDoor door(node,3);
 //SensorMotion motion(node,3);
-//SensorDs18b20 ds18b20(node,6);
+SensorDs18b20 ds18b20(node,6);
 //SensorBH1750 bh1750(node);
 //SensorMLX90614 mlx90614(node);
 //SensorBME280 bme280(node);
@@ -374,7 +374,7 @@ NodeManager node;
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
-  
+  node.setReportIntervalSeconds(10);
 
   
   /*

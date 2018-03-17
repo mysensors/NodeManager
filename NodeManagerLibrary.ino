@@ -1760,7 +1760,7 @@ void SensorDs18b20::setSleepDuringConversion(bool value) {
 
 // return the address of a device
 char* SensorDs18b20::_getAddress(int index) {
-  char* charAddr = "                ";
+  char* charAddr = new char[17];
   DeviceAddress device_address;
   _sensors->getAddress(device_address,index);
   String strAddr = String(device_address[0], HEX);
@@ -1772,6 +1772,7 @@ char* SensorDs18b20::_getAddress(int index) {
     strAddr.toUpperCase();
   }
   for (int j = 0; j < 16; j++) charAddr[j] = strAddr[j];
+  charAddr[16] = 0;
   return charAddr;
 }
 #endif
