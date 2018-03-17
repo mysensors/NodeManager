@@ -978,7 +978,7 @@ class SensorInterrupt: public Sensor {
   public:
     SensorInterrupt(NodeManager& node_manager, int pin, int child_id = -255);
     // [101] set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
-    void setMode(int value);
+    void setInterruptMode(int value);
     // [103] time to wait in milliseconds after a change is detected to allow the signal to be restored to its normal value (default: 0)
     void setTriggerTime(int value);
     // [104] Set initial value on the interrupt pin (default: HIGH)
@@ -998,7 +998,7 @@ class SensorInterrupt: public Sensor {
     void onInterrupt();
   protected:
     int _trigger_time = 0;
-    int _mode = CHANGE;
+    int _interrupt_mode = CHANGE;
     int _initial = HIGH;
     int _active_state = HIGH;
     bool _armed = true;
@@ -1441,7 +1441,7 @@ class SensorPulseMeter: public Sensor {
     void setPulseFactor(float value);
     // set initial value - internal pull up (default: HIGH)
     void setInitialValue(int value);
-    // set the interrupt mode to attach to (default: FALLING)
+    // set the interrupt mode. Can be CHANGE, RISING, FALLING (default: FALLING)
     void setInterruptMode(int value);
     // define what to do at each stage of the sketch
     void onSetup();

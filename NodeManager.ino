@@ -245,7 +245,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 
 //#define USE_BATTERY
 //#define USE_SIGNAL
-//#define USE_CONFIGURATION
+#define USE_CONFIGURATION
 //#define USE_ANALOG_INPUT
 //#define USE_THERMISTOR
 //#define USE_ML8511
@@ -313,7 +313,7 @@ NodeManager node;
 
 // built-in sensors
 //SensorBattery battery(node);
-//SensorConfiguration configuration(node);
+SensorConfiguration configuration(node);
 //SensorSignal signal(node);
 //PowerManager power(5,6);
 

@@ -1571,8 +1571,8 @@ SensorInterrupt::SensorInterrupt(NodeManager& node_manager, int pin, int child_i
 }
 
 // setter/getter
-void SensorInterrupt::setMode(int value) {
-  _mode = value;
+void SensorInterrupt::setInterruptMode(int value) {
+  _interrupt_mode = value;
 }
 void SensorInterrupt::setTriggerTime(int value) {
   _trigger_time = value;
@@ -1596,7 +1596,7 @@ void SensorInterrupt::setThreshold(int value) {
 // what to do during setup
 void SensorInterrupt::onSetup() {
   // set the interrupt pin so it will be called only when waking up from that interrupt
-  setInterrupt(_pin,_mode,_initial);
+  setInterrupt(_pin,_interrupt_mode,_initial);
   // report immediately
   _report_timer->unset();
 }
@@ -1627,7 +1627,7 @@ void SensorInterrupt::onInterrupt() {
   // read the value of the pin
   int value = _node->getLastInterruptValue();
   // process the value
-  if ( (_mode == RISING && value == HIGH ) || (_mode == FALLING && value == LOW) || (_mode == CHANGE) )  {
+  if ( (_interrupt_mode == RISING && value == HIGH ) || (_interrupt_mode == FALLING && value == LOW) || (_interrupt_mode == CHANGE) )  {
     // invert the value if Active State is set to LOW
     if (_active_state == LOW) value = !value;
     #if FEATURE_DEBUG == ON
@@ -4187,16 +4187,15 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      #ifdef USE_SWITCH
+      #ifdef USE_INTERRUPT
       if (strcmp(sensor->getName(),"INTERRUPT") == 0 || strcmp(sensor->getName(),"DOOR") == 0 || strcmp(sensor->getName(),"MOTION") == 0) {
         SensorInterrupt* custom_sensor = (SensorInterrupt*)sensor;
         switch(function) {
-          case 101: custom_sensor->setMode(request.getValueInt()); break;
+          case 101: custom_sensor->setInterruptMode(request.getValueInt()); break;
           case 103: custom_sensor->setTriggerTime(request.getValueInt()); break;
           case 104: custom_sensor->setInitial(request.getValueInt()); break;
           case 105: custom_sensor->setActiveState(request.getValueInt()); break;
           case 106: custom_sensor->setArmed(request.getValueInt()); break;
-          case 107: custom_sensor->setThreshold(request.getValueInt()); break;
           default: return;
         }
       }
