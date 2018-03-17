@@ -981,8 +981,8 @@ class SensorInterrupt: public Sensor {
     void setInterruptMode(int value);
     // [103] time to wait in milliseconds after a change is detected to allow the signal to be restored to its normal value (default: 0)
     void setTriggerTime(int value);
-    // [104] Set initial value on the interrupt pin (default: HIGH)
-    void setInitial(int value);
+    // [104] Set initial value on the interrupt pin. Can be used for internal pull up (default: HIGH)
+    void setInitialValue(int value);
     // [105] Set active state (default: HIGH) 
     void setActiveState(int value);
     // [106] Set armed, if false the sensor will not trigger until armed (default: true) 
@@ -999,7 +999,7 @@ class SensorInterrupt: public Sensor {
   protected:
     int _trigger_time = 0;
     int _interrupt_mode = CHANGE;
-    int _initial = HIGH;
+    int _initial_value = HIGH;
     int _active_state = HIGH;
     bool _armed = true;
 #if FEATURE_TIME == ON
@@ -1023,7 +1023,6 @@ class SensorDoor: public SensorInterrupt {
 class SensorMotion: public SensorInterrupt {
   public:
     SensorMotion(NodeManager& node_manager, int pin, int child_id = -255);
-    void onSetup();
 };
 #endif
 /*
@@ -1439,7 +1438,7 @@ class SensorPulseMeter: public Sensor {
     SensorPulseMeter(NodeManager& node_manager, int pin, int child_id = -255);
     // [102] set how many pulses for each unit (e.g. 1000 pulses for 1 kwh of power, 9 pulses for 1 mm of rain, etc.)
     void setPulseFactor(float value);
-    // set initial value - internal pull up (default: HIGH)
+    // Set initial value on the interrupt pin. Can be used for internal pull up (default: HIGH)
     void setInitialValue(int value);
     // set the interrupt mode. Can be CHANGE, RISING, FALLING (default: FALLING)
     void setInterruptMode(int value);

@@ -1577,8 +1577,8 @@ void SensorInterrupt::setInterruptMode(int value) {
 void SensorInterrupt::setTriggerTime(int value) {
   _trigger_time = value;
 }
-void SensorInterrupt::setInitial(int value) {
-  _initial = value;
+void SensorInterrupt::setInitialValue(int value) {
+  _initial_value = value;
 }
 void SensorInterrupt::setActiveState(int value) {
   _active_state = value;
@@ -1596,7 +1596,7 @@ void SensorInterrupt::setThreshold(int value) {
 // what to do during setup
 void SensorInterrupt::onSetup() {
   // set the interrupt pin so it will be called only when waking up from that interrupt
-  setInterrupt(_pin,_interrupt_mode,_initial);
+  setInterrupt(_pin,_interrupt_mode,_initial_value);
   // report immediately
   _report_timer->unset();
 }
@@ -1668,14 +1668,10 @@ SensorMotion::SensorMotion(NodeManager& node_manager, int pin, int child_id): Se
   children.get(1)->presentation = S_MOTION;
   children.get(1)->type = V_TRIPPED;
   children.get(1)->description = _name;
+  // set initial value to LOW
+  setInitialValue(LOW);
 }
 
-// what to do during setup
-void SensorMotion::onSetup() {
-  SensorInterrupt::onSetup();
-  // set initial value to LOW
-  setInitial(LOW);
-}
 #endif
 
 /*
@@ -4193,7 +4189,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         switch(function) {
           case 101: custom_sensor->setInterruptMode(request.getValueInt()); break;
           case 103: custom_sensor->setTriggerTime(request.getValueInt()); break;
-          case 104: custom_sensor->setInitial(request.getValueInt()); break;
+          case 104: custom_sensor->setInitialValue(request.getValueInt()); break;
           case 105: custom_sensor->setActiveState(request.getValueInt()); break;
           case 106: custom_sensor->setArmed(request.getValueInt()); break;
           default: return;
