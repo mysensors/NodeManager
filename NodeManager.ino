@@ -327,13 +327,13 @@ SensorConfiguration configuration(node);
 //SensorACS712 acs712(node,A0);
 //SensorDigitalInput digitalIn(node,6);
 //SensorDigitalOutput digitalOut(node,6);
-SensorRelay relay(node,6);
-//SensorLatchingRelay latching(node,6);
+//SensorRelay relay(node,6);
+SensorLatchingRelay latching(node,6);
 //SensorDHT11 dht11(node,6);
 //SensorDHT22 dht22(node,6);
 //SensorSHT21 sht21(node);
 //SensorHTU21D htu21(node);
-SensorInterrupt interrupt(node,3);
+//SensorInterrupt interrupt(node,3);
 //SensorDoor door(node,3);
 //SensorMotion motion(node,3);
 //SensorDs18b20 ds18b20(node,6);
@@ -351,7 +351,7 @@ SensorInterrupt interrupt(node,3);
 //SensorTSL2561 tsl2561(node);
 //SensorPT100 pt100(node,6);
 //SensorDimmer dimmer(node,3);
-SensorRainGauge rainGauge(node,3);
+//SensorRainGauge rainGauge(node,3);
 //SensorPowerMeter powerMeter(node,3);
 //SensorWaterMeter waterMeter(node,3);
 //SensorPlantowerPMS pms(node,6,7);
@@ -374,7 +374,7 @@ SensorRainGauge rainGauge(node,3);
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
-  
+  //latching.setInvertValueToWrite(true);
 
   
   /*

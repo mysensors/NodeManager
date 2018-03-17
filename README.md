@@ -483,8 +483,6 @@ Each sensor class exposes additional methods.
 
 * SensorDigitalOutput / SensorRelay
 ~~~c
-    // [103] define which value to set to the output when set to on (default: HIGH)
-    void setOnValue(int value);
     // [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
     void setLegacyMode(bool value);
     // [105] automatically turn the output off after the given number of minutes
@@ -517,8 +515,8 @@ Each sensor class exposes additional methods.
     void setWaitAfterTrigger(int value);
     // [104] Set initial value on the interrupt pin. Can be used for internal pull up (default: HIGH)
     void setInitialValue(int value);
-    // [105] Set active state (default: HIGH) 
-    void setActiveState(int value);    
+    // [105] Invert the value to report. E.g. if FALLING and value is LOW, report HIGH (default: false) 
+    void setInvertValueToReport(bool value);
     // [106] Set armed, if false the sensor will not trigger until armed (default: true) 
     void setArmed(bool value);
 #if FEATURE_TIME == ON

@@ -851,8 +851,6 @@ class SensorDigitalInput: public Sensor {
 class SensorDigitalOutput: public Sensor {
   public:
     SensorDigitalOutput(NodeManager& node_manager, int pin, int child_id = -255);
-    // [103] define which value to set to the output when set to on (default: HIGH)
-    void setOnValue(int value);
     // [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
     void setLegacyMode(bool value);
     // [105] automatically turn the output off after the given number of minutes
@@ -863,6 +861,8 @@ class SensorDigitalOutput: public Sensor {
     void setWaitAfterSet(int value);
     // [108] when switching on, turns the output off after the given number of milliseconds. For latching relay controls the pulse width (default: 0)
     void setPulseWidth(int value);
+    // [109] Invert the value to write. E.g. if ON is received, write LOW (default: false) 
+    void setInvertValueToWrite(bool value);
     // manually switch the output to the provided value
     void setStatus(int value);
     // toggle the status
@@ -873,16 +873,14 @@ class SensorDigitalOutput: public Sensor {
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
   protected:
-    int _on_value = HIGH;
     int _status = OFF;
     bool _legacy_mode = false;
     bool _input_is_elapsed = false;
     int _wait_after_set = 0;
     int _pulse_width = 0;
-    Timer* _safeguard_timer;
-    void _setupPin(Child* child, int pin);
-    virtual void _setStatus(int value);
-    int _getValueToWrite(int value);
+    bool _invert_value_to_write = false;
+    Timer* _safeguard_timer = new Timer(_node);
+    virtual void _switchOutput(int value);
 };
 
 /*
@@ -908,7 +906,7 @@ class SensorLatchingRelay: public SensorRelay {
   protected:
     int _pin_on;
     int _pin_off;
-    void _setStatus(int value);
+    void _switchOutput(int value);
 };
 #endif
 
@@ -983,8 +981,8 @@ class SensorInterrupt: public Sensor {
     void setWaitAfterTrigger(int value);
     // [104] Set initial value on the interrupt pin. Can be used for internal pull up (default: HIGH)
     void setInitialValue(int value);
-    // [105] Set active state (default: HIGH) 
-    void setActiveState(int value);
+    // [105] Invert the value to report. E.g. if FALLING and value is LOW, report HIGH (default: false) 
+    void setInvertValueToReport(bool value);
     // [106] Set armed, if false the sensor will not trigger until armed (default: true) 
     void setArmed(bool value);
 #if FEATURE_TIME == ON
@@ -1000,7 +998,7 @@ class SensorInterrupt: public Sensor {
     int _wait_after_trigger = 0;
     int _interrupt_mode = CHANGE;
     int _initial_value = HIGH;
-    int _active_state = HIGH;
+    bool _invert_value_to_report = false;
     bool _armed = true;
 #if FEATURE_TIME == ON
     int _threshold = 1;
