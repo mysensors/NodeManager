@@ -979,8 +979,8 @@ class SensorInterrupt: public Sensor {
     SensorInterrupt(NodeManager& node_manager, int pin, int child_id = -255);
     // [101] set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
     void setInterruptMode(int value);
-    // [103] time to wait in milliseconds after a change is detected to allow the signal to be restored to its normal value (default: 0)
-    void setTriggerTime(int value);
+    // [103] milliseconds to wait/sleep after the interrupt before reporting (default: 0)
+    void setWaitAfterTrigger(int value);
     // [104] Set initial value on the interrupt pin. Can be used for internal pull up (default: HIGH)
     void setInitialValue(int value);
     // [105] Set active state (default: HIGH) 
@@ -997,7 +997,7 @@ class SensorInterrupt: public Sensor {
     void onReceive(MyMessage* message);
     void onInterrupt();
   protected:
-    int _trigger_time = 0;
+    int _wait_after_trigger = 0;
     int _interrupt_mode = CHANGE;
     int _initial_value = HIGH;
     int _active_state = HIGH;
@@ -1442,6 +1442,8 @@ class SensorPulseMeter: public Sensor {
     void setInitialValue(int value);
     // set the interrupt mode. Can be CHANGE, RISING, FALLING (default: FALLING)
     void setInterruptMode(int value);
+    // milliseconds to wait/sleep after the interrupt before reporting (default: 0)
+    void setWaitAfterTrigger(int value);
     // define what to do at each stage of the sketch
     void onSetup();
     void onLoop(Child* child);
@@ -1453,6 +1455,7 @@ class SensorPulseMeter: public Sensor {
     float _pulse_factor;
     int _initial_value = HIGH;
     int _interrupt_mode = FALLING;
+    int _wait_after_trigger = 0;
     virtual void _reportTotal(Child* child);
 };
 

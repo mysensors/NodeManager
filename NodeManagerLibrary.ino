@@ -1574,8 +1574,8 @@ SensorInterrupt::SensorInterrupt(NodeManager& node_manager, int pin, int child_i
 void SensorInterrupt::setInterruptMode(int value) {
   _interrupt_mode = value;
 }
-void SensorInterrupt::setTriggerTime(int value) {
-  _trigger_time = value;
+void SensorInterrupt::setWaitAfterTrigger(int value) {
+  _wait_after_trigger = value;
 }
 void SensorInterrupt::setInitialValue(int value) {
   _initial_value = value;
@@ -1645,8 +1645,8 @@ void SensorInterrupt::onInterrupt() {
     if (_counter < _threshold) return;
 #endif
     ((ChildInt*)child)->setValueInt(value);
-    // allow the signal to be restored to its normal value
-    if (_trigger_time > 0) _node->sleepOrWait(_trigger_time);
+    // allow the signal to be restored to its normal value before reporting
+    if (_wait_after_trigger > 0) _node->sleepOrWait(_wait_after_trigger);
   }
 }
 
@@ -2977,6 +2977,9 @@ void SensorPulseMeter::setInitialValue(int value) {
 void SensorPulseMeter::setInterruptMode(int value) {
   _interrupt_mode = value;
 }
+void SensorPulseMeter::setWaitAfterTrigger(int value) {
+  _wait_after_trigger = value;
+}
 
 // what to do during setup
 void SensorPulseMeter::onSetup() {
@@ -3024,6 +3027,8 @@ void SensorPulseMeter::_reportTotal(Child* child) {
     Serial.print(F(" V="));
     Serial.println(((ChildFloat*)child)->getValueFloat());
   #endif
+  // allow the signal to be restored to its normal value before reporting
+  if (_wait_after_trigger > 0) _node->sleepOrWait(_wait_after_trigger);
 }
 
 /*
@@ -3059,6 +3064,8 @@ void SensorPowerMeter::_reportTotal(Child* child) {
     Serial.println(((ChildDouble*)child)->getValueDouble());
     Serial.println(_count);
   #endif
+  // allow the signal to be restored to its normal value before reporting
+  if (_wait_after_trigger > 0) _node->sleepOrWait(_wait_after_trigger);
 }
 
 /*
@@ -3082,6 +3089,8 @@ void SensorWaterMeter::_reportTotal(Child* child) {
     Serial.print(F(" V="));
     Serial.println(((ChildDouble*)child)->getValueDouble());
   #endif
+  // allow the signal to be restored to its normal value before reporting
+  if (_wait_after_trigger > 0) _node->sleepOrWait(_wait_after_trigger);
 }
 #endif
 
@@ -4188,7 +4197,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         SensorInterrupt* custom_sensor = (SensorInterrupt*)sensor;
         switch(function) {
           case 101: custom_sensor->setInterruptMode(request.getValueInt()); break;
-          case 103: custom_sensor->setTriggerTime(request.getValueInt()); break;
+          case 103: custom_sensor->setWaitAfterTrigger(request.getValueInt()); break;
           case 104: custom_sensor->setInitialValue(request.getValueInt()); break;
           case 105: custom_sensor->setActiveState(request.getValueInt()); break;
           case 106: custom_sensor->setArmed(request.getValueInt()); break;
