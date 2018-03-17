@@ -3971,24 +3971,43 @@ void SensorNeopixel::setColor(char* string) {
   long color = 0;
   char * p = strstr(string, ",");
   if (p){ 
-    char pixelnum[6];
+    char pixelnum[10];
     int pos = (int) (p - string);
+    if (pos >= 10)
+      return;
     strncpy(pixelnum, string, pos);
     pixelnum[pos] = 0;
 
-    int pixel_num = atoi(pixelnum);
-
-    color = strtol(string + pos+1, NULL, 16);
+    int pixel_num = 0;
+    int pixel_end = 1;
+    //may be range?
+    char * r = strstr(pixelnum, "-");
+    if (r){ 
+      pixel_end = atoi(r+1);
+      *r = 0; //null terminating instead of delimeter
+      pixel_num = atoi(pixelnum);
+    }
+    else{
+      pixel_num = atoi(pixelnum);
+      pixel_end = pixel_num;
+    }
+    color = strtol(string + pos + 1, NULL, 16);
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
       Serial.print(F(" N="));
       Serial.print(pixel_num);
+      if (pixel_num != pixel_end)
+      {
+        Serial.print(F("-"));
+        Serial.print(pixel_end);
+      }
       Serial.print(F(" C="));
       Serial.println(color);
     #endif
-    _pixels->setPixelColor(pixel_num,color);
+    for(int i=pixel_num;i<=pixel_end;i++)
+        _pixels->setPixelColor(i,color);
     //((ChildString*)child)->setValueString(string + pos+1);
   }
   else //set All pixels to single color
