@@ -863,7 +863,9 @@ class SensorDigitalOutput: public Sensor {
     void setPulseWidth(int value);
     // [109] Invert the value to write. E.g. if ON is received, write LOW (default: false) 
     void setInvertValueToWrite(bool value);
-    // manually switch the output to the provided value
+    // [110] for a 2-pins latching relay, set the pin which turns the relay off (default: -1)
+    void setPinOff(int value);
+    // manually switch the output to the provided status (ON or OFF)
     void setStatus(int value);
     // toggle the status
     void toggleStatus();
@@ -874,6 +876,7 @@ class SensorDigitalOutput: public Sensor {
     void onReceive(MyMessage* message);
   protected:
     int _status = OFF;
+    int _pin_off = -1;
     bool _legacy_mode = false;
     bool _input_is_elapsed = false;
     int _wait_after_set = 0;
@@ -897,16 +900,6 @@ class SensorRelay: public SensorDigitalOutput {
 class SensorLatchingRelay: public SensorRelay {
   public:
     SensorLatchingRelay(NodeManager& node_manager, int pin, int child_id = -255);
-    // [202] set the pin which turns the relay off (default: the pin provided while registering the sensor)
-    void setPinOff(int value);
-    // [203] set the pin which turns the relay on (default: the pin provided while registering the sensor + 1)
-    void setPinOn(int value);
-    // define what to do at each stage of the sketch
-    void onSetup();
-  protected:
-    int _pin_on;
-    int _pin_off;
-    void _switchOutput(int value);
 };
 #endif
 

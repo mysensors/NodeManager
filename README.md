@@ -481,7 +481,7 @@ Each sensor class exposes additional methods.
     void setOffset(int value);
 ~~~
 
-* SensorDigitalOutput / SensorRelay
+* SensorDigitalOutput / SensorRelay / SensorLatchingRelay
 ~~~c
     // [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
     void setLegacyMode(bool value);
@@ -493,18 +493,14 @@ Each sensor class exposes additional methods.
     void setWaitAfterSet(int value);
     // [108] when switching on, turns the output off after the given number of milliseconds. For latching relay controls the pulse width (default: 0)
     void setPulseWidth(int value);
-    // manually switch the output to the provided value
+    // [109] Invert the value to write. E.g. if ON is received, write LOW (default: false) 
+    void setInvertValueToWrite(bool value);
+    // [110] for a 2-pins latching relay, set the pin which turns the relay off (default: -1)
+    void setPinOff(int value);
+    // manually switch the output to the provided status (ON or OFF)
     void setStatus(int value);
     // toggle the status
     void toggleStatus(int value);
-~~~
-
-* SensorLatchingRelay (in addition to those available for SensorDigitalOutput / SensorRelay)
-~~~c
-    // [202] set the pin which turns the relay off (default: the pin provided while registering the sensor)
-    void setPinOff(int value);
-    // [203] set the pin which turns the relay on (default: the pin provided while registering the sensor + 1)
-    void setPinOn(int value);
 ~~~
 
 *  SensorInterrupt / SensorDoor / SensorMotion

@@ -1203,9 +1203,11 @@ SensorDigitalOutput::SensorDigitalOutput(NodeManager& node_manager, int pin, int
 void SensorDigitalOutput::onSetup() {
   // setup the pin
   pinMode(_pin, OUTPUT);
+  // setup the off pin if needed
+  if (_pin_off > 0) pinMode(_pin_off, OUTPUT);
   // report immediately
   _report_timer->unset();
-  // turn it off
+  // turn the relay off by default
   setStatus(OFF);
 }
 
@@ -1231,6 +1233,9 @@ void SensorDigitalOutput::setPulseWidth(int value) {
 void SensorDigitalOutput::setInvertValueToWrite(bool value) {
   _invert_value_to_write = value;
 }
+void SensorDigitalOutput::setPinOff(int value) {
+  _pin_off = value;
+}
 
 // main task
 void SensorDigitalOutput::onLoop(Child* child) {
@@ -1239,11 +1244,14 @@ void SensorDigitalOutput::onLoop(Child* child) {
     // update the timer
     _safeguard_timer->update();
     // if the time is over, turn the output off
-    if (_safeguard_timer->isOver()) setStatus(OFF);
+    if (_safeguard_timer->isOver()) {
+      setStatus(OFF);
+      _safeguard_timer->stop();
+    }
   }
 }
 
-// what to do as the main task when receiving a message
+// what to do when receiving a message
 void SensorDigitalOutput::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
@@ -1264,7 +1272,7 @@ void SensorDigitalOutput::setStatus(int requested_status) {
   if (_input_is_elapsed) {
     int elapsed = requested_status;
     // received a request to turn it off immediately, stop the timer
-    if (elapsed == OFF) _safeguard_timer->stop();
+    if (elapsed == 0) _safeguard_timer->stop();
     else {
       // configure and start the timer
       _safeguard_timer->start(elapsed,MINUTES);
@@ -1277,7 +1285,7 @@ void SensorDigitalOutput::setStatus(int requested_status) {
   }
   // switch the actual output
   _switchOutput(requested_status);
-  // wait if needed for relay drawing a lot of current
+  // wait if needed for relays drawing a lot of current
   if (_wait_after_set > 0) _node->sleepOrWait(_wait_after_set);
   // store the new status so it will be sent to the controller
   _status = requested_status;
@@ -1291,25 +1299,33 @@ void SensorDigitalOutput::toggleStatus() {
 
 // switch to the requested status
 void SensorDigitalOutput::_switchOutput(int requested_status) {
-  int value = requested_status;
-  // invert the value to write. E.g. if ON is received, write LOW 
-  if (_invert_value_to_write) value = !value;  
-  // set the value to the pin
+  // select the right pin
+  int pin = _pin;
+  if (_pin_off > 0 && requested_status == OFF) pin = _pin_off;
+  // set the value to write. If pulse (latching relay), value is always ON, otherwise is the requested status
+  int value = _pulse_width > 0 ? ON : requested_status;
+  // invert the value to write if needed. E.g. if ON is received, write LOW, if OFF write HIGH
+  if (_invert_value_to_write) value = !value;
+  // write the value to the pin
   digitalWrite(_pin, value);
+  // if pulse is set wait for the given timeframe before restoring the value to the original value
+  if (_pulse_width > 0) {
+    _node->sleepOrWait(_pulse_width);
+    digitalWrite(pin, ! value);
+  }
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(children.get(1)->child_id);
     Serial.print(F(" P="));
     Serial.print(_pin);
+    Serial.print(F(" S="));
+    Serial.print(requested_status);
     Serial.print(F(" V="));
-    Serial.println(value);
+    Serial.print(value);
+    Serial.print(F(" P="));
+    Serial.println(_pulse_width);
   #endif
-  // if pulse width is set and status is on, turn it off after the configured interval
-  if (_pulse_width > 0 && requested_status == ON) {
-    _node->sleepOrWait(_pulse_width);
-    digitalWrite(_pin, !value);
-  }
 }
 
 /*
@@ -1331,58 +1347,10 @@ SensorRelay::SensorRelay(NodeManager& node_manager, int pin, int child_id): Sens
 // contructor
 SensorLatchingRelay::SensorLatchingRelay(NodeManager& node_manager, int pin, int child_id): SensorRelay(node_manager, pin, child_id) {
   _name = "LATCHING";
-  // set the "off" pin to the provided pin and the "on" pin to the provided pin + 1
-  _pin_on = pin;
-  _pin_off = pin + 1;
   children.get(1)->description = _name;
   // set pulse duration
   _pulse_width = 50;
 }
-
-// setter/getter
-void SensorLatchingRelay::setPinOn(int value) {
-  _pin_on = value;
-}
-void SensorLatchingRelay::setPinOff(int value) {
-  _pin_off = value;
-}
-
-// what to do during setup
-void SensorLatchingRelay::onSetup() {
-  // setup the pins
-  pinMode(_pin_on, OUTPUT);
-  pinMode(_pin_off, OUTPUT);
-  // report immediately
-  _report_timer->unset();
-  // turn if off
-  setStatus(OFF);
-}
-
-// switch to the requested status
-void SensorLatchingRelay::_switchOutput(int requested_status) {
-  int value = requested_status;
-  // invert the value to write. E.g. if ON is received, write LOW 
-  if (_invert_value_to_write) value = !value;
-  // select the appropriate pin to send the pulse to
-  int pin = requested_status == OFF ? _pin_off : _pin_on;
-  // set the value
-  digitalWrite(pin, value);
-  // wait for the given time before restoring the value to the original value after the pulse
-  _node->sleepOrWait(_pulse_width);
-  digitalWrite(pin, ! value);
-  #if FEATURE_DEBUG == ON
-    Serial.print(_name);
-    Serial.print(F(" I="));
-    Serial.print(children.get(1)->child_id);
-    Serial.print(F(" P="));
-    Serial.print(pin);
-    Serial.print(F(" V="));
-    Serial.print(value);
-    Serial.print(F(" P="));
-    Serial.println(_pulse_width);
-  #endif
-}
-
 #endif
 
 #ifdef USE_DHT
@@ -4165,15 +4133,8 @@ void SensorConfiguration::onReceive(MyMessage* message) {
             case 107: custom_sensor->setWaitAfterSet(request.getValueInt()); break;
             case 108: custom_sensor->setPulseWidth(request.getValueInt()); break;
             case 109: custom_sensor->setInvertValueToWrite(request.getValueInt()); break;
+            case 110: custom_sensor->setPinOff(request.getValueInt()); break;
           default: return;
-        }
-        if (function > 200 && strcmp(sensor->getName(),"LATCHING") == 0) {
-          SensorLatchingRelay* custom_sensor_2 = (SensorLatchingRelay*)sensor;
-          switch(function) {
-            case 202: custom_sensor_2->setPinOff(request.getValueInt()); break;
-            case 203: custom_sensor_2->setPinOn(request.getValueInt()); break;
-            default: return;
-          }
         }
       }
       #endif

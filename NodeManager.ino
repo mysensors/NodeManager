@@ -327,8 +327,8 @@ SensorConfiguration configuration(node);
 //SensorACS712 acs712(node,A0);
 //SensorDigitalInput digitalIn(node,6);
 //SensorDigitalOutput digitalOut(node,6);
-//SensorRelay relay(node,6);
-SensorLatchingRelay latching(node,6);
+SensorRelay relay(node,6);
+//SensorLatchingRelay latching(node,6);
 //SensorDHT11 dht11(node,6);
 //SensorDHT22 dht22(node,6);
 //SensorSHT21 sht21(node);
@@ -374,8 +374,7 @@ SensorLatchingRelay latching(node,6);
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
-  //latching.setInvertValueToWrite(true);
-
+  relay.setSafeguard(1);
   
   /*
   * Configure your sensors below
