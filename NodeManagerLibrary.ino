@@ -3973,11 +3973,17 @@ void SensorNeopixel::onReceive(MyMessage* message) {
 	  }
 }
 
+//string format:
+//RRGGBB                color for all LEDs
+//LED,RRGGBB            color for specific LED
+//LEDfrom-LEDto,RRGGBB  color for LED range from LEDfrom to LEDto
 void SensorNeopixel::setColor(char* string) {
   Child* child = children.get(1);
   long color = 0;
+  //find separator
   char * p = strstr(string, ",");
   if (p){ 
+    //extract LED or LED range part
     char pixelnum[10];
     int pos = (int) (p - string);
     if (pos >= 10)
@@ -3986,8 +3992,8 @@ void SensorNeopixel::setColor(char* string) {
     pixelnum[pos] = 0;
 
     int pixel_num = 0;
-    int pixel_end = 1;
-    //may be range?
+    int pixel_end = 0;
+    //may be range, try find range separator -
     char * r = strstr(pixelnum, "-");
     if (r){ 
       pixel_end = atoi(r+1);
@@ -4013,6 +4019,7 @@ void SensorNeopixel::setColor(char* string) {
       Serial.print(F(" C="));
       Serial.println(color);
     #endif
+    //set LED to color
     for(int i=pixel_num;i<=pixel_end;i++)
         _pixels->setPixelColor(i,color);
   }
@@ -4023,6 +4030,8 @@ void SensorNeopixel::setColor(char* string) {
         _pixels->setPixelColor(i,color);
   }
   _pixels->show();
+  //send value back
+  ((ChildString*)child)->setValueString(string);
 }
 
 #endif
