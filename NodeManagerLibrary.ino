@@ -635,11 +635,7 @@ void Sensor::loop(MyMessage* message) {
       ) 
         child->sendValue();
 #else      
-      //recive OR send message
-      // we've been called from NOT from receive(), pass the message along
-      if (message == nullptr)
-        child->sendValue();
-
+    child->sendValue();
 #endif
      
   }
