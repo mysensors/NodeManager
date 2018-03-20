@@ -705,7 +705,10 @@ Each sensor class exposes additional methods.
 ~~~c
     // set how many NeoPixels are attached
     void setNumPixels(int value);
-    // format expeted is "<pixel_number>,<RGB color in a packed 32 bit format>"
+    // format expected is:
+    //<pixel_number from>-<pixel_number to>,<RGB color in a packed 24 bit format>
+    //<pixel_number>,<RGB color in a packed 24 bit format>
+    //<RGB color in a packed 24 bit format>
     void setColor(char* string);
 ~~~
 

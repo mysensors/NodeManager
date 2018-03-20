@@ -633,8 +633,11 @@ void Sensor::loop(MyMessage* message) {
       _track_last_value && child->isNewValue() || 
       _track_last_value && child->force_update_timer->isRunning() && child->force_update_timer->isOver()
       ) 
-#endif
         child->sendValue();
+#else      
+    child->sendValue();
+#endif
+     
   }
 #if FEATURE_HOOKING == ON
   // if a hook function is defined, call it
@@ -3934,17 +3937,16 @@ void SensorAPDS9960::onInterrupt() {
 SensorNeopixel::SensorNeopixel(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "NEOPIXEL";
   children.allocateBlocks(1);
-  new ChildInt(this, _node->getAvailableChildId(child_id), S_COLOR_SENSOR, V_RGB ,_name);
+  new ChildString(this, _node->getAvailableChildId(child_id), S_COLOR_SENSOR, V_RGB ,_name);
 }
 
 // setter/getter
 void SensorNeopixel::setNumPixels(int value) {
   _num_pixels = value;
 }
-
 // what to do during setup
 void SensorNeopixel::onSetup() {
-#if defined(ARDUINO_ARCH_STM32F0) || defined(ARDUINO_ARCH_STM32F1) || defined(ARDUINO_ARCH_STM32F3) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32L4)
+#if defined(CHIP_STM32)
   _pixels = new NeoMaple(_num_pixels, NEO_GRB + NEO_KHZ800);
 #else  
   _pixels = new Adafruit_NeoPixel(_num_pixels, _pin, NEO_GRB + NEO_KHZ800);
@@ -3968,29 +3970,55 @@ void SensorNeopixel::onReceive(MyMessage* message) {
 	  }
 }
 
+//string format:
+//RRGGBB                color for all LEDs
+//LED,RRGGBB            color for specific LED
+//LEDfrom-LEDto,RRGGBB  color for LED range from LEDfrom to LEDto
 void SensorNeopixel::setColor(char* string) {
   Child* child = children.get(1);
   long color = 0;
+  //find separator
   char * p = strstr(string, ",");
   if (p){ 
-    char pixelnum[6];
+    //extract LED or LED range part
+    char pixelnum[10];
     int pos = (int) (p - string);
+    if (pos >= 10)
+      return;
     strncpy(pixelnum, string, pos);
     pixelnum[pos] = 0;
 
-    int pixel_num = atoi(pixelnum);
-
-    color = strtol(string + pos+1, NULL, 16);
+    int pixel_num = 0;
+    int pixel_end = 0;
+    //may be range, try find range separator -
+    char * r = strstr(pixelnum, "-");
+    if (r){ 
+      pixel_end = atoi(r+1);
+      *r = 0; //null terminating instead of delimeter
+      pixel_num = atoi(pixelnum);
+    }
+    else{
+      pixel_num = atoi(pixelnum);
+      pixel_end = pixel_num;
+    }
+    color = strtol(string + pos + 1, NULL, 16);
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
       Serial.print(child->child_id);
       Serial.print(F(" N="));
       Serial.print(pixel_num);
+      if (pixel_num != pixel_end)
+      {
+        Serial.print(F("-"));
+        Serial.print(pixel_end);
+      }
       Serial.print(F(" C="));
       Serial.println(color);
     #endif
-    _pixels->setPixelColor(pixel_num,color);
+    //set LED to color
+    for(int i=pixel_num;i<=pixel_end;i++)
+        _pixels->setPixelColor(i,color);
   }
   else //set All pixels to single color
   {
@@ -3998,9 +4026,9 @@ void SensorNeopixel::setColor(char* string) {
     for(int i=0;i<_num_pixels;i++)
         _pixels->setPixelColor(i,color);
   }
-    
   _pixels->show();
-  ((ChildInt*)child)->setValueInt(color);
+  //send value back
+  ((ChildString*)child)->setValueString(string);
 }
 
 #endif
@@ -4697,14 +4725,15 @@ void NodeManager::hello() {
 
 // reboot the board
 void NodeManager::reboot() {
-#ifdef CHIP_AVR
   #if FEATURE_DEBUG == ON
     Serial.println(F("REBOOT"));
   #endif
   if (_reboot_pin > -1) {
     // reboot the board through the reboot pin which is connected to RST by setting it to low
     digitalWrite(_reboot_pin, LOW);
-  } else {
+  }
+#ifdef CHIP_AVR
+  else {
     // Software reboot with watchdog timer. Enter Watchdog Configuration mode:
     WDTCSR |= (1<<WDCE) | (1<<WDE);
     // Reset enable
@@ -4789,13 +4818,21 @@ void NodeManager::setupInterrupts() {
     pinMode(INTERRUPT_PIN_1,INPUT);
     if (_interrupt_1_initial > -1) digitalWrite(INTERRUPT_PIN_1,_interrupt_1_initial);
     // for non sleeping nodes, we need to handle the interrupt by ourselves  
+#if defined(CHIP_STM32)
+    if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, (ExtIntTriggerMode)_interrupt_1_mode);
+#else
     if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, _interrupt_1_mode);
+#endif
   }
   if (_interrupt_2_mode != MODE_NOT_DEFINED) {
     pinMode(INTERRUPT_PIN_2, INPUT);
     if (_interrupt_2_initial > -1) digitalWrite(INTERRUPT_PIN_2,_interrupt_2_initial);
     // for non sleeping nodes, we need to handle the interrupt by ourselves  
+#if defined(CHIP_STM32)
+    if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, (ExtIntTriggerMode)_interrupt_2_mode);
+#else
     if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, _interrupt_2_mode);
+#endif
   }
   #if FEATURE_DEBUG == ON
     Serial.print(F("INT P="));
