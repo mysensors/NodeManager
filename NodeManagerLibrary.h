@@ -27,16 +27,6 @@
 #define OFF 0
 #define ON 1
 
-// define interrupt pins
-#define INTERRUPT_PIN_1 3
-#define INTERRUPT_PIN_2 2
-
-// define eeprom addresses
-#define EEPROM_SLEEP_SAVED 0
-#define EEPROM_SLEEP_1 5
-#define EEPROM_SLEEP_2 6
-#define EEPROM_SLEEP_3 7
-#define EEPROM_USER_START 100
 
 /***********************************
    Chip type
@@ -57,9 +47,31 @@
 #if defined(ESP8266) || defined(MY_GATEWAY_ESP8266)
   #define CHIP_ESP8266
 #endif
-#if !defined(CHIP_ESP8266) && !defined(CHIP_STM32)
+#if defined (MYBOARDNRF5)
+  #define CHIP_NRF5
+#endif
+
+#if !defined(CHIP_ESP8266) && !defined(CHIP_STM32) && !defined(CHIP_NRF5)
   #define CHIP_AVR
 #endif
+
+// define interrupt pins
+
+#if defined(CHIP_STM32)
+#define INTERRUPT_PIN_1 PB8
+#define INTERRUPT_PIN_2 2
+#else
+#define INTERRUPT_PIN_1 3
+#define INTERRUPT_PIN_2 2
+#endif
+
+// define eeprom addresses
+#define EEPROM_SLEEP_SAVED 0
+#define EEPROM_SLEEP_1 5
+#define EEPROM_SLEEP_2 6
+#define EEPROM_SLEEP_3 7
+#define EEPROM_USER_START 100
+
 
 /***********************************
    Default configuration settings
