@@ -1204,16 +1204,17 @@ SensorDigitalOutput::SensorDigitalOutput(NodeManager& node_manager, int pin, int
 
 // what to do during setup
 void SensorDigitalOutput::onSetup() {
-  _setupPin(children.get(1), _pin);
-  _safeguard_timer = new Timer(_node);
+  // setup the pin
+  pinMode(_pin, OUTPUT);
+  // setup the off pin if needed
+  if (_pin_off > 0) pinMode(_pin_off, OUTPUT);
   // report immediately
   _report_timer->unset();
+  // turn the relay off by default
+  setStatus(OFF);
 }
 
 // setter/getter
-void SensorDigitalOutput::setOnValue(int value) {
-  _on_value = value;
-}
 void SensorDigitalOutput::setLegacyMode(bool value) {
   _legacy_mode = value;
 }
@@ -1232,6 +1233,12 @@ void SensorDigitalOutput::setWaitAfterSet(int value) {
 void SensorDigitalOutput::setPulseWidth(int value) {
   _pulse_width = value;
 }
+void SensorDigitalOutput::setInvertValueToWrite(bool value) {
+  _invert_value_to_write = value;
+}
+void SensorDigitalOutput::setPinOff(int value) {
+  _pin_off = value;
+}
 
 // main task
 void SensorDigitalOutput::onLoop(Child* child) {
@@ -1240,11 +1247,14 @@ void SensorDigitalOutput::onLoop(Child* child) {
     // update the timer
     _safeguard_timer->update();
     // if the time is over, turn the output off
-    if (_safeguard_timer->isOver()) setStatus(OFF);
+    if (_safeguard_timer->isOver()) {
+      setStatus(OFF);
+      _safeguard_timer->stop();
+    }
   }
 }
 
-// what to do as the main task when receiving a message
+// what to do when receiving a message
 void SensorDigitalOutput::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
@@ -1259,31 +1269,30 @@ void SensorDigitalOutput::onReceive(MyMessage* message) {
   }
 }
 
-// write the value to the output
-void SensorDigitalOutput::setStatus(int value) {
-  // pre-process the input value
+// set the status of the output, can be ON or OFF
+void SensorDigitalOutput::setStatus(int requested_status) {
+  // the input provided is an elapsed time
   if (_input_is_elapsed) {
-    // the input provided is an elapsed time
-    if (value == OFF) {
-      // turning it off, no need for a safeguard anymore, stop the timer
-      _safeguard_timer->stop();
-    } 
-    else if (value == ON) {
+    int elapsed = requested_status;
+    // received a request to turn it off immediately, stop the timer
+    if (elapsed == 0) _safeguard_timer->stop();
+    else {
       // configure and start the timer
-      _safeguard_timer->start(value,MINUTES);
-      // if the input is an elapsed time, unless the value is OFF, the output will be always ON
-      value = ON;
+      _safeguard_timer->start(elapsed,MINUTES);
+      // set the status just to ON, not to the requested elapsed
+      requested_status = ON;
     }
   } else {
     // if turning the output on and a safeguard timer is configured, start it
-    if (value == ON && _safeguard_timer->isConfigured() && ! _safeguard_timer->isRunning()) _safeguard_timer->start();
+    if (requested_status == ON && _safeguard_timer->isConfigured() && ! _safeguard_timer->isRunning()) _safeguard_timer->start();
   }
-  _setStatus(value);
-  // wait if needed for relay drawing a lot of current
+  // switch the actual output
+  _switchOutput(requested_status);
+  // wait if needed for relays drawing a lot of current
   if (_wait_after_set > 0) _node->sleepOrWait(_wait_after_set);
   // store the new status so it will be sent to the controller
-  _status = value;
-  ((ChildInt*)children.get(1))->setValueInt(value);
+  _status = requested_status;
+  ((ChildInt*)children.get(1))->setValueInt(_status);
 }
 
 // toggle the status
@@ -1291,47 +1300,35 @@ void SensorDigitalOutput::toggleStatus() {
   setStatus(!_status);
 }
 
-// setup the provided pin for output
-void SensorDigitalOutput::_setupPin(Child* child, int pin) {
-  // set the pin as output and initialize it accordingly
-  pinMode(pin, OUTPUT);
-  // setup the pin in a off status
-  _status = ! _on_value;
-  digitalWrite(pin, _status);
-  // the initial value is now the current value
-  ((ChildInt*)child)->setValueInt(_status);
-}
-
 // switch to the requested status
-void SensorDigitalOutput::_setStatus(int value) {
-  int value_to_write = _getValueToWrite(value);
-  // set the value to the pin
-  digitalWrite(_pin, value_to_write);
+void SensorDigitalOutput::_switchOutput(int requested_status) {
+  // select the right pin
+  int pin = _pin;
+  if (_pin_off > 0 && requested_status == OFF) pin = _pin_off;
+  // set the value to write. If pulse (latching relay), value is always ON, otherwise is the requested status
+  int value = _pulse_width > 0 ? ON : requested_status;
+  // invert the value to write if needed. E.g. if ON is received, write LOW, if OFF write HIGH
+  if (_invert_value_to_write) value = !value;
+  // write the value to the pin
+  digitalWrite(_pin, value);
+  // if pulse is set wait for the given timeframe before restoring the value to the original value
+  if (_pulse_width > 0) {
+    _node->sleepOrWait(_pulse_width);
+    digitalWrite(pin, ! value);
+  }
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(children.get(1)->child_id);
     Serial.print(F(" P="));
     Serial.print(_pin);
+    Serial.print(F(" S="));
+    Serial.print(requested_status);
     Serial.print(F(" V="));
-    Serial.println(value_to_write);
+    Serial.print(value);
+    Serial.print(F(" P="));
+    Serial.println(_pulse_width);
   #endif
-  // if pulse width is set and status is on, turn it off after the configured interval
-  if (_pulse_width > 0 && value == ON) {
-    _node->sleepOrWait(_pulse_width);
-    digitalWrite(_pin, !value_to_write);
-  }
-}
-
-// reverse the value if needed based on the _on_value
-int SensorDigitalOutput::_getValueToWrite(int value) {
-  int value_to_write = value;
-  if (_on_value == LOW) {
-    // if the "on" value is LOW, reverse the value
-    if (value == ON) value_to_write = LOW;
-    if (value == OFF) value_to_write = HIGH;
-  }
-  return value_to_write;
 }
 
 /*
@@ -1347,60 +1344,30 @@ SensorRelay::SensorRelay(NodeManager& node_manager, int pin, int child_id): Sens
 }
 
 /*
-   SensorLatchingRelay
+   SensorLatchingRelay1Pin
 */
 
 // contructor
-SensorLatchingRelay::SensorLatchingRelay(NodeManager& node_manager, int pin, int child_id): SensorRelay(node_manager, pin, child_id) {
-  _name = "LATCHING";
-  // set the "off" pin to the provided pin and the "on" pin to the provided pin + 1
-  _pin_on = pin;
-  _pin_off = pin + 1;
+SensorLatchingRelay1Pin::SensorLatchingRelay1Pin(NodeManager& node_manager, int pin, int child_id): SensorRelay(node_manager, pin, child_id) {
+  _name = "LATCHING1PIN";
   children.get(1)->description = _name;
   // set pulse duration
   _pulse_width = 50;
 }
 
-// setter/getter
-void SensorLatchingRelay::setPinOn(int value) {
-  _pin_on = value;
-}
-void SensorLatchingRelay::setPinOff(int value) {
-  _pin_off = value;
-}
+/*
+   SensorLatchingRelay2Pins
+*/
 
-// what to do during setup
-void SensorLatchingRelay::onSetup() {
-  _setupPin(children.get(1),_pin_on);
-  _setupPin(children.get(1),_pin_off);
-  // report immediately
-  _report_timer->unset();
+// contructor
+SensorLatchingRelay2Pins::SensorLatchingRelay2Pins(NodeManager& node_manager, int pin_off, int pin_on, int child_id): SensorRelay(node_manager, pin_on, child_id) {
+  _name = "LATCHING2PINS";
+  children.get(1)->description = _name;
+  // set pulse duration
+  _pulse_width = 50;
+  // set off pin
+  setPinOff(pin_off);
 }
-
-// switch to the requested status
-void SensorLatchingRelay::_setStatus(int value) {
-  // select the right pin to send the pulse to
-  int pin = value == OFF ? _pin_off : _pin_on;
-  // set the value
-  digitalWrite(pin, _on_value);
-  // wait for the given time before restoring the value to the original value after the pulse
-  _node->sleepOrWait(_pulse_width);
-  digitalWrite(pin, ! _on_value);
-  #if FEATURE_DEBUG == ON
-    Serial.print(_name);
-    Serial.print(F(" I="));
-    Serial.print(children.get(1)->child_id);
-    Serial.print(F(" P="));
-    Serial.print(pin);
-    Serial.print(F(" S="));
-    Serial.print(value);
-    Serial.print(F(" V="));
-    Serial.print(_on_value);
-    Serial.print(F(" P="));
-    Serial.println(_pulse_width);
-  #endif
-}
-
 #endif
 
 #ifdef USE_DHT
@@ -1574,17 +1541,17 @@ SensorInterrupt::SensorInterrupt(NodeManager& node_manager, int pin, int child_i
 }
 
 // setter/getter
-void SensorInterrupt::setMode(int value) {
-  _mode = value;
+void SensorInterrupt::setInterruptMode(int value) {
+  _interrupt_mode = value;
 }
-void SensorInterrupt::setTriggerTime(int value) {
-  _trigger_time = value;
+void SensorInterrupt::setWaitAfterTrigger(int value) {
+  _wait_after_trigger = value;
 }
-void SensorInterrupt::setInitial(int value) {
-  _initial = value;
+void SensorInterrupt::setInitialValue(int value) {
+  _initial_value = value;
 }
-void SensorInterrupt::setActiveState(int value) {
-  _active_state = value;
+void SensorInterrupt::setInvertValueToReport(bool value) {
+  _invert_value_to_report = value;
 }
 void SensorInterrupt::setArmed(bool value) {
   _armed = value;
@@ -1599,7 +1566,7 @@ void SensorInterrupt::setThreshold(int value) {
 // what to do during setup
 void SensorInterrupt::onSetup() {
   // set the interrupt pin so it will be called only when waking up from that interrupt
-  setInterrupt(_pin,_mode,_initial);
+  setInterrupt(_pin,_interrupt_mode,_initial_value);
   // report immediately
   _report_timer->unset();
 }
@@ -1630,9 +1597,9 @@ void SensorInterrupt::onInterrupt() {
   // read the value of the pin
   int value = _node->getLastInterruptValue();
   // process the value
-  if ( (_mode == RISING && value == HIGH ) || (_mode == FALLING && value == LOW) || (_mode == CHANGE) )  {
+  if ( (_interrupt_mode == RISING && value == HIGH ) || (_interrupt_mode == FALLING && value == LOW) || (_interrupt_mode == CHANGE) )  {
     // invert the value if Active State is set to LOW
-    if (_active_state == LOW) value = !value;
+    if (_invert_value_to_report) value = !value;
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
@@ -1648,8 +1615,8 @@ void SensorInterrupt::onInterrupt() {
     if (_counter < _threshold) return;
 #endif
     ((ChildInt*)child)->setValueInt(value);
-    // allow the signal to be restored to its normal value
-    if (_trigger_time > 0) _node->sleepOrWait(_trigger_time);
+    // allow the signal to be restored to its normal value before reporting
+    if (_wait_after_trigger > 0) _node->sleepOrWait(_wait_after_trigger);
   }
 }
 
@@ -1671,14 +1638,10 @@ SensorMotion::SensorMotion(NodeManager& node_manager, int pin, int child_id): Se
   children.get(1)->presentation = S_MOTION;
   children.get(1)->type = V_TRIPPED;
   children.get(1)->description = _name;
+  // set initial value to LOW
+  setInitialValue(LOW);
 }
 
-// what to do during setup
-void SensorMotion::onSetup() {
-  SensorInterrupt::onSetup();
-  // set initial value to LOW
-  setInitial(LOW);
-}
 #endif
 
 /*
@@ -2985,6 +2948,9 @@ void SensorPulseMeter::setInitialValue(int value) {
 void SensorPulseMeter::setInterruptMode(int value) {
   _interrupt_mode = value;
 }
+void SensorPulseMeter::setWaitAfterTrigger(int value) {
+  _wait_after_trigger = value;
+}
 
 // what to do during setup
 void SensorPulseMeter::onSetup() {
@@ -3032,6 +2998,8 @@ void SensorPulseMeter::_reportTotal(Child* child) {
     Serial.print(F(" V="));
     Serial.println(((ChildFloat*)child)->getValueFloat());
   #endif
+  // allow the signal to be restored to its normal value before reporting
+  if (_wait_after_trigger > 0) _node->sleepOrWait(_wait_after_trigger);
 }
 
 /*
@@ -3067,6 +3035,8 @@ void SensorPowerMeter::_reportTotal(Child* child) {
     Serial.println(((ChildDouble*)child)->getValueDouble());
     Serial.println(_count);
   #endif
+  // allow the signal to be restored to its normal value before reporting
+  if (_wait_after_trigger > 0) _node->sleepOrWait(_wait_after_trigger);
 }
 
 /*
@@ -3090,6 +3060,8 @@ void SensorWaterMeter::_reportTotal(Child* child) {
     Serial.print(F(" V="));
     Serial.println(((ChildDouble*)child)->getValueDouble());
   #endif
+  // allow the signal to be restored to its normal value before reporting
+  if (_wait_after_trigger > 0) _node->sleepOrWait(_wait_after_trigger);
 }
 #endif
 
@@ -4195,37 +4167,29 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       }
       #endif
       #ifdef USE_DIGITAL_OUTPUT
-      if (strcmp(sensor->getName(),"DIGITAL_O") == 0 || strcmp(sensor->getName(),"RELAY") == 0 || strcmp(sensor->getName(),"LATCHING") == 0) {
+      if (strcmp(sensor->getName(),"DIGITAL_O") == 0 || strcmp(sensor->getName(),"RELAY") == 0 || strcmp(sensor->getName(),"LATCHING1PIN") == 0 || strcmp(sensor->getName(),"LATCHING2PINS") == 0) {
         SensorDigitalOutput* custom_sensor = (SensorDigitalOutput*)sensor;
         switch(function) {
-            case 103: custom_sensor->setOnValue(request.getValueInt()); break;
             case 104: custom_sensor->setLegacyMode(request.getValueInt()); break;
             case 105: custom_sensor->setSafeguard(request.getValueInt()); break;
             case 106: custom_sensor->setInputIsElapsed(request.getValueInt()); break;
             case 107: custom_sensor->setWaitAfterSet(request.getValueInt()); break;
             case 108: custom_sensor->setPulseWidth(request.getValueInt()); break;
+            case 109: custom_sensor->setInvertValueToWrite(request.getValueInt()); break;
+            case 110: custom_sensor->setPinOff(request.getValueInt()); break;
           default: return;
-        }
-        if (function > 200 && strcmp(sensor->getName(),"LATCHING") == 0) {
-          SensorLatchingRelay* custom_sensor_2 = (SensorLatchingRelay*)sensor;
-          switch(function) {
-            case 202: custom_sensor_2->setPinOff(request.getValueInt()); break;
-            case 203: custom_sensor_2->setPinOn(request.getValueInt()); break;
-            default: return;
-          }
         }
       }
       #endif
-      #ifdef USE_SWITCH
+      #ifdef USE_INTERRUPT
       if (strcmp(sensor->getName(),"INTERRUPT") == 0 || strcmp(sensor->getName(),"DOOR") == 0 || strcmp(sensor->getName(),"MOTION") == 0) {
         SensorInterrupt* custom_sensor = (SensorInterrupt*)sensor;
         switch(function) {
-          case 101: custom_sensor->setMode(request.getValueInt()); break;
-          case 103: custom_sensor->setTriggerTime(request.getValueInt()); break;
-          case 104: custom_sensor->setInitial(request.getValueInt()); break;
-          case 105: custom_sensor->setActiveState(request.getValueInt()); break;
+          case 101: custom_sensor->setInterruptMode(request.getValueInt()); break;
+          case 103: custom_sensor->setWaitAfterTrigger(request.getValueInt()); break;
+          case 104: custom_sensor->setInitialValue(request.getValueInt()); break;
+          case 105: custom_sensor->setInvertValueToReport(request.getValueInt()); break;
           case 106: custom_sensor->setArmed(request.getValueInt()); break;
-          case 107: custom_sensor->setThreshold(request.getValueInt()); break;
           default: return;
         }
       }
