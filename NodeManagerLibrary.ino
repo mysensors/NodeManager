@@ -1341,15 +1341,29 @@ SensorRelay::SensorRelay(NodeManager& node_manager, int pin, int child_id): Sens
 }
 
 /*
-   SensorLatchingRelay
+   SensorLatchingRelay1Pin
 */
 
 // contructor
-SensorLatchingRelay::SensorLatchingRelay(NodeManager& node_manager, int pin, int child_id): SensorRelay(node_manager, pin, child_id) {
-  _name = "LATCHING";
+SensorLatchingRelay1Pin::SensorLatchingRelay1Pin(NodeManager& node_manager, int pin, int child_id): SensorRelay(node_manager, pin, child_id) {
+  _name = "LATCHING1PIN";
   children.get(1)->description = _name;
   // set pulse duration
   _pulse_width = 50;
+}
+
+/*
+   SensorLatchingRelay2Pins
+*/
+
+// contructor
+SensorLatchingRelay2Pins::SensorLatchingRelay2Pins(NodeManager& node_manager, int pin_off, int pin_on, int child_id): SensorRelay(node_manager, pin_on, child_id) {
+  _name = "LATCHING2PINS";
+  children.get(1)->description = _name;
+  // set pulse duration
+  _pulse_width = 50;
+  // set off pin
+  setPinOff(pin_off);
 }
 #endif
 
@@ -4124,7 +4138,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       }
       #endif
       #ifdef USE_DIGITAL_OUTPUT
-      if (strcmp(sensor->getName(),"DIGITAL_O") == 0 || strcmp(sensor->getName(),"RELAY") == 0 || strcmp(sensor->getName(),"LATCHING") == 0) {
+      if (strcmp(sensor->getName(),"DIGITAL_O") == 0 || strcmp(sensor->getName(),"RELAY") == 0 || strcmp(sensor->getName(),"LATCHING1PIN") == 0 || strcmp(sensor->getName(),"LATCHING2PINS") == 0) {
         SensorDigitalOutput* custom_sensor = (SensorDigitalOutput*)sensor;
         switch(function) {
             case 104: custom_sensor->setLegacyMode(request.getValueInt()); break;

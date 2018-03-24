@@ -437,17 +437,27 @@ class Child {
   public:
     Child();
     Child(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
+    // child id used to communicate with the gateway/controller
     int child_id;
+    // Sensor presentation (default: S_CUSTOM)
     int presentation = S_CUSTOM;
+    // Sensor type (default: V_CUSTOM)
     int type = V_CUSTOM;
+    // how many decimal digits to use (default: 2 for ChildFloat, 4 for ChildDouble)
     int float_precision;
+    // Sensor description
     const char* description = "";
+    // send the current value to the gateway
     virtual void sendValue();
+    // print the current value on a LCD display
     virtual void printOn(Print& p);
 #if FEATURE_CONDITIONAL_REPORT == ON
     Timer* force_update_timer;
+    // return true if the current value is new/different compared to the previous one
     virtual bool isNewValue();
+    // minimum threshold for reporting the value to the controller
     float min_threshold = FLT_MIN;
+    // maximum threshold for reporting the value to the controller
     float max_threshold = FLT_MAX;
 #endif
   protected:
@@ -895,11 +905,19 @@ class SensorRelay: public SensorDigitalOutput {
 };
 
 /*
-   SensorLatchingRelay
+   SensorLatchingRelay1Pin
 */
-class SensorLatchingRelay: public SensorRelay {
+class SensorLatchingRelay1Pin: public SensorRelay {
   public:
-    SensorLatchingRelay(NodeManager& node_manager, int pin, int child_id = -255);
+    SensorLatchingRelay1Pin(NodeManager& node_manager, int pin, int child_id = -255);
+};
+
+/*
+   SensorLatchingRelay2Pins
+*/
+class SensorLatchingRelay2Pins: public SensorRelay {
+  public:
+    SensorLatchingRelay2Pins(NodeManager& node_manager, int pin_off, int pin_on, int child_id = -255);
 };
 #endif
 
