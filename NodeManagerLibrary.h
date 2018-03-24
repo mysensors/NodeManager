@@ -467,10 +467,12 @@ class Child {
     Timer* force_update_timer;
     // return true if the current value is new/different compared to the previous one
     virtual bool isNewValue();
-    // minimum threshold for reporting the value to the controller
+    // minimum threshold for reporting the value to the controller (default: FLT_MIN)
     float min_threshold = FLT_MIN;
-    // maximum threshold for reporting the value to the controller
+    // maximum threshold for reporting the value to the controller (default: FLT_MAX)
     float max_threshold = FLT_MAX;
+    // a value is considered new when is more or less this delta from the previous one (default: 0)
+    float new_value_delta = 0;
 #endif
   protected:
     int _samples = 0;
