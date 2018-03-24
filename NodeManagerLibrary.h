@@ -449,17 +449,27 @@ class Child {
   public:
     Child();
     Child(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
+    // child id used to communicate with the gateway/controller
     int child_id;
+    // Sensor presentation (default: S_CUSTOM)
     int presentation = S_CUSTOM;
+    // Sensor type (default: V_CUSTOM)
     int type = V_CUSTOM;
+    // how many decimal digits to use (default: 2 for ChildFloat, 4 for ChildDouble)
     int float_precision;
+    // Sensor description
     const char* description = "";
+    // send the current value to the gateway
     virtual void sendValue();
+    // print the current value on a LCD display
     virtual void printOn(Print& p);
 #if FEATURE_CONDITIONAL_REPORT == ON
     Timer* force_update_timer;
+    // return true if the current value is new/different compared to the previous one
     virtual bool isNewValue();
+    // minimum threshold for reporting the value to the controller
     float min_threshold = FLT_MIN;
+    // maximum threshold for reporting the value to the controller
     float max_threshold = FLT_MAX;
 #endif
   protected:
@@ -863,8 +873,6 @@ class SensorDigitalInput: public Sensor {
 class SensorDigitalOutput: public Sensor {
   public:
     SensorDigitalOutput(NodeManager& node_manager, int pin, int child_id = -255);
-    // [103] define which value to set to the output when set to on (default: HIGH)
-    void setOnValue(int value);
     // [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
     void setLegacyMode(bool value);
     // [105] automatically turn the output off after the given number of minutes
@@ -875,7 +883,11 @@ class SensorDigitalOutput: public Sensor {
     void setWaitAfterSet(int value);
     // [108] when switching on, turns the output off after the given number of milliseconds. For latching relay controls the pulse width (default: 0)
     void setPulseWidth(int value);
-    // manually switch the output to the provided value
+    // [109] Invert the value to write. E.g. if ON is received, write LOW (default: false) 
+    void setInvertValueToWrite(bool value);
+    // [110] for a 2-pins latching relay, set the pin which turns the relay off (default: -1)
+    void setPinOff(int value);
+    // manually switch the output to the provided status (ON or OFF)
     void setStatus(int value);
     // toggle the status
     void toggleStatus();
@@ -885,16 +897,15 @@ class SensorDigitalOutput: public Sensor {
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
   protected:
-    int _on_value = HIGH;
     int _status = OFF;
+    int _pin_off = -1;
     bool _legacy_mode = false;
     bool _input_is_elapsed = false;
     int _wait_after_set = 0;
     int _pulse_width = 0;
-    Timer* _safeguard_timer;
-    void _setupPin(Child* child, int pin);
-    virtual void _setStatus(int value);
-    int _getValueToWrite(int value);
+    bool _invert_value_to_write = false;
+    Timer* _safeguard_timer = new Timer(_node);
+    virtual void _switchOutput(int value);
 };
 
 /*
@@ -906,21 +917,19 @@ class SensorRelay: public SensorDigitalOutput {
 };
 
 /*
-   SensorLatchingRelay
+   SensorLatchingRelay1Pin
 */
-class SensorLatchingRelay: public SensorRelay {
+class SensorLatchingRelay1Pin: public SensorRelay {
   public:
-    SensorLatchingRelay(NodeManager& node_manager, int pin, int child_id = -255);
-    // [202] set the pin which turns the relay off (default: the pin provided while registering the sensor)
-    void setPinOff(int value);
-    // [203] set the pin which turns the relay on (default: the pin provided while registering the sensor + 1)
-    void setPinOn(int value);
-    // define what to do at each stage of the sketch
-    void onSetup();
-  protected:
-    int _pin_on;
-    int _pin_off;
-    void _setStatus(int value);
+    SensorLatchingRelay1Pin(NodeManager& node_manager, int pin, int child_id = -255);
+};
+
+/*
+   SensorLatchingRelay2Pins
+*/
+class SensorLatchingRelay2Pins: public SensorRelay {
+  public:
+    SensorLatchingRelay2Pins(NodeManager& node_manager, int pin_off, int pin_on, int child_id = -255);
 };
 #endif
 
@@ -990,13 +999,13 @@ class SensorInterrupt: public Sensor {
   public:
     SensorInterrupt(NodeManager& node_manager, int pin, int child_id = -255);
     // [101] set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
-    void setMode(int value);
-    // [103] time to wait in milliseconds after a change is detected to allow the signal to be restored to its normal value (default: 0)
-    void setTriggerTime(int value);
-    // [104] Set initial value on the interrupt pin (default: HIGH)
-    void setInitial(int value);
-    // [105] Set active state (default: HIGH) 
-    void setActiveState(int value);
+    void setInterruptMode(int value);
+    // [103] milliseconds to wait/sleep after the interrupt before reporting (default: 0)
+    void setWaitAfterTrigger(int value);
+    // [104] Set initial value on the interrupt pin. Can be used for internal pull up (default: HIGH)
+    void setInitialValue(int value);
+    // [105] Invert the value to report. E.g. if FALLING and value is LOW, report HIGH (default: false) 
+    void setInvertValueToReport(bool value);
     // [106] Set armed, if false the sensor will not trigger until armed (default: true) 
     void setArmed(bool value);
 #if FEATURE_TIME == ON
@@ -1009,10 +1018,10 @@ class SensorInterrupt: public Sensor {
     void onReceive(MyMessage* message);
     void onInterrupt();
   protected:
-    int _trigger_time = 0;
-    int _mode = CHANGE;
-    int _initial = HIGH;
-    int _active_state = HIGH;
+    int _wait_after_trigger = 0;
+    int _interrupt_mode = CHANGE;
+    int _initial_value = HIGH;
+    bool _invert_value_to_report = false;
     bool _armed = true;
 #if FEATURE_TIME == ON
     int _threshold = 1;
@@ -1035,7 +1044,6 @@ class SensorDoor: public SensorInterrupt {
 class SensorMotion: public SensorInterrupt {
   public:
     SensorMotion(NodeManager& node_manager, int pin, int child_id = -255);
-    void onSetup();
 };
 #endif
 /*
@@ -1451,10 +1459,12 @@ class SensorPulseMeter: public Sensor {
     SensorPulseMeter(NodeManager& node_manager, int pin, int child_id = -255);
     // [102] set how many pulses for each unit (e.g. 1000 pulses for 1 kwh of power, 9 pulses for 1 mm of rain, etc.)
     void setPulseFactor(float value);
-    // set initial value - internal pull up (default: HIGH)
+    // Set initial value on the interrupt pin. Can be used for internal pull up (default: HIGH)
     void setInitialValue(int value);
-    // set the interrupt mode to attach to (default: FALLING)
+    // set the interrupt mode. Can be CHANGE, RISING, FALLING (default: FALLING)
     void setInterruptMode(int value);
+    // milliseconds to wait/sleep after the interrupt before reporting (default: 0)
+    void setWaitAfterTrigger(int value);
     // define what to do at each stage of the sketch
     void onSetup();
     void onLoop(Child* child);
@@ -1466,6 +1476,7 @@ class SensorPulseMeter: public Sensor {
     float _pulse_factor;
     int _initial_value = HIGH;
     int _interrupt_mode = FALLING;
+    int _wait_after_trigger = 0;
     virtual void _reportTotal(Child* child);
 };
 
