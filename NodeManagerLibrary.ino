@@ -237,28 +237,71 @@ Child::Child() {
 }
 
 // constructor
-Child::Child(Sensor* __sensor, int _child_id, int _presentation, int _type, const char* _description) {
-  child_id = _child_id;
-  presentation = _presentation;
-  type = _type;
-  description = _description;
-  _sensor = __sensor;
+Child::Child(Sensor* sensor, int child_id, int presentation, int type, const char* description) {
+  _child_id = child_id;
+  _presentation = presentation;
+  _type = type;
+  _description = description;
+  _sensor = sensor;
   _sensor->registerChild(this);
 #if FEATURE_CONDITIONAL_REPORT == ON
-  force_update_timer = new Timer(_sensor->_node);
+  // initialize the timer for forcing updates to the gateway after a given timeframe
+  _force_update_timer = new Timer(_sensor->_node);
 #endif
 }
-// set a value, implemented by the subclasses
-void Child::sendValue() {
+
+// setter/getter
+void Child::setChildId(int value) {
+  _child_id = value;
 }
-// Print the child's value (variable type depending on the child class) to the given output
-void Child::printOn(Print& p) {
+int Child::getChildId() {
+  return _child_id;
+}
+void Child::setPresentation(int value) {
+  _presentation = value;
+}
+int Child::getPresentation() {
+  return _presentation;
+}
+void Child::setType(int value) {
+  _type = value;
+}
+int Child::getType() {
+  return _type;
+}
+void Child::setFloatPrecision(int value) {
+  _float_precision = value;
+}
+void Child::setDescription(const char* value) {
+  _description = value;
+}
+const char* Child::getDescription() {
+  return _description;
 }
 #if FEATURE_CONDITIONAL_REPORT == ON
-// check if it is an updated value, implemented by the subclasses
-bool Child::isNewValue() {
+void Child::setForceUpdateMinutes(int value) {
+  _force_update_timer->start(value,MINUTES);
+}
+void Child::setMinThreshold(float value) {
+  _min_threshold = value;
+}
+void Child::setMaxThreshold(float value) {
+  _max_threshold = value;
+}
+void Child::setValueDelta(float value) {
+  _value_delta = value;
 }
 #endif
+
+// set a value, implemented by the subclasses
+void Child::sendValue(bool force) {
+}
+// Print the child's value (variable type depending on the child class) to the given output
+void Child::print(Print& device) {
+}
+// reset the counters
+void Child::reset() {
+}
 
 /*
  ChildInt class
@@ -272,6 +315,7 @@ ChildInt::ChildInt(Sensor* sensor, int child_id, int presentation, int type, con
 void ChildInt::setValueInt(int value) {
   _total = _total + value;
   _samples++;
+  // averages the values
   _value = (int) (_total / _samples);
 }
 
@@ -281,31 +325,44 @@ int ChildInt::getValueInt() {
 }
 
 // send the value back to the controller
-void ChildInt::sendValue() {
+void ChildInt::sendValue(bool force) {
   if (_samples == 0) return;
 #if FEATURE_CONDITIONAL_REPORT == ON
-  // if below or above the thresholds, do not send the value
-  if (_value < min_threshold || _value > max_threshold) return;
-#endif
-  _sensor->_node->sendMessage(child_id,type,_value);
-#if FEATURE_CONDITIONAL_REPORT == ON
+  if (! force) {
+    // update the force update timer if running
+    if (_force_update_timer->isRunning()) _force_update_timer->update();
+    // if below or above the thresholds, do not send the value
+    if (_value < _min_threshold || _value > _max_threshold) return;
+    // if the force update timer is over, send the value regardless and restart it
+    if (_force_update_timer->isRunning() && _force_update_timer->isOver()) {
+      _force_update_timer->restart();
+    } else {
+      // if the value does not differ enough from the previous one, do not send the value
+      if (_value > (_last_value - _value_delta) && _value < (_last_value + _value_delta)) {
+        // keep track of the previous value
+        _last_value = _value;
+        return;
+      }
+    }
+  }
+  // keep track of the previous value
   _last_value = _value;
 #endif
-  _total = 0;
-  _samples = 0;
+  // send the value to the gateway
+  _sensor->_node->sendMessage(_child_id,_type,_value);
+  reset();
 }
 
 // Print the child's value (variable type depending on the child class) to the given output
-void ChildInt::printOn(Print& p) {
-  p.print(_value);
+void ChildInt::print(Print& device) {
+  device.print(_value);
 }
 
-#if FEATURE_CONDITIONAL_REPORT == ON
-// check if it is an updated value
-bool ChildInt::isNewValue() {
-  return _last_value != _value;
+// reset the counters
+void ChildInt::reset() {
+  _total = 0;
+  _samples = 0;
 }
-#endif
 
 /*
  ChildFloat class
@@ -313,13 +370,14 @@ bool ChildInt::isNewValue() {
 
 // ChildFloat class
 ChildFloat::ChildFloat(Sensor* sensor, int child_id, int presentation, int type, const char* description): Child(sensor, child_id, presentation, type, description)  {
-  float_precision = 2;
+  _float_precision = 2;
 }
 
 // store a new value and update the total
 void ChildFloat::setValueFloat(float value) {
   _total = _total + value;
   _samples++;
+  // averages the values
   _value = _total / _samples;
 }
 
@@ -329,31 +387,48 @@ float ChildFloat::getValueFloat() {
 }
 
 // send the value back to the controller
-void ChildFloat::sendValue() {
+void ChildFloat::sendValue(bool force) {
   if (_samples == 0) return;
 #if FEATURE_CONDITIONAL_REPORT == ON
-  // if below or above the thresholds, do not send the value
-  if (_value < min_threshold || _value > max_threshold) return;
-#endif
-  _sensor->_node->sendMessage(child_id,type,_value,float_precision);
-#if FEATURE_CONDITIONAL_REPORT == ON
+  if (! force) {
+    // update the force update timer if running
+    if (_force_update_timer->isRunning()) _force_update_timer->update();
+    // if below or above the thresholds, do not send the value
+    if (_value < _min_threshold || _value > _max_threshold) return;
+    //   if the force update timer is over, send the value regardless and restart it
+    if (_force_update_timer->isRunning() && _force_update_timer->isOver()) {
+      _force_update_timer->restart();
+    } else {
+      // if the value does not differ enough from the previous one, do not send the value
+      Serial.println(_value);
+      Serial.println(_last_value);
+      Serial.println((_last_value - _value_delta));
+      Serial.println((_last_value + _value_delta));
+      if (_value > (_last_value - _value_delta) && _value < (_last_value + _value_delta)) {
+        // keep track of the previous value
+        _last_value = _value;
+        return;
+      }
+    }
+  }
+  // keep track of the previous value
   _last_value = _value;
 #endif
+  // send the value to the gateway
+  _sensor->_node->sendMessage(_child_id,_type,_value,_float_precision);
+}
+
+// Print the child's value (variable type depending on the child class) to the given output
+void ChildFloat::print(Print& device) {
+  device.print(_value,_float_precision);
+}
+
+// reset the counters
+void ChildFloat::reset() {
   _total = 0;
   _samples = 0;
 }
 
-// Print the child's value (variable type depending on the child class) to the given output
-void ChildFloat::printOn(Print& p) {
-  p.print(_value,float_precision);
-}
-
-#if FEATURE_CONDITIONAL_REPORT == ON
-// check if it is an updated value
-bool ChildFloat::isNewValue() {
-  return _last_value != _value;
-}
-#endif
 
 /*
  ChildDouble class
@@ -361,13 +436,14 @@ bool ChildFloat::isNewValue() {
 
 // ChildDouble class
 ChildDouble::ChildDouble(Sensor* sensor, int child_id, int presentation, int type, const char* description): Child(sensor, child_id, presentation, type, description)  {
-  float_precision = 4;
+  _float_precision = 4;
 }
 
 // store a new value and update the total
 void ChildDouble::setValueDouble(double value) {
   _total = _total + value;
   _samples++;
+  // averages the values
   _value = _total / _samples;
 }
 
@@ -377,31 +453,44 @@ double ChildDouble::getValueDouble() {
 }
 
 // send the value back to the controller
-void ChildDouble::sendValue() {
+void ChildDouble::sendValue(bool force) {
   if (_samples == 0) return;
 #if FEATURE_CONDITIONAL_REPORT == ON
-  // if below or above the thresholds, do not send the value
-  if (_value < min_threshold || _value > max_threshold) return;
-#endif
-  _sensor->_node->sendMessage(child_id,type,_value,float_precision);
-#if FEATURE_CONDITIONAL_REPORT == ON
+  if (! force) {
+    // update the force update timer if running
+    if (_force_update_timer->isRunning()) _force_update_timer->update();
+    // if below or above the thresholds, do not send the value
+    if (_value < _min_threshold || _value > _max_threshold) return;
+    // if the force update timer is over, send the value regardless and restart it
+    if (_force_update_timer->isRunning() && _force_update_timer->isOver()) {
+      _force_update_timer->restart();
+    } else {
+      // if the value does not differ enough from the previous one, do not send the value
+      if (_value > (_last_value - _value_delta) && _value < (_last_value + _value_delta)) {
+        // keep track of the previous value
+        _last_value = _value;
+        return;
+      }
+    }
+  }
+  // keep track of the previous value
   _last_value = _value;
 #endif
+  // send the value to the gateway
+  _sensor->_node->sendMessage(_child_id,_type,_value,_float_precision);
+}
+
+// Print the child's value (variable type depending on the child class) to the given output
+void ChildDouble::print(Print& device) {
+  device.print(_value,_float_precision);
+}
+
+// reset the counters
+void ChildDouble::reset() {
   _total = 0;
   _samples = 0;
 }
 
-// Print the child's value (variable type depending on the child class) to the given output
-void ChildDouble::printOn(Print& p) {
-  p.print(_value,float_precision);
-}
-
-#if FEATURE_CONDITIONAL_REPORT == ON
-// check if it is an updated value
-bool ChildDouble::isNewValue() {
-  return _last_value != _value;
-}
-#endif
 
 /*
  ChildString class
@@ -422,25 +511,32 @@ const char* ChildString::getValueString() {
 }
 
 // send the value back to the controller
-void ChildString::sendValue() {
-  _sensor->_node->sendMessage(child_id,type,_value);
+void ChildString::sendValue(bool force) {
 #if FEATURE_CONDITIONAL_REPORT == ON
+  if (! force) {
+    // if a delta is configured, do not report if the string is the same as the previous one
+    if (_value_delta > 0 && strcmp(_value, _last_value) == 0) {
+      // keep track of the previous value
+      _last_value = _value;
+      return;
+    }
+  }
+  // keep track of the previous value
   _last_value = _value;
 #endif
-  _value = "";
+  // send the value to the gateway
+  _sensor->_node->sendMessage(_child_id,_type,_value);
 }
 
 // Print the child's value (variable type depending on the child class) to the given output
-void ChildString::printOn(Print& p) {
-  p.print(_value);
+void ChildString::print(Print& device) {
+  device.print(_value);
 }
 
-#if FEATURE_CONDITIONAL_REPORT == ON
-// check if it is an updated value
-bool ChildString::isNewValue() {
-  return strcmp(_value, _last_value) != 0;
+// reset the counters
+void ChildString::reset() {
+  _value = "";
 }
-#endif
 
 /*
    Sensor class
@@ -473,17 +569,6 @@ void Sensor::setSamples(int value) {
 void Sensor::setSamplesInterval(int value) {
   _samples_interval = value;
 }
-#if FEATURE_CONDITIONAL_REPORT == ON
-void Sensor::setTrackLastValue(bool value) {
-  _track_last_value = value;
-}
-void Sensor::setForceUpdateMinutes(int value) {
-  for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
-    Child* child = *itr;
-    child->force_update_timer->start(value,MINUTES);
-  }
-}
-#endif
 #if FEATURE_POWER_MANAGER == ON
 void Sensor::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
   if (_powerManager == nullptr) return;
@@ -549,13 +634,13 @@ void Sensor::presentation() {
     Child* child = *itr;
     #if FEATURE_DEBUG == ON
       Serial.print(F("PRES I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" T="));
-      Serial.print(child->presentation);
+      Serial.print(child->getPresentation());
       Serial.print(F(" D="));
-      Serial.println(child->description);
+      Serial.println(child->getDescription());
     #endif
-    present(child->child_id, child->presentation, child->description, _node->getAck());
+    present(child->getChildId(), child->getPresentation(), child->getDescription(), _node->getAck());
   }
 
 }
@@ -568,11 +653,11 @@ void Sensor::before() {
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" P="));
-      Serial.print(child->presentation);
+      Serial.print(child->getPresentation());
       Serial.print(F(" T="));
-      Serial.println(child->type);
+      Serial.println(child->getType());
     #endif
   }
 }
@@ -610,12 +695,8 @@ void Sensor::loop(MyMessage* message) {
   // iterates over all the children
   for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
     Child* child = *itr;
-#if FEATURE_CONDITIONAL_REPORT == ON
-    // update the force update timer if running
-    if (child->force_update_timer->isRunning()) child->force_update_timer->update();
-#endif
     // if a specific child is requested, skip all the others
-    if (message != nullptr && message->sensor != child->child_id) continue;
+    if (message != nullptr && message->sensor != child->getChildId()) continue;
     // collect multiple samples if needed
     for (int i = 0; i < _samples; i++) {
       // we've been called from receive(), pass the message along
@@ -625,19 +706,10 @@ void Sensor::loop(MyMessage* message) {
       // wait between samples
       if (_samples_interval > 0) _node->sleepOrWait(_samples_interval);
     }
-#if FEATURE_CONDITIONAL_REPORT == ON
-    // process the result and send a response back if 1) is not a loop 2) not tracking last value 3) tracking last value and there is a new value 4) tracking last value and timer is over
-    if (
-      message != nullptr
-      || ! _track_last_value || 
-      _track_last_value && child->isNewValue() || 
-      _track_last_value && child->force_update_timer->isRunning() && child->force_update_timer->isOver()
-      ) 
-        child->sendValue();
-#else      
-    child->sendValue();
-#endif
-     
+    // send the value back to the controller
+    child->sendValue(message != nullptr);
+    // reset the counters
+    child->reset();
   }
 #if FEATURE_HOOKING == ON
   // if a hook function is defined, call it
@@ -679,7 +751,7 @@ void Sensor::receive(MyMessage* message) {
 Child* Sensor::getChild(int child_id) {
   for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
     Child* child = *itr;
-    if (child->child_id == child_id) return child;
+    if (child->getChildId() == child_id) return child;
   }
   return nullptr;
 }
@@ -782,7 +854,7 @@ void SensorBattery::onLoop(Child* child) {
 void SensorBattery::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 #endif
 
@@ -818,7 +890,7 @@ void SensorSignal::onLoop(Child* child) {
 void SensorSignal::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 #endif
 
@@ -867,7 +939,7 @@ void SensorAnalogInput::onLoop(Child* child) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" V="));
     Serial.print(adc);
     Serial.print(F(" %="));
@@ -881,7 +953,7 @@ void SensorAnalogInput::onLoop(Child* child) {
 void SensorAnalogInput::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 
 // read the analog input
@@ -1024,7 +1096,7 @@ void SensorThermistor::onLoop(Child* child) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" V="));
     Serial.print(adc);
     Serial.print(F(" T="));
@@ -1038,7 +1110,7 @@ void SensorThermistor::onLoop(Child* child) {
 void SensorThermistor::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 #endif
 
@@ -1072,7 +1144,7 @@ void SensorML8511::onLoop(Child* child) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" V="));
     Serial.print(outputVoltage);
     Serial.print(F(" I="));
@@ -1086,7 +1158,7 @@ void SensorML8511::onLoop(Child* child) {
 void SensorML8511::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 
 // The Arduino Map function but for floats
@@ -1131,7 +1203,7 @@ void SensorACS712::onLoop(Child* child) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" A="));
     Serial.println(value_float);
   #endif
@@ -1142,7 +1214,7 @@ void SensorACS712::onLoop(Child* child) {
 void SensorACS712::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 
 #endif
@@ -1172,7 +1244,7 @@ void SensorDigitalInput::onLoop(Child* child) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" P="));
     Serial.print(_pin);
     Serial.print(F(" V="));
@@ -1186,7 +1258,7 @@ void SensorDigitalInput::onLoop(Child* child) {
 void SensorDigitalInput::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 #endif
 
@@ -1397,14 +1469,14 @@ void SensorDHT::onLoop(Child* child) {
   _node->sleepOrWait(_dht->getMinimumSamplingPeriod());
   _dht->readSensor(true);
   // temperature sensor
-  if (child->type == V_TEMP) {
+  if (child->getType() == V_TEMP) {
     // read the temperature
     float temperature = _dht->getTemperature();
     if (! _node->getIsMetric()) temperature = _dht->toFahrenheit(temperature);
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" T="));
       Serial.println(temperature);
     #endif
@@ -1412,13 +1484,13 @@ void SensorDHT::onLoop(Child* child) {
     if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
   }
   // humidity sensor
-  else if (child->type == V_HUM) {
+  else if (child->getType() == V_HUM) {
     // read humidity
     float humidity = _dht->getHumidity();
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" H="));
       Serial.println(humidity);
     #endif
@@ -1431,7 +1503,7 @@ void SensorDHT::onLoop(Child* child) {
 void SensorDHT::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 
 /*
@@ -1480,7 +1552,7 @@ void SensorSHT21::onSetup() {
 // what to do during loop
 void SensorSHT21::onLoop(Child* child) {
   // temperature sensor
-  if (child->type == V_TEMP) {
+  if (child->getType() == V_TEMP) {
     // read the temperature
     float temperature = SHT2x.GetTemperature();
     // convert it
@@ -1488,7 +1560,7 @@ void SensorSHT21::onLoop(Child* child) {
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" T="));
       Serial.println(temperature);
     #endif
@@ -1496,14 +1568,14 @@ void SensorSHT21::onLoop(Child* child) {
     if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
   }
   // Humidity Sensor
-  else if (child->type == V_HUM) {
+  else if (child->getType() == V_HUM) {
     // read humidity
     float humidity = SHT2x.GetHumidity();
     if (isnan(humidity)) return;
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" H="));
       Serial.println(humidity);
     #endif
@@ -1516,7 +1588,7 @@ void SensorSHT21::onLoop(Child* child) {
 void SensorSHT21::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 
 /*
@@ -1603,7 +1675,7 @@ void SensorInterrupt::onInterrupt() {
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" P="));
       Serial.print(_pin);
       Serial.print(F(" V="));
@@ -1694,7 +1766,7 @@ void SensorDs18b20::onLoop(Child* child) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" T="));
     Serial.println(temperature);
   #endif
@@ -1706,7 +1778,7 @@ void SensorDs18b20::onLoop(Child* child) {
 void SensorDs18b20::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 
 // returns the sensor's resolution in bits
@@ -1771,7 +1843,7 @@ void SensorBH1750::onLoop(Child* child) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" L="));
     Serial.println(value);
   #endif
@@ -1782,7 +1854,7 @@ void SensorBH1750::onLoop(Child* child) {
 void SensorBH1750::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 #endif
 
@@ -1815,7 +1887,7 @@ void SensorMLX90614::onLoop(Child* child) {
   temperature = _node->celsiusToFahrenheit(temperature);
   #if FEATURE_DEBUG == ON
     Serial.print(F("MLX I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" T="));
     Serial.println(temperature);
   #endif
@@ -1826,7 +1898,7 @@ void SensorMLX90614::onLoop(Child* child) {
 void SensorMLX90614::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 #endif
 
@@ -1850,7 +1922,7 @@ void SensorBosch::setForecastSamplesCount(int value) {
 void SensorBosch::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 
 // calculate and send the forecast back
@@ -1986,7 +2058,7 @@ void SensorBME280::onSetup() {
 
 void SensorBME280::onLoop(Child* child) {
   // temperature sensor
-  if (child->type == V_TEMP) {
+  if (child->getType() == V_TEMP) {
     // read the temperature
     float temperature = _bm->readTemperature();
     // convert it
@@ -1994,7 +2066,7 @@ void SensorBME280::onLoop(Child* child) {
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" T="));
       Serial.println(temperature);
     #endif
@@ -2002,13 +2074,13 @@ void SensorBME280::onLoop(Child* child) {
     if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
   }
   // Humidity Sensor
-  else if (child->type == V_HUM) {
+  else if (child->getType() == V_HUM) {
     // read humidity
     float humidity = _bm->readHumidity();
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" H="));
       Serial.println(humidity);
     #endif
@@ -2016,13 +2088,13 @@ void SensorBME280::onLoop(Child* child) {
     if (! isnan(humidity)) ((ChildFloat*)child)->setValueFloat(humidity);
   }
   // Pressure Sensor
-  else if (child->type == V_PRESSURE) {
+  else if (child->getType() == V_PRESSURE) {
     // read pressure
     float pressure = _bm->readPressure() / 100.0F;
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" P="));
       Serial.println(pressure);
     #endif
@@ -2030,7 +2102,7 @@ void SensorBME280::onLoop(Child* child) {
     if (! isnan(pressure)) ((ChildFloat*)child)->setValueFloat(pressure);
   }
   // Forecast Sensor
-  else if (child->type == V_FORECAST) {
+  else if (child->getType() == V_FORECAST) {
     float pressure = _bm->readPressure() / 100.0F;
     ((ChildString*)child)->setValueString(_forecast(pressure));
   }
@@ -2063,7 +2135,7 @@ void SensorBMP085::onSetup() {
 // what to do during loop
 void SensorBMP085::onLoop(Child* child) {
   // temperature sensor
-  if (child->type == V_TEMP) {
+  if (child->getType() == V_TEMP) {
     // read the temperature
     float temperature = _bm->readTemperature();
     // convert it
@@ -2071,7 +2143,7 @@ void SensorBMP085::onLoop(Child* child) {
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" T="));
       Serial.println(temperature);
     #endif
@@ -2079,13 +2151,13 @@ void SensorBMP085::onLoop(Child* child) {
     if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
   }
   // Pressure Sensor
-  else if (child->type == V_PRESSURE) {
+  else if (child->getType() == V_PRESSURE) {
     // read pressure
     float pressure = _bm->readPressure() / 100.0F;
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" P="));
       Serial.println(pressure);
     #endif
@@ -2093,7 +2165,7 @@ void SensorBMP085::onLoop(Child* child) {
     if (! isnan(pressure)) ((ChildFloat*)child)->setValueFloat(pressure);
   }
   // Forecast Sensor
-  else if (child->type == V_FORECAST) {
+  else if (child->getType() == V_FORECAST) {
     float pressure = _bm->readPressure() / 100.0F;
     ((ChildString*)child)->setValueString(_forecast(pressure));
   }
@@ -2125,7 +2197,7 @@ void SensorBMP280::onSetup() {
 
 void SensorBMP280::onLoop(Child* child) {
   // temperature sensor
-  if (child->type == V_TEMP) {
+  if (child->getType() == V_TEMP) {
     // read the temperature
     float temperature = _bm->readTemperature();
     // convert it
@@ -2133,7 +2205,7 @@ void SensorBMP280::onLoop(Child* child) {
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" T="));
       Serial.println(temperature);
     #endif
@@ -2141,13 +2213,13 @@ void SensorBMP280::onLoop(Child* child) {
     if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
   }
   // Pressure Sensor
-  else if (child->type == V_PRESSURE) {
+  else if (child->getType() == V_PRESSURE) {
     // read pressure
     float pressure = _bm->readPressure() / 100.0F;
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" P="));
       Serial.println(pressure);
     #endif
@@ -2155,7 +2227,7 @@ void SensorBMP280::onLoop(Child* child) {
     if (! isnan(pressure)) ((ChildFloat*)child)->setValueFloat(pressure);
   }
   // Forecast Sensor
-  else if (child->type == V_FORECAST) {
+  else if (child->getType() == V_FORECAST) {
     float pressure = _bm->readPressure() / 100.0F;
     ((ChildString*)child)->setValueString(_forecast(pressure));
   }
@@ -2240,7 +2312,7 @@ void SensorSonoff::_toggle(Child* child) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" V="));
     Serial.println(_state);
   #endif
@@ -2295,7 +2367,7 @@ void SensorHCSR04::onLoop(Child* child) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" D="));
     Serial.println(distance);
   #endif
@@ -2306,7 +2378,7 @@ void SensorHCSR04::onLoop(Child* child) {
 void SensorHCSR04::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 #endif
 
@@ -2334,7 +2406,7 @@ void SensorMCP9808::onLoop(Child* child) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" T="));
     Serial.println(temperature);
   #endif
@@ -2346,7 +2418,7 @@ void SensorMCP9808::onLoop(Child* child) {
 void SensorMCP9808::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 #endif
 
@@ -2426,7 +2498,7 @@ void SensorMQ::onLoop(Child* child) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" V="));
     Serial.print(value);
     Serial.print(F(" LPG="));
@@ -2444,7 +2516,7 @@ void SensorMQ::onLoop(Child* child) {
 void SensorMQ::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 
 // returns the calculated sensor resistance
@@ -2530,7 +2602,7 @@ void SensorMHZ19::onLoop(Child* child) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" ppm="));
     Serial.println(co2ppm);
   #endif
@@ -2543,7 +2615,7 @@ void SensorMHZ19::onLoop(Child* child) {
 void SensorMHZ19::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 
 // Read out the CO2 data
@@ -2601,12 +2673,12 @@ void SensorAM2320::onLoop(Child* child) {
   int status = _th->Read();
   if (status != 0) return;
   // temperature sensor
-  if (child->type == V_TEMP) {
+  if (child->getType() == V_TEMP) {
     float temperature = _th->t;
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" T="));
       Serial.println(temperature);
     #endif
@@ -2614,13 +2686,13 @@ void SensorAM2320::onLoop(Child* child) {
     if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
   }
   // Humidity Sensor
-  else if (child->type == V_HUM) {
+  else if (child->getType() == V_HUM) {
     // read humidity
     float humidity = _th->h;
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" T="));
       Serial.println(humidity);
     #endif
@@ -2633,7 +2705,7 @@ void SensorAM2320::onLoop(Child* child) {
 void SensorAM2320::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 #endif
 
@@ -2726,7 +2798,7 @@ void SensorTSL2561::onLoop(Child* child) {
       #if FEATURE_DEBUG == ON
         Serial.print(_name);
         Serial.print(F(" I="));
-        Serial.print(child->child_id);
+        Serial.print(child->getChildId());
         Serial.print(F(" LUX="));
         Serial.print(((ChildInt*)child)->getValueInt());
         Serial.print(F(" IR="));
@@ -2742,7 +2814,7 @@ void SensorTSL2561::onLoop(Child* child) {
     if (_tsl_spectrum < 3) {
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" L="));
       Serial.println(((ChildInt*)child)->getValueInt());
     }
@@ -2753,7 +2825,7 @@ void SensorTSL2561::onLoop(Child* child) {
 void SensorTSL2561::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 #endif
 
@@ -2788,7 +2860,7 @@ void SensorPT100::onLoop(Child* child) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" T="));
     Serial.println(temperature);
   #endif
@@ -2800,7 +2872,7 @@ void SensorPT100::onLoop(Child* child) {
 void SensorPT100::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 #endif
 
@@ -2847,17 +2919,17 @@ void SensorDimmer::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
   // heandle a SET command
-  if (message->getCommand() == C_SET && message->type == child->type) {
+  if (message->getCommand() == C_SET && message->type == child->getType()) {
     // if changing the status
-    if (child->type == V_STATUS) setStatus(message->getInt());
+    if (child->getType() == V_STATUS) setStatus(message->getInt());
     // if changing the percentage of the dimmer
-    if (child->type == V_PERCENTAGE) setPercentage(message->getInt());
+    if (child->getType() == V_PERCENTAGE) setPercentage(message->getInt());
   }
   // handle REQ command
-  if (message->getCommand() == C_REQ && message->type == child->type) {
+  if (message->getCommand() == C_REQ && message->type == child->getType()) {
     // return the current status
-    if (child->type == V_STATUS) ((ChildInt*)child)->setValueInt(_status);
-    if (child->type == V_PERCENTAGE) ((ChildInt*)child)->setValueInt(_percentage);
+    if (child->getType() == V_STATUS) ((ChildInt*)child)->setValueInt(_status);
+    if (child->getType() == V_PERCENTAGE) ((ChildInt*)child)->setValueInt(_percentage);
   }
 }
 
@@ -2898,7 +2970,7 @@ void SensorDimmer::_fadeTo(Child* child, int target_percentage) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" V="));
     Serial.println(target_percentage);
   #endif
@@ -2972,7 +3044,7 @@ void SensorPulseMeter::onLoop(Child* child) {
 void SensorPulseMeter::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) {
+  if (message->getCommand() == C_REQ && message->type == child->getType()) {
     // report the total the last period
     _reportTotal(child);
   }
@@ -2994,7 +3066,7 @@ void SensorPulseMeter::_reportTotal(Child* child) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" V="));
     Serial.println(((ChildFloat*)child)->getValueFloat());
   #endif
@@ -3030,7 +3102,7 @@ void SensorPowerMeter::_reportTotal(Child* child) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" V="));
     Serial.println(((ChildDouble*)child)->getValueDouble());
     Serial.println(_count);
@@ -3056,7 +3128,7 @@ void SensorWaterMeter::_reportTotal(Child* child) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" V="));
     Serial.println(((ChildDouble*)child)->getValueDouble());
   #endif
@@ -3122,7 +3194,7 @@ void SensorPlantowerPMS::onLoop(Child* child) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" µg/m³="));
     Serial.println(val);
   #endif
@@ -3132,7 +3204,7 @@ void SensorPlantowerPMS::onLoop(Child* child) {
 void SensorPlantowerPMS::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 #endif
 
@@ -3166,7 +3238,7 @@ void SensorVL53L0X::onLoop(Child *child) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" D="));
     if (val>=0) {
       Serial.print(val);
@@ -3181,7 +3253,7 @@ void SensorVL53L0X::onLoop(Child *child) {
 void SensorVL53L0X::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 
 // measure the distance
@@ -3283,7 +3355,7 @@ void Display::onLoop(Child*child) {
 void Display::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_SET && message->type == child->type) {
+  if (message->getCommand() == C_SET && message->type == child->getType()) {
     int text_start = 0;
     // if the string contains a "," at the second position, it means the first char is the row number
     if (strncmp(message->getString()+1,",",1) == 0) {
@@ -3376,7 +3448,7 @@ void DisplaySSD1306::println(const char* value) {
 }
 
 void DisplaySSD1306::printChild(Child* child) {
-  child->printOn(*_oled);
+  child->print(*_oled);
 }
 
 void DisplaySSD1306::clear() {
@@ -3419,7 +3491,7 @@ void SensorSHT31::onSetup() {
 // what to do during loop
 void SensorSHT31::onLoop(Child* child) {
   // temperature sensor
-  if (child->type == V_TEMP) {
+  if (child->getType() == V_TEMP) {
     // read the temperature
     float temperature = _sht31->readTemperature();
     // convert it
@@ -3427,7 +3499,7 @@ void SensorSHT31::onLoop(Child* child) {
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" T="));
       Serial.println(temperature);
     #endif
@@ -3435,14 +3507,14 @@ void SensorSHT31::onLoop(Child* child) {
     if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
   }
   // Humidity Sensor
-  else if (child->type == V_HUM) {
+  else if (child->getType() == V_HUM) {
     // read humidity
     float humidity = _sht31->readHumidity();
     if (isnan(humidity)) return;
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" H="));
       Serial.println(humidity);
     #endif
@@ -3455,7 +3527,7 @@ void SensorSHT31::onLoop(Child* child) {
 void SensorSHT31::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 #endif
 
@@ -3480,7 +3552,7 @@ void SensorSI7021::onSetup() {
 // what to do during loop
 void SensorSI7021::onLoop(Child* child) {
   // temperature sensor
-  if (child->type == V_TEMP) {
+  if (child->getType() == V_TEMP) {
     // read the temperature
     float temperature = _si7021->getTemp();
     // convert it
@@ -3488,7 +3560,7 @@ void SensorSI7021::onLoop(Child* child) {
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" T="));
       Serial.println(temperature);
     #endif
@@ -3496,14 +3568,14 @@ void SensorSI7021::onLoop(Child* child) {
     if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
   }
   // Humidity Sensor
-  else if (child->type == V_HUM) {
+  else if (child->getType() == V_HUM) {
     // read humidity
     float humidity = _si7021->getRH();
     if (isnan(humidity)) return;
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" H="));
       Serial.println(humidity);
     #endif
@@ -3516,7 +3588,7 @@ void SensorSI7021::onLoop(Child* child) {
 void SensorSI7021::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 #endif
 
@@ -3565,7 +3637,7 @@ void SensorChirp::onSetup() {
 void SensorChirp::onLoop(Child* child) {
   while (_chirp->isBusy()) wait(50);
   // temperature sensor
-  if (child->type == V_TEMP) {
+  if (child->getType() == V_TEMP) {
     // read the temperature
     float temperature = _chirp->getTemperature()/(float)10;
     // convert it
@@ -3573,7 +3645,7 @@ void SensorChirp::onLoop(Child* child) {
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" T="));
       Serial.println(temperature);
     #endif
@@ -3581,7 +3653,7 @@ void SensorChirp::onLoop(Child* child) {
     if (! isnan(temperature)) ((ChildFloat*)child)->setValueFloat(temperature);
   }
   // Humidity Sensor
-  else if (child->type == V_HUM) {
+  else if (child->getType() == V_HUM) {
     // request the SoilMoisturelevel
     float capacitance = _chirp->getCapacitance();
     float capacitance_orig = capacitance;
@@ -3596,21 +3668,21 @@ void SensorChirp::onLoop(Child* child) {
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" H="));
       Serial.println(capacitance);
     #endif
     // store the value
    if (! isnan(capacitance)) ((ChildFloat*)child)->setValueFloat(capacitance);
   }
-  else if (child->type == V_LIGHT_LEVEL) {
+  else if (child->getType() == V_LIGHT_LEVEL) {
     // read light
     float light = _chirp->getLight(true);
     if ( _chirp_lightreversed ) light = 65535 - light;
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" L="));
       Serial.println(light);
     #endif
@@ -3659,7 +3731,7 @@ void DisplayHD44780::println(const char* value) {
 }
 
 void DisplayHD44780::printChild(Child* child) {
-  child->printOn(*_lcd);
+  child->print(*_lcd);
 }
 
 void DisplayHD44780::clear() {
@@ -3737,7 +3809,7 @@ void SensorTTP::onInterrupt() {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" D="));
     Serial.println(value);
   #endif
@@ -3755,7 +3827,7 @@ void SensorTTP::onInterrupt() {
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" V="));
       Serial.println(passcode);
     #endif
@@ -3770,7 +3842,7 @@ void SensorTTP::onInterrupt() {
 void SensorTTP::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_REQ && message->type == child->type) onLoop(child);
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 
 // fetch data from the keypad
@@ -3837,7 +3909,7 @@ void SensorServo::setPercentage(int value) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(child->child_id);
+    Serial.print(child->getChildId());
     Serial.print(F(" P="));
     Serial.print(_pin);
     Serial.print(F(" V="));
@@ -3891,7 +3963,7 @@ void SensorAPDS9960::onInterrupt() {
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" G="));
       Serial.println(gesture);
     #endif
@@ -3935,7 +4007,7 @@ void SensorNeopixel::onLoop(Child *child) {
 void SensorNeopixel::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
-  if (message->getCommand() == C_SET && message->type == child->type) {
+  if (message->getCommand() == C_SET && message->type == child->getType()) {
       char* string = (char*)message->getString();
       setColor(string);
  		//setColor(message->getString());
@@ -3977,7 +4049,7 @@ void SensorNeopixel::setColor(char* string) {
     #if FEATURE_DEBUG == ON
       Serial.print(_name);
       Serial.print(F(" I="));
-      Serial.print(child->child_id);
+      Serial.print(child->getChildId());
       Serial.print(F(" N="));
       Serial.print(pixel_num);
       if (pixel_num != pixel_end)

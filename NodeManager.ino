@@ -248,7 +248,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define USE_SIGNAL
 //#define USE_CONFIGURATION
 //#define USE_ANALOG_INPUT
-//#define USE_THERMISTOR
+#define USE_THERMISTOR
 //#define USE_ML8511
 //#define USE_ACS712
 //#define USE_DIGITAL_INPUT
@@ -292,7 +292,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 #define FEATURE_DEBUG ON
 #define FEATURE_POWER_MANAGER OFF
 #define FEATURE_INTERRUPTS ON
-#define FEATURE_CONDITIONAL_REPORT OFF
+#define FEATURE_CONDITIONAL_REPORT ON
 #define FEATURE_EEPROM OFF
 #define FEATURE_SLEEP ON
 #define FEATURE_RECEIVE ON
@@ -323,7 +323,7 @@ NodeManager node;
 //SensorLDR ldr(node,A0);
 //SensorRain rain(node,A0);
 //SensorSoilMoisture soil(node,A0);
-//SensorThermistor thermistor(node,A0);
+SensorThermistor thermistor(node,A0);
 //SensorML8511 ml8511(node,A0);
 //SensorACS712 acs712(node,A0);
 //SensorDigitalInput digitalIn(node,6);
@@ -377,7 +377,9 @@ void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
 
-
+node.setReportIntervalSeconds(5);
+//thermistor.children.get(1)->setValueDelta(5);
+thermistor.children.get(1)->setFloatPrecision(1);
   
   /*
   * Configure your sensors below
