@@ -2062,11 +2062,7 @@ SensorBME280::SensorBME280(NodeManager& node_manager, int child_id): SensorBosch
 // what to do during setup
 void SensorBME280::onSetup() {
   _bm = new Adafruit_BME280();
-  if (! _bm->begin(detectI2CAddress(0x60))) {
-    #if FEATURE_DEBUG == ON
-      Serial.println(F("INIT ERR"));
-    #endif
-  }
+  _bm->begin(detectI2CAddress(0x60));
 }
 
 void SensorBME280::onLoop(Child* child) {
