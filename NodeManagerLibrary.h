@@ -50,7 +50,6 @@
 #if defined (MYBOARDNRF5)
   #define CHIP_NRF5
 #endif
-
 #if !defined(CHIP_ESP8266) && !defined(CHIP_STM32) && !defined(CHIP_NRF5)
   #define CHIP_AVR
 #endif
@@ -449,32 +448,50 @@ class Child {
   public:
     Child();
     Child(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
-    // child id used to communicate with the gateway/controller
-    int child_id;
-    // Sensor presentation (default: S_CUSTOM)
-    int presentation = S_CUSTOM;
-    // Sensor type (default: V_CUSTOM)
-    int type = V_CUSTOM;
-    // how many decimal digits to use (default: 2 for ChildFloat, 4 for ChildDouble)
-    int float_precision;
-    // Sensor description
-    const char* description = "";
-    // send the current value to the gateway
-    virtual void sendValue();
-    // print the current value on a LCD display
-    virtual void printOn(Print& p);
+    // set child id used to communicate with the gateway/controller
+    void setChildId(int value);
+    int getChildId();
+    // set sensor presentation (default: S_CUSTOM)
+    void setPresentation(int value);
+    int getPresentation();
+    // set sensor type (default: V_CUSTOM)
+    void setType(int value);
+    int getType();
+    // set how many decimal digits to use (default: 2 for ChildFloat, 4 for ChildDouble)
+    void setFloatPrecision(int value);
+    // set sensor description
+    void setDescription(const char* value);
+    const char* getDescription();
 #if FEATURE_CONDITIONAL_REPORT == ON
-    Timer* force_update_timer;
-    // return true if the current value is new/different compared to the previous one
-    virtual bool isNewValue();
-    // minimum threshold for reporting the value to the controller
-    float min_threshold = FLT_MIN;
-    // maximum threshold for reporting the value to the controller
-    float max_threshold = FLT_MAX;
+    // force to send an update after the configured number of minutes
+    void setForceUpdateMinutes(int value);
+    // never report values below this threshold (default: FLT_MIN)
+    void setMinThreshold(float value);
+    // never report values above this threshold (default: FLT_MAX)
+    void setMaxThreshold(float value);
+    // do not report values if too close to the previous one (default: 0)
+    void setValueDelta(float value);
 #endif
+    // send the current value to the gateway
+    virtual void sendValue(bool force);
+    // print the current value on a LCD display
+    virtual void print(Print& device);
+    // reset all the counters
+    virtual void reset();
   protected:
     int _samples = 0;
     Sensor* _sensor;
+    int _child_id;
+    int _presentation = S_CUSTOM;
+    int _type = V_CUSTOM;
+    int _float_precision;
+    const char* _description = "";
+#if FEATURE_CONDITIONAL_REPORT == ON
+    Timer* _force_update_timer;
+    float _min_threshold = FLT_MIN;
+    float _max_threshold = FLT_MAX;
+    float _value_delta = 0;
+#endif
 };
 
 class ChildInt: public Child {
@@ -482,15 +499,13 @@ class ChildInt: public Child {
     ChildInt(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
     void setValueInt(int value);
     int getValueInt();
-    void sendValue();
-    void printOn(Print& p);
-#if FEATURE_CONDITIONAL_REPORT == ON
-    bool isNewValue();
-#endif
+    void sendValue(bool force);
+    void print(Print& device);
+    void reset();
   private:
     int _value;
 #if FEATURE_CONDITIONAL_REPORT == ON
-    int _last_value;
+    int _last_value = -256;
 #endif
     int _total = 0;
 };
@@ -500,15 +515,13 @@ class ChildFloat: public Child {
     ChildFloat(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
     void setValueFloat(float value);
     float getValueFloat();
-    void sendValue();
-    void printOn(Print& p);
-#if FEATURE_CONDITIONAL_REPORT == ON
-    bool isNewValue();
-#endif
+    void sendValue(bool force);
+    void print(Print& device);
+    void reset();
   private:
     float _value;
 #if FEATURE_CONDITIONAL_REPORT == ON
-    float _last_value;
+    float _last_value = -256;
 #endif
     float _total = 0;
 };
@@ -518,15 +531,13 @@ class ChildDouble: public Child {
     ChildDouble(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
     void setValueDouble(double value);
     double getValueDouble();
-    void sendValue();
-    void printOn(Print& p);
-#if FEATURE_CONDITIONAL_REPORT == ON
-    bool isNewValue();
-#endif
+    void sendValue(bool force);
+    void print(Print& device);
+    void reset();
   private:
     double _value;
 #if FEATURE_CONDITIONAL_REPORT == ON
-    double _last_value;
+    double _last_value = -256;
 #endif
     double _total = 0;
 };
@@ -536,11 +547,9 @@ class ChildString: public Child {
     ChildString(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
     void setValueString(const char* value);
     const char* getValueString();
-    void sendValue();
-    void printOn(Print& p);
-#if FEATURE_CONDITIONAL_REPORT == ON
-    bool isNewValue();
-#endif
+    void sendValue(bool force);
+    void print(Print& device);
+    void reset();
   private:
     const char* _value = "";
 #if FEATURE_CONDITIONAL_REPORT == ON
@@ -565,12 +574,6 @@ class Sensor {
     void setSamples(int value);
     // [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
     void setSamplesInterval(int value);
-#if FEATURE_CONDITIONAL_REPORT == ON
-    // [7] if true will report the measure only if different than the previous one (default: false)
-    void setTrackLastValue(bool value);
-    // [9] if track last value is enabled, force to send an update after the configured number of minutes
-    void setForceUpdateMinutes(int value);
-#endif
 #if FEATURE_POWER_MANAGER == ON
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
     void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
@@ -639,9 +642,6 @@ class Sensor {
     int _pin = -1;
     int _samples = 1;
     int _samples_interval = 0;
-#if FEATURE_CONDITIONAL_REPORT == ON
-    bool _track_last_value = false;
-#endif
 #if FEATURE_INTERRUPTS == ON
     int _interrupt_pin = -1;
 #endif
