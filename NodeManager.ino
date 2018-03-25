@@ -378,8 +378,9 @@ void before() {
   Serial.begin(MY_BAUD_RATE);
 
 node.setReportIntervalSeconds(5);
-//thermistor.children.get(1)->setValueDelta(5);
+thermistor.children.get(1)->setValueDelta(5);
 thermistor.children.get(1)->setFloatPrecision(1);
+thermistor.children.get(1)->setForceUpdateMinutes(1);
   
   /*
   * Configure your sensors below

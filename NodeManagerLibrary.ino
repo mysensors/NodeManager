@@ -379,6 +379,8 @@ void ChildFloat::setValueFloat(float value) {
   _samples++;
   // averages the values
   _value = _total / _samples;
+  // round the value if float precision has been customized
+  if (_float_precision != 2) _value = float((int) (_value * (_float_precision*10))) / (_float_precision*10);
 }
 
 // return the value
@@ -400,10 +402,6 @@ void ChildFloat::sendValue(bool force) {
       _force_update_timer->restart();
     } else {
       // if the value does not differ enough from the previous one, do not send the value
-      Serial.println(_value);
-      Serial.println(_last_value);
-      Serial.println((_last_value - _value_delta));
-      Serial.println((_last_value + _value_delta));
       if (_value > (_last_value - _value_delta) && _value < (_last_value + _value_delta)) {
         // keep track of the previous value
         _last_value = _value;
@@ -445,6 +443,8 @@ void ChildDouble::setValueDouble(double value) {
   _samples++;
   // averages the values
   _value = _total / _samples;
+  // round the value if float precision has been customized
+  if (_float_precision != 4) _value = double((int) (_value * (_float_precision*10))) / (_float_precision*10);
 }
 
 // return the value
