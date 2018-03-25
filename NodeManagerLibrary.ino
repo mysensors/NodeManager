@@ -1909,7 +1909,7 @@ void SensorMLX90614::onReceive(MyMessage* message) {
 /*
    SensorBosch
 */
-#if defined(USE_BME280) || defined(USE_BMP085) || defined(USE_BMP280)
+#if defined(USE_BME280) || defined(USE_BMP085_180) || defined(USE_BMP280)
 // contructor
 SensorBosch::SensorBosch(NodeManager& node_manager, int child_id): Sensor(node_manager) {
   _name = "BOSCH";
@@ -2014,7 +2014,7 @@ float SensorBosch::_getLastPressureSamplesAverage() {
 }
 
 // search for a given chip on i2c bus (emulating Adafruit's init() function)
-uint8_t SensorBosch::DetectI2CAddress(uint8_t chip_id) {
+uint8_t SensorBosch::detectI2CAddress(uint8_t chip_id) {
   // define the i2c addresses to test  
   uint8_t addresses[] = {0x77, 0x76};
   // define the register's address of the chip id (e.g. BMxxx_REGISTER_CHIPID)
@@ -2062,7 +2062,7 @@ SensorBME280::SensorBME280(NodeManager& node_manager, int child_id): SensorBosch
 // what to do during setup
 void SensorBME280::onSetup() {
   _bm = new Adafruit_BME280();
-  if (! _bm->begin(SensorBosch::DetectI2CAddress(0x60))) {
+  if (! _bm->begin(detectI2CAddress(0x60))) {
     #if FEATURE_DEBUG == ON
       Serial.println(F("INIT ERR"));
     #endif
@@ -2125,7 +2125,7 @@ void SensorBME280::onLoop(Child* child) {
 /*
    SensorBMP085
 */
-#ifdef USE_BMP085
+#ifdef USE_BMP085_180
 // contructor
 SensorBMP085::SensorBMP085(NodeManager& node_manager, int child_id): SensorBosch(node_manager, child_id) {
   _name = "BMP085";
@@ -2138,11 +2138,7 @@ SensorBMP085::SensorBMP085(NodeManager& node_manager, int child_id): SensorBosch
 // what to do during setup
 void SensorBMP085::onSetup() {
   _bm = new Adafruit_BMP085();
-  if (! _bm->begin(SensorBosch::DetectI2CAddress(0x55))) {
-    #if FEATURE_DEBUG == ON
-      Serial.println(F("ERR"));
-    #endif
-  }
+  _bm->begin(detectI2CAddress(0x55));
 }
 
 // what to do during loop
@@ -2183,6 +2179,17 @@ void SensorBMP085::onLoop(Child* child) {
     ((ChildString*)child)->setValueString(_forecast(pressure));
   }
 }
+
+/*
+   SensorBMP180
+*/
+// contructor
+SensorBMP180::SensorBMP180(NodeManager& node_manager, int child_id): SensorBMP085(node_manager, child_id) {
+  _name = "BMP180";
+  children.get(1)->setDescription(_name);
+  children.get(2)->setDescription(_name);
+  children.get(3)->setDescription(_name);
+}
 #endif
 
 /*
@@ -2201,11 +2208,7 @@ SensorBMP280::SensorBMP280(NodeManager& node_manager, int child_id): SensorBosch
 // what to do during setup
 void SensorBMP280::onSetup() {
   _bm = new Adafruit_BMP280();
-  if (! _bm->begin(SensorBosch::DetectI2CAddress(0x58))) {
-    #if FEATURE_DEBUG == ON
-      Serial.println(F("ERR"));
-    #endif
-  }
+  _bm->begin(detectI2CAddress(0x58));
 }
 
 void SensorBMP280::onLoop(Child* child) {
@@ -3065,12 +3068,16 @@ void SensorPulseMeter::onReceive(MyMessage* message) {
 
 // what to do when receiving an interrupt
 void SensorPulseMeter::onInterrupt() {
-  // increase the counter
-  _count++;
-  #if FEATURE_DEBUG == ON
-    Serial.print(_name);
-    Serial.println(F("+"));
-  #endif
+  // read the value of the pin
+  int value = _node->getLastInterruptValue();
+  if ( (_interrupt_mode == RISING && value == HIGH ) || (_interrupt_mode == FALLING && value == LOW) || (_interrupt_mode == CHANGE) )  {
+    // increase the counter
+    _count++;
+    #if FEATURE_DEBUG == ON
+      Serial.print(_name);
+      Serial.println(F("+"));
+    #endif
+  }
 }
 
 // return the total based on the pulses counted
@@ -3080,6 +3087,8 @@ void SensorPulseMeter::_reportTotal(Child* child) {
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->getChildId());
+    Serial.print(F(" C="));
+    Serial.print(_count);
     Serial.print(F(" V="));
     Serial.println(((ChildFloat*)child)->getValueFloat());
   #endif
@@ -3107,6 +3116,8 @@ SensorPowerMeter::SensorPowerMeter(NodeManager& node_manager, int pin, int child
   children.allocateBlocks(1);
   new ChildDouble(this,_node->getAvailableChildId(child_id),S_POWER,V_KWH,_name);
   setPulseFactor(1000);
+  setInitialValue(LOW);
+  setInterruptMode(RISING);
 }
 
 // return the total based on the pulses counted
@@ -3116,9 +3127,10 @@ void SensorPowerMeter::_reportTotal(Child* child) {
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->getChildId());
+    Serial.print(F(" C="));
+    Serial.print(_count);
     Serial.print(F(" V="));
     Serial.println(((ChildDouble*)child)->getValueDouble());
-    Serial.println(_count);
   #endif
   // allow the signal to be restored to its normal value before reporting
   if (_wait_after_trigger > 0) _node->sleepOrWait(_wait_after_trigger);
@@ -3133,6 +3145,8 @@ SensorWaterMeter::SensorWaterMeter(NodeManager& node_manager, int pin, int child
   children.allocateBlocks(1);
   new ChildDouble(this,_node->getAvailableChildId(child_id),S_WATER,V_VOLUME,_name);
   setPulseFactor(1000);
+  setInitialValue(LOW);
+  setInterruptMode(RISING);
 }
 
 // return the total based on the pulses counted
@@ -3142,6 +3156,8 @@ void SensorWaterMeter::_reportTotal(Child* child) {
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->getChildId());
+    Serial.print(F(" C="));
+    Serial.print(_count);
     Serial.print(F(" V="));
     Serial.println(((ChildDouble*)child)->getValueDouble());
   #endif
@@ -3498,7 +3514,7 @@ SensorSHT31::SensorSHT31(NodeManager& node_manager, int child_id): Sensor(node_m
 void SensorSHT31::onSetup() {
   _sht31 = new Adafruit_SHT31();
   // Set to 0x45 for alternate i2c addr
-  _sht31->begin(0x44); 
+  _sht31->begin(0x44);
 }
 
 // what to do during loop
@@ -4297,8 +4313,8 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      #if defined(USE_BME280) || defined(USE_BMP085) || defined(USE_BMP280)
-      if (strcmp(sensor->getName(),"BMP085") == 0 || strcmp(sensor->getName(),"BME280") == 0 || strcmp(sensor->getName(),"BMP280") == 0) {
+      #if defined(USE_BME280) || defined(USE_BMP085_180) || defined(USE_BMP280)
+      if (strcmp(sensor->getName(),"BMP085") == 0 || strcmp(sensor->getName(),"BMP180") == 0 || strcmp(sensor->getName(),"BME280") == 0 || strcmp(sensor->getName(),"BMP280") == 0) {
         SensorBosch* custom_sensor = (SensorBosch*)sensor;
         switch(function) {
           case 101: custom_sensor->setForecastSamplesCount(request.getValueInt()); break;

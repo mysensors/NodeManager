@@ -177,7 +177,7 @@
 #ifdef USE_SONOFF
   #include <Bounce2.h>
 #endif
-#ifdef USE_BMP085
+#ifdef USE_BMP085_180
   #include <Wire.h>
   #include <Adafruit_BMP085.h>
 #endif
@@ -1110,7 +1110,7 @@ class SensorMLX90614: public Sensor {
  * SensorBosch
 */
 
-#if defined(USE_BME280) || defined(USE_BMP085) || defined(USE_BMP280)
+#if defined(USE_BME280) || defined(USE_BMP085_180) || defined(USE_BMP280)
 class SensorBosch: public Sensor {
   public:
     SensorBosch(NodeManager& node_manager, int child_id = -255);
@@ -1118,7 +1118,7 @@ class SensorBosch: public Sensor {
     void setForecastSamplesCount(int value);
     // define what to do at each stage of the sketch
     void onReceive(MyMessage* message);
-    uint8_t DetectI2CAddress(uint8_t chip_id);
+    uint8_t detectI2CAddress(uint8_t chip_id);
   protected:
     const char* _weather[6] = { "stable", "sunny", "cloudy", "unstable", "thunderstorm", "unknown" };
     int _forecast_samples_count = 5;
@@ -1151,7 +1151,7 @@ class SensorBME280: public SensorBosch {
 /*
    SensorBMP085
 */
-#ifdef USE_BMP085
+#ifdef USE_BMP085_180
 class SensorBMP085: public SensorBosch {
   public:
     SensorBMP085(NodeManager& node_manager, int child_id = -255);
@@ -1160,6 +1160,14 @@ class SensorBMP085: public SensorBosch {
     void onLoop(Child* child);
   protected:
     Adafruit_BMP085* _bm;
+};
+
+/*
+   SensorBMP180
+*/
+class SensorBMP180: public SensorBMP085 {
+  public:
+    SensorBMP180(NodeManager& node_manager, int child_id = -255);
 };
 #endif
 
