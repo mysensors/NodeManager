@@ -70,7 +70,8 @@ SensorDs18b20            | 1+    | USE_DS18B20        | DS18B20 sensor, return t
 SensorBH1750             | 1     | USE_BH1750         | BH1750 sensor, return light level in lux                                                          | https://github.com/claws/BH1750
 SensorMLX90614           | 2     | USE_MLX90614       | MLX90614 contactless temperature sensor, return ambient and object temperature                    | https://github.com/adafruit/Adafruit-MLX90614-Library
 SensorBME280             | 4     | USE_BME280         | BME280 sensor, return temperature/humidity/pressure based on the attached BME280 sensor           | https://github.com/adafruit/Adafruit_BME280_Library
-SensorBMP085             | 3     | USE_BMP085         | BMP085/BMP180 sensor, return temperature and pressure                                             | https://github.com/adafruit/Adafruit-BMP085-Library
+SensorBMP085             | 3     | USE_BMP085_180     | BMP085 sensor, return temperature and pressure                                                    | https://github.com/adafruit/Adafruit-BMP085-Library
+SensorBMP180             | 3     | USE_BMP085_180     | BMP180 sensor, return temperature and pressure                                                    | https://github.com/adafruit/Adafruit-BMP085-Library
 SensorBMP280             | 3     | USE_BMP280         | BMP280 sensor, return temperature/pressure based on the attached BMP280 sensor                    | https://github.com/adafruit/Adafruit_BMP280_Library
 SensorSonoff             | 1     | USE_SONOFF         | Sonoff wireless smart switch                                                                      | https://github.com/thomasfredericks/Bounce2
 SensorHCSR04             | 1     | USE_HCSR04         | HC-SR04 sensor, return the distance between the sensor and an object                              | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/NewPing
@@ -119,6 +120,7 @@ FEATURE_TIME                | OFF     | allow keeping the current system time in
 FEATURE_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device (requires FEATURE_TIME)| https://github.com/JChristensen/DS3232RTC
 FEATURE_SD                  | OFF     | allow reading from and writing to SD cards                                                       | -
 FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the out of the box sensors                                     | -
+**/
 
 /**********************************
  * MySensors node configuration
@@ -262,7 +264,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define USE_BH1750
 //#define USE_MLX90614
 //#define USE_BME280
-//#define USE_BMP085
+//#define USE_BMP085_180
 //#define USE_BMP280
 //#define USE_SONOFF
 //#define USE_HCSR04
@@ -345,6 +347,7 @@ NodeManager node;
 //SensorMLX90614 mlx90614(node);
 //SensorBME280 bme280(node);
 //SensorBMP085 bmp085(node);
+//SensorBMP180 bmp180(node);
 //SensorBMP280 bmp280(node);
 //SensorSonoff sonoff(node);
 //SensorHCSR04 hcsr04(node,6);
@@ -385,6 +388,8 @@ void before() {
   //node.setReportIntervalSeconds(10);
   // report measures of every attached sensors every 10 minutes
   //node.setReportIntervalMinutes(10);
+  // set the node to sleep in 30 seconds cycles
+  //node.setSleepSeconds(30);
   // set the node to sleep in 5 minutes cycles
   //node.setSleepMinutes(5);
   // report battery level every 10 minutes
