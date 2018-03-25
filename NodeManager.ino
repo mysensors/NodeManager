@@ -256,14 +256,14 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define USE_DIGITAL_INPUT
 //#define USE_DIGITAL_OUTPUT
 //#define USE_DHT
-//#define USE_SHT21
+#define USE_SHT21
 //#define USE_INTERRUPT
 //#define USE_DS18B20
 //#define USE_BH1750
 //#define USE_MLX90614
 //#define USE_BME280
 //#define USE_BMP085
-#define USE_BMP280
+//#define USE_BMP280
 //#define USE_SONOFF
 //#define USE_HCSR04
 //#define USE_MCP9808
@@ -335,7 +335,7 @@ SensorBattery battery(node);
 //SensorLatchingRelay2Pins latching2pins(node,6,7);
 //SensorDHT11 dht11(node,6);
 //SensorDHT22 dht22(node,6);
-//SensorSHT21 sht21(node);
+SensorSHT21 sht21(node);
 //SensorHTU21D htu21(node);
 //SensorInterrupt interrupt(node,3);
 //SensorDoor door(node,3);
@@ -345,7 +345,7 @@ SensorBattery battery(node);
 //SensorMLX90614 mlx90614(node);
 //SensorBME280 bme280(node);
 //SensorBMP085 bmp085(node);
-SensorBMP280 bmp280(node);
+//SensorBMP280 bmp280(node);
 //SensorSonoff sonoff(node);
 //SensorHCSR04 hcsr04(node,6);
 //SensorMCP9808 mcp9808(node);

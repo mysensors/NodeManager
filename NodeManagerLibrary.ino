@@ -991,9 +991,9 @@ int SensorAnalogInput::_getPercentage(int adc) {
 // contructor
 SensorLDR::SensorLDR(NodeManager& node_manager, int pin, int child_id): SensorAnalogInput(node_manager, pin, child_id) {
   _name = "LDR";
-  children.get(1)->presentation = S_LIGHT_LEVEL;
-  children.get(1)->type = V_LIGHT_LEVEL;
-  children.get(1)->description = _name;
+  children.get(1)->setPresentation(S_LIGHT_LEVEL);
+  children.get(1)->setType(V_LIGHT_LEVEL);
+  children.get(1)->setDescription(_name);
 }
 
 // what to do during setup
@@ -1008,9 +1008,9 @@ void SensorLDR::onSetup() {
 // contructor
 SensorRain::SensorRain(NodeManager& node_manager, int pin, int child_id): SensorAnalogInput(node_manager, pin, child_id) {
   _name = "RAIN";
-  children.get(1)->presentation = S_RAIN;
-  children.get(1)->type = V_RAINRATE;
-  children.get(1)->description = _name;
+  children.get(1)->setPresentation(S_RAIN);
+  children.get(1)->setType(V_RAINRATE);
+  children.get(1)->setDescription(_name);
 }
 
 // what to do during setup
@@ -1028,9 +1028,9 @@ void SensorRain::onSetup() {
 // contructor
 SensorSoilMoisture::SensorSoilMoisture(NodeManager& node_manager, int pin, int child_id): SensorAnalogInput(node_manager, pin, child_id) {
   _name = "SOIL";
-  children.get(1)->presentation = S_MOISTURE;
-  children.get(1)->type = V_LEVEL;
-  children.get(1)->description = _name;
+  children.get(1)->setPresentation(S_MOISTURE);
+  children.get(1)->setType(V_LEVEL);
+  children.get(1)->setDescription(_name);
 }
 
 // what to do during setup
@@ -1391,7 +1391,7 @@ void SensorDigitalOutput::_switchOutput(int requested_status) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(children.get(1)->child_id);
+    Serial.print(children.get(1)->getChildId());
     Serial.print(F(" P="));
     Serial.print(_pin);
     Serial.print(F(" S="));
@@ -1410,9 +1410,9 @@ void SensorDigitalOutput::_switchOutput(int requested_status) {
 // contructor
 SensorRelay::SensorRelay(NodeManager& node_manager, int pin, int child_id): SensorDigitalOutput(node_manager, pin, child_id) {
   _name = "RELAY";
-  children.get(1)->presentation = S_BINARY;
-  children.get(1)->type = V_STATUS;
-  children.get(1)->description = _name;
+  children.get(1)->setPresentation(S_BINARY);
+  children.get(1)->setType(V_STATUS);
+  children.get(1)->setDescription(_name);
 }
 
 /*
@@ -1422,7 +1422,7 @@ SensorRelay::SensorRelay(NodeManager& node_manager, int pin, int child_id): Sens
 // contructor
 SensorLatchingRelay1Pin::SensorLatchingRelay1Pin(NodeManager& node_manager, int pin, int child_id): SensorRelay(node_manager, pin, child_id) {
   _name = "LATCHING1PIN";
-  children.get(1)->description = _name;
+  children.get(1)->setDescription(_name);
   // set pulse duration
   _pulse_width = 50;
 }
@@ -1434,7 +1434,7 @@ SensorLatchingRelay1Pin::SensorLatchingRelay1Pin(NodeManager& node_manager, int 
 // contructor
 SensorLatchingRelay2Pins::SensorLatchingRelay2Pins(NodeManager& node_manager, int pin_off, int pin_on, int child_id): SensorRelay(node_manager, pin_on, child_id) {
   _name = "LATCHING2PINS";
-  children.get(1)->description = _name;
+  children.get(1)->setDescription(_name);
   // set pulse duration
   _pulse_width = 50;
   // set off pin
@@ -1514,8 +1514,8 @@ void SensorDHT::onReceive(MyMessage* message) {
 SensorDHT11::SensorDHT11(NodeManager& node_manager, int pin, int child_id): SensorDHT(node_manager, pin, child_id) {
   _name = "DHT11";
   _dht_type = DHT::DHT11;
-  children.get(1)->description = _name;
-  children.get(2)->description = _name;
+  children.get(1)->setDescription(_name);
+  children.get(2)->setDescription(_name);
 }
 
 /*
@@ -1526,8 +1526,8 @@ SensorDHT11::SensorDHT11(NodeManager& node_manager, int pin, int child_id): Sens
 SensorDHT22::SensorDHT22(NodeManager& node_manager, int pin, int child_id): SensorDHT(node_manager, pin, child_id) {
   _name = "DHT22";
   _dht_type = DHT::DHT22;
-  children.get(1)->description = _name;
-  children.get(2)->description = _name;
+  children.get(1)->setDescription(_name);
+  children.get(2)->setDescription(_name);
 }
 #endif
 
@@ -1597,8 +1597,8 @@ void SensorSHT21::onReceive(MyMessage* message) {
  // constructor
 SensorHTU21D::SensorHTU21D(NodeManager& nodeManager, int child_id): SensorSHT21(nodeManager, child_id) {
   _name = "HTU21";
-  children.get(1)->description = _name;
-  children.get(2)->description = _name;
+  children.get(1)->setDescription(_name);
+  children.get(2)->setDescription(_name);
 }
 #endif 
 
@@ -1697,9 +1697,9 @@ void SensorInterrupt::onInterrupt() {
  */
 SensorDoor::SensorDoor(NodeManager& node_manager, int pin, int child_id): SensorInterrupt(node_manager, pin, child_id) {
   _name = "DOOR";
-  children.get(1)->presentation = S_DOOR;
-  children.get(1)->type = V_TRIPPED;
-  children.get(1)->description = _name;
+  children.get(1)->setPresentation(S_DOOR);
+  children.get(1)->setType(V_TRIPPED);
+  children.get(1)->setDescription(_name);
 }
 
 /*
@@ -1707,9 +1707,9 @@ SensorDoor::SensorDoor(NodeManager& node_manager, int pin, int child_id): Sensor
  */
 SensorMotion::SensorMotion(NodeManager& node_manager, int pin, int child_id): SensorInterrupt(node_manager, pin, child_id) {
   _name = "MOTION";
-  children.get(1)->presentation = S_MOTION;
-  children.get(1)->type = V_TRIPPED;
-  children.get(1)->description = _name;
+  children.get(1)->setPresentation(S_MOTION);
+  children.get(1)->setType(V_TRIPPED);
+  children.get(1)->setDescription(_name);
   // set initial value to LOW
   setInitialValue(LOW);
 }
@@ -1738,7 +1738,7 @@ SensorDs18b20::SensorDs18b20(NodeManager& node_manager, int pin, int child_id): 
 void SensorDs18b20::onSetup() {
   for (int i = 1; i <= children.size(); i++) {
     children.get(i);
-    _node->sendMessage(children.get(i)->child_id,V_ID,_getAddress(i-1));
+    _node->sendMessage(children.get(i)->getChildId(),V_ID,_getAddress(i-1));
   }
 }
 
@@ -3376,7 +3376,7 @@ void Display::onReceive(MyMessage* message) {
 // constructor
 DisplaySSD1306::DisplaySSD1306(NodeManager& node_manager, int child_id): Display(node_manager, child_id) {
   _name = "SSD1306";
-  children.get(1)->description = _name;
+  children.get(1)->setDescription(_name);
 }
 
 // setter/getter
@@ -3703,7 +3703,7 @@ void SensorChirp::onReceive(MyMessage* message) {
 // constructor
 DisplayHD44780::DisplayHD44780(NodeManager& node_manager, int child_id): Display(node_manager, child_id) {
   _name = "HD44780";
-  children.get(1)->description = _name;
+  children.get(1)->setDescription(_name);
 }
 
 // setter/getter
