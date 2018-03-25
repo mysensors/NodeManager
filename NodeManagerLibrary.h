@@ -177,7 +177,7 @@
 #ifdef USE_SONOFF
   #include <Bounce2.h>
 #endif
-#ifdef USE_BMP085
+#ifdef USE_BMP085_180
   #include <Wire.h>
   #include <Adafruit_BMP085.h>
 #endif
@@ -319,7 +319,7 @@ public:
   inline iterator begin() { return _internalArray; }
   inline iterator end() { return _internalArray + _endPosition; }
   inline bool empty() { return (_endPosition == 0); }
-  inline unsigned int size() { return _endPosition; }
+  inline int size() { return _endPosition; }
   void allocateBlocks(int alloc) {
     _allocBlocks = alloc;
     T* newArray = new T[_allocBlocks];
@@ -1110,7 +1110,7 @@ class SensorMLX90614: public Sensor {
  * SensorBosch
 */
 
-#if defined(USE_BME280) || defined(USE_BMP085) || defined(USE_BMP280)
+#if defined(USE_BME280) || defined(USE_BMP085_180) || defined(USE_BMP280)
 class SensorBosch: public Sensor {
   public:
     SensorBosch(NodeManager& node_manager, int child_id = -255);
@@ -1118,9 +1118,9 @@ class SensorBosch: public Sensor {
     void setForecastSamplesCount(int value);
     // define what to do at each stage of the sketch
     void onReceive(MyMessage* message);
-    uint8_t GetI2CAddress(uint8_t chip_id);
+    uint8_t detectI2CAddress(uint8_t chip_id);
   protected:
-    char* _weather[6] = { "stable", "sunny", "cloudy", "unstable", "thunderstorm", "unknown" };
+    const char* _weather[6] = { "stable", "sunny", "cloudy", "unstable", "thunderstorm", "unknown" };
     int _forecast_samples_count = 5;
     float* _forecast_samples;
     int _minute_count = 0;
@@ -1129,7 +1129,7 @@ class SensorBosch: public Sensor {
     float _dP_dt;
     bool _first_round = true;
     float _getLastPressureSamplesAverage();
-    char* _forecast(float pressure);
+    const char* _forecast(float pressure);
 };
 #endif
 
@@ -1151,7 +1151,7 @@ class SensorBME280: public SensorBosch {
 /*
    SensorBMP085
 */
-#ifdef USE_BMP085
+#ifdef USE_BMP085_180
 class SensorBMP085: public SensorBosch {
   public:
     SensorBMP085(NodeManager& node_manager, int child_id = -255);
@@ -1160,6 +1160,14 @@ class SensorBMP085: public SensorBosch {
     void onLoop(Child* child);
   protected:
     Adafruit_BMP085* _bm;
+};
+
+/*
+   SensorBMP180
+*/
+class SensorBMP180: public SensorBMP085 {
+  public:
+    SensorBMP180(NodeManager& node_manager, int child_id = -255);
 };
 #endif
 
@@ -1617,7 +1625,7 @@ class DisplaySSD1306: public Display {
     uint8_t _i2caddress = 0x3c;
     int _fontsize = 1;
     int _caption_fontsize = 2;
-    uint8_t* _font = Adafruit5x7;
+    const uint8_t* _font = Adafruit5x7;
     uint8_t _contrast = -1;
 };
 #endif

@@ -380,7 +380,10 @@ void ChildFloat::setValueFloat(float value) {
   // averages the values
   _value = _total / _samples;
   // round the value if float precision has been customized
-  if (_float_precision != 2) _value = float((int) (_value * (_float_precision*10))) / (_float_precision*10);
+  if (_float_precision != 2) {
+    if (_float_precision == 0) _value = (int) _value;
+    else _value = float((int) (_value * (_float_precision*10))) / (_float_precision*10);
+  }
 }
 
 // return the value
@@ -444,7 +447,10 @@ void ChildDouble::setValueDouble(double value) {
   // averages the values
   _value = _total / _samples;
   // round the value if float precision has been customized
-  if (_float_precision != 4) _value = double((int) (_value * (_float_precision*10))) / (_float_precision*10);
+  if (_float_precision != 4) {
+    if (_float_precision == 0) _value = (int) _value;
+    else _value = double((int) (_value * (_float_precision*10))) / (_float_precision*10);
+  }
 }
 
 // return the value
@@ -991,9 +997,9 @@ int SensorAnalogInput::_getPercentage(int adc) {
 // contructor
 SensorLDR::SensorLDR(NodeManager& node_manager, int pin, int child_id): SensorAnalogInput(node_manager, pin, child_id) {
   _name = "LDR";
-  children.get(1)->presentation = S_LIGHT_LEVEL;
-  children.get(1)->type = V_LIGHT_LEVEL;
-  children.get(1)->description = _name;
+  children.get(1)->setPresentation(S_LIGHT_LEVEL);
+  children.get(1)->setType(V_LIGHT_LEVEL);
+  children.get(1)->setDescription(_name);
 }
 
 // what to do during setup
@@ -1008,9 +1014,9 @@ void SensorLDR::onSetup() {
 // contructor
 SensorRain::SensorRain(NodeManager& node_manager, int pin, int child_id): SensorAnalogInput(node_manager, pin, child_id) {
   _name = "RAIN";
-  children.get(1)->presentation = S_RAIN;
-  children.get(1)->type = V_RAINRATE;
-  children.get(1)->description = _name;
+  children.get(1)->setPresentation(S_RAIN);
+  children.get(1)->setType(V_RAINRATE);
+  children.get(1)->setDescription(_name);
 }
 
 // what to do during setup
@@ -1028,9 +1034,9 @@ void SensorRain::onSetup() {
 // contructor
 SensorSoilMoisture::SensorSoilMoisture(NodeManager& node_manager, int pin, int child_id): SensorAnalogInput(node_manager, pin, child_id) {
   _name = "SOIL";
-  children.get(1)->presentation = S_MOISTURE;
-  children.get(1)->type = V_LEVEL;
-  children.get(1)->description = _name;
+  children.get(1)->setPresentation(S_MOISTURE);
+  children.get(1)->setType(V_LEVEL);
+  children.get(1)->setDescription(_name);
 }
 
 // what to do during setup
@@ -1120,7 +1126,7 @@ void SensorThermistor::onReceive(MyMessage* message) {
 */
 
 // contructor
-SensorML8511::SensorML8511(NodeManager& node_manager, int pin, int child_id = -255): Sensor(node_manager, pin) {
+SensorML8511::SensorML8511(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "ML8511";
   children.allocateBlocks(1);
   new ChildFloat(this,_node->getAvailableChildId(child_id),S_UV,V_UV,_name);
@@ -1391,7 +1397,7 @@ void SensorDigitalOutput::_switchOutput(int requested_status) {
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
-    Serial.print(children.get(1)->child_id);
+    Serial.print(children.get(1)->getChildId());
     Serial.print(F(" P="));
     Serial.print(_pin);
     Serial.print(F(" S="));
@@ -1410,9 +1416,9 @@ void SensorDigitalOutput::_switchOutput(int requested_status) {
 // contructor
 SensorRelay::SensorRelay(NodeManager& node_manager, int pin, int child_id): SensorDigitalOutput(node_manager, pin, child_id) {
   _name = "RELAY";
-  children.get(1)->presentation = S_BINARY;
-  children.get(1)->type = V_STATUS;
-  children.get(1)->description = _name;
+  children.get(1)->setPresentation(S_BINARY);
+  children.get(1)->setType(V_STATUS);
+  children.get(1)->setDescription(_name);
 }
 
 /*
@@ -1422,7 +1428,7 @@ SensorRelay::SensorRelay(NodeManager& node_manager, int pin, int child_id): Sens
 // contructor
 SensorLatchingRelay1Pin::SensorLatchingRelay1Pin(NodeManager& node_manager, int pin, int child_id): SensorRelay(node_manager, pin, child_id) {
   _name = "LATCHING1PIN";
-  children.get(1)->description = _name;
+  children.get(1)->setDescription(_name);
   // set pulse duration
   _pulse_width = 50;
 }
@@ -1434,7 +1440,7 @@ SensorLatchingRelay1Pin::SensorLatchingRelay1Pin(NodeManager& node_manager, int 
 // contructor
 SensorLatchingRelay2Pins::SensorLatchingRelay2Pins(NodeManager& node_manager, int pin_off, int pin_on, int child_id): SensorRelay(node_manager, pin_on, child_id) {
   _name = "LATCHING2PINS";
-  children.get(1)->description = _name;
+  children.get(1)->setDescription(_name);
   // set pulse duration
   _pulse_width = 50;
   // set off pin
@@ -1514,8 +1520,8 @@ void SensorDHT::onReceive(MyMessage* message) {
 SensorDHT11::SensorDHT11(NodeManager& node_manager, int pin, int child_id): SensorDHT(node_manager, pin, child_id) {
   _name = "DHT11";
   _dht_type = DHT::DHT11;
-  children.get(1)->description = _name;
-  children.get(2)->description = _name;
+  children.get(1)->setDescription(_name);
+  children.get(2)->setDescription(_name);
 }
 
 /*
@@ -1526,8 +1532,8 @@ SensorDHT11::SensorDHT11(NodeManager& node_manager, int pin, int child_id): Sens
 SensorDHT22::SensorDHT22(NodeManager& node_manager, int pin, int child_id): SensorDHT(node_manager, pin, child_id) {
   _name = "DHT22";
   _dht_type = DHT::DHT22;
-  children.get(1)->description = _name;
-  children.get(2)->description = _name;
+  children.get(1)->setDescription(_name);
+  children.get(2)->setDescription(_name);
 }
 #endif
 
@@ -1597,8 +1603,8 @@ void SensorSHT21::onReceive(MyMessage* message) {
  // constructor
 SensorHTU21D::SensorHTU21D(NodeManager& nodeManager, int child_id): SensorSHT21(nodeManager, child_id) {
   _name = "HTU21";
-  children.get(1)->description = _name;
-  children.get(2)->description = _name;
+  children.get(1)->setDescription(_name);
+  children.get(2)->setDescription(_name);
 }
 #endif 
 
@@ -1697,9 +1703,9 @@ void SensorInterrupt::onInterrupt() {
  */
 SensorDoor::SensorDoor(NodeManager& node_manager, int pin, int child_id): SensorInterrupt(node_manager, pin, child_id) {
   _name = "DOOR";
-  children.get(1)->presentation = S_DOOR;
-  children.get(1)->type = V_TRIPPED;
-  children.get(1)->description = _name;
+  children.get(1)->setPresentation(S_DOOR);
+  children.get(1)->setType(V_TRIPPED);
+  children.get(1)->setDescription(_name);
 }
 
 /*
@@ -1707,9 +1713,9 @@ SensorDoor::SensorDoor(NodeManager& node_manager, int pin, int child_id): Sensor
  */
 SensorMotion::SensorMotion(NodeManager& node_manager, int pin, int child_id): SensorInterrupt(node_manager, pin, child_id) {
   _name = "MOTION";
-  children.get(1)->presentation = S_MOTION;
-  children.get(1)->type = V_TRIPPED;
-  children.get(1)->description = _name;
+  children.get(1)->setPresentation(S_MOTION);
+  children.get(1)->setType(V_TRIPPED);
+  children.get(1)->setDescription(_name);
   // set initial value to LOW
   setInitialValue(LOW);
 }
@@ -1738,7 +1744,7 @@ SensorDs18b20::SensorDs18b20(NodeManager& node_manager, int pin, int child_id): 
 void SensorDs18b20::onSetup() {
   for (int i = 1; i <= children.size(); i++) {
     children.get(i);
-    _node->sendMessage(children.get(i)->child_id,V_ID,_getAddress(i-1));
+    _node->sendMessage(children.get(i)->getChildId(),V_ID,_getAddress(i-1));
   }
 }
 
@@ -1802,8 +1808,6 @@ char* SensorDs18b20::_getAddress(int index) {
   DeviceAddress device_address;
   _sensors->getAddress(device_address,index);
   String strAddr = String(device_address[0], HEX);
-  byte first ;
-  int j = 0;
   for (uint8_t i = 1; i < 8; i++) {
     if (device_address[i] < 16) strAddr = strAddr + 0;
     strAddr = strAddr + String(device_address[i], HEX);
@@ -1905,9 +1909,9 @@ void SensorMLX90614::onReceive(MyMessage* message) {
 /*
    SensorBosch
 */
-#if defined(USE_BME280) || defined(USE_BMP085) || defined(USE_BMP280)
+#if defined(USE_BME280) || defined(USE_BMP085_180) || defined(USE_BMP280)
 // contructor
-SensorBosch::SensorBosch(NodeManager& node_manager, int child_id = -255): Sensor(node_manager) {
+SensorBosch::SensorBosch(NodeManager& node_manager, int child_id): Sensor(node_manager) {
   _name = "BOSCH";
   // initialize the forecast samples array
   _forecast_samples = new float[_forecast_samples_count];
@@ -1926,7 +1930,7 @@ void SensorBosch::onReceive(MyMessage* message) {
 }
 
 // calculate and send the forecast back
-char* SensorBosch::_forecast(float pressure) {
+const char* SensorBosch::_forecast(float pressure) {
   if (isnan(pressure)) return "";
   // Calculate the average of the last n minutes.
   int index = _minute_count % _forecast_samples_count;
@@ -2009,26 +2013,35 @@ float SensorBosch::_getLastPressureSamplesAverage() {
   return avg;
 }
 
-// search for a given chip on i2c bus
-uint8_t SensorBosch::GetI2CAddress(uint8_t chip_id) {
+// search for a given chip on i2c bus (emulating Adafruit's init() function)
+uint8_t SensorBosch::detectI2CAddress(uint8_t chip_id) {
+  // define the i2c addresses to test  
   uint8_t addresses[] = {0x77, 0x76};
+  // define the register's address of the chip id (e.g. BMxxx_REGISTER_CHIPID)
   uint8_t register_address = 0xD0;
-  for (int i = 0; i < sizeof(addresses); i++) { 
+  // initialize wire
+  Wire.begin();
+  // for each i2c address to test
+  for (uint8_t i = 0; i < sizeof(addresses); i++) { 
     uint8_t i2c_address = addresses[i];
-    uint8_t value;
+    // read the value from the register (e.g. read8())
     Wire.beginTransmission((uint8_t)i2c_address);
     Wire.write((uint8_t)register_address);
     Wire.endTransmission();
     Wire.requestFrom((uint8_t)i2c_address, (byte)1);
-    value = Wire.read();
+    uint8_t value = Wire.read();
+    // found the expected chip id, this is the correct i2c address to use
     if (value == chip_id) {
       #if FEATURE_DEBUG == ON
-        Serial.print(F("I2C=")); 
-        Serial.println(i2c_address);
+        Serial.print(F("I2C=0x")); 
+        Serial.println(i2c_address,HEX);
       #endif
       return i2c_address;
     }
   }
+  #if FEATURE_DEBUG == ON
+    Serial.println(F("I2C=FAIL")); 
+  #endif
   return addresses[0]; 
 }
 #endif
@@ -2049,11 +2062,7 @@ SensorBME280::SensorBME280(NodeManager& node_manager, int child_id): SensorBosch
 // what to do during setup
 void SensorBME280::onSetup() {
   _bm = new Adafruit_BME280();
-  if (! _bm->begin(SensorBosch::GetI2CAddress(0x60))) {
-    #if FEATURE_DEBUG == ON
-      Serial.println(F("ERR"));
-    #endif
-  }
+  _bm->begin(detectI2CAddress(0x60));
 }
 
 void SensorBME280::onLoop(Child* child) {
@@ -2112,7 +2121,7 @@ void SensorBME280::onLoop(Child* child) {
 /*
    SensorBMP085
 */
-#ifdef USE_BMP085
+#ifdef USE_BMP085_180
 // contructor
 SensorBMP085::SensorBMP085(NodeManager& node_manager, int child_id): SensorBosch(node_manager, child_id) {
   _name = "BMP085";
@@ -2125,11 +2134,7 @@ SensorBMP085::SensorBMP085(NodeManager& node_manager, int child_id): SensorBosch
 // what to do during setup
 void SensorBMP085::onSetup() {
   _bm = new Adafruit_BMP085();
-  if (! _bm->begin(SensorBosch::GetI2CAddress(0x55))) {
-    #if FEATURE_DEBUG == ON
-      Serial.println(F("ERR"));
-    #endif
-  }
+  _bm->begin(detectI2CAddress(0x55));
 }
 
 // what to do during loop
@@ -2170,6 +2175,17 @@ void SensorBMP085::onLoop(Child* child) {
     ((ChildString*)child)->setValueString(_forecast(pressure));
   }
 }
+
+/*
+   SensorBMP180
+*/
+// contructor
+SensorBMP180::SensorBMP180(NodeManager& node_manager, int child_id): SensorBMP085(node_manager, child_id) {
+  _name = "BMP180";
+  children.get(1)->setDescription(_name);
+  children.get(2)->setDescription(_name);
+  children.get(3)->setDescription(_name);
+}
 #endif
 
 /*
@@ -2188,11 +2204,7 @@ SensorBMP280::SensorBMP280(NodeManager& node_manager, int child_id): SensorBosch
 // what to do during setup
 void SensorBMP280::onSetup() {
   _bm = new Adafruit_BMP280();
-  if (! _bm->begin(SensorBosch::GetI2CAddress(0x58))) {
-    #if FEATURE_DEBUG == ON
-      Serial.println(F("ERR"));
-    #endif
-  }
+  _bm->begin(detectI2CAddress(0x58));
 }
 
 void SensorBMP280::onLoop(Child* child) {
@@ -2291,7 +2303,7 @@ void SensorSonoff::onReceive(MyMessage* message) {
   if (message->getCommand() == C_SET) {
     // retrieve from the message the value to set
     int value = message->getInt();
-    if (value != 0 && value != 1 || value == _state) return;
+    if ((value != 0 && value != 1) || value == _state) return;
     // toggle the state
     _toggle(child);
   }
@@ -3052,12 +3064,16 @@ void SensorPulseMeter::onReceive(MyMessage* message) {
 
 // what to do when receiving an interrupt
 void SensorPulseMeter::onInterrupt() {
-  // increase the counter
-  _count++;
-  #if FEATURE_DEBUG == ON
-    Serial.print(_name);
-    Serial.println(F("+"));
-  #endif
+  // read the value of the pin
+  int value = _node->getLastInterruptValue();
+  if ( (_interrupt_mode == RISING && value == HIGH ) || (_interrupt_mode == FALLING && value == LOW) || (_interrupt_mode == CHANGE) )  {
+    // increase the counter
+    _count++;
+    #if FEATURE_DEBUG == ON
+      Serial.print(_name);
+      Serial.println(F("+"));
+    #endif
+  }
 }
 
 // return the total based on the pulses counted
@@ -3067,6 +3083,8 @@ void SensorPulseMeter::_reportTotal(Child* child) {
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->getChildId());
+    Serial.print(F(" C="));
+    Serial.print(_count);
     Serial.print(F(" V="));
     Serial.println(((ChildFloat*)child)->getValueFloat());
   #endif
@@ -3094,6 +3112,8 @@ SensorPowerMeter::SensorPowerMeter(NodeManager& node_manager, int pin, int child
   children.allocateBlocks(1);
   new ChildDouble(this,_node->getAvailableChildId(child_id),S_POWER,V_KWH,_name);
   setPulseFactor(1000);
+  setInitialValue(LOW);
+  setInterruptMode(RISING);
 }
 
 // return the total based on the pulses counted
@@ -3103,9 +3123,10 @@ void SensorPowerMeter::_reportTotal(Child* child) {
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->getChildId());
+    Serial.print(F(" C="));
+    Serial.print(_count);
     Serial.print(F(" V="));
     Serial.println(((ChildDouble*)child)->getValueDouble());
-    Serial.println(_count);
   #endif
   // allow the signal to be restored to its normal value before reporting
   if (_wait_after_trigger > 0) _node->sleepOrWait(_wait_after_trigger);
@@ -3120,6 +3141,8 @@ SensorWaterMeter::SensorWaterMeter(NodeManager& node_manager, int pin, int child
   children.allocateBlocks(1);
   new ChildDouble(this,_node->getAvailableChildId(child_id),S_WATER,V_VOLUME,_name);
   setPulseFactor(1000);
+  setInitialValue(LOW);
+  setInterruptMode(RISING);
 }
 
 // return the total based on the pulses counted
@@ -3129,6 +3152,8 @@ void SensorWaterMeter::_reportTotal(Child* child) {
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->getChildId());
+    Serial.print(F(" C="));
+    Serial.print(_count);
     Serial.print(F(" V="));
     Serial.println(((ChildDouble*)child)->getValueDouble());
   #endif
@@ -3326,26 +3351,26 @@ void Display::onLoop(Child*child) {
     for (List<Child*>::iterator chitr = sensor->children.begin(); chitr != sensor->children.end(); ++chitr) {
       Child* ch = *chitr;
       // print description if any
-      if (strlen(ch->description) > 0) {
-        print(ch->description);
+      if (strlen(ch->getDescription()) > 0) {
+        print(ch->getDescription());
         print(": ");
       }
       // print value
       printChild(ch);
       // print type
-      if (ch->type == V_TEMP) {
+      if (ch->getType() == V_TEMP) {
         if (_node->getIsMetric()) print("C");
         else print("F");
       }
-      else if (ch->type == V_HUM || ch->type == V_PERCENTAGE) print("%");
-      else if (ch->type == V_PRESSURE) print("Pa");
-      else if (ch->type == V_WIND || ch->type == V_GUST) print("Km/h");
-      else if (ch->type == V_VOLTAGE) print("V");
-      else if (ch->type == V_CURRENT) print("A");
-      else if (ch->type == V_LEVEL && ch->presentation == S_SOUND) print("dB");
-      else if (ch->type == V_LIGHT_LEVEL && ch->presentation == S_LIGHT_LEVEL) print("%");
-      else if (ch->type == V_RAINRATE) print("%");
-      else if (ch->type == V_LEVEL && ch->presentation == S_MOISTURE) print("%");
+      else if (ch->getType() == V_HUM || ch->getType() == V_PERCENTAGE) print("%");
+      else if (ch->getType() == V_PRESSURE) print("Pa");
+      else if (ch->getType() == V_WIND || ch->getType() == V_GUST) print("Km/h");
+      else if (ch->getType() == V_VOLTAGE) print("V");
+      else if (ch->getType() == V_CURRENT) print("A");
+      else if (ch->getType() == V_LEVEL && ch->getPresentation() == S_SOUND) print("dB");
+      else if (ch->getType() == V_LIGHT_LEVEL && ch->getPresentation() == S_LIGHT_LEVEL) print("%");
+      else if (ch->getType() == V_RAINRATE) print("%");
+      else if (ch->getType() == V_LEVEL && ch->getPresentation() == S_MOISTURE) print("%");
       println(nullptr);
     }
   }
@@ -3376,7 +3401,7 @@ void Display::onReceive(MyMessage* message) {
 // constructor
 DisplaySSD1306::DisplaySSD1306(NodeManager& node_manager, int child_id): Display(node_manager, child_id) {
   _name = "SSD1306";
-  children.get(1)->description = _name;
+  children.get(1)->setDescription(_name);
 }
 
 // setter/getter
@@ -3485,7 +3510,7 @@ SensorSHT31::SensorSHT31(NodeManager& node_manager, int child_id): Sensor(node_m
 void SensorSHT31::onSetup() {
   _sht31 = new Adafruit_SHT31();
   // Set to 0x45 for alternate i2c addr
-  _sht31->begin(0x44); 
+  _sht31->begin(0x44);
 }
 
 // what to do during loop
@@ -3656,7 +3681,6 @@ void SensorChirp::onLoop(Child* child) {
   else if (child->getType() == V_HUM) {
     // request the SoilMoisturelevel
     float capacitance = _chirp->getCapacitance();
-    float capacitance_orig = capacitance;
     float cap_offsetfree = capacitance - _chirp_moistureoffset;
     if (cap_offsetfree < 0) cap_offsetfree = 0;
     if (_chirp_moisturenormalized == true && _chirp_moistureoffset > 0 && _chirp_moisturerange > 0) {
@@ -3703,7 +3727,7 @@ void SensorChirp::onReceive(MyMessage* message) {
 // constructor
 DisplayHD44780::DisplayHD44780(NodeManager& node_manager, int child_id): Display(node_manager, child_id) {
   _name = "HD44780";
-  children.get(1)->description = _name;
+  children.get(1)->setDescription(_name);
 }
 
 // setter/getter
@@ -3948,7 +3972,7 @@ void SensorAPDS9960::onLoop(Child *child) {
 
 // what to do on interrupt
 void SensorAPDS9960::onInterrupt() {
-  char* gesture = "";
+  const char* gesture = "";
   Child* child = children.get(1);
   if ( _apds->isGestureAvailable() ) {
     switch ( _apds->readGesture() ) {
@@ -4285,8 +4309,8 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
-      #if defined(USE_BME280) || defined(USE_BMP085) || defined(USE_BMP280)
-      if (strcmp(sensor->getName(),"BMP085") == 0 || strcmp(sensor->getName(),"BME280") == 0 || strcmp(sensor->getName(),"BMP280") == 0) {
+      #if defined(USE_BME280) || defined(USE_BMP085_180) || defined(USE_BMP280)
+      if (strcmp(sensor->getName(),"BMP085") == 0 || strcmp(sensor->getName(),"BMP180") == 0 || strcmp(sensor->getName(),"BME280") == 0 || strcmp(sensor->getName(),"BMP280") == 0) {
         SensorBosch* custom_sensor = (SensorBosch*)sensor;
         switch(function) {
           case 101: custom_sensor->setForecastSamplesCount(request.getValueInt()); break;
