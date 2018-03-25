@@ -382,6 +382,8 @@ void before() {
   /*
   * Configure your sensors below
   */
+  bme280.children.get(1)->setFloatPrecision(1);
+  bme280.children.get(2)->setFloatPrecision(1);
   // report measures of every attached sensors every 10 seconds
   node.setReportIntervalSeconds(10);
   // report measures of every attached sensors every 10 minutes

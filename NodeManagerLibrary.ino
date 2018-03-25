@@ -380,7 +380,10 @@ void ChildFloat::setValueFloat(float value) {
   // averages the values
   _value = _total / _samples;
   // round the value if float precision has been customized
-  if (_float_precision != 2) _value = float((int) (_value * (_float_precision*10))) / (_float_precision*10);
+  if (_float_precision != 2) {
+    if (_float_precision == 0) _value = (int) _value;
+    else _value = float((int) (_value * (_float_precision*10))) / (_float_precision*10);
+  }
 }
 
 // return the value
@@ -444,7 +447,10 @@ void ChildDouble::setValueDouble(double value) {
   // averages the values
   _value = _total / _samples;
   // round the value if float precision has been customized
-  if (_float_precision != 4) _value = double((int) (_value * (_float_precision*10))) / (_float_precision*10);
+  if (_float_precision != 4) {
+    if (_float_precision == 0) _value = (int) _value;
+    else _value = double((int) (_value * (_float_precision*10))) / (_float_precision*10);
+  }
 }
 
 // return the value
@@ -2007,28 +2013,34 @@ float SensorBosch::_getLastPressureSamplesAverage() {
   return avg;
 }
 
-// search for a given chip on i2c bus
-uint8_t SensorBosch::GetI2CAddress(uint8_t chip_id) {
+// search for a given chip on i2c bus (emulating Adafruit's init() function)
+uint8_t SensorBosch::DetectI2CAddress(uint8_t chip_id) {
+  // define the i2c addresses to test  
   uint8_t addresses[] = {0x77, 0x76};
+  // define the register's address of the chip id (e.g. BMxxx_REGISTER_CHIPID)
   uint8_t register_address = 0xD0;
+  // initialize wire
+  Wire.begin();
+  // for each i2c address to test
   for (uint8_t i = 0; i < sizeof(addresses); i++) { 
     uint8_t i2c_address = addresses[i];
-    uint8_t value;
+    // read the value from the register (e.g. read8())
     Wire.beginTransmission((uint8_t)i2c_address);
     Wire.write((uint8_t)register_address);
     Wire.endTransmission();
     Wire.requestFrom((uint8_t)i2c_address, (byte)1);
-    value = Wire.read();
+    uint8_t value = Wire.read();
+    // found the expected chip id, this is the correct i2c address to use
     if (value == chip_id) {
       #if FEATURE_DEBUG == ON
-        Serial.print(F("I2C=")); 
-        Serial.println(i2c_address);
+        Serial.print(F("I2C=0x")); 
+        Serial.println(i2c_address,HEX);
       #endif
       return i2c_address;
     }
   }
   #if FEATURE_DEBUG == ON
-    Serial.println(F("I2C=FAILED")); 
+    Serial.println(F("I2C=FAIL")); 
   #endif
   return addresses[0]; 
 }
@@ -2050,7 +2062,7 @@ SensorBME280::SensorBME280(NodeManager& node_manager, int child_id): SensorBosch
 // what to do during setup
 void SensorBME280::onSetup() {
   _bm = new Adafruit_BME280();
-  if (! _bm->begin(SensorBosch::GetI2CAddress(0x60))) {
+  if (! _bm->begin(SensorBosch::DetectI2CAddress(0x60))) {
     #if FEATURE_DEBUG == ON
       Serial.println(F("INIT ERR"));
     #endif
@@ -2126,7 +2138,7 @@ SensorBMP085::SensorBMP085(NodeManager& node_manager, int child_id): SensorBosch
 // what to do during setup
 void SensorBMP085::onSetup() {
   _bm = new Adafruit_BMP085();
-  if (! _bm->begin(SensorBosch::GetI2CAddress(0x55))) {
+  if (! _bm->begin(SensorBosch::DetectI2CAddress(0x55))) {
     #if FEATURE_DEBUG == ON
       Serial.println(F("ERR"));
     #endif
@@ -2189,7 +2201,7 @@ SensorBMP280::SensorBMP280(NodeManager& node_manager, int child_id): SensorBosch
 // what to do during setup
 void SensorBMP280::onSetup() {
   _bm = new Adafruit_BMP280();
-  if (! _bm->begin(SensorBosch::GetI2CAddress(0x58))) {
+  if (! _bm->begin(SensorBosch::DetectI2CAddress(0x58))) {
     #if FEATURE_DEBUG == ON
       Serial.println(F("ERR"));
     #endif
