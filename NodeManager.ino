@@ -101,6 +101,8 @@ to save some storage for your code. To enable/disable a buil-in feature:
 * Install the required library if any
 * Enable the corresponding feature by setting it to ON in the main sketch. To 
 disable it, set it to OFF
+* When a feature is enabled additional functions may be made available. Have a look 
+at the API documentation for details
 
 A list of buil-in features and the required dependencies is presented below:
 
@@ -376,9 +378,6 @@ NodeManager node;
 void before() {
   // setup the serial port baud rate
   Serial.begin(MY_BAUD_RATE);
-
-
-  
   /*
   * Configure your sensors below
   */
@@ -398,7 +397,6 @@ void before() {
   //analog.children.get(1)->min_threshold = 40;
   // power all the nodes through dedicated pins
   //node.setPowerManager(power);
-  
   /*
   * Configure your sensors above
   */

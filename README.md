@@ -91,6 +91,7 @@ NodeManager built-in features can be enabled/disabled also when you need to save
 To enable/disable a buil-in feature:
 * Install the required library if any
 * Enable the corresponding feature by setting it to ON in the main sketch. To disable it, set it to OFF
+* When a feature is enabled additional functions may be made available. Have a look at the API documentation for details
 
 A list of buil-in features and the required dependencies is presented below:
 
@@ -314,8 +315,8 @@ You can interact with each class provided by NodeManager through a set of API fu
 #endif
     // send a message by providing the source child, type of the message and value
 	  void sendMessage(int child_id, int type, int value);
-    void sendMessage(int child_id, int type, float value);
-    void sendMessage(int child_id, int type, double value);
+    void sendMessage(int child_id, int type, float value, int precision);
+    void sendMessage(int child_id, int type, double value, int precision);
     void sendMessage(int child_id, int type, const char* value);
 #if FEATURE_POWER_MANAGER == ON
     void setPowerManager(PowerManager& powerManager);
@@ -329,6 +330,14 @@ You can interact with each class provided by NodeManager through a set of API fu
     SdVolume sd_volume;
     SdFile sd_root;
     SdFile sd_file;
+#endif
+    // hook into the main sketch functions
+    void before();
+    void presentation();
+    void setup();
+    void loop();
+#if FEATURE_RECEIVE == ON
+    void receive(const MyMessage & msg);
 #endif
 ~~~
 
@@ -346,12 +355,6 @@ The following methods are available for all the sensors:
     void setSamples(int value);
     // [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
     void setSamplesInterval(int value);
-#if FEATURE_CONDITIONAL_REPORT == ON
-    // [7] if true will report the measure only if different than the previous one (default: false)
-    void setTrackLastValue(bool value);
-    // [9] if track last value is enabled, force to send an update after the configured number of minutes
-    void setForceUpdateMinutes(int value);
-#endif
 #if FEATURE_POWER_MANAGER == ON
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
     void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
@@ -380,11 +383,6 @@ The following methods are available for all the sensors:
     // set a previously configured PowerManager to the sensor so to powering it up with custom pins
     void setPowerManager(PowerManager& powerManager);
 #endif
-    // list of configured child
-    List<Child*> children;
-#if FEATURE_INTERRUPTS == ON
-    void interrupt();
-#endif
 #if FEATURE_HOOKING == ON
     // set a custom hook function to be called when the sensor executes its setup() function
     void setSetupHook(void (*function)(Sensor* sensor));
@@ -397,10 +395,23 @@ The following methods are available for all the sensors:
     // set a custom hook function to be called when the sensor executes its receive() function
     void setReceiveHook(void (*function)(Sensor* sensor, MyMessage* message));
 #endif
+    // list of configured child
+    List<Child*> children;
+#if FEATURE_INTERRUPTS == ON
+    void interrupt();
+#endif
     Child* getChild(int child_id);
     // register a child
     void registerChild(Child* child);
     NodeManager* _node;
+    // define what to do at each stage of the sketch
+    void before();
+    void presentation();
+    void setup();
+    void loop(MyMessage* message);
+#if FEATURE_RECEIVE == ON
+    void receive(MyMessage* message);
+#endif
 ~~~
 
 ### Child API
@@ -408,29 +419,36 @@ The following methods are available for all the sensors:
 The following methods are available for all the child:
 ~~~c
     Child(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
-    // child id used to communicate with the gateway/controller
-    int child_id;
-    // Sensor presentation (default: S_CUSTOM)
-    int presentation = S_CUSTOM;
-    // Sensor type (default: V_CUSTOM)
-    int type = V_CUSTOM;
-    // how many decimal digits to use (default: 2 for ChildFloat, 4 for ChildDouble)
-    int float_precision;
-    // Sensor description
-    const char* description = "";
-    // send the current value to the gateway
-    virtual void sendValue();
-    // print the current value on a LCD display
-    virtual void printOn(Print& p);
+    // set child id used to communicate with the gateway/controller
+    void setChildId(int value);
+    int getChildId();
+    // set sensor presentation (default: S_CUSTOM)
+    void setPresentation(int value);
+    int getPresentation();
+    // set sensor type (default: V_CUSTOM)
+    void setType(int value);
+    int getType();
+    // set how many decimal digits to use (default: 2 for ChildFloat, 4 for ChildDouble)
+    void setFloatPrecision(int value);
+    // set sensor description
+    void setDescription(const char* value);
+    const char* getDescription();
 #if FEATURE_CONDITIONAL_REPORT == ON
-    Timer* force_update_timer;
-    // return true if the current value is new/different compared to the previous one
-    virtual bool isNewValue();
-    // minimum threshold for reporting the value to the controller
-    float min_threshold = FLT_MIN;
-    // maximum threshold for reporting the value to the controller
-    float max_threshold = FLT_MAX;
+    // force to send an update after the configured number of minutes
+    void setForceUpdateMinutes(int value);
+    // never report values below this threshold (default: FLT_MIN)
+    void setMinThreshold(float value);
+    // never report values above this threshold (default: FLT_MAX)
+    void setMaxThreshold(float value);
+    // do not report values if too close to the previous one (default: 0)
+    void setValueDelta(float value);
 #endif
+    // send the current value to the gateway
+    virtual void sendValue(bool force);
+    // print the current value on a LCD display
+    virtual void print(Print& device);
+    // reset all the counters
+    virtual void reset();
 ~~~
 
 ### Built-in sensors API
