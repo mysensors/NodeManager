@@ -1120,7 +1120,7 @@ class SensorBosch: public Sensor {
     void onReceive(MyMessage* message);
     uint8_t GetI2CAddress(uint8_t chip_id);
   protected:
-    char* _weather[6] = { "stable", "sunny", "cloudy", "unstable", "thunderstorm", "unknown" };
+    const char* _weather[6] = { "stable", "sunny", "cloudy", "unstable", "thunderstorm", "unknown" };
     int _forecast_samples_count = 5;
     float* _forecast_samples;
     int _minute_count = 0;
@@ -1129,7 +1129,7 @@ class SensorBosch: public Sensor {
     float _dP_dt;
     bool _first_round = true;
     float _getLastPressureSamplesAverage();
-    char* _forecast(float pressure);
+    const char* _forecast(float pressure);
 };
 #endif
 

@@ -246,7 +246,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
  * NodeManager modules for supported sensors
  */
 
-//#define USE_BATTERY
+#define USE_BATTERY
 //#define USE_SIGNAL
 //#define USE_CONFIGURATION
 //#define USE_ANALOG_INPUT
@@ -263,7 +263,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define USE_MLX90614
 //#define USE_BME280
 //#define USE_BMP085
-//#define USE_BMP280
+#define USE_BMP280
 //#define USE_SONOFF
 //#define USE_HCSR04
 //#define USE_MCP9808
@@ -315,7 +315,7 @@ NodeManager node;
  */
 
 // built-in sensors
-//SensorBattery battery(node);
+SensorBattery battery(node);
 //SensorConfiguration configuration(node);
 //SensorSignal signal(node);
 //PowerManager power(5,6);
@@ -345,7 +345,7 @@ NodeManager node;
 //SensorMLX90614 mlx90614(node);
 //SensorBME280 bme280(node);
 //SensorBMP085 bmp085(node);
-//SensorBMP280 bmp280(node);
+SensorBMP280 bmp280(node);
 //SensorSonoff sonoff(node);
 //SensorHCSR04 hcsr04(node,6);
 //SensorMCP9808 mcp9808(node);
@@ -382,7 +382,7 @@ void before() {
   * Configure your sensors below
   */
   // report measures of every attached sensors every 10 seconds
-  //node.setReportIntervalSeconds(10);
+  node.setReportIntervalSeconds(10);
   // report measures of every attached sensors every 10 minutes
   //node.setReportIntervalMinutes(10);
   // set the node to sleep in 5 minutes cycles

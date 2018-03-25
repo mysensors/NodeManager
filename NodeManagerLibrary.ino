@@ -1120,7 +1120,7 @@ void SensorThermistor::onReceive(MyMessage* message) {
 */
 
 // contructor
-SensorML8511::SensorML8511(NodeManager& node_manager, int pin, int child_id = -255): Sensor(node_manager, pin) {
+SensorML8511::SensorML8511(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "ML8511";
   children.allocateBlocks(1);
   new ChildFloat(this,_node->getAvailableChildId(child_id),S_UV,V_UV,_name);
@@ -1907,7 +1907,7 @@ void SensorMLX90614::onReceive(MyMessage* message) {
 */
 #if defined(USE_BME280) || defined(USE_BMP085) || defined(USE_BMP280)
 // contructor
-SensorBosch::SensorBosch(NodeManager& node_manager, int child_id = -255): Sensor(node_manager) {
+SensorBosch::SensorBosch(NodeManager& node_manager, int child_id): Sensor(node_manager) {
   _name = "BOSCH";
   // initialize the forecast samples array
   _forecast_samples = new float[_forecast_samples_count];
@@ -1926,7 +1926,7 @@ void SensorBosch::onReceive(MyMessage* message) {
 }
 
 // calculate and send the forecast back
-char* SensorBosch::_forecast(float pressure) {
+const char* SensorBosch::_forecast(float pressure) {
   if (isnan(pressure)) return "";
   // Calculate the average of the last n minutes.
   int index = _minute_count % _forecast_samples_count;
