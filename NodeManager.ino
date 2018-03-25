@@ -397,9 +397,9 @@ void before() {
   // set an offset to -1 to a thermistor sensor
   //thermistor.setOffset(-1);
   // change the id of a the first child of a sht21 sensor
-  //sht21.children.get(1)->child_id = 5;
+  //sht21.children.get(1)->setChildId(5);
   // report only when the analog value is above 40%
-  //analog.children.get(1)->min_threshold = 40;
+  //analog.children.get(1)->setMinThreshold(40);
   // power all the nodes through dedicated pins
   //node.setPowerManager(power);
   /*
