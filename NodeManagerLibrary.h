@@ -319,7 +319,7 @@ public:
   inline iterator begin() { return _internalArray; }
   inline iterator end() { return _internalArray + _endPosition; }
   inline bool empty() { return (_endPosition == 0); }
-  inline unsigned int size() { return _endPosition; }
+  inline int size() { return _endPosition; }
   void allocateBlocks(int alloc) {
     _allocBlocks = alloc;
     T* newArray = new T[_allocBlocks];
@@ -1118,7 +1118,7 @@ class SensorBosch: public Sensor {
     void setForecastSamplesCount(int value);
     // define what to do at each stage of the sketch
     void onReceive(MyMessage* message);
-    uint8_t GetI2CAddress(uint8_t chip_id);
+    uint8_t DetectI2CAddress(uint8_t chip_id);
   protected:
     const char* _weather[6] = { "stable", "sunny", "cloudy", "unstable", "thunderstorm", "unknown" };
     int _forecast_samples_count = 5;
@@ -1617,7 +1617,7 @@ class DisplaySSD1306: public Display {
     uint8_t _i2caddress = 0x3c;
     int _fontsize = 1;
     int _caption_fontsize = 2;
-    uint8_t* _font = Adafruit5x7;
+    const uint8_t* _font = Adafruit5x7;
     uint8_t _contrast = -1;
 };
 #endif

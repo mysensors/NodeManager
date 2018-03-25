@@ -119,6 +119,7 @@ FEATURE_TIME                | OFF     | allow keeping the current system time in
 FEATURE_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device (requires FEATURE_TIME)| https://github.com/JChristensen/DS3232RTC
 FEATURE_SD                  | OFF     | allow reading from and writing to SD cards                                                       | -
 FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the out of the box sensors                                     | -
+**/
 
 /**********************************
  * MySensors node configuration
@@ -256,12 +257,12 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define USE_DIGITAL_INPUT
 //#define USE_DIGITAL_OUTPUT
 //#define USE_DHT
-#define USE_SHT21
+//#define USE_SHT21
 //#define USE_INTERRUPT
 //#define USE_DS18B20
 //#define USE_BH1750
 //#define USE_MLX90614
-//#define USE_BME280
+#define USE_BME280
 //#define USE_BMP085
 //#define USE_BMP280
 //#define USE_SONOFF
@@ -335,7 +336,7 @@ SensorBattery battery(node);
 //SensorLatchingRelay2Pins latching2pins(node,6,7);
 //SensorDHT11 dht11(node,6);
 //SensorDHT22 dht22(node,6);
-SensorSHT21 sht21(node);
+//SensorSHT21 sht21(node);
 //SensorHTU21D htu21(node);
 //SensorInterrupt interrupt(node,3);
 //SensorDoor door(node,3);
@@ -343,7 +344,7 @@ SensorSHT21 sht21(node);
 //SensorDs18b20 ds18b20(node,6);
 //SensorBH1750 bh1750(node);
 //SensorMLX90614 mlx90614(node);
-//SensorBME280 bme280(node);
+SensorBME280 bme280(node);
 //SensorBMP085 bmp085(node);
 //SensorBMP280 bmp280(node);
 //SensorSonoff sonoff(node);

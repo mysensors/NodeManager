@@ -1802,8 +1802,6 @@ char* SensorDs18b20::_getAddress(int index) {
   DeviceAddress device_address;
   _sensors->getAddress(device_address,index);
   String strAddr = String(device_address[0], HEX);
-  byte first ;
-  int j = 0;
   for (uint8_t i = 1; i < 8; i++) {
     if (device_address[i] < 16) strAddr = strAddr + 0;
     strAddr = strAddr + String(device_address[i], HEX);
@@ -2013,7 +2011,7 @@ float SensorBosch::_getLastPressureSamplesAverage() {
 uint8_t SensorBosch::GetI2CAddress(uint8_t chip_id) {
   uint8_t addresses[] = {0x77, 0x76};
   uint8_t register_address = 0xD0;
-  for (int i = 0; i < sizeof(addresses); i++) { 
+  for (uint8_t i = 0; i < sizeof(addresses); i++) { 
     uint8_t i2c_address = addresses[i];
     uint8_t value;
     Wire.beginTransmission((uint8_t)i2c_address);
@@ -2029,6 +2027,9 @@ uint8_t SensorBosch::GetI2CAddress(uint8_t chip_id) {
       return i2c_address;
     }
   }
+  #if FEATURE_DEBUG == ON
+    Serial.println(F("I2C=FAILED")); 
+  #endif
   return addresses[0]; 
 }
 #endif
@@ -2051,7 +2052,7 @@ void SensorBME280::onSetup() {
   _bm = new Adafruit_BME280();
   if (! _bm->begin(SensorBosch::GetI2CAddress(0x60))) {
     #if FEATURE_DEBUG == ON
-      Serial.println(F("ERR"));
+      Serial.println(F("INIT ERR"));
     #endif
   }
 }
@@ -2291,7 +2292,7 @@ void SensorSonoff::onReceive(MyMessage* message) {
   if (message->getCommand() == C_SET) {
     // retrieve from the message the value to set
     int value = message->getInt();
-    if (value != 0 && value != 1 || value == _state) return;
+    if ((value != 0 && value != 1) || value == _state) return;
     // toggle the state
     _toggle(child);
   }
@@ -3326,26 +3327,26 @@ void Display::onLoop(Child*child) {
     for (List<Child*>::iterator chitr = sensor->children.begin(); chitr != sensor->children.end(); ++chitr) {
       Child* ch = *chitr;
       // print description if any
-      if (strlen(ch->description) > 0) {
-        print(ch->description);
+      if (strlen(ch->getDescription()) > 0) {
+        print(ch->getDescription());
         print(": ");
       }
       // print value
       printChild(ch);
       // print type
-      if (ch->type == V_TEMP) {
+      if (ch->getType() == V_TEMP) {
         if (_node->getIsMetric()) print("C");
         else print("F");
       }
-      else if (ch->type == V_HUM || ch->type == V_PERCENTAGE) print("%");
-      else if (ch->type == V_PRESSURE) print("Pa");
-      else if (ch->type == V_WIND || ch->type == V_GUST) print("Km/h");
-      else if (ch->type == V_VOLTAGE) print("V");
-      else if (ch->type == V_CURRENT) print("A");
-      else if (ch->type == V_LEVEL && ch->presentation == S_SOUND) print("dB");
-      else if (ch->type == V_LIGHT_LEVEL && ch->presentation == S_LIGHT_LEVEL) print("%");
-      else if (ch->type == V_RAINRATE) print("%");
-      else if (ch->type == V_LEVEL && ch->presentation == S_MOISTURE) print("%");
+      else if (ch->getType() == V_HUM || ch->getType() == V_PERCENTAGE) print("%");
+      else if (ch->getType() == V_PRESSURE) print("Pa");
+      else if (ch->getType() == V_WIND || ch->getType() == V_GUST) print("Km/h");
+      else if (ch->getType() == V_VOLTAGE) print("V");
+      else if (ch->getType() == V_CURRENT) print("A");
+      else if (ch->getType() == V_LEVEL && ch->getPresentation() == S_SOUND) print("dB");
+      else if (ch->getType() == V_LIGHT_LEVEL && ch->getPresentation() == S_LIGHT_LEVEL) print("%");
+      else if (ch->getType() == V_RAINRATE) print("%");
+      else if (ch->getType() == V_LEVEL && ch->getPresentation() == S_MOISTURE) print("%");
       println(nullptr);
     }
   }
@@ -3656,7 +3657,6 @@ void SensorChirp::onLoop(Child* child) {
   else if (child->getType() == V_HUM) {
     // request the SoilMoisturelevel
     float capacitance = _chirp->getCapacitance();
-    float capacitance_orig = capacitance;
     float cap_offsetfree = capacitance - _chirp_moistureoffset;
     if (cap_offsetfree < 0) cap_offsetfree = 0;
     if (_chirp_moisturenormalized == true && _chirp_moistureoffset > 0 && _chirp_moisturerange > 0) {
@@ -3948,7 +3948,7 @@ void SensorAPDS9960::onLoop(Child *child) {
 
 // what to do on interrupt
 void SensorAPDS9960::onInterrupt() {
-  char* gesture = "";
+  const char* gesture = "";
   Child* child = children.get(1);
   if ( _apds->isGestureAvailable() ) {
     switch ( _apds->readGesture() ) {
