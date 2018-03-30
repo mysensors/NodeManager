@@ -85,6 +85,7 @@ SensorTTP                | 1     | USE_TTP            | TTP226/TTP229 Touch cont
 SensorServo              | 1     | USE_SERVO          | Control a generic Servo motor sensor                                                              | -
 SensorAPDS9960           | 1     | USE_APDS9960       | SparkFun RGB and Gesture Sensor                                                                   | https://github.com/sparkfun/APDS-9960_RGB_and_Gesture_Sensor
 SensorNeopixel           | 1     | USE_NEOPIXEL       | Control a Neopixel LED                                                                            | https://github.com/adafruit/Adafruit_NeoPixel
+SensorSDS011             | 2     | USE_SDS011         | SDS011 air quality sensor, return concentrations of 2.5 and 10 micrometer particles.              | https://github.com/ricki-z/SDS011
 
 ### Built-in features
 
@@ -638,6 +639,12 @@ Each sensor class exposes additional methods.
 ~~~c
     // [101] set the voltageRef used to compare with analog measures
     void setVoltageRef(float value);
+~~~
+
+* SensorSDS011
+~~~c
+    // Sleep sensor after measurment. This powers down the fan but increases measurment time. (default: true)
+    void setSleep(bool value);
 ~~~
 
 * SensorDimmer
