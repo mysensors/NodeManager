@@ -4217,6 +4217,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           case 104: custom_sensor->setBatteryInternalVcc(request.getValueInt()); break;
           case 105: custom_sensor->setBatteryPin(request.getValueInt()); break;
           case 106: custom_sensor->setBatteryVoltsPerBit(request.getValueFloat()); break;
+          case 107: custom_sensor->setBatteryCalibrationFactor(request.getValueFloat()); break;
           default: return;
         }
       }
