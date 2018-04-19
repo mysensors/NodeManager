@@ -468,6 +468,8 @@ Each sensor class exposes additional methods.
     void setBatteryPin(int value);
     // [106] if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
     void setBatteryVoltsPerBit(float value);
+    // set battery voltage calibration factor applied (multiplied) to the battery voltage read from hardware, default 1.0 (no adjustment)
+    void SensorBattery::setBatteryCalibrationFactor(float value);
 ~~~
 
 * SensorSignal
