@@ -820,6 +820,9 @@ void SensorBattery::setBatteryPin(int value) {
 void SensorBattery::setBatteryVoltsPerBit(float value) {
   _battery_volts_per_bit = value;
 }
+void SensorBattery::setBatteryCalibrationFactor(float value) {
+  _battery_adj_factor = value;
+}
 
 // what to do during setup
 void SensorBattery::onSetup() {
@@ -840,6 +843,7 @@ void SensorBattery::onLoop(Child* child) {
   float volt = 0;
   if (_battery_internal_vcc || _battery_pin == -1) volt = _node->getVcc();
   else volt = analogRead(_battery_pin) * _battery_volts_per_bit;
+  volt = volt * _battery_adj_factor;
   // calculate the percentage
   int percentage = ((volt - _battery_min) / (_battery_max - _battery_min)) * 100;
   if (percentage > 100) percentage = 100;
@@ -4213,6 +4217,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           case 104: custom_sensor->setBatteryInternalVcc(request.getValueInt()); break;
           case 105: custom_sensor->setBatteryPin(request.getValueInt()); break;
           case 106: custom_sensor->setBatteryVoltsPerBit(request.getValueFloat()); break;
+          case 107: custom_sensor->setBatteryCalibrationFactor(request.getValueFloat()); break;
           default: return;
         }
       }

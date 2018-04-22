@@ -675,6 +675,8 @@ class SensorBattery: public Sensor {
     void setBatteryPin(int value);
     // [106] if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
     void setBatteryVoltsPerBit(float value);
+    // [107] change battery voltage calibration factor
+    void setBatteryCalibrationFactor(float value);
     // define what to do at each stage of the sketch
     void onSetup();
     void onLoop(Child* child);
@@ -685,6 +687,7 @@ class SensorBattery: public Sensor {
       bool _battery_internal_vcc = true;
       int _battery_pin = -1;
       float _battery_volts_per_bit = 0.003363075;
+      float _battery_adj_factor = 1.0;
 };
 #endif
 
