@@ -96,6 +96,7 @@ SensorTTP                | 1     | USE_TTP            | TTP226/TTP229 Touch cont
 SensorServo              | 1     | USE_SERVO          | Control a generic Servo motor sensor                                                              | -
 SensorAPDS9960           | 1     | USE_APDS9960       | SparkFun RGB and Gesture Sensor                                                                   | https://github.com/sparkfun/APDS-9960_RGB_and_Gesture_Sensor
 SensorNeopixel           | 1     | USE_NEOPIXEL       | Control a Neopixel LED                                                                            | https://github.com/adafruit/Adafruit_NeoPixel
+SensorSDS011             | 2     | USE_SDS011         | SDS011 air quality sensor, return concentrations of 2.5 and 10 micrometer particles.              | https://github.com/ricki-z/SDS011
 
 NodeManager provides useful built-in features which can be disabled if you need 
 to save some storage for your code. To enable/disable a buil-in feature:
@@ -287,6 +288,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define USE_SERVO
 //#define USE_APDS9960
 //#define USE_NEOPIXEL
+//#define USE_SDS011
 
 /***********************************
  * NodeManager built-in features
@@ -372,6 +374,7 @@ NodeManager node;
 //SensorServo servo(node,6);
 //SensorAPDS9960 apds9960(node,3);
 //SensorNeopixel neopixel(node,6);
+//SensorSDS011 sds011(node,6,7);
 
 /***********************************
  * Main Sketch

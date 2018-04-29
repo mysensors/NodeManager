@@ -252,6 +252,9 @@
   #include <Adafruit_NeoPixel.h>
 #endif
 #endif
+#ifdef USE_SDS011
+  #include <SDS011.h>
+#endif
 
 // include third party libraries for enabled features
 #ifdef MY_GATEWAY_SERIAL
@@ -1813,6 +1816,28 @@ class SensorNeopixel: public Sensor {
 };
 #endif
 
+/*
+  SensorSDS011
+*/
+#ifdef USE_SDS011
+ class SensorSDS011: public Sensor {
+ public:
+   SensorSDS011(NodeManager& node_manager, int rxpin, int txpin, int child_id = -255);
+   // Sleep sensor during measurment aka stop fan.
+   void setSleep(bool value);
+   // define what to do at each stage of the sketch
+   void onSetup();
+   void onLoop(Child* child);
+   void onReceive(MyMessage* message);
+ protected:
+   SDS011* _sds;
+   float _p10 = 0.;
+   float _p25 = 0.;
+   int _rx_pin = 6;
+   int _tx_pin = 7;
+   bool _slp = true;
+ };
+#endif
 
 /***************************************
    NodeManager: manages all the aspects of the node

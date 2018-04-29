@@ -4105,6 +4105,76 @@ void SensorNeopixel::setColor(char* string) {
 
 #endif
 
+/*
+   SensorSDS011
+*/
+#ifdef USE_SDS011
+SensorSDS011::SensorSDS011(NodeManager & node_manager, int rxpin, int txpin, int child_id): Sensor(node_manager, rxpin){
+  _name = "SDS011";
+  _rx_pin = rxpin;
+  _tx_pin = txpin;
+  children.allocateBlocks(2);
+  new ChildFloat(this, _node->getAvailableChildId(child_id), S_AIR_QUALITY, V_LEVEL, _name);
+  new ChildFloat(this, _node->getAvailableChildId(child_id+1), S_AIR_QUALITY, V_LEVEL, _name);
+}
+
+// Set sensor sleeping
+void SensorSDS011::setSleep(bool value){
+  _slp = value;
+}
+
+// what to do during setup
+void SensorSDS011::onSetup(){
+  _sds = new SDS011();
+  _sds->begin(_rx_pin, _tx_pin);
+  wait(2000);
+}
+
+// what to do during loop
+void SensorSDS011::onLoop(Child* child){
+  if (children.get(1) == child){
+    int error;
+
+    // Make sure sensor is running
+    _sds -> wakeup();
+    if (_slp){
+      // Powering up the fan needs some time.
+      wait(4000);
+    }
+
+    // Read the particle concentration values
+    error = _sds->read(&_p25,&_p10);
+
+    // Stop fan to keep it clean
+    if (_slp){
+      _sds->sleep();
+    }
+
+    ((ChildFloat*)child)->setValueFloat(_p10);
+  }
+
+  if (children.get(2) == child){
+    ((ChildFloat*)child)->setValueFloat(_p25);
+  }
+
+  #if FEATURE_DEBUG == ON
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->getChildId());
+    Serial.print(F(" p10="));
+    Serial.print(_p10);
+    Serial.print(F(" p25="));
+    Serial.print(_p25);
+  #endif
+}
+
+void SensorSDS011::onReceive(MyMessage* message){
+  Child* child = getChild(message->sensor);
+   if (child == nullptr) return;
+   if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
+}
+#endif
+
 #ifdef USE_CONFIGURATION
 /*
    SensorConfiguration
