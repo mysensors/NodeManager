@@ -4600,6 +4600,16 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         }
       }
       #endif
+      #ifdef USE_FPM10A
+      if (strcmp(sensor->getName(),"FPM10A") == 0) {
+        SensorFPM10A* custom_sensor = (SensorFPM10A*)sensor;
+        switch(function) {
+          case 101: SensorFPM10A->setMinConfidence(request.getValueInt()); break;
+          case 102: SensorFPM10A->setWaitFingerForSeconds(request.getValueInt()); break;
+          default: return;
+        }
+      }
+      #endif
     }
   }
   _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,function);
