@@ -755,9 +755,9 @@ Each sensor class exposes additional methods.
    void setBaudRate(uint32_t value);
    // set the password for connecting to the sensor (default: 0)
    void setPassword(uint32_t value);
-   // set the minimum confidence below which the match is not considered valid (default: 0)
+   // [101] set the minimum confidence below which the match is not considered valid (default: 0)
    void setMinConfidence(uint16_t value);
-   // wait for a valid fingerprint for the given amount of seconds. Useful when battery powered (default: 0)
+   // [102] wait for a valid fingerprint for the given amount of seconds. Useful when battery powered (default: 0)
    void setWaitFingerForSeconds(int value);
 ~~~
 
