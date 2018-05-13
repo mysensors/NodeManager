@@ -4175,6 +4175,108 @@ void SensorSDS011::onReceive(MyMessage* message){
 }
 #endif
 
+/*
+   SensorFPM10A
+*/
+#ifdef USE_FPM10A
+SensorFPM10A::SensorFPM10A(NodeManager & node_manager, int rxpin, int txpin, int child_id): Sensor(node_manager, rxpin){
+  _name = "FPM10A";
+  _rx_pin = rxpin;
+  _tx_pin = txpin;
+  children.allocateBlocks(1);
+  new ChildInt(this, _node->getAvailableChildId(child_id), S_CUSTOM, V_CUSTOM, _name);
+  _timer = new Timer(_node);
+}
+
+//setter/getter
+// what to do during setup
+void SensorFPM10A::setBaudRate(uint32_t value) {
+  _baud_rate = value;
+}
+void SensorFPM10A::setPassword(uint32_t value) {
+  _password = value;
+}
+void SensorFPM10A::setMinConfidence(uint16_t value) {
+  _min_confidence = value;
+}
+void SensorFPM10A::setWaitFingerForSeconds(int value) {
+  _timer->start(value,SECONDS);
+}
+
+// what to do during setup
+void SensorFPM10A::onSetup(){
+  // setup software serial
+  _serial = new SoftwareSerial(_rx_pin,_tx_pin);
+  // setup fingerprint sensor
+  _finger = new Adafruit_Fingerprint(_serial,_password);
+  // connect to the sensor
+  _finger->begin(_baud_rate);
+  if (_finger->verifyPassword()) {
+    _finger->getTemplateCount();
+    #if FEATURE_DEBUG == ON
+      Serial.print(_name);
+      Serial.print(F(" T="));
+      Serial.println(_finger->templateCount);
+    #endif
+  }
+  else {
+    #if FEATURE_DEBUG == ON
+      Serial.print(_name);
+      Serial.println(F(" ERROR"));
+    #endif
+  }
+  // report immediately
+  _report_timer->unset();
+}
+
+// what to do during loop
+void SensorFPM10A::onLoop(Child* child){
+  // restart the timer if set
+  if (_timer->isRunning()) _timer->restart();
+  while(true) {
+    if (_timer->isRunning()) {
+      // if a timer is set, leave the cycle if over
+      _timer->update();
+      if (_timer->isOver()) break;
+    }
+    // read the fingerprint
+    int finger = _readFingerprint();
+    if (finger > 0) {
+      // fingerprint match found, send the template ID back
+      ((ChildInt*)child)->setValueInt(finger);
+      // leave the loop so we can report back
+      break;
+    }
+    //don't need to run this at full speed
+    wait(50);
+  }
+}
+
+// read the fingerprint from the sensor
+int SensorFPM10A::_readFingerprint() {
+  // take image
+  uint8_t p = _finger->getImage();
+  if (p != FINGERPRINT_OK) return -1;
+  // convert image
+  p = _finger->image2Tz();
+  if (p != FINGERPRINT_OK) return -1;
+  // search for a fingerprint
+  p = _finger->fingerFastSearch();
+  if (p != FINGERPRINT_OK) return -1;
+  // fingerprint found
+  #if FEATURE_DEBUG == ON
+    Serial.print(_name);
+    Serial.print(F(" T="));
+    Serial.print(_finger->fingerID);
+    Serial.print(F(" C="));
+    Serial.println(_finger->confidence);
+  #endif
+  // ignore the match if not confident enough
+  if (_finger->confidence < _min_confidence) return -1;
+  return _finger->fingerID; 
+}
+#endif
+
 #ifdef USE_CONFIGURATION
 /*
    SensorConfiguration
@@ -4494,6 +4596,16 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           case 102: custom_sensor->setMoistureRange(request.getValueInt()); break;
           case 103: custom_sensor->setReturnMoistureNormalized(request.getValueInt()); break;
           case 104: custom_sensor->setReturnLightReversed(request.getValueInt()); break;
+          default: return;
+        }
+      }
+      #endif
+      #ifdef USE_FPM10A
+      if (strcmp(sensor->getName(),"FPM10A") == 0) {
+        SensorFPM10A* custom_sensor = (SensorFPM10A*)sensor;
+        switch(function) {
+          case 101: SensorFPM10A->setMinConfidence(request.getValueInt()); break;
+          case 102: SensorFPM10A->setWaitFingerForSeconds(request.getValueInt()); break;
           default: return;
         }
       }
@@ -5089,7 +5201,7 @@ void NodeManager::_onInterrupt_2() {
 // send a message by providing the source child, type of the message and value
 void NodeManager::sendMessage(int child_id, int type, int value) {
   _message.clear();
-  _message.set((uint32_t) value);
+  _message.set(value);
   _sendMessage(child_id,type);
 }
 void NodeManager::sendMessage(int child_id, int type, float value, int precision) {

@@ -255,6 +255,10 @@
 #ifdef USE_SDS011
   #include <SDS011.h>
 #endif
+#ifdef USE_FPM10A
+  #include <Adafruit_Fingerprint.h>
+  #include <SoftwareSerial.h>
+#endif
 
 // include third party libraries for enabled features
 #ifdef MY_GATEWAY_SERIAL
@@ -1836,6 +1840,37 @@ class SensorNeopixel: public Sensor {
    int _rx_pin = 6;
    int _tx_pin = 7;
    bool _slp = true;
+ };
+#endif
+
+/*
+  SensorFPM10A
+*/
+#ifdef USE_FPM10A
+ class SensorFPM10A: public Sensor {
+ public:
+   SensorFPM10A(NodeManager& node_manager, int rxpin, int txpin, int child_id = -255);
+   // set the baud rate of the serial port for connecting to the sensor (default: 57600)
+   void setBaudRate(uint32_t value);
+   // set the password for connecting to the sensor (default: 0)
+   void setPassword(uint32_t value);
+   // [101] set the minimum confidence below which the match is not considered valid (default: 0)
+   void setMinConfidence(uint16_t value);
+   // [102] wait for a valid fingerprint for the given amount of seconds. Useful when battery powered (default: 0)
+   void setWaitFingerForSeconds(int value);
+   // define what to do at each stage of the sketch
+   void onSetup();
+   void onLoop(Child* child);
+ protected:
+   Adafruit_Fingerprint* _finger;
+   SoftwareSerial* _serial;
+   int _rx_pin;
+   int _tx_pin;
+   Timer* _timer;
+   uint32_t _baud_rate = 57600;
+   uint32_t _password = 0;
+   uint16_t _min_confidence = 0;
+   int _readFingerprint();
  };
 #endif
 

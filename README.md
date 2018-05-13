@@ -86,6 +86,7 @@ SensorServo              | 1     | USE_SERVO          | Control a generic Servo 
 SensorAPDS9960           | 1     | USE_APDS9960       | SparkFun RGB and Gesture Sensor                                                                   | https://github.com/sparkfun/APDS-9960_RGB_and_Gesture_Sensor
 SensorNeopixel           | 1     | USE_NEOPIXEL       | Control a Neopixel LED                                                                            | https://github.com/adafruit/Adafruit_NeoPixel
 SensorSDS011             | 2     | USE_SDS011         | SDS011 air quality sensor, return concentrations of 2.5 and 10 micrometer particles.              | https://github.com/ricki-z/SDS011
+SensorFPM10A             | 1     | USE_FPM10A         | FPM10A fingerprint sensor                                                                         | https://github.com/adafruit/Adafruit-Fingerprint-Sensor-Library
 
 ### Built-in features
 
@@ -746,6 +747,18 @@ Each sensor class exposes additional methods.
     //<pixel_number>,<RGB color in a packed 24 bit format>
     //<RGB color in a packed 24 bit format>
     void setColor(char* string);
+~~~
+
+* SensorFPM10A
+~~~c
+   // set the baud rate of the serial port for connecting to the sensor (default: 57600)
+   void setBaudRate(uint32_t value);
+   // set the password for connecting to the sensor (default: 0)
+   void setPassword(uint32_t value);
+   // [101] set the minimum confidence below which the match is not considered valid (default: 0)
+   void setMinConfidence(uint16_t value);
+   // [102] wait for a valid fingerprint for the given amount of seconds. Useful when battery powered (default: 0)
+   void setWaitFingerForSeconds(int value);
 ~~~
 
 ### Remote API
