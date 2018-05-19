@@ -4006,12 +4006,20 @@ SensorNeopixel::SensorNeopixel(NodeManager& node_manager, int pin, int child_id)
   _name = "NEOPIXEL";
   children.allocateBlocks(1);
   new ChildString(this, _node->getAvailableChildId(child_id), S_COLOR_SENSOR, V_RGB ,_name);
+  // add brightness configuration
+  new ChildInt(this,_node->getAvailableChildId(child_id+1),S_LIGHT_LEVEL,V_LEVEL,_name);
 }
 
 // setter/getter
 void SensorNeopixel::setNumPixels(int value) {
   _num_pixels = value;
 }
+
+// set default brightness
+void SensorNeopixel::setDefaultBrightness(int value) {
+  _default_brightness = value;
+}
+
 // what to do during setup
 void SensorNeopixel::onSetup() {
 #if defined(CHIP_STM32)
@@ -4021,6 +4029,7 @@ void SensorNeopixel::onSetup() {
 #endif
   _pixels->begin();
   _pixels->show();
+  _pixels->setBrightness(_default_brightness);
 }
 
 // what to do during loop
@@ -4032,10 +4041,16 @@ void SensorNeopixel::onReceive(MyMessage* message) {
   Child* child = getChild(message->sensor);
   if (child == nullptr) return;
   if (message->getCommand() == C_SET && message->type == child->getType()) {
-      char* string = (char*)message->getString();
-      setColor(string);
- 		//setColor(message->getString());
-	  }
+      if (message->type == V_LEVEL) {
+          int value = (int)message->getInt();
+          setBrightness(value);
+      } 
+      else {
+          char* string = (char*)message->getString();
+          setColor(string);
+         //setColor(message->getString());
+      }
+    }
 }
 
 //string format:
@@ -4097,6 +4112,16 @@ void SensorNeopixel::setColor(char* string) {
   _pixels->show();
   //send value back
   ((ChildString*)child)->setValueString(string);
+}
+
+//int format:
+//0-255                brighntess for all LEDs
+void SensorNeopixel::setBrightness(int value) {
+  Child* child = children.get(1);
+  _pixels->setBrightness(value);
+  _pixels->show();
+  //send value back
+  ((ChildInt*)child)->setValueInt(value);
 }
 
 #endif

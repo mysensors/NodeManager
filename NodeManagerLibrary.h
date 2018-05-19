@@ -1794,8 +1794,11 @@ class SensorNeopixel: public Sensor {
     SensorNeopixel(NodeManager& node_manager, int pin, int child_id = -255);
     // set how many NeoPixels are attached
     void setNumPixels(int value);
+    void setDefaultBrightness(int value);
     // format expeted is "<pixel_number>,<RGB color in a packed 32 bit format>"
     void setColor(char* string);
+    // set brightness of NeoPixels (0-255)
+    void setBrightness(int value);
     // define what to do at each stage of the sketch
     void onSetup();
     void onLoop(Child* child);
@@ -1807,6 +1810,7 @@ class SensorNeopixel: public Sensor {
   Adafruit_NeoPixel* _pixels;
 #endif
   int _num_pixels = 16;
+  int _default_brightness = 255;
 };
 #endif
 
