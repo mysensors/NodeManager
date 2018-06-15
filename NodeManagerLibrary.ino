@@ -2441,91 +2441,108 @@ void SensorMCP9808::onReceive(MyMessage* message) {
 /*
  * SensorMQ
  */
-#ifdef USE_MQ
-
-float SensorMQ::_default_LPGCurve[3] = {2.3,0.21,-0.47};
-float SensorMQ::_default_COCurve[3] = {2.3,0.72,-0.34};
-float SensorMQ::_default_SmokeCurve[3] = {2.3,0.53,-0.44};
-
 SensorMQ::SensorMQ(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "MQ";
-  _LPGCurve = SensorMQ::_default_LPGCurve;
-  _COCurve = SensorMQ::_default_COCurve;
-  _SmokeCurve = SensorMQ::_default_SmokeCurve;
   children.allocateBlocks(1);
   new ChildInt(this,_node->getAvailableChildId(child_id),S_AIR_QUALITY,V_LEVEL,_name);
 }
 
 //setter/getter
-void SensorMQ::setTargetGas(int value) {
-  _target_gas = value;
-}
 void SensorMQ::setRlValue(float value) {
-  _rl_value = value;
+  _rl = value;
 }
 void SensorMQ::setRoValue(float value) {
   _ro = value;
 }
-void SensorMQ::setCleanAirFactor(float value) {
-  _ro_clean_air_factor = value;
+void SensorMQ::setKnownPpm(float value) {
+  _known_ppm = value;
 }
-void SensorMQ::setCalibrationSampleTimes(int value) {
-  _calibration_sample_times = value;
+void SensorMQ::setCalibrationSamples(int value) {
+  _calibration_samples = value;
 }
 void SensorMQ::setCalibrationSampleInterval(int value){
   _calibration_sample_interval = value;
 }
-void SensorMQ::setReadSampleTimes(int value) {
-  _read_sample_times = value;
+void SensorMQ::setSamples(int value) {
+  _samples = value;
 }
-void SensorMQ::setReadSampleInterval(int value) {
-  _read_sample_interval = value;
+void SensorMQ::setSampleInterval(int value) {
+  _sample_interval = value;
 }
-void SensorMQ::setLPGCurve(float *value) {
-  _LPGCurve = value;
+void SensorMQ::setPoint1Ppm(float value) {
+  _point1_ppm = value;
 }
-void SensorMQ::setCOCurve(float *value) {
-  _COCurve = value;
+void SensorMQ::setPoint1Ratio(float value) {
+  _point1_ratio = value;
 }
-void SensorMQ::setSmokeCurve(float *value) {
-  _SmokeCurve = value;
+void SensorMQ::setPoint2Ppm(float value) {
+  _point2_ppm = value;
+}
+void SensorMQ::setPoint2Ratio(float value) {
+  _point2_ratio = value;
+}
+void SensorMQ::setCurveScalingFactor(float value) {
+  _curve_scaling_factor = value;
+}
+void SensorMQ::setCurveExponent(float value) {
+  _curve_exponent = value;
 }
 
 // what to do during setup
 void SensorMQ::onSetup() {
   // prepare the pin for input
   pinMode(_pin, INPUT);
-  _ro = _MQCalibration();
+  // The curve function is ppm = scaling_factor*ratio^exponent
+  // since we know two points (ppm1,ratio1) and (ppm2,ratio2) we can calculate scaling_factor and exponent approximating a power regression
+  if (_curve_exponent == 0) _curve_exponent = log(_point2_ppm/_point1_ppm)/log(_point2_ratio/_point1_ratio);
+  if (_curve_scaling_factor == 0) _curve_scaling_factor = exp((log(_point1_ratio)*log(_point2_ppm)-log(_point2_ratio)*log(_point1_ppm))/(_point1_ratio-_point2_ratio));
+  int rs = 0;
+  if (_ro == 0) {
+    // calibrate the sensor (the Ro resistance) if requested
+    #if FEATURE_DEBUG == ON
+      Serial.println(F("..."));
+    #endif
+    // since ppm = scaling_factor*(rs/ro)^exponent, we need Rs to calculate Ro for the given ppm
+    rs = _getRsValue(_calibration_samples,_calibration_sample_interval);
+    _ro = (long)(rs * exp( log(_curve_scaling_factor/_known_ppm) / _curve_exponent ));
+  }
+
+  #if FEATURE_DEBUG == ON
+    Serial.print(_name);
+    Serial.print(F(" Rs="));
+    Serial.print(rs);
+    Serial.print(F(" Ro="));
+    Serial.print(_ro);
+    Serial.print(F(" Rl="));
+    Serial.print(_rl);
+    Serial.print(F(" F="));
+    Serial.print(_curve_scaling_factor);
+    Serial.print(F("x^"));
+    Serial.println(_curve_exponent);
+  #endif
 }
 
 // what to do during loop
 void SensorMQ::onLoop(Child* child) {
-  // calculate rs/ro
-  float mq = _MQRead()/_ro;
-  // calculate the ppm
-  float lpg = _MQGetGasPercentage(mq,_gas_lpg);
-  float co = _MQGetGasPercentage(mq,_gas_co);
-  float smoke = _MQGetGasPercentage(mq,_gas_smoke);
-  // assign to the value the requested gas
-  uint16_t value;
-  if (_target_gas == _gas_lpg) value = lpg;
-  if (_target_gas == _gas_co) value = co;
-  if (_target_gas == _gas_smoke) value = smoke;
+  // ppm = _curve_scaling_factor * (rs/ro) ^ _curve_exponent so we need Rs 
+  float rs = _getRsValue(_samples,_sample_interval);
+  // calculate the Rs / Ro ratio
+  float rs_ro_ratio = rs / _ro;
+  // calculate ppm 
+  int ppm = _curve_scaling_factor * pow(rs_ro_ratio, _curve_exponent);
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->getChildId());
-    Serial.print(F(" V="));
-    Serial.print(value);
-    Serial.print(F(" LPG="));
-    Serial.print(lpg);
-    Serial.print(F(" CO="));
-    Serial.print(co);
-    Serial.print(F(" SMOKE="));
-    Serial.println(smoke);
+    Serial.print(F(" Rs="));
+    Serial.print(rs);
+    Serial.print(F(" Rs/Ro="));
+    Serial.print(rs_ro_ratio);
+    Serial.print(F(" PPM="));
+    Serial.println(ppm);
   #endif
   // store the value
-  ((ChildInt*)child)->setValueInt((int16_t)ceil(value));
+  ((ChildInt*)child)->setValueInt(ppm);
 }
 
 // what to do as the main task when receiving a message
@@ -2535,59 +2552,18 @@ void SensorMQ::onReceive(MyMessage* message) {
   if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 
-// returns the calculated sensor resistance
-float SensorMQ::_MQResistanceCalculation(int raw_adc) {
-  return ( ((float)_rl_value*(1023-raw_adc)/raw_adc));
-}
-
-//  This function assumes that the sensor is in clean air
-float SensorMQ::_MQCalibration() {
-  int i;
-  float val=0;
-  //take multiple samples
-  for (i=0; i< _calibration_sample_times; i++) {  
-    val += _MQResistanceCalculation(analogRead(_pin));
-    wait(_calibration_sample_interval);
+// get the rs value by sampling the resistance multiple times
+float SensorMQ::_getRsValue(int samples, int sample_interval) {
+  float total = 0;
+  for (int i = 0; i < samples; i++) {
+    int adc = analogRead(_pin);
+    float rs = ( ((float)_rl*(1023-adc)/adc));
+    total += rs;
+    wait(sample_interval);
   }
-  //calculate the average value
-  val = val/_calibration_sample_times;                   
-  //divided by RO_CLEAN_AIR_FACTOR yields the Ro
-  val = val/_ro_clean_air_factor;
-  //according to the chart in the datasheet
-  return val;
-}
-
-// This function use MQResistanceCalculation to caculate the sensor resistenc (Rs).
-float SensorMQ::_MQRead() {
-  int i;
-  float rs=0;
-  for (i=0; i<_read_sample_times; i++) {
-    rs += _MQResistanceCalculation(analogRead(_pin));
-    wait(_read_sample_interval);
-  }
-  rs = rs/_read_sample_times;
-  return rs;
-}
-
-// This function passes different curves to the MQGetPercentage function which calculates the ppm (parts per million) of the target gas.
-int SensorMQ::_MQGetGasPercentage(float rs_ro_ratio, int gas_id) {
-  if ( gas_id == _gas_lpg ) {
-    return _MQGetPercentage(rs_ro_ratio,_LPGCurve);
-  } else if ( gas_id == _gas_co) {
-    return _MQGetPercentage(rs_ro_ratio,_COCurve);
-  } else if ( gas_id == _gas_smoke) {
-    return _MQGetPercentage(rs_ro_ratio,_SmokeCurve);
-  }
-  return 0;
-}
-
-// returns ppm of the target gas
-int SensorMQ::_MQGetPercentage(float rs_ro_ratio, float *pcurve) {
-  return (pow(10,( ((log10(rs_ro_ratio)-pcurve[1])/pcurve[2]) + pcurve[0])));
+  return total/(float)samples;
 }
 #endif
-
-
 
 /*
    SensorMHZ19
@@ -4521,14 +4497,19 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       if (strcmp(sensor->getName(),"MQ") == 0) {
         SensorMQ* custom_sensor = (SensorMQ*)sensor;
         switch(function) {
-          case 101: custom_sensor->setTargetGas(request.getValueInt()); break;
           case 102: custom_sensor->setRlValue(request.getValueFloat()); break;
           case 103: custom_sensor->setRoValue(request.getValueFloat()); break;
-          case 104: custom_sensor->setCleanAirFactor(request.getValueFloat()); break;
-          case 105: custom_sensor->setCalibrationSampleTimes(request.getValueInt()); break;
+          case 104: custom_sensor->setKnownPpm(request.getValueInt()); break;
+          case 105: custom_sensor->setCalibrationSamples(request.getValueInt()); break;
           case 106: custom_sensor->setCalibrationSampleInterval(request.getValueInt()); break;
-          case 107: custom_sensor->setReadSampleTimes(request.getValueInt()); break;
-          case 108: custom_sensor->setReadSampleInterval(request.getValueInt()); break;
+          case 107: custom_sensor->setSamples(request.getValueInt()); break;
+          case 108: custom_sensor->setSampleInterval(request.getValueInt()); break;
+          case 109: custom_sensor->setPoint1Ppm(request.getValueFloat()); break;
+          case 110: custom_sensor->setPoint1Ratio(request.getValueFloat()); break;
+          case 111: custom_sensor->setPoint2Ppm(request.getValueFloat()); break;
+          case 112: custom_sensor->setPoint2Ratio(request.getValueFloat()); break;
+          case 113: custom_sensor->setCurveScalingFactor(request.getValueFloat()); break;
+          case 114: custom_sensor->setCurveExponent(request.getValueFloat()); break; 
           default: return;
         }
       }
