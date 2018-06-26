@@ -18,18 +18,18 @@ NodeManager will take care of importing the required library, presenting the sen
 * Calculate battery level without requiring an additional pin and the resistors
 * Report signal level periodically and automatically or on demand
 * Allow collecting and averaging multiple samples, tracking the last value and forcing periodic updates for any sensor
-* Provide buil-in capabilities to handle interrupt-based sensors 
+* Provide built-in capabilities to handle interrupt-based sensors 
 
 ### Built-in sensors
 
 NodeManager provides built-in implementation of a number of sensors through ad-hoc classes. 
-To use a buil-in sensor:
+To use a built-in sensor:
 * Install the required library if any
 * Enable the corresponding module (uncomment it) in the main sketch
 * Declare the sensor (uncomment it) in the main sketch
 
 Once created, the sensor will automatically present one or more child to the gateway and controller.
-A list of buil-in sensors, module to enable, required dependencies and the number of child automatically created is presented below:
+A list of built-in sensors, module to enable, required dependencies and the number of child automatically created is presented below:
 
 Sensor Name              |#Child | Module to enable   | Description                                                                                       | Dependencies
 -------------------------|-------|--------------------|---------------------------------------------------------------------------------------------------|----------------------------------------------------------
@@ -91,12 +91,12 @@ SensorFPM10A             | 1     | USE_FPM10A         | FPM10A fingerprint senso
 ### Built-in features
 
 NodeManager built-in features can be enabled/disabled also when you need to save some storage for your code. 
-To enable/disable a buil-in feature:
+To enable/disable a built-in feature:
 * Install the required library if any
 * Enable the corresponding feature by setting it to ON in the main sketch. To disable it, set it to OFF
 * When a feature is enabled additional functions may be made available. Have a look at the API documentation for details
 
-A list of buil-in features and the required dependencies is presented below:
+A list of built-in features and the required dependencies is presented below:
 
 Feature                     | Default | Description                                                                                      | Dependencies
 ----------------------------|---------|--------------------------------------------------------------------------------------------------|----------------------------------------------------------
