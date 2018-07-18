@@ -12,7 +12,7 @@ install:
   - tar zxfv 2.2.0.tar.gz
   - ln -s MySensors-2.2.0 /usr/local/share/arduino/libraries/MySensors-2.2.0
 script:
-  - arduino --verify --board arduino:avr:mini $PWD/NodeManager.ino
+  - arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/NodeManager.ino
 notifications:
   email:
     on_success: change
