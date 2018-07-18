@@ -2441,6 +2441,7 @@ void SensorMCP9808::onReceive(MyMessage* message) {
 /*
  * SensorMQ
  */
+#ifdef USE_MQ
 SensorMQ::SensorMQ(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "MQ";
   children.allocateBlocks(1);
@@ -2486,6 +2487,9 @@ void SensorMQ::setCurveScalingFactor(float value) {
 }
 void SensorMQ::setCurveExponent(float value) {
   _curve_exponent = value;
+}
+void SensorMQ::setWarmupMinutes(int value) {
+  _warmup_minutes = value;
 }
 
 // what to do during setup
@@ -2541,6 +2545,10 @@ void SensorMQ::onLoop(Child* child) {
     Serial.print(F(" PPM="));
     Serial.println(ppm);
   #endif
+  // ppm cannot be negative
+  if (ppm < 0) ppm = 0;
+  // if warmup is configured, do not send the value back if within the warmup period
+  if (_warmup_minutes > 0 && millis() < _warmup_minutes*60*1000) return;
   // store the value
   ((ChildInt*)child)->setValueInt(ppm);
 }

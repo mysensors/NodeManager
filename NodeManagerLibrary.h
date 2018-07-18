@@ -1304,6 +1304,8 @@ class SensorMQ: public Sensor {
     void setCurveScalingFactor(float value); 
     // [114] with ppm = scaling_factor*x^exponent set the value manually, otherwise will be calculated automatically based on the two points provided
     void setCurveExponent(float value); 
+    // do not report for the given number of minutes, waiting for the sensor to warm up (default: 0);
+    void setWarmupMinutes(int value);
     // define what to do at each stage of the sketch
     void onSetup();
     void onLoop(Child* child);
@@ -1316,6 +1318,7 @@ class SensorMQ: public Sensor {
     int _calibration_sample_interval = 500;
     int _sample_interval = 50;
     int _samples = 5;
+    unsigned long _warmup_minutes = 0;
     float _point1_ppm = 200;
     float _point1_ratio = 5;
     float _point2_ppm = 10000;
