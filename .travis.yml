@@ -7,10 +7,12 @@ before_install:
   - tar xf arduino-1.6.5-linux64.tar.xz
   - sudo mv arduino-1.6.5 /usr/local/share/arduino
   - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
+  - git clone https://github.com/mysensors/MySensors
 install:
-  - wget https://github.com/mysensors/MySensors/archive/2.2.0.tar.gz
-  - tar zxfv 2.2.0.tar.gz
-  - ln -s MySensors-2.2.0 /usr/local/share/arduino/libraries/MySensors-2.2.0
+  #- wget https://github.com/mysensors/MySensors/archive/2.2.0.tar.gz
+  #- tar zxfv 2.2.0.tar.gz
+  #- ln -s MySensors-2.2.0 /usr/local/share/arduino/libraries/MySensors-2.2.0
+  ln -s $PWD/libraries/MySensors /usr/local/share/arduino/libraries/MySensors
 script:
   - arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/NodeManager.ino
 notifications:
