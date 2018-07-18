@@ -252,7 +252,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 
 //#define USE_BATTERY
 //#define USE_SIGNAL
-#define USE_CONFIGURATION
+//#define USE_CONFIGURATION
 //#define USE_ANALOG_INPUT
 //#define USE_THERMISTOR
 //#define USE_ML8511
@@ -271,7 +271,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define USE_SONOFF
 //#define USE_HCSR04
 //#define USE_MCP9808
-#define USE_MQ
+//#define USE_MQ
 //#define USE_MHZ19
 //#define USE_AM2320
 //#define USE_TSL2561
@@ -322,7 +322,7 @@ NodeManager node;
 
 // built-in sensors
 //SensorBattery battery(node);
-SensorConfiguration configuration(node);
+//SensorConfiguration configuration(node);
 //SensorSignal signal(node);
 //PowerManager power(5,6);
 
@@ -356,7 +356,7 @@ SensorConfiguration configuration(node);
 //SensorSonoff sonoff(node);
 //SensorHCSR04 hcsr04(node,6);
 //SensorMCP9808 mcp9808(node);
-SensorMQ mq(node,A0);
+//SensorMQ mq(node,A0);
 //SensorMHZ19 mhz19(node,6,7);
 //SensorAM2320 am2320(node);
 //SensorTSL2561 tsl2561(node);
