@@ -1278,55 +1278,54 @@ class SensorMCP9808: public Sensor {
 class SensorMQ: public Sensor {
   public:
     SensorMQ(NodeManager& node_manager, int pin, int child_id = -255);
-    // [101] define the target gas whose ppm has to be returned. 0: LPG, 1: CO, 2: Smoke (default: 1);
-    void setTargetGas(int value);
-    // [102] define the load resistance on the board, in kilo ohms (default: 1);
+    // [102] set the load resistance on the board, in ohms (default: 1000);
     void setRlValue(float value);
-    // [103] define the Ro resistance on the board (default: 10000);
+    // [103] set the Ro resistance in ohms. By default will be calculated at startup during the calibration phase using the known ppm provided
     void setRoValue(float value);
-    // [104] Sensor resistance in clean air (default: 9.83);
-    void setCleanAirFactor(float value);
-    // [105] define how many samples you are going to take in the calibration phase (default: 50);
-    void setCalibrationSampleTimes(int value);
-    // [106] define the time interal(in milisecond) between each samples in the cablibration phase (default: 500);
+    // [104] set the ppm used during the calibration (default: 411);
+    void setKnownPpm(float value);
+    // [105] define how many samples we are going to take in the calibration phase (default: 50);
+    void setCalibrationSamples(int value);
+    // [106] define the time (in milisecond) between each sample in the cablibration phase (default: 500);
     void setCalibrationSampleInterval(int value);
     // [107] define how many samples you are going to take in normal operation (default: 50);
-    void setReadSampleTimes(int value);
-    // [108] define the time interal(in milisecond) between each samples in the normal operations (default: 5);
-    void setReadSampleInterval(int value);
-    // set the LPGCurve array (default: {2.3,0.21,-0.47})
-    void setLPGCurve(float *value);
-    // set the COCurve array (default: {2.3,0.72,-0.34})
-    void setCOCurve(float *value);
-    // set the SmokeCurve array (default: {2.3,0.53,-0.44})
-    void setSmokeCurve(float *value);
+    void setSamples(int value);
+    // [108] define the time (in milisecond) between each sample in the normal operations (default: 5);
+    void setSampleInterval(int value);
+    // [109] set the ppm (x) of a random point on the gas curve (default: 200)
+    void setPoint1Ppm(float value); 
+    // [110] set the Rs/Ro ratio (y) of the same random point on the gas curve (default: 5)
+    void setPoint1Ratio(float value);
+    // [111] set the ppm (x) of another random point on the gas curve (default: 10000)
+    void setPoint2Ppm(float value);
+    // [112] set the Rs/Ro ratio (y) of the same random point on the gas curve (default: 1.2)
+    void setPoint2Ratio(float value);
+    // [113] with ppm = scaling_factor*x^exponent set the value manually, otherwise will be calculated automatically based on the two points provided
+    void setCurveScalingFactor(float value); 
+    // [114] with ppm = scaling_factor*x^exponent set the value manually, otherwise will be calculated automatically based on the two points provided
+    void setCurveExponent(float value); 
+    // do not report for the given number of minutes, waiting for the sensor to warm up (default: 0);
+    void setWarmupMinutes(int value);
     // define what to do at each stage of the sketch
     void onSetup();
     void onLoop(Child* child);
     void onReceive(MyMessage* message);
   protected:
-    float _rl_value = 1.0;
-    float _ro_clean_air_factor = 9.83;
-    int _calibration_sample_times = 50;
+    long _rl = 1000;
+    long _ro = 0;
+    int _known_ppm = 411;
+    int _calibration_samples = 50;
     int _calibration_sample_interval = 500;
-    int _read_sample_interval = 50;
-    int _read_sample_times = 5;
-    float _ro = 10000.0;
-    static float _default_LPGCurve[3];
-    static float _default_COCurve[3];
-    static float _default_SmokeCurve[3];
-    float *_LPGCurve;
-    float *_COCurve;
-    float *_SmokeCurve;
-    float _MQResistanceCalculation(int raw_adc);
-    float _MQCalibration();
-    float _MQRead();
-    int _MQGetGasPercentage(float rs_ro_ratio, int gas_id);
-    int  _MQGetPercentage(float rs_ro_ratio, float *pcurve);
-    const static int _gas_lpg = 0;
-    const static int _gas_co = 1;
-    const static int _gas_smoke = 2;
-    int _target_gas = _gas_co;
+    int _sample_interval = 50;
+    int _samples = 5;
+    unsigned long _warmup_minutes = 0;
+    float _point1_ppm = 200;
+    float _point1_ratio = 5;
+    float _point2_ppm = 10000;
+    float _point2_ratio = 1.2;
+    float _curve_scaling_factor = 0;
+    float _curve_exponent = 0;
+    float _getRsValue(int samples, int sample_interval);
 };
 #endif
 

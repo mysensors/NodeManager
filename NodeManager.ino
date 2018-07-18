@@ -76,7 +76,7 @@ SensorBMP280             | 3     | USE_BMP280         | BMP280 sensor, return te
 SensorSonoff             | 1     | USE_SONOFF         | Sonoff wireless smart switch                                                                      | https://github.com/thomasfredericks/Bounce2
 SensorHCSR04             | 1     | USE_HCSR04         | HC-SR04 sensor, return the distance between the sensor and an object                              | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/NewPing
 SensorMCP9808            | 1     | USE_MCP9808        | MCP9808 sensor, measure the temperature through the attached module                               | https://github.com/adafruit/Adafruit_MCP9808_Library
-SensorMQ                 | 1     | USE_MQ             | MQ sensor, return ppm of the target gas                                                           | -
+SensorMQ                 | 1     | USE_MQ             | MQ sensor, return ppm of the target gas. Tuned by default for MQ135 and CO2                       | -
 SensorMHZ19              | 1     | USE_MHZ19          | MH-Z19 CO2 sensor via UART (SoftwareSerial, default on pins 6(Rx) and 7(Tx)                       | -
 SensorAM2320             | 2     | USE_AM2320         | AM2320 sensors, return temperature/humidity based on the attached AM2320 sensor                   | https://github.com/thakshak/AM2320
 SensorTSL2561            | 1     | USE_TSL2561        | TSL2561 sensor, return light in lux                                                               | https://github.com/adafruit/TSL2561-Arduino-Library
