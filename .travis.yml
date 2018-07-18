@@ -8,7 +8,9 @@ before_install:
   - sudo mv arduino-1.6.5 /usr/local/share/arduino
   - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
 install:
-  - arduino --install-library "MySensors"
+  - wget https://github.com/mysensors/MySensors/archive/2.2.0.tar.gz
+  - tar zxfv MySensors-2.2.0.tar.gz
+  - ln -s MySensors-2.2.0 /usr/local/share/arduino/libraries/MySensors-2.2.0
 script:
   - arduino --verify --board arduino:avr:mini $PWD/NodeManager.ino
 notifications:
