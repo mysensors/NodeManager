@@ -17,7 +17,7 @@ install:
 script:
   - arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/NodeManager.ino
   - cat $PWD/template.txt > $PWD/NodeManager.ino
-  - sed -i s/OFF/ON/g $PWD/NodeManager.ino
+  - sed -i s/OFF/ON/g $PWD/NodeManager.ino 
   - arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/NodeManager.ino
 notifications:
   email:
