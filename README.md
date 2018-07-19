@@ -1193,8 +1193,11 @@ Before applying any change, ensure you have the latest development version avail
 Create a branch for the fix/feature you want to work on and apply changes to the code:
 * Create and switch to a new branch (give it a significant name, e.g. fix/enum-sensors): `git checkout -b <yourbranch>`
 * Do any required change to the code
+* If adding a new sensor, add your code just below the last sensor in all the files so to keep the list in order
+* If adding a new sensor, add an additional job in the Travis CI configuration file `.travis.yml`
+* If adding a new function to a sensor, ensure to make it accessible through SensorConfiguration (if applicable) and add it in the README.md file as well
 * Include all the files changed for your commit: `git add .`
-* Ensure both the main sketch and the config.h file do not present any change
+* Ensure the main sketch does not present any change (e.g. keep default values before committing)
 * Commit the changes: `git  commit -m"Use enum instead of define for defining each sensor #121"`
 * Push the branch with the changes to your repository: `git push origin <yourbranch>`
 * Visit `https://github.com/<username>/NodeManager/branches` and click the "New pull request" button just aside your newly created branch

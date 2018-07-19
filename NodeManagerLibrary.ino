@@ -4347,8 +4347,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       switch(function) {
         case 1: sensor->setPin(request.getValueInt()); break;
         case 5: sensor->setSamples(request.getValueInt()); break;
-        case 6: sensor->setSamplesI!_pms->read
-        nterval(request.getValueInt()); break;
+        case 6: sensor->setSamplesInterval(request.getValueInt()); break;
 #if FEATURE_POWER_MANAGER == ON
         case 13: sensor->powerOn(); break;
         case 14: sensor->powerOff(); break;
