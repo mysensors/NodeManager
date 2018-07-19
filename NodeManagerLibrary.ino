@@ -595,6 +595,11 @@ int Sensor::getInterruptPin() {
 }
 #endif
 
+// enable/disable reporting to the gateway
+void Sensor::setReporting(bool value) {
+  _reporting = value;
+}
+
 // After how many seconds the sensor will report back its measure
 void Sensor::setReportIntervalSeconds(int value) {
   _report_timer->start(value,SECONDS);
@@ -713,7 +718,7 @@ void Sensor::loop(MyMessage* message) {
       if (_samples_interval > 0) _node->sleepOrWait(_samples_interval);
     }
     // send the value back to the controller
-    child->sendValue(message != nullptr);
+    if (_reporting) child->sendValue(message != nullptr);
     // reset the counters
     child->reset();
   }
@@ -3304,6 +3309,9 @@ Display::Display(NodeManager& node_manager, int child_id): Sensor(node_manager) 
   // We don't need any sensors, but we need a child, otherwise the loop will never be executed
   children.allocateBlocks(1);
   new ChildString(this, _node->getAvailableChildId(child_id), S_INFO, V_TEXT,_name);
+  // prevent reporting to the gateway at each display update
+  setReporting(false);
+  _report_timer->unset();
 }
 // setter/getter
 void Display::setCaption(const char* value) {
@@ -4354,6 +4362,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         case 17: sensor->setReportIntervalSeconds(request.getValueInt()); break;
         case 19: sensor->setReportIntervalHours(request.getValueInt()); break;
         case 20: sensor->setReportIntervalDays(request.getValueInt()); break;
+        case 21: sensor->setReporting(request.getValueInt()); break;
         default: return;
       }
     } else {

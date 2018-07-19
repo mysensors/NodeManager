@@ -366,6 +366,8 @@ The following methods are available for all the sensors:
     // [14] manually turn the power off
     void powerOff();
 #endif
+    // [21] enable/disable reporting to the gateway (default: true)
+    void setReporting(bool value);
     // [17] After how many minutes the sensor will report back its measure (default: 10 minutes)
     void setReportIntervalSeconds(int value);
     // [16] After how many minutes the sensor will report back its measure (default: 10 minutes)
