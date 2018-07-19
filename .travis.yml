@@ -3,6 +3,19 @@ cache:
     directories:
     # prepare the cache for storing dependencies
      - /home/travis/.deps
+notifications:
+  email:
+    on_success: change
+    on_failure: change
+env:
+  global:
+    - DEPS=/home/travis/.deps
+    - ARDUINO_VERSION=1.8.5
+    - MYSENSORS_VERSION=2.2.0
+    - SKETCH=NodeManager.ino
+    - TEMPLATE=template.txt
+    - CONFIGURATION_SENSOR=1
+    - RUN="if [ $CONFIGURATION_SENSOR == 1 ]; then sed -i 's/\/\/SensorConfiguration configuration(node);/SensorConfiguration configuration(node);/g' $PWD/$SKETCH && sed -i 's/\/\/#define USE_CONFIGURATION/#define USE_CONFIGURATION/g' $PWD/$SKETCH && echo 'Enabled SensorConfiguration' ; fi ; cat $PWD/$SKETCH; arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH"
 before_install:
   # setup X environment
   - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16"
@@ -342,16 +355,3 @@ jobs:
        - sed -r -i 's/\/\/(SensorFPM10A .+)/\1/' $PWD/$SKETCH
        - sed -r -i 's/\/\/(#define USE_FPM10A)/\1/' $PWD/$SKETCH
        - eval $RUN
-notifications:
-  email:
-    on_success: change
-    on_failure: change
-env:
-  global:
-    - DEPS=/home/travis/.deps
-    - ARDUINO_VERSION=1.8.5
-    - MYSENSORS_VERSION=2.2.0
-    - SKETCH=NodeManager.ino
-    - TEMPLATE=template.txt
-    - CONFIGURATION_SENSOR=1
-    - RUN="if [ $CONFIGURATION_SENSOR == 1 ]; then sed -i 's/\/\/SensorConfiguration configuration(node);/SensorConfiguration configuration(node);/g' $PWD/$SKETCH && sed -i 's/\/\/#define USE_CONFIGURATION/#define USE_CONFIGURATION/g' $PWD/$SKETCH && echo 'Enabled SensorConfiguration' ; fi ; cat $PWD/$SKETCH; arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH"

@@ -3181,7 +3181,7 @@ void SensorPlantowerPMS::onLoop(Child* child) {
   }
   // Read the ppm values
   if (!_valuesRead || _valuesReadError) {
-    _valuesReadError = !_pms->read(_data, 1000);
+    _valuesReadError = !_pms->readUntil(_data, 1000);
     if (_valuesReadError) {
       Serial.println(F("ERR PMS read"));
       return;
@@ -4347,7 +4347,8 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       switch(function) {
         case 1: sensor->setPin(request.getValueInt()); break;
         case 5: sensor->setSamples(request.getValueInt()); break;
-        case 6: sensor->setSamplesInterval(request.getValueInt()); break;
+        case 6: sensor->setSamplesI!_pms->read
+        nterval(request.getValueInt()); break;
 #if FEATURE_POWER_MANAGER == ON
         case 13: sensor->powerOn(); break;
         case 14: sensor->powerOff(); break;
