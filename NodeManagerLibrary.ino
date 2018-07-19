@@ -4589,8 +4589,8 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       if (strcmp(sensor->getName(),"FPM10A") == 0) {
         SensorFPM10A* custom_sensor = (SensorFPM10A*)sensor;
         switch(function) {
-          case 101: SensorFPM10A->setMinConfidence(request.getValueInt()); break;
-          case 102: SensorFPM10A->setWaitFingerForSeconds(request.getValueInt()); break;
+          case 101: custom_sensor->setMinConfidence(request.getValueInt()); break;
+          case 102: custom_sensor->setWaitFingerForSeconds(request.getValueInt()); break;
           default: return;
         }
       }
