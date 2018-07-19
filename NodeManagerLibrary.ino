@@ -3313,6 +3313,7 @@ Display::Display(NodeManager& node_manager, int child_id): Sensor(node_manager) 
   new ChildString(this, _node->getAvailableChildId(child_id), S_INFO, V_TEXT,_name);
   // prevent reporting to the gateway at each display update
   setReporting(false);
+  _report_timer->unset();
 }
 // setter/getter
 void Display::setCaption(const char* value) {
