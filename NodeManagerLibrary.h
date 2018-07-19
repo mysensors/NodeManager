@@ -263,6 +263,7 @@
 // include third party libraries for enabled features
 #ifdef MY_GATEWAY_SERIAL
   #define FEATURE_SLEEP OFF
+  #define FEATURE_DEBUG OFF
 #endif
 #if FEATURE_TIME == ON
   #include <TimeLib.h>
