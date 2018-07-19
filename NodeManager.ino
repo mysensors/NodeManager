@@ -354,7 +354,7 @@ NodeManager node;
 //SensorBMP180 bmp180(node);
 //SensorBMP280 bmp280(node);
 //SensorSonoff sonoff(node);
-//SensorHCSR04 hcsr04(node,6);
+//SensorHCSR04 hcsr04(node,6,7);
 //SensorMCP9808 mcp9808(node);
 //SensorMQ mq(node,A0);
 //SensorMHZ19 mhz19(node,6,7);

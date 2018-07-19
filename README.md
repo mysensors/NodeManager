@@ -592,12 +592,10 @@ Each sensor class exposes additional methods.
 
 * SensorHCSR04
 ~~~c
-    // [101] Arduino pin tied to trigger pin on the ultrasonic sensor (default: the pin set while registering the sensor)
-    void setTriggerPin(int value);
-    // [102] Arduino pin tied to echo pin on the ultrasonic sensor (default: the pin set while registering the sensor)
-    void setEchoPin(int value);
     // [103] Maximum distance we want to ping for (in centimeters) (default: 300)
     void setMaxDistance(int value);
+    // [104] Report the measure even if is invalid (e.g. 0) (default: true)
+    void setReportIfInvalid(bool value);
 ~~~
 
 * SensorMQ
