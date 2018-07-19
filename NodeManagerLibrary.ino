@@ -2352,23 +2352,20 @@ void SensorSonoff::_blink() {
 */
 #ifdef USE_HCSR04
 // contructor
-SensorHCSR04::SensorHCSR04(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
+SensorHCSR04::SensorHCSR04(NodeManager& node_manager, int echo_pin, int trigger_pin, int child_id): Sensor(node_manager) {
   _name = "HCSR04";
-  _trigger_pin = pin;
-  _echo_pin = pin;
+  _echo_pin = echo_pin;
+  _trigger_pin = trigger_pin;
   children.allocateBlocks(1);
   new ChildInt(this,_node->getAvailableChildId(child_id),S_DISTANCE,V_DISTANCE,_name);
 }
 
 // setter/getter
-void SensorHCSR04::setTriggerPin(int value) {
-  _trigger_pin = value;
-}
-void SensorHCSR04::setEchoPin(int value) {
-  _echo_pin = value;
-}
 void SensorHCSR04::setMaxDistance(int value) {
   _max_distance = value;
+}
+void SensorHCSR04::setReportIfInvalid(bool value) {
+  _report_if_invalid = value;
 }
 
 // what to do during setup
@@ -2387,6 +2384,7 @@ void SensorHCSR04::onLoop(Child* child) {
     Serial.print(F(" D="));
     Serial.println(distance);
   #endif
+  if (! _report_if_invalid && distance == 0) return;
   ((ChildInt*)child)->setValueInt(distance);
 }
 
@@ -4490,9 +4488,8 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       if (strcmp(sensor->getName(),"HCSR04") == 0) {
         SensorHCSR04* custom_sensor = (SensorHCSR04*)sensor;
         switch(function) {
-          case 101: custom_sensor->setTriggerPin(request.getValueInt()); break;
-          case 102: custom_sensor->setEchoPin(request.getValueInt()); break;
           case 103: custom_sensor->setMaxDistance(request.getValueInt()); break;
+          case 104: custom_sensor->setReportIfInvalid(request.getValueInt()); break;
           default: return;
         }
       }

@@ -1235,13 +1235,11 @@ class SensorSonoff: public Sensor {
 #ifdef USE_HCSR04
 class SensorHCSR04: public Sensor {
   public:
-    SensorHCSR04(NodeManager& node_manager, int pin, int child_id = -255);
-    // [101] Arduino pin tied to trigger pin on the ultrasonic sensor (default: the pin set while registering the sensor)
-    void setTriggerPin(int value);
-    // [102] Arduino pin tied to echo pin on the ultrasonic sensor (default: the pin set while registering the sensor)
-    void setEchoPin(int value);
+    SensorHCSR04(NodeManager& node_manager, int echo_pin, int trigger_pin, int child_id = -255);
     // [103] Maximum distance we want to ping for (in centimeters) (default: 300)
     void setMaxDistance(int value);
+    // [104] Report the measure even if is invalid (e.g. 0) (default: true)
+    void setReportIfInvalid(bool value);
     // define what to do at each stage of the sketch
     void onSetup();
     void onLoop(Child* child);
@@ -1250,6 +1248,7 @@ class SensorHCSR04: public Sensor {
   protected:
     int _trigger_pin;
     int _echo_pin;
+    bool _report_if_invalid = true;
     int _max_distance = 300;
     NewPing* _sonar;
 };
