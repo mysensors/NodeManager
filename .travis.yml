@@ -41,13 +41,120 @@ jobs:
        - sed -r -i 's/\/\/(SensorSignal.+)/\1/' $PWD/$SKETCH
        - sed -r -i 's/\/\/(#define USE_SIGNAL)/\1/' $PWD/$SKETCH
        - eval $RUN
+    - name: "SensorAnalogInput"
+      script: 
+       - sed -r -i 's/\/\/(SensorAnalogInput.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_ANALOG_INPUT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorLDR"
+      script: 
+       - sed -r -i 's/\/\/(SensorLDR.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_ANALOG_INPUT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorRain"
+      script: 
+       - sed -r -i 's/\/\/(SensorRain.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_ANALOG_INPUT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorSoilMoisture"
+      script: 
+       - sed -r -i 's/\/\/(SensorSoilMoisture.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_ANALOG_INPUT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorThermistor"
+      script: 
+       - sed -r -i 's/\/\/(SensorThermistor.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_THERMISTOR)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorML8511"
+      script: 
+       - sed -r -i 's/\/\/(SensorML8511.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_ML8511)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorACS712"
+      script: 
+       - sed -r -i 's/\/\/(SensorACS712.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_ACS712)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorDigitalInput"
+      script: 
+       - sed -r -i 's/\/\/(SensorDigitalInput.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_DIGITAL_INPUT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorDigitalOutput"
+      script: 
+       - sed -r -i 's/\/\/(SensorDigitalOutput.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_DIGITAL_OUTPUT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorRelay"
+      script: 
+       - sed -r -i 's/\/\/(SensorRelay.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_DIGITAL_OUTPUT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorLatchingRelay1Pin"
+      script: 
+       - sed -r -i 's/\/\/(SensorLatchingRelay1Pin.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_DIGITAL_OUTPUT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorLatchingRelay2Pins"
+      script: 
+       - sed -r -i 's/\/\/(SensorLatchingRelay2Pins.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_DIGITAL_OUTPUT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorDHT11"
+      script: 
+       - wget https://github.com/mysensors/MySensorsArduinoExamples/archive/master.zip
+       - unzip master.zip
+       - sudo cp -r MySensorsArduinoExamples-master/libraries/DHT /usr/local/share/arduino/libraries
+       - sed -r -i 's/\/\/(SensorDHT11.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_DHT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorDHT22"
+      script: 
+       - wget https://github.com/mysensors/MySensorsArduinoExamples/archive/master.zip
+       - unzip master.zip
+       - sudo cp -r MySensorsArduinoExamples-master/libraries/DHT /usr/local/share/arduino/libraries
+       - sed -r -i 's/\/\/(SensorDHT22.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_DHT)/\1/' $PWD/$SKETCH
+       - eval $RUN
     - name: "SensorSHT21"
       script: 
        - arduino --install-library "Sodaq_SHT2x"
        - sed -r -i 's/\/\/(SensorSHT21.+)/\1/' $PWD/$SKETCH
        - sed -r -i 's/\/\/(#define USE_SHT21)/\1/' $PWD/$SKETCH
-       - cat $PWD/$SKETCH
-       - eval $RUN       
+       - eval $RUN   
+    - name: "SensorHTU21D"
+      script: 
+       - arduino --install-library "Sodaq_SHT2x"
+       - sed -r -i 's/\/\/(SensorHTU21D.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_SHT21)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorInterrupt"
+      script: 
+       - sed -r -i 's/\/\/(SensorInterrupt.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_INTERRUPT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorDoor"
+      script: 
+       - sed -r -i 's/\/\/(SensorDoor.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_INTERRUPT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorMotion"
+      script: 
+       - sed -r -i 's/\/\/(SensorMotion.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_INTERRUPT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorDs18b20"
+      script: 
+       - sed -r -i 's/\/\/(SensorDs18b20.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_DS18B20)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorBH1750"
+      script: 
+       - arduino --install-library "BH1750"
+       - sed -r -i 's/\/\/(SensorBH1750.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_BH1750)/\1/' $PWD/$SKETCH
+       - eval $RUN
 notifications:
   email:
     on_success: change
@@ -60,4 +167,4 @@ env:
     - SKETCH=NodeManager.ino
     - TEMPLATE=template.txt
     - CONFIGURATION_SENSOR=1
-    - RUN="if [ $CONFIGURATION_SENSOR == 1 ]; then sed -i 's/\/\/SensorConfiguration configuration(node);/SensorConfiguration configuration(node);/g' $PWD/$SKETCH && sed -i 's/\/\/#define USE_CONFIGURATION/#define USE_CONFIGURATION/g' $PWD/$SKETCH && echo 'Enabled SensorConfiguration' ; fi ; arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH"
+    - RUN="if [ $CONFIGURATION_SENSOR == 1 ]; then sed -i 's/\/\/SensorConfiguration configuration(node);/SensorConfiguration configuration(node);/g' $PWD/$SKETCH && sed -i 's/\/\/#define USE_CONFIGURATION/#define USE_CONFIGURATION/g' $PWD/$SKETCH && echo 'Enabled SensorConfiguration' ; fi ; cat $PWD/$SKETCH; arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH"
