@@ -4348,10 +4348,6 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         case 1: sensor->setPin(request.getValueInt()); break;
         case 5: sensor->setSamples(request.getValueInt()); break;
         case 6: sensor->setSamplesInterval(request.getValueInt()); break;
-#if FEATURE_CONDITIONAL_REPORT == ON
-        case 7: sensor->setTrackLastValue(request.getValueInt()); break;
-        case 9: sensor->setForceUpdateMinutes(request.getValueInt()); break;
-#endif
 #if FEATURE_POWER_MANAGER == ON
         case 13: sensor->powerOn(); break;
         case 14: sensor->powerOff(); break;
