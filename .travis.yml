@@ -46,6 +46,7 @@ jobs:
        - arduino --install-library "Sodaq_SHT2x"
        - sed -r -i 's/\/\/(SensorSHT21.+)/\1/' $PWD/$SKETCH
        - sed -r -i 's/\/\/(#define USE_SHT21.+)/\1/' $PWD/$SKETCH
+       - cat $PWD/$SKETCH
        - eval $RUN       
 notifications:
   email:
