@@ -25,13 +25,20 @@ install:
 jobs:
   include:
     - stage: build
-      name: "compile the sketch"
+      name: "Vanilla Sketch"
       script: 
-       - arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH
-    - name: "compile with all the features enabled"
+       - $RUN
+    - name: "All the features enabled"
       script: 
-       - sed -e s/OFF/ON/g $PWD/$TEMPLATE > $PWD/$SKETCH
-       - arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH
+       - cp $PWD/$TEMPLATE > $PWD/$SKETCH
+        - sed -i s/OFF/ON/g $PWD/$SKETCH
+       - $RUN
+    - name: "SensorBattery"
+      script: 
+       - cp $PWD/$TEMPLATE > $PWD/$SKETCH
+       - sed -i s/\/\/SensorBattery battery(node);/SensorBattery battery(node);/g $PWD/$SKETCH
+       - sed -i s/\/\/#define USE_BATTERY/#define USE_BATTERY/g $PWD/$SKETCH
+       - $RUN
 notifications:
   email:
     on_success: change
@@ -44,3 +51,6 @@ env:
     - MYSENSORS_VERSION=2.2.0
     - SKETCH=NodeManager.ino
     - TEMPLATE=template.txt
+    - DEBUG=0
+    - CONFIGURATION_SENSOR=1
+    - RUN="if [ $CONFIGURATION_SENSOR == 1 ]; then sed -i s/\/\/SensorConfiguration configuration(node);/SensorConfiguration configuration(node);/g $PWD/$SKETCH && sed -i s/\/\/#define USE_CONFIGURATION/#define USE_CONFIGURATION/g $PWD/$SKETCH s; fi ; arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH"
