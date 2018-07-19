@@ -238,12 +238,15 @@ jobs:
        - eval $RUN
     - name: "SensorTSL2561"
       script: 
-       - - arduino --install-library "TSL2561 Arduino Library"
+       - wget https://github.com/adafruit/TSL2561-Arduino-Library/archive/master.zip && unzip master.zip
+       - sudo cp -r TSL2561-Arduino-Library-master /usr/local/share/arduino/libraries
        - sed -r -i 's/\/\/(SensorTSL2561 .+)/\1/' $PWD/$SKETCH
        - sed -r -i 's/\/\/(#define USE_TSL2561)/\1/' $PWD/$SKETCH
        - eval $RUN
     - name: "SensorPT100"
       script: 
+       - wget https://raw.githubusercontent.com/nxcosa/HighTemperatureSensor/master/libraries.zip && unzip libraries.zip
+       - sudo cp -r libraries/DFRobotHighTemperatureSensor /usr/local/share/arduino/libraries
        - sed -r -i 's/\/\/(SensorPT100 .+)/\1/' $PWD/$SKETCH
        - sed -r -i 's/\/\/(#define USE_PT100)/\1/' $PWD/$SKETCH
        - eval $RUN
@@ -280,7 +283,8 @@ jobs:
        - eval $RUN
     - name: "SensorVL53L0X"
       script: 
-       - arduino --install-library "VL52L0X"
+       - wget https://github.com/pololu/vl53l0x-arduino/archive/master.zip && unzip master.zip
+       - sudo cp -r vl53l0x-arduino-master /usr/local/share/arduino/libraries
        - sed -r -i 's/\/\/(SensorVL53L0X .+)/\1/' $PWD/$SKETCH
        - sed -r -i 's/\/\/(#define USE_VL53L0X)/\1/' $PWD/$SKETCH
        - eval $RUN
@@ -347,8 +351,8 @@ jobs:
     - name: "SensorFPM10A"
       script: 
       
-       - wget https://github.com/brianrho/FPM/archive/master.zip && unzip master.zip
-       - sudo cp -r FPM-master/src /usr/local/share/arduino/libraries
+       - wget https://github.com/adafruit/Adafruit-Fingerprint-Sensor-Library/archive/master.zip && unzip master.zip
+       - sudo cp -r Adafruit-Fingerprint-Sensor-Library-master /usr/local/share/arduino/libraries
        - sed -r -i 's/\/\/(SensorFPM10A .+)/\1/' $PWD/$SKETCH
        - sed -r -i 's/\/\/(#define USE_FPM10A)/\1/' $PWD/$SKETCH
        - eval $RUN
