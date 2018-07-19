@@ -5322,6 +5322,8 @@ void NodeManager::_sleep() {
     interrupt = sleep(interrupt_1_pin,_interrupt_1_mode,sleep_time*1000,_smart_sleep);
   } else if (interrupt_2_pin != INTERRUPT_NOT_DEFINED) {
     interrupt = sleep(interrupt_2_pin,_interrupt_2_mode,sleep_time*1000,_smart_sleep);
+  } else {
+    sleep(INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,sleep_time*1000,_smart_sleep);
   }
   // woke up by an interrupt
   if (interrupt > -1) {
