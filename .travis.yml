@@ -22,12 +22,16 @@ install:
   - sudo cp -r $DEPS/MySensors-$MYSENSORS_VERSION /usr/local/share/arduino/libraries
   # save the main sketch as a template
   - cp $PWD/$SKETCH $PWD/$TEMPLATE 
-script:
-  # compile the sketch
-  - arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH
-  # compile with all the features enabled
-  - sed -e s/OFF/ON/g $PWD/$TEMPLATE > $PWD/$SKETCH
-  - arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH
+jobs:
+  include:
+    - stage: build
+      name: "compile the sketch"
+      script: 
+       - arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH
+    - name: "compile with all the features enabled"
+      script: 
+       - sed -e s/OFF/ON/g $PWD/$TEMPLATE > $PWD/$SKETCH
+       - arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH
 notifications:
   email:
     on_success: change
