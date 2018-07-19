@@ -3311,6 +3311,8 @@ Display::Display(NodeManager& node_manager, int child_id): Sensor(node_manager) 
   // We don't need any sensors, but we need a child, otherwise the loop will never be executed
   children.allocateBlocks(1);
   new ChildString(this, _node->getAvailableChildId(child_id), S_INFO, V_TEXT,_name);
+  // prevent reporting to the gateway at each display update
+  setReporting(false);
 }
 // setter/getter
 void Display::setCaption(const char* value) {
