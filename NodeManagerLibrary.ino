@@ -1392,7 +1392,7 @@ void SensorDigitalOutput::_switchOutput(int requested_status) {
   // invert the value to write if needed. E.g. if ON is received, write LOW, if OFF write HIGH
   if (_invert_value_to_write) value = !value;
   // write the value to the pin
-  digitalWrite(_pin, value);
+  digitalWrite(pin, value);
   // if pulse is set wait for the given timeframe before restoring the value to the original value
   if (_pulse_width > 0) {
     _node->sleepOrWait(_pulse_width);
@@ -1403,7 +1403,7 @@ void SensorDigitalOutput::_switchOutput(int requested_status) {
     Serial.print(F(" I="));
     Serial.print(children.get(1)->getChildId());
     Serial.print(F(" P="));
-    Serial.print(_pin);
+    Serial.print(pin);
     Serial.print(F(" S="));
     Serial.print(requested_status);
     Serial.print(F(" V="));
