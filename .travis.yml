@@ -29,28 +29,34 @@ jobs:
     - name: "All the features enabled"
       script: 
        - arduino --install-library "DS3232RTC,Time"
-       - cp $PWD/$TEMPLATE $PWD/$SKETCH
        - sed -i s/OFF/ON/g $PWD/$SKETCH
        - eval $RUN
     - name: "SensorBattery"
       script: 
-       - cp $PWD/$TEMPLATE $PWD/$SKETCH
        - sed -i 's/\/\/SensorBattery battery(node);/SensorBattery battery(node);/g' $PWD/$SKETCH
        - sed -i 's/\/\/#define USE_BATTERY/#define USE_BATTERY/g' $PWD/$SKETCH
        - eval $RUN 
+    - name: "SensorSignal"
+      script: 
+       - sed -i 's/\/\/SensorSignal signal(node);/SensorSignal signal(node);/g' $PWD/$SKETCH
+       - sed -i 's/\/\/#define USE_SIGNAL/#define USE_SIGNAL/g' $PWD/$SKETCH
+       - eval $RUN     
+    - name: "SensorSHT21"
+      script: 
+       - arduino --install-library "Sodaq_SHT2x"
+       - sed -i 's/\/\/SensorSHT21 sht21(node);/SensorSHT21 sht21(node);/g' $PWD/$SKETCH
+       - sed -i 's/\/\/#define USE_SHT21/#define USE_SHT21/g' $PWD/$SKETCH
+       - eval $RUN       
 notifications:
   email:
     on_success: change
     on_failure: change
 env:
-  matrix:
-    - CONFIGURATION_SENSOR=1
-    - CONFIGURATION_SENSOR=0
   global:
     - DEPS=/home/travis/.deps
     - ARDUINO_VERSION=1.8.5
     - MYSENSORS_VERSION=2.2.0
     - SKETCH=NodeManager.ino
     - TEMPLATE=template.txt
-    - DEBUG=0
+    - CONFIGURATION_SENSOR=1
     - RUN="if [ $CONFIGURATION_SENSOR == 1 ]; then sed -i 's/\/\/SensorConfiguration configuration(node);/SensorConfiguration configuration(node);/g' $PWD/$SKETCH && sed -i 's/\/\/#define USE_CONFIGURATION/#define USE_CONFIGURATION/g' $PWD/$SKETCH && echo 'Enabled SensorConfiguration' ; fi ; arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH"
