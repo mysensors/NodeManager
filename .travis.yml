@@ -17,7 +17,7 @@ install:
   - ls -alh /usr/local/share/arduino/libraries/MySensors
   #ln -s $PWD/libraries/MySensors /usr/local/share/arduino/libraries/MySensors
 script:
-  - arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/NodeManager.ino
+  - arduino --verify --board arduino:avr:mini:cpu=atmega328 --verbose-build $PWD/NodeManager.ino
 notifications:
   email:
     on_success: change
