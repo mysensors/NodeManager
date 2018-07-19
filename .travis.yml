@@ -1,24 +1,34 @@
 language: c
 cache:
     directories:
+    # prepare the cache for storing dependencies
      - /home/travis/.deps
 before_install:
+  # setup X environment
   - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16"
   - sleep 3
   - export DISPLAY=:1.0
+  # download and cache the arduino IDE if not already available
+  - ls -alh $DEPS
   - if [ -d $DEPS/arduino-$ARDUINO_VERSION ]; then echo "Found Arduino IDE"; else wget https://downloads.arduino.cc/arduino-$ARDUINO_VERSION-linux64.tar.xz && tar xf arduino-$ARDUINO_VERSION-linux64.tar.xz && mv arduino-$ARDUINO_VERSION $DEPS ;fi
+  # download and cache the MySensors library if not already available
   - if [ -d $DEPS/MySensors-$MYSENSORS_VERSION ]; then echo "Found MySensors Library"; else wget https://github.com/mysensors/MySensors/archive/$MYSENSORS_VERSION.tar.gz && tar xf $MYSENSORS_VERSION.tar.gz && mv MySensors-2.2.0 $DEPS ;fi
 install:
+  # install the Arduino IDE
   - sudo mv $DEPS/arduino-$ARDUINO_VERSION /usr/local/share/arduino
   - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
+  # install the required arduino libraries
+  - arduino --install-library "$ARDUINO_LIBRARIES"
+  # install the MySensors Library
   - sudo mv $DEPS/MySensors-$MYSENSORS_VERSION /usr/local/share/arduino/libraries
-  - arduino --install-library "DS3232RTC,Time"
-  - cp $PWD/NodeManager.ino $PWD/template.txt
+  # save the main sketch as a template
+  - cp $PWD/$SKETCH $PWD/$TEMPLATE
 script:
-  - arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/NodeManager.ino
-  - cat $PWD/template.txt > $PWD/NodeManager.ino
-  - sed -i s/OFF/ON/g $PWD/NodeManager.ino 
-  - arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/NodeManager.ino
+  # compile the sketch
+  - arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH
+  # compile with all the features enabled
+  - sed -e s/OFF/ON/g $PWD/$TEMPLATE > $PWD/$SKETCH
+  - arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH
 notifications:
   email:
     on_success: change
@@ -27,4 +37,7 @@ env:
   global:
     - DEPS=/home/travis/.deps
     - ARDUINO_VERSION=1.8.5
+    - ARDUINO_LIBRARIES="DS3232RTC,Time"
     - MYSENSORS_VERSION=2.2.0
+    - SKETCH=NodeManager.ino
+    - TEMPLATE=template.txt
