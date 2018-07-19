@@ -33,19 +33,19 @@ jobs:
        - eval $RUN
     - name: "SensorBattery"
       script: 
-       - sed -i 's/\/\/SensorBattery battery(node);/SensorBattery battery(node);/g' $PWD/$SKETCH
-       - sed -i 's/\/\/#define USE_BATTERY/#define USE_BATTERY/g' $PWD/$SKETCH
-       - eval $RUN 
+       - sed -i 's/\/\/(SensorBattery.+)/\1/' $PWD/$SKETCH
+       - sed -i 's/\/\/(#define USE_BATTERY.+)/\1/' $PWD/$SKETCH
+       - eval $RUN
     - name: "SensorSignal"
       script: 
-       - sed -i 's/\/\/SensorSignal signal(node);/SensorSignal signal(node);/g' $PWD/$SKETCH
-       - sed -i 's/\/\/#define USE_SIGNAL/#define USE_SIGNAL/g' $PWD/$SKETCH
-       - eval $RUN     
+       - sed -i 's/\/\/(SensorSignal.+)/\1/' $PWD/$SKETCH
+       - sed -i 's/\/\/(#define USE_SIGNAL.+)/\1/' $PWD/$SKETCH
+       - eval $RUN
     - name: "SensorSHT21"
       script: 
        - arduino --install-library "Sodaq_SHT2x"
-       - sed -i 's/\/\/SensorSHT21 sht21(node);/SensorSHT21 sht21(node);/g' $PWD/$SKETCH
-       - sed -i 's/\/\/#define USE_SHT21/#define USE_SHT21/g' $PWD/$SKETCH
+       - sed -i 's/\/\/(SensorSHT21.+)/\1/' $PWD/$SKETCH
+       - sed -i 's/\/\/(#define USE_SHT21.+)/\1/' $PWD/$SKETCH
        - eval $RUN       
 notifications:
   email:
