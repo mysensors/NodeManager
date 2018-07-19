@@ -1,4 +1,4 @@
-# NodeManager
+# NodeManager [![Build Status](https://travis-ci.org/mysensors/NodeManager.svg?branch=development)](https://travis-ci.org/mysensors/NodeManager)
 
 NodeManager is intended to take care on your behalf of all those common tasks that a MySensors node has to accomplish, speeding up the development cycle of your projects. 
 Consider it as a sort of frontend for your MySensors projects. When you need to add a sensor (which requires just uncommeting a single line),
@@ -69,7 +69,7 @@ SensorMQ                 | 1     | USE_MQ             | MQ sensor, return ppm of
 SensorMHZ19              | 1     | USE_MHZ19          | MH-Z19 CO2 sensor via UART (SoftwareSerial, default on pins 6(Rx) and 7(Tx)                       | -
 SensorAM2320             | 2     | USE_AM2320         | AM2320 sensors, return temperature/humidity based on the attached AM2320 sensor                   | https://github.com/thakshak/AM2320
 SensorTSL2561            | 1     | USE_TSL2561        | TSL2561 sensor, return light in lux                                                               | https://github.com/adafruit/TSL2561-Arduino-Library
-SensorPT100              | 1     | USE_PT100          | DFRobot Driver high temperature sensor, return the temperature from the attached PT100 sensor     | -
+SensorPT100              | 1     | USE_PT100          | DFRobot Driver high temperature sensor, return the temperature from the attached PT100 sensor     | https://github.com/nxcosa/HighTemperatureSensor
 SensorDimmer             | 1     | USE_DIMMER         | Generic dimmer sensor used to drive a pwm output                                                  | -
 SensorRainGauge          | 1     | USE_PULSE_METER    | Rain gauge sensor                                                                                 | -
 SensorPowerMeter         | 1     | USE_PULSE_METER    | Power meter pulse sensor                                                                          | -
@@ -1193,8 +1193,11 @@ Before applying any change, ensure you have the latest development version avail
 Create a branch for the fix/feature you want to work on and apply changes to the code:
 * Create and switch to a new branch (give it a significant name, e.g. fix/enum-sensors): `git checkout -b <yourbranch>`
 * Do any required change to the code
+* If adding a new sensor, add your code just below the last sensor in all the files so to keep the list in order
+* If adding a new sensor, add an additional job in the Travis CI configuration file `.travis.yml`
+* If adding a new function to a sensor, ensure to make it accessible through SensorConfiguration (if applicable) and add it in the README.md file as well
 * Include all the files changed for your commit: `git add .`
-* Ensure both the main sketch and the config.h file do not present any change
+* Ensure the main sketch does not present any change (e.g. keep default values before committing)
 * Commit the changes: `git  commit -m"Use enum instead of define for defining each sensor #121"`
 * Push the branch with the changes to your repository: `git push origin <yourbranch>`
 * Visit `https://github.com/<username>/NodeManager/branches` and click the "New pull request" button just aside your newly created branch

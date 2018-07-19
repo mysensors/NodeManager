@@ -3181,7 +3181,7 @@ void SensorPlantowerPMS::onLoop(Child* child) {
   }
   // Read the ppm values
   if (!_valuesRead || _valuesReadError) {
-    _valuesReadError = !_pms->read(_data, 1000);
+    _valuesReadError = !_pms->readUntil(_data, 1000);
     if (_valuesReadError) {
       Serial.println(F("ERR PMS read"));
       return;
@@ -4348,10 +4348,6 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         case 1: sensor->setPin(request.getValueInt()); break;
         case 5: sensor->setSamples(request.getValueInt()); break;
         case 6: sensor->setSamplesInterval(request.getValueInt()); break;
-#if FEATURE_CONDITIONAL_REPORT == ON
-        case 7: sensor->setTrackLastValue(request.getValueInt()); break;
-        case 9: sensor->setForceUpdateMinutes(request.getValueInt()); break;
-#endif
 #if FEATURE_POWER_MANAGER == ON
         case 13: sensor->powerOn(); break;
         case 14: sensor->powerOff(); break;
@@ -4593,8 +4589,8 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       if (strcmp(sensor->getName(),"FPM10A") == 0) {
         SensorFPM10A* custom_sensor = (SensorFPM10A*)sensor;
         switch(function) {
-          case 101: SensorFPM10A->setMinConfidence(request.getValueInt()); break;
-          case 102: SensorFPM10A->setWaitFingerForSeconds(request.getValueInt()); break;
+          case 101: custom_sensor->setMinConfidence(request.getValueInt()); break;
+          case 102: custom_sensor->setWaitFingerForSeconds(request.getValueInt()); break;
           default: return;
         }
       }
