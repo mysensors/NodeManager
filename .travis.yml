@@ -23,29 +23,29 @@ install:
 jobs:
   include:
     - stage: build
-      name: "Vanilla Sketch"
+      name: "Base Sketch"
       script: 
        - eval $RUN
-    - name: "All the features enabled"
+    - name: "All features ON"
       script: 
        - arduino --install-library "DS3232RTC,Time"
-       - sed -i s/OFF/ON/g $PWD/$SKETCH
+       - sed -r -i s/OFF/ON/g $PWD/$SKETCH
        - eval $RUN
     - name: "SensorBattery"
       script: 
-       - sed -i 's/\/\/(SensorBattery.+)/\1/' $PWD/$SKETCH
-       - sed -i 's/\/\/(#define USE_BATTERY.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(SensorBattery.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_BATTERY.+)/\1/' $PWD/$SKETCH
        - eval $RUN
     - name: "SensorSignal"
       script: 
-       - sed -i 's/\/\/(SensorSignal.+)/\1/' $PWD/$SKETCH
-       - sed -i 's/\/\/(#define USE_SIGNAL.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(SensorSignal.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_SIGNAL.+)/\1/' $PWD/$SKETCH
        - eval $RUN
     - name: "SensorSHT21"
       script: 
        - arduino --install-library "Sodaq_SHT2x"
-       - sed -i 's/\/\/(SensorSHT21.+)/\1/' $PWD/$SKETCH
-       - sed -i 's/\/\/(#define USE_SHT21.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(SensorSHT21.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_SHT21.+)/\1/' $PWD/$SKETCH
        - eval $RUN       
 notifications:
   email:
