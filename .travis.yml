@@ -38,7 +38,7 @@ jobs:
        - cp $PWD/$TEMPLATE > $PWD/$SKETCH
        - sed -i s/\/\/SensorBattery battery(node);/SensorBattery battery(node);/g $PWD/$SKETCH
        - sed -i s/\/\/#define USE_BATTERY/#define USE_BATTERY/g $PWD/$SKETCH
-       - eval $RUN
+       - eval $RUN 
 notifications:
   email:
     on_success: change
