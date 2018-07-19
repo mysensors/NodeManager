@@ -34,18 +34,18 @@ jobs:
     - name: "SensorBattery"
       script: 
        - sed -r -i 's/\/\/(SensorBattery.+)/\1/' $PWD/$SKETCH
-       - sed -r -i 's/\/\/(#define USE_BATTERY.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_BATTERY)/\1/' $PWD/$SKETCH
        - eval $RUN
     - name: "SensorSignal"
       script: 
        - sed -r -i 's/\/\/(SensorSignal.+)/\1/' $PWD/$SKETCH
-       - sed -r -i 's/\/\/(#define USE_SIGNAL.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_SIGNAL)/\1/' $PWD/$SKETCH
        - eval $RUN
     - name: "SensorSHT21"
       script: 
        - arduino --install-library "Sodaq_SHT2x"
        - sed -r -i 's/\/\/(SensorSHT21.+)/\1/' $PWD/$SKETCH
-       - sed -r -i 's/\/\/(#define USE_SHT21.+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_SHT21)/\1/' $PWD/$SKETCH
        - cat $PWD/$SKETCH
        - eval $RUN       
 notifications:
