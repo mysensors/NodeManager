@@ -9,18 +9,17 @@ before_install:
   - sleep 3
   - export DISPLAY=:1.0
   # download and cache the arduino IDE if not already available
-  - ls -alh $DEPS
   - if [ -d $DEPS/arduino-$ARDUINO_VERSION ]; then echo "Found Arduino IDE"; else wget https://downloads.arduino.cc/arduino-$ARDUINO_VERSION-linux64.tar.xz && tar xf arduino-$ARDUINO_VERSION-linux64.tar.xz && mv arduino-$ARDUINO_VERSION $DEPS ;fi
   # download and cache the MySensors library if not already available
   - if [ -d $DEPS/MySensors-$MYSENSORS_VERSION ]; then echo "Found MySensors Library"; else wget https://github.com/mysensors/MySensors/archive/$MYSENSORS_VERSION.tar.gz && tar xf $MYSENSORS_VERSION.tar.gz && mv MySensors-2.2.0 $DEPS ;fi
 install:
   # install the Arduino IDE
-  - sudo mv $DEPS/arduino-$ARDUINO_VERSION /usr/local/share/arduino
+  - sudo cp -r $DEPS/arduino-$ARDUINO_VERSION /usr/local/share/arduino
   - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
   # install the required arduino libraries
   - arduino --install-library "$ARDUINO_LIBRARIES"
   # install the MySensors Library
-  - sudo mv $DEPS/MySensors-$MYSENSORS_VERSION /usr/local/share/arduino/libraries
+  - sudo cp -r $DEPS/MySensors-$MYSENSORS_VERSION /usr/local/share/arduino/libraries
   # save the main sketch as a template
   - cp $PWD/$SKETCH $PWD/$TEMPLATE
 script:
