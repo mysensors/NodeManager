@@ -10,7 +10,6 @@ before_install:
   - tar xf arduino-1.8.5-linux64.tar.xz
   - sudo mv arduino-1.8.5 /usr/local/share/arduino
   - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
-  - mkdir /home/travis/.deps
   - cp arduino-1.8.5-linux64.tar.xz /home/travis/.deps
 install:
   - wget https://github.com/mysensors/MySensors/archive/2.2.0.tar.gz
