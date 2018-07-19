@@ -52,4 +52,4 @@ env:
     - SKETCH=NodeManager.ino
     - TEMPLATE=template.txt
     - DEBUG=0
-    - RUN="if [ $CONFIGURATION_SENSOR == 1 ]; then sed -i 's/\/\/SensorConfiguration configuration(node);/SensorConfiguration configuration(node);/g' $PWD/$SKETCH && sed -i 's/\/\/#define USE_CONFIGURATION/#define USE_CONFIGURATION/g' $PWD/$SKETCH ; fi ; arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH"
+    - RUN="if [ $CONFIGURATION_SENSOR == 1 ]; then sed -i 's/\/\/SensorConfiguration configuration(node);/SensorConfiguration configuration(node);/g' $PWD/$SKETCH && sed -i 's/\/\/#define USE_CONFIGURATION/#define USE_CONFIGURATION/g' $PWD/$SKETCH && echo 'Enabled SensorConfiguration' ; fi ; arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH"
