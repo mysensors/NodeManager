@@ -1,4 +1,4 @@
-# NodeManager
+# NodeManager [![Build Status](https://travis-ci.org/mysensors/NodeManager.svg?branch=development)](https://travis-ci.org/mysensors/NodeManager)
 
 NodeManager is intended to take care on your behalf of all those common tasks that a MySensors node has to accomplish, speeding up the development cycle of your projects. 
 Consider it as a sort of frontend for your MySensors projects. When you need to add a sensor (which requires just uncommeting a single line),
