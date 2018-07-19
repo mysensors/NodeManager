@@ -36,10 +36,21 @@ install:
 jobs:
   include:
     - stage: build
-      name: "Base Sketch"
+      name: "Empty Sketch (NRF24 radio)"
       script: 
        - eval $RUN
-    - name: "All features ON"
+    - name: "Empty Sketch (RFM69 radio)"
+      script: 
+       - sed -r -i 's/(#define MY_RADIO_NRF24)/\/\/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define MY_RADIO_RFM69)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define MY_IS_RFM69HW)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define MY_RFM69_NEW_DRIVER)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "Gateway Serial"
+      script: 
+       - sed -r -i 's/\/\/(#define MY_GATEWAY_SERIAL)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "Features"
       script: 
        - arduino --install-library "DS3232RTC,Time"
        - sed -r -i s/OFF/ON/g $PWD/$SKETCH
