@@ -21,7 +21,7 @@ install:
   # install the MySensors Library
   - sudo cp -r $DEPS/MySensors-$MYSENSORS_VERSION /usr/local/share/arduino/libraries
   # save the main sketch as a template
-  - cp $PWD/$SKETCH $PWD/$TEMPLATE
+  - cp $PWD/$SKETCH $PWD/$TEMPLATE 
 script:
   # compile the sketch
   - arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH
