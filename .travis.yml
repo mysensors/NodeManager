@@ -3,22 +3,21 @@ before_install:
   - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16"
   - sleep 3
   - export DISPLAY=:1.0
-  #- wget http://downloads.arduino.cc/arduino-1.6.5-linux64.tar.xz
   - wget https://downloads.arduino.cc/arduino-1.8.5-linux64.tar.xz
   - tar xf arduino-1.8.5-linux64.tar.xz
   - sudo mv arduino-1.8.5 /usr/local/share/arduino
   - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
-  #- git clone https://github.com/mysensors/MySensors
 install:
   - wget https://github.com/mysensors/MySensors/archive/2.2.0.tar.gz
   - tar zxfv 2.2.0.tar.gz
-  #- ln -s MySensors-2.2.0 /usr/local/share/arduino/libraries/MySensors-2.2.0
   - sudo mv MySensors-2.2.0 /usr/local/share/arduino/libraries/MySensors
-  - ls -alh /usr/local/share/arduino/libraries/
-  - ls -alh /usr/local/share/arduino/libraries/MySensors
-  #ln -s $PWD/libraries/MySensors /usr/local/share/arduino/libraries/MySensors
+  - cp $PWD/NodeManager.ino $PWD/template.txt
 script:
-  - arduino --verify --board arduino:avr:mini:cpu=atmega328 --verbose-build $PWD/NodeManager.ino
+  - arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/NodeManager.ino
+  - cat $PWD/template.txt > $PWD/NodeManager.ino
+  - sed -i s/OFF/ON/g $PWD/NodeManager.ino
+  - cat $PWD/NodeManager.ino
+  - arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/NodeManager.ino
 notifications:
   email:
     on_success: change
