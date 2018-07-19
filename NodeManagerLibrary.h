@@ -589,6 +589,8 @@ class Sensor {
     // [14] manually turn the power off
     void powerOff();
 #endif
+    // [21] enable/disable reporting to the gateway (default: true)
+    void setReporting(bool value);
     // [17] After how many minutes the sensor will report back its measure (default: 10 minutes)
     void setReportIntervalSeconds(int value);
     // [16] After how many minutes the sensor will report back its measure (default: 10 minutes)
@@ -649,6 +651,7 @@ class Sensor {
     int _pin = -1;
     int _samples = 1;
     int _samples_interval = 0;
+    bool _reporting = true;
 #if FEATURE_INTERRUPTS == ON
     int _interrupt_pin = -1;
 #endif

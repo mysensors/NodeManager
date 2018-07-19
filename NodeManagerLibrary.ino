@@ -595,6 +595,11 @@ int Sensor::getInterruptPin() {
 }
 #endif
 
+// enable/disable reporting to the gateway
+void Sensor::setReporting(bool value) {
+  _reporting = value;
+}
+
 // After how many seconds the sensor will report back its measure
 void Sensor::setReportIntervalSeconds(int value) {
   _report_timer->start(value,SECONDS);
@@ -713,7 +718,7 @@ void Sensor::loop(MyMessage* message) {
       if (_samples_interval > 0) _node->sleepOrWait(_samples_interval);
     }
     // send the value back to the controller
-    child->sendValue(message != nullptr);
+    if (_reporting) child->sendValue(message != nullptr);
     // reset the counters
     child->reset();
   }
@@ -4356,6 +4361,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         case 17: sensor->setReportIntervalSeconds(request.getValueInt()); break;
         case 19: sensor->setReportIntervalHours(request.getValueInt()); break;
         case 20: sensor->setReportIntervalDays(request.getValueInt()); break;
+        case 21: sensor->setReporting(request.getValueInt()); break;
         default: return;
       }
     } else {
