@@ -16,8 +16,6 @@ install:
   # install the Arduino IDE
   - sudo cp -r $DEPS/arduino-$ARDUINO_VERSION /usr/local/share/arduino
   - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
-  # install the required arduino libraries
-  - arduino --install-library "$ARDUINO_LIBRARIES"
   # install the MySensors Library
   - sudo cp -r $DEPS/MySensors-$MYSENSORS_VERSION /usr/local/share/arduino/libraries
   # save the main sketch as a template
@@ -30,6 +28,7 @@ jobs:
        - eval $RUN
     - name: "All the features enabled"
       script: 
+       - arduino --install-library "DS3232RTC,Time"
        - cp $PWD/$TEMPLATE $PWD/$SKETCH
        - sed -i s/OFF/ON/g $PWD/$SKETCH
        - eval $RUN
@@ -47,10 +46,10 @@ env:
   global:
     - DEPS=/home/travis/.deps
     - ARDUINO_VERSION=1.8.5
-    - ARDUINO_LIBRARIES="DS3232RTC,Time"
     - MYSENSORS_VERSION=2.2.0
     - SKETCH=NodeManager.ino
     - TEMPLATE=template.txt
     - DEBUG=0
     - CONFIGURATION_SENSOR=1
+    - CONFIGURATION_SENSOR=0
     - RUN="if [ $CONFIGURATION_SENSOR == 1 ]; then sed -i 's/\/\/SensorConfiguration configuration(node);/SensorConfiguration configuration(node);/g' $PWD/$SKETCH && sed -i 's/\/\/#define USE_CONFIGURATION/#define USE_CONFIGURATION/g' $PWD/$SKETCH ; fi ; arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH"
