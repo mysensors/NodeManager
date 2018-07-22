@@ -131,6 +131,19 @@ Default configuration settings
 #define FEATURE_HOOKING OFF
 #endif
 
+// disable sleep and debug when running as a serial gateway
+#ifdef MY_GATEWAY_SERIAL
+#define FEATURE_SLEEP OFF
+#define FEATURE_DEBUG OFF
+#endif
+
+// define debug output macro
+#if FEATURE_DEBUG == ON
+#define debug(x,...)		hwDebugPrint(x, ##__VA_ARGS__)
+#else
+#define debug(x,...)
+#endif
+
 /***********************************
 Libraries
 */
@@ -261,10 +274,6 @@ Libraries
 #endif
 
 // include third party libraries for enabled features
-#ifdef MY_GATEWAY_SERIAL
-#define FEATURE_SLEEP OFF
-#define FEATURE_DEBUG OFF
-#endif
 #if FEATURE_TIME == ON
 #include <TimeLib.h>
 #endif
@@ -505,8 +514,8 @@ protected:
 class ChildInt: public Child {
 public:
 	ChildInt(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
-	void setValueInt(int value);
-	int getValueInt();
+	void setValue(int value);
+	int getValue();
 	void sendValue(bool force);
 	void print(Print& device);
 	void reset();
@@ -521,8 +530,8 @@ private:
 class ChildFloat: public Child {
 public:
 	ChildFloat(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
-	void setValueFloat(float value);
-	float getValueFloat();
+	void setValue(float value);
+	float getValue();
 	void sendValue(bool force);
 	void print(Print& device);
 	void reset();
@@ -537,8 +546,8 @@ private:
 class ChildDouble: public Child {
 public:
 	ChildDouble(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
-	void setValueDouble(double value);
-	double getValueDouble();
+	void setValue(double value);
+	double getValue();
 	void sendValue(bool force);
 	void print(Print& device);
 	void reset();
@@ -553,8 +562,8 @@ private:
 class ChildString: public Child {
 public:
 	ChildString(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
-	void setValueString(const char* value);
-	const char* getValueString();
+	void setValue(const char* value);
+	const char* getValue();
 	void sendValue(bool force);
 	void print(Print& device);
 	void reset();
