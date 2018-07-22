@@ -1,0 +1,368 @@
+language: c
+cache:
+    directories:
+    # prepare the cache for storing dependencies
+     - /home/travis/.deps
+notifications:
+  email:
+    on_success: change
+    on_failure: change
+env:
+  global:
+    - DEPS=/home/travis/.deps
+    - ARDUINO_VERSION=1.8.5
+    - MYSENSORS_VERSION=2.2.0
+    - SKETCH=NodeManager.ino
+    - TEMPLATE=template.txt
+    - CONFIGURATION_SENSOR=1
+    - RUN="if [ $CONFIGURATION_SENSOR == 1 ]; then sed -i 's/\/\/SensorConfiguration configuration(node);/SensorConfiguration configuration(node);/g' $PWD/$SKETCH && sed -i 's/\/\/#define USE_CONFIGURATION/#define USE_CONFIGURATION/g' $PWD/$SKETCH && echo 'Enabled SensorConfiguration' ; fi ; cat $PWD/$SKETCH; arduino --verify --board arduino:avr:mini:cpu=atmega328 $PWD/$SKETCH"
+before_install:
+  # setup X environment
+  - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16"
+  - sleep 3
+  - export DISPLAY=:1.0
+  # download and cache the arduino IDE if not already available
+  - if [ -d $DEPS/arduino-$ARDUINO_VERSION ]; then echo "Found Arduino IDE"; else wget https://downloads.arduino.cc/arduino-$ARDUINO_VERSION-linux64.tar.xz && tar xf arduino-$ARDUINO_VERSION-linux64.tar.xz && mv arduino-$ARDUINO_VERSION $DEPS ;fi
+  # download and cache the MySensors library if not already available
+  - if [ -d $DEPS/MySensors-$MYSENSORS_VERSION ]; then echo "Found MySensors Library"; else wget https://github.com/mysensors/MySensors/archive/$MYSENSORS_VERSION.tar.gz && tar xf $MYSENSORS_VERSION.tar.gz && mv MySensors-2.2.0 $DEPS ;fi
+install:
+  # install the Arduino IDE
+  - sudo cp -r $DEPS/arduino-$ARDUINO_VERSION /usr/local/share/arduino
+  - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
+  # install the MySensors Library
+  - sudo cp -r $DEPS/MySensors-$MYSENSORS_VERSION /usr/local/share/arduino/libraries
+  # save the main sketch as a template
+  - cp $PWD/$SKETCH $PWD/$TEMPLATE 
+jobs:
+  include:
+    - stage: build
+      name: "Empty Sketch (NRF24 radio)"
+      script: 
+       - eval $RUN
+    - name: "Empty Sketch (RFM69 radio)"
+      script: 
+       - sed -r -i 's/(#define MY_RADIO_NRF24)/\/\/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define MY_RADIO_RFM69)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define MY_IS_RFM69HW)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define MY_RFM69_NEW_DRIVER)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "Gateway Serial"
+      script: 
+       - sed -r -i 's/\/\/(#define MY_GATEWAY_SERIAL)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "Features"
+      script: 
+       - arduino --install-library "DS3232RTC,Time"
+       - sed -r -i s/OFF/ON/g $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorBattery"
+      script: 
+       - sed -r -i 's/\/\/(SensorBattery .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_BATTERY)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorSignal"
+      script: 
+       - sed -r -i 's/\/\/(SensorSignal .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_SIGNAL)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorAnalogInput"
+      script: 
+       - sed -r -i 's/\/\/(SensorAnalogInput .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_ANALOG_INPUT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorLDR"
+      script: 
+       - sed -r -i 's/\/\/(SensorLDR .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_ANALOG_INPUT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorRain"
+      script: 
+       - sed -r -i 's/\/\/(SensorRain .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_ANALOG_INPUT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorSoilMoisture"
+      script: 
+       - sed -r -i 's/\/\/(SensorSoilMoisture .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_ANALOG_INPUT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorThermistor"
+      script: 
+       - sed -r -i 's/\/\/(SensorThermistor .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_THERMISTOR)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorML8511"
+      script: 
+       - sed -r -i 's/\/\/(SensorML8511 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_ML8511)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorACS712"
+      script: 
+       - sed -r -i 's/\/\/(SensorACS712 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_ACS712)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorDigitalInput"
+      script: 
+       - sed -r -i 's/\/\/(SensorDigitalInput .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_DIGITAL_INPUT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorDigitalOutput"
+      script: 
+       - sed -r -i 's/\/\/(SensorDigitalOutput .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_DIGITAL_OUTPUT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorRelay"
+      script: 
+       - sed -r -i 's/\/\/(SensorRelay .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_DIGITAL_OUTPUT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorLatchingRelay1Pin"
+      script: 
+       - sed -r -i 's/\/\/(SensorLatchingRelay1Pin .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_DIGITAL_OUTPUT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorLatchingRelay2Pins"
+      script: 
+       - sed -r -i 's/\/\/(SensorLatchingRelay2Pins .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_DIGITAL_OUTPUT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorDHT11"
+      script: 
+       - wget https://github.com/mysensors/MySensorsArduinoExamples/archive/master.zip && unzip master.zip
+       - sudo cp -r MySensorsArduinoExamples-master/libraries/DHT /usr/local/share/arduino/libraries
+       - sed -r -i 's/\/\/(SensorDHT11 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_DHT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorDHT22"
+      script: 
+       - wget https://github.com/mysensors/MySensorsArduinoExamples/archive/master.zip && unzip master.zip
+       - sudo cp -r MySensorsArduinoExamples-master/libraries/DHT /usr/local/share/arduino/libraries
+       - sed -r -i 's/\/\/(SensorDHT22 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_DHT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorSHT21"
+      script: 
+       - arduino --install-library "Sodaq_SHT2x"
+       - sed -r -i 's/\/\/(SensorSHT21 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_SHT21)/\1/' $PWD/$SKETCH
+       - eval $RUN   
+    - name: "SensorHTU21D"
+      script: 
+       - arduino --install-library "Sodaq_SHT2x"
+       - sed -r -i 's/\/\/(SensorHTU21D .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_SHT21)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorInterrupt"
+      script: 
+       - sed -r -i 's/\/\/(SensorInterrupt .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_INTERRUPT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorDoor"
+      script: 
+       - sed -r -i 's/\/\/(SensorDoor .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_INTERRUPT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorMotion"
+      script: 
+       - sed -r -i 's/\/\/(SensorMotion .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_INTERRUPT)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorDs18b20"
+      script: 
+       - arduino --install-library "OneWire"
+       - wget https://github.com/milesburton/Arduino-Temperature-Control-Library/archive/master.zip && unzip master.zip
+       - sudo cp -r Arduino-Temperature-Control-Library-master /usr/local/share/arduino/libraries
+       - sed -r -i 's/\/\/(SensorDs18b20 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_DS18B20)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorBH1750"
+      script: 
+       - wget https://github.com/claws/BH1750/archive/master.zip && unzip master.zip
+       - sudo cp -r BH1750-master /usr/local/share/arduino/libraries
+       - sed -r -i 's/\/\/(SensorBH1750 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_BH1750)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorMLX90614"
+      script: 
+       - arduino --install-library "Adafruit MLX90614 Library"
+       - sed -r -i 's/\/\/(SensorMLX90614 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_MLX90614)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorBME280"
+      script: 
+       - arduino --install-library "Adafruit Unified Sensor,Adafruit BME280 Library"
+       - sed -r -i 's/\/\/(SensorBME280 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_BME280)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorBMP085"
+      script: 
+       - arduino --install-library "Adafruit BMP085 Library"
+       - sed -r -i 's/\/\/(SensorBMP085 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_BMP085_180)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorBMP180"
+      script: 
+       - arduino --install-library "Adafruit BMP085 Library"
+       - sed -r -i 's/\/\/(SensorBMP180 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_BMP085_180)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorBMP280"
+      script: 
+       - arduino --install-library "Adafruit Unified Sensor,Adafruit BMP280 Library"
+       - sed -r -i 's/\/\/(SensorBMP280 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_BMP280)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorSonoff"
+      script: 
+       - arduino --install-library "Bounce2"
+       - sed -r -i 's/\/\/(SensorSonoff .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_SONOFF)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorHCSR04"
+      script: 
+       - wget https://github.com/mysensors/MySensorsArduinoExamples/archive/master.zip && unzip master.zip
+       - sudo cp -r MySensorsArduinoExamples-master/libraries/NewPing /usr/local/share/arduino/libraries
+       - sed -r -i 's/\/\/(SensorHCSR04 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_HCSR04)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorMCP9808"
+      script: 
+       - arduino --install-library "Adafruit MCP9808 Library"
+       - sed -r -i 's/\/\/(SensorMCP9808 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_MCP9808)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorMQ"
+      script: 
+       - sed -r -i 's/\/\/(SensorMQ .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_MQ)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorMHZ19"
+      script: 
+       - sed -r -i 's/\/\/(SensorMHZ19 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_MHZ19)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorAM2320"
+      script: 
+       - wget https://github.com/thakshak/AM2320/archive/master.zip && unzip master.zip
+       - sudo cp -r AM2320-master/AM2320 /usr/local/share/arduino/libraries
+       - sed -r -i 's/\/\/(SensorAM2320 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_AM2320)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorTSL2561"
+      script: 
+       - wget https://github.com/adafruit/TSL2561-Arduino-Library/archive/master.zip && unzip master.zip
+       - sudo cp -r TSL2561-Arduino-Library-master /usr/local/share/arduino/libraries
+       - sed -r -i 's/\/\/(SensorTSL2561 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_TSL2561)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorPT100"
+      script: 
+       - wget https://raw.githubusercontent.com/nxcosa/HighTemperatureSensor/master/libraries.zip && unzip libraries.zip
+       - sudo cp -r libraries/DFRobotHighTemperatureSensor /usr/local/share/arduino/libraries
+       - sed -r -i 's/\/\/(SensorPT100 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_PT100)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorDimmer"
+      script: 
+       - sed -r -i 's/\/\/(SensorDimmer .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_DIMMER)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorRainGauge"
+      script: 
+       - sed -r -i 's/\/\/(SensorRainGauge .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_PULSE_METER)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorPowerMeter"
+      script: 
+       - sed -r -i 's/\/\/(SensorPowerMeter .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_PULSE_METER)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorWaterMeter"
+      script: 
+       - sed -r -i 's/\/\/(SensorWaterMeter .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_PULSE_METER)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorPlantowerPMS"
+      script: 
+       - arduino --install-library "PMS Library"
+       - sed -r -i 's/\/\/(SensorPlantowerPMS .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_PMS)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorPowerMeter"
+      script: 
+       - sed -r -i 's/\/\/(SensorPowerMeter .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_PULSE_METER)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorVL53L0X"
+      script: 
+       - wget https://github.com/pololu/vl53l0x-arduino/archive/master.zip && unzip master.zip
+       - sudo cp -r vl53l0x-arduino-master /usr/local/share/arduino/libraries
+       - sed -r -i 's/\/\/(SensorVL53L0X .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_VL53L0X)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "DisplaySSD1306"
+      script: 
+       - arduino --install-library "SSD1306Ascii"
+       - sed -r -i 's/\/\/(DisplaySSD1306 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_SSD1306)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorSHT31"
+      script: 
+       - arduino --install-library "Adafruit SHT31 Library"
+       - sed -r -i 's/\/\/(SensorSHT31 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_SHT31)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorSI7021"
+      script: 
+       - wget https://github.com/sparkfun/SparkFun_Si701_Breakout_Arduino_Library/archive/master.zip && unzip master.zip
+       - sudo cp -r SparkFun_Si701_Breakout_Arduino_Library-master/src /usr/local/share/arduino/libraries
+       - sed -r -i 's/\/\/(SensorSI7021 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_SI7021)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorChirp"
+      script: 
+       - arduino --install-library "I2CSoilMoistureSensor"
+       - sed -r -i 's/\/\/(SensorChirp .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_CHIRP)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "DisplayHD44780"
+      script: 
+       - wget https://github.com/cyberang3l/NewLiquidCrystal/archive/master.zip && unzip master.zip
+       - sudo cp -r NewLiquidCrystal-master /usr/local/share/arduino/libraries
+       - sed -r -i 's/\/\/(DisplayHD44780 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_HD44780)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorTTP"
+      script: 
+       - sed -r -i 's/\/\/(SensorTTP .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_TTP)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorServo"
+      script: 
+       - sed -r -i 's/\/\/(SensorServo .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_SERVO)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorAPDS9960"
+      script: 
+       - arduino --install-library "SparkFun APDS9960 RGB and Gesture Sensor"
+       - sed -r -i 's/\/\/(SensorAPDS9960 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_APDS9960)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorNeopixel"
+      script: 
+       - arduino --install-library "Adafruit NeoPixel"
+       - sed -r -i 's/\/\/(SensorNeopixel .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_NEOPIXEL)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorSDS011"
+      script: 
+       - arduino --install-library "SDS011 sensor Library"
+       - sed -r -i 's/\/\/(SensorSDS011 .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_SDS011)/\1/' $PWD/$SKETCH
+       - eval $RUN
+    - name: "SensorFPM10A"
+      script: 
+       - wget https://github.com/adafruit/Adafruit-Fingerprint-Sensor-Library/archive/master.zip && unzip master.zip
+       - sudo cp -r Adafruit-Fingerprint-Sensor-Library-master /usr/local/share/arduino/libraries
+       - sed -r -i 's/\/\/(SensorFPM10A .+)/\1/' $PWD/$SKETCH
+       - sed -r -i 's/\/\/(#define USE_FPM10A)/\1/' $PWD/$SKETCH
+       - eval $RUN

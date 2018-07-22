@@ -595,6 +595,11 @@ int Sensor::getInterruptPin() {
 }
 #endif
 
+// enable/disable reporting to the gateway
+void Sensor::setReporting(bool value) {
+  _reporting = value;
+}
+
 // After how many seconds the sensor will report back its measure
 void Sensor::setReportIntervalSeconds(int value) {
   _report_timer->start(value,SECONDS);
@@ -713,7 +718,7 @@ void Sensor::loop(MyMessage* message) {
       if (_samples_interval > 0) _node->sleepOrWait(_samples_interval);
     }
     // send the value back to the controller
-    child->sendValue(message != nullptr);
+    if (_reporting) child->sendValue(message != nullptr);
     // reset the counters
     child->reset();
   }
@@ -1475,7 +1480,7 @@ void SensorDigitalOutput::_switchOutput(int requested_status) {
   // invert the value to write if needed. E.g. if ON is received, write LOW, if OFF write HIGH
   if (_invert_value_to_write) value = !value;
   // write the value to the pin
-  digitalWrite(_pin, value);
+  digitalWrite(pin, value);
   // if pulse is set wait for the given timeframe before restoring the value to the original value
   if (_pulse_width > 0) {
     _node->sleepOrWait(_pulse_width);
@@ -1486,7 +1491,7 @@ void SensorDigitalOutput::_switchOutput(int requested_status) {
     Serial.print(F(" I="));
     Serial.print(children.get(1)->getChildId());
     Serial.print(F(" P="));
-    Serial.print(_pin);
+    Serial.print(pin);
     Serial.print(F(" S="));
     Serial.print(requested_status);
     Serial.print(F(" V="));
@@ -2435,23 +2440,20 @@ void SensorSonoff::_blink() {
 */
 #ifdef USE_HCSR04
 // contructor
-SensorHCSR04::SensorHCSR04(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
+SensorHCSR04::SensorHCSR04(NodeManager& node_manager, int echo_pin, int trigger_pin, int child_id): Sensor(node_manager) {
   _name = "HCSR04";
-  _trigger_pin = pin;
-  _echo_pin = pin;
+  _echo_pin = echo_pin;
+  _trigger_pin = trigger_pin;
   children.allocateBlocks(1);
   new ChildInt(this,_node->getAvailableChildId(child_id),S_DISTANCE,V_DISTANCE,_name);
 }
 
 // setter/getter
-void SensorHCSR04::setTriggerPin(int value) {
-  _trigger_pin = value;
-}
-void SensorHCSR04::setEchoPin(int value) {
-  _echo_pin = value;
-}
 void SensorHCSR04::setMaxDistance(int value) {
   _max_distance = value;
+}
+void SensorHCSR04::setReportIfInvalid(bool value) {
+  _report_if_invalid = value;
 }
 
 // what to do during setup
@@ -2470,6 +2472,7 @@ void SensorHCSR04::onLoop(Child* child) {
     Serial.print(F(" D="));
     Serial.println(distance);
   #endif
+  if (! _report_if_invalid && distance == 0) return;
   ((ChildInt*)child)->setValueInt(distance);
 }
 
@@ -2525,90 +2528,115 @@ void SensorMCP9808::onReceive(MyMessage* message) {
  * SensorMQ
  */
 #ifdef USE_MQ
-
-float SensorMQ::_default_LPGCurve[3] = {2.3,0.21,-0.47};
-float SensorMQ::_default_COCurve[3] = {2.3,0.72,-0.34};
-float SensorMQ::_default_SmokeCurve[3] = {2.3,0.53,-0.44};
-
 SensorMQ::SensorMQ(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
   _name = "MQ";
-  _LPGCurve = SensorMQ::_default_LPGCurve;
-  _COCurve = SensorMQ::_default_COCurve;
-  _SmokeCurve = SensorMQ::_default_SmokeCurve;
   children.allocateBlocks(1);
   new ChildInt(this,_node->getAvailableChildId(child_id),S_AIR_QUALITY,V_LEVEL,_name);
 }
 
 //setter/getter
-void SensorMQ::setTargetGas(int value) {
-  _target_gas = value;
-}
 void SensorMQ::setRlValue(float value) {
-  _rl_value = value;
+  _rl = value;
 }
 void SensorMQ::setRoValue(float value) {
   _ro = value;
 }
-void SensorMQ::setCleanAirFactor(float value) {
-  _ro_clean_air_factor = value;
+void SensorMQ::setKnownPpm(float value) {
+  _known_ppm = value;
 }
-void SensorMQ::setCalibrationSampleTimes(int value) {
-  _calibration_sample_times = value;
+void SensorMQ::setCalibrationSamples(int value) {
+  _calibration_samples = value;
 }
 void SensorMQ::setCalibrationSampleInterval(int value){
   _calibration_sample_interval = value;
 }
-void SensorMQ::setReadSampleTimes(int value) {
-  _read_sample_times = value;
+void SensorMQ::setSamples(int value) {
+  _samples = value;
 }
-void SensorMQ::setReadSampleInterval(int value) {
-  _read_sample_interval = value;
+void SensorMQ::setSampleInterval(int value) {
+  _sample_interval = value;
 }
-void SensorMQ::setLPGCurve(float *value) {
-  _LPGCurve = value;
+void SensorMQ::setPoint1Ppm(float value) {
+  _point1_ppm = value;
 }
-void SensorMQ::setCOCurve(float *value) {
-  _COCurve = value;
+void SensorMQ::setPoint1Ratio(float value) {
+  _point1_ratio = value;
 }
-void SensorMQ::setSmokeCurve(float *value) {
-  _SmokeCurve = value;
+void SensorMQ::setPoint2Ppm(float value) {
+  _point2_ppm = value;
+}
+void SensorMQ::setPoint2Ratio(float value) {
+  _point2_ratio = value;
+}
+void SensorMQ::setCurveScalingFactor(float value) {
+  _curve_scaling_factor = value;
+}
+void SensorMQ::setCurveExponent(float value) {
+  _curve_exponent = value;
+}
+void SensorMQ::setWarmupMinutes(int value) {
+  _warmup_minutes = value;
 }
 
 // what to do during setup
 void SensorMQ::onSetup() {
   // prepare the pin for input
   pinMode(_pin, INPUT);
-  _ro = _MQCalibration();
+  // The curve function is ppm = scaling_factor*ratio^exponent
+  // since we know two points (ppm1,ratio1) and (ppm2,ratio2) we can calculate scaling_factor and exponent approximating a power regression
+  if (_curve_exponent == 0) _curve_exponent = log(_point2_ppm/_point1_ppm)/log(_point2_ratio/_point1_ratio);
+  if (_curve_scaling_factor == 0) _curve_scaling_factor = exp((log(_point1_ratio)*log(_point2_ppm)-log(_point2_ratio)*log(_point1_ppm))/(_point1_ratio-_point2_ratio));
+  int rs = 0;
+  if (_ro == 0) {
+    // calibrate the sensor (the Ro resistance) if requested
+    #if FEATURE_DEBUG == ON
+      Serial.println(F("..."));
+    #endif
+    // since ppm = scaling_factor*(rs/ro)^exponent, we need Rs to calculate Ro for the given ppm
+    rs = _getRsValue(_calibration_samples,_calibration_sample_interval);
+    _ro = (long)(rs * exp( log(_curve_scaling_factor/_known_ppm) / _curve_exponent ));
+  }
+
+  #if FEATURE_DEBUG == ON
+    Serial.print(_name);
+    Serial.print(F(" Rs="));
+    Serial.print(rs);
+    Serial.print(F(" Ro="));
+    Serial.print(_ro);
+    Serial.print(F(" Rl="));
+    Serial.print(_rl);
+    Serial.print(F(" F="));
+    Serial.print(_curve_scaling_factor);
+    Serial.print(F("x^"));
+    Serial.println(_curve_exponent);
+  #endif
 }
 
 // what to do during loop
 void SensorMQ::onLoop(Child* child) {
-  // calculate rs/ro
-  float mq = _MQRead()/_ro;
-  // calculate the ppm
-  float lpg = _MQGetGasPercentage(mq,_gas_lpg);
-  float co = _MQGetGasPercentage(mq,_gas_co);
-  float smoke = _MQGetGasPercentage(mq,_gas_smoke);
-  // assign to the value the requested gas
-  uint16_t value;
-  if (_target_gas == _gas_lpg) value = lpg;
-  if (_target_gas == _gas_co) value = co;
-  if (_target_gas == _gas_smoke) value = smoke;
+  // ppm = _curve_scaling_factor * (rs/ro) ^ _curve_exponent so we need Rs 
+  float rs = _getRsValue(_samples,_sample_interval);
+  // calculate the Rs / Ro ratio
+  float rs_ro_ratio = rs / _ro;
+  // calculate ppm 
+  int ppm = _curve_scaling_factor * pow(rs_ro_ratio, _curve_exponent);
   #if FEATURE_DEBUG == ON
     Serial.print(_name);
     Serial.print(F(" I="));
     Serial.print(child->getChildId());
-    Serial.print(F(" V="));
-    Serial.print(value);
-    Serial.print(F(" LPG="));
-    Serial.print(lpg);
-    Serial.print(F(" CO="));
-    Serial.print(co);
-    Serial.print(F(" SMOKE="));
-    Serial.println(smoke);
+    Serial.print(F(" Rs="));
+    Serial.print(rs);
+    Serial.print(F(" Rs/Ro="));
+    Serial.print(rs_ro_ratio);
+    Serial.print(F(" PPM="));
+    Serial.println(ppm);
   #endif
+  // ppm cannot be negative
+  if (ppm < 0) ppm = 0;
+  // if warmup is configured, do not send the value back if within the warmup period
+  if (_warmup_minutes > 0 && millis() < _warmup_minutes*60*1000) return;
   // store the value
-  ((ChildInt*)child)->setValueInt((int16_t)ceil(value));
+  ((ChildInt*)child)->setValueInt(ppm);
 }
 
 // what to do as the main task when receiving a message
@@ -2618,59 +2646,18 @@ void SensorMQ::onReceive(MyMessage* message) {
   if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 
-// returns the calculated sensor resistance
-float SensorMQ::_MQResistanceCalculation(int raw_adc) {
-  return ( ((float)_rl_value*(1023-raw_adc)/raw_adc));
-}
-
-//  This function assumes that the sensor is in clean air
-float SensorMQ::_MQCalibration() {
-  int i;
-  float val=0;
-  //take multiple samples
-  for (i=0; i< _calibration_sample_times; i++) {  
-    val += _MQResistanceCalculation(analogRead(_pin));
-    wait(_calibration_sample_interval);
+// get the rs value by sampling the resistance multiple times
+float SensorMQ::_getRsValue(int samples, int sample_interval) {
+  float total = 0;
+  for (int i = 0; i < samples; i++) {
+    int adc = analogRead(_pin);
+    float rs = ( ((float)_rl*(1023-adc)/adc));
+    total += rs;
+    wait(sample_interval);
   }
-  //calculate the average value
-  val = val/_calibration_sample_times;                   
-  //divided by RO_CLEAN_AIR_FACTOR yields the Ro
-  val = val/_ro_clean_air_factor;
-  //according to the chart in the datasheet
-  return val;
-}
-
-// This function use MQResistanceCalculation to caculate the sensor resistenc (Rs).
-float SensorMQ::_MQRead() {
-  int i;
-  float rs=0;
-  for (i=0; i<_read_sample_times; i++) {
-    rs += _MQResistanceCalculation(analogRead(_pin));
-    wait(_read_sample_interval);
-  }
-  rs = rs/_read_sample_times;
-  return rs;
-}
-
-// This function passes different curves to the MQGetPercentage function which calculates the ppm (parts per million) of the target gas.
-int SensorMQ::_MQGetGasPercentage(float rs_ro_ratio, int gas_id) {
-  if ( gas_id == _gas_lpg ) {
-    return _MQGetPercentage(rs_ro_ratio,_LPGCurve);
-  } else if ( gas_id == _gas_co) {
-    return _MQGetPercentage(rs_ro_ratio,_COCurve);
-  } else if ( gas_id == _gas_smoke) {
-    return _MQGetPercentage(rs_ro_ratio,_SmokeCurve);
-  }
-  return 0;
-}
-
-// returns ppm of the target gas
-int SensorMQ::_MQGetPercentage(float rs_ro_ratio, float *pcurve) {
-  return (pow(10,( ((log10(rs_ro_ratio)-pcurve[1])/pcurve[2]) + pcurve[0])));
+  return total/(float)samples;
 }
 #endif
-
-
 
 /*
    SensorMHZ19
@@ -3280,7 +3267,7 @@ void SensorPlantowerPMS::onLoop(Child* child) {
   }
   // Read the ppm values
   if (!_valuesRead || _valuesReadError) {
-    _valuesReadError = !_pms->read(_data, 1000);
+    _valuesReadError = !_pms->readUntil(_data, 1000);
     if (_valuesReadError) {
       Serial.println(F("ERR PMS read"));
       return;
@@ -3405,6 +3392,9 @@ Display::Display(NodeManager& node_manager, int child_id): Sensor(node_manager) 
   // We don't need any sensors, but we need a child, otherwise the loop will never be executed
   children.allocateBlocks(1);
   new ChildString(this, _node->getAvailableChildId(child_id), S_INFO, V_TEXT,_name);
+  // prevent reporting to the gateway at each display update
+  setReporting(false);
+  _report_timer->unset();
 }
 // setter/getter
 void Display::setCaption(const char* value) {
@@ -4258,6 +4248,108 @@ void SensorSDS011::onReceive(MyMessage* message){
 }
 #endif
 
+/*
+   SensorFPM10A
+*/
+#ifdef USE_FPM10A
+SensorFPM10A::SensorFPM10A(NodeManager & node_manager, int rxpin, int txpin, int child_id): Sensor(node_manager, rxpin){
+  _name = "FPM10A";
+  _rx_pin = rxpin;
+  _tx_pin = txpin;
+  children.allocateBlocks(1);
+  new ChildInt(this, _node->getAvailableChildId(child_id), S_CUSTOM, V_CUSTOM, _name);
+  _timer = new Timer(_node);
+}
+
+//setter/getter
+// what to do during setup
+void SensorFPM10A::setBaudRate(uint32_t value) {
+  _baud_rate = value;
+}
+void SensorFPM10A::setPassword(uint32_t value) {
+  _password = value;
+}
+void SensorFPM10A::setMinConfidence(uint16_t value) {
+  _min_confidence = value;
+}
+void SensorFPM10A::setWaitFingerForSeconds(int value) {
+  _timer->start(value,SECONDS);
+}
+
+// what to do during setup
+void SensorFPM10A::onSetup(){
+  // setup software serial
+  _serial = new SoftwareSerial(_rx_pin,_tx_pin);
+  // setup fingerprint sensor
+  _finger = new Adafruit_Fingerprint(_serial,_password);
+  // connect to the sensor
+  _finger->begin(_baud_rate);
+  if (_finger->verifyPassword()) {
+    _finger->getTemplateCount();
+    #if FEATURE_DEBUG == ON
+      Serial.print(_name);
+      Serial.print(F(" T="));
+      Serial.println(_finger->templateCount);
+    #endif
+  }
+  else {
+    #if FEATURE_DEBUG == ON
+      Serial.print(_name);
+      Serial.println(F(" ERROR"));
+    #endif
+  }
+  // report immediately
+  _report_timer->unset();
+}
+
+// what to do during loop
+void SensorFPM10A::onLoop(Child* child){
+  // restart the timer if set
+  if (_timer->isRunning()) _timer->restart();
+  while(true) {
+    if (_timer->isRunning()) {
+      // if a timer is set, leave the cycle if over
+      _timer->update();
+      if (_timer->isOver()) break;
+    }
+    // read the fingerprint
+    int finger = _readFingerprint();
+    if (finger > 0) {
+      // fingerprint match found, send the template ID back
+      ((ChildInt*)child)->setValueInt(finger);
+      // leave the loop so we can report back
+      break;
+    }
+    //don't need to run this at full speed
+    wait(50);
+  }
+}
+
+// read the fingerprint from the sensor
+int SensorFPM10A::_readFingerprint() {
+  // take image
+  uint8_t p = _finger->getImage();
+  if (p != FINGERPRINT_OK) return -1;
+  // convert image
+  p = _finger->image2Tz();
+  if (p != FINGERPRINT_OK) return -1;
+  // search for a fingerprint
+  p = _finger->fingerFastSearch();
+  if (p != FINGERPRINT_OK) return -1;
+  // fingerprint found
+  #if FEATURE_DEBUG == ON
+    Serial.print(_name);
+    Serial.print(F(" T="));
+    Serial.print(_finger->fingerID);
+    Serial.print(F(" C="));
+    Serial.println(_finger->confidence);
+  #endif
+  // ignore the match if not confident enough
+  if (_finger->confidence < _min_confidence) return -1;
+  return _finger->fingerID; 
+}
+#endif
+
 #ifdef USE_CONFIGURATION
 /*
    SensorConfiguration
@@ -4345,10 +4437,6 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         case 1: sensor->setPin(request.getValueInt()); break;
         case 5: sensor->setSamples(request.getValueInt()); break;
         case 6: sensor->setSamplesInterval(request.getValueInt()); break;
-#if FEATURE_CONDITIONAL_REPORT == ON
-        case 7: sensor->setTrackLastValue(request.getValueInt()); break;
-        case 9: sensor->setForceUpdateMinutes(request.getValueInt()); break;
-#endif
 #if FEATURE_POWER_MANAGER == ON
         case 13: sensor->powerOn(); break;
         case 14: sensor->powerOff(); break;
@@ -4357,6 +4445,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
         case 17: sensor->setReportIntervalSeconds(request.getValueInt()); break;
         case 19: sensor->setReportIntervalHours(request.getValueInt()); break;
         case 20: sensor->setReportIntervalDays(request.getValueInt()); break;
+        case 21: sensor->setReporting(request.getValueInt()); break;
         default: return;
       }
     } else {
@@ -4491,9 +4580,8 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       if (strcmp(sensor->getName(),"HCSR04") == 0) {
         SensorHCSR04* custom_sensor = (SensorHCSR04*)sensor;
         switch(function) {
-          case 101: custom_sensor->setTriggerPin(request.getValueInt()); break;
-          case 102: custom_sensor->setEchoPin(request.getValueInt()); break;
           case 103: custom_sensor->setMaxDistance(request.getValueInt()); break;
+          case 104: custom_sensor->setReportIfInvalid(request.getValueInt()); break;
           default: return;
         }
       }
@@ -4502,14 +4590,19 @@ void SensorConfiguration::onReceive(MyMessage* message) {
       if (strcmp(sensor->getName(),"MQ") == 0) {
         SensorMQ* custom_sensor = (SensorMQ*)sensor;
         switch(function) {
-          case 101: custom_sensor->setTargetGas(request.getValueInt()); break;
           case 102: custom_sensor->setRlValue(request.getValueFloat()); break;
           case 103: custom_sensor->setRoValue(request.getValueFloat()); break;
-          case 104: custom_sensor->setCleanAirFactor(request.getValueFloat()); break;
-          case 105: custom_sensor->setCalibrationSampleTimes(request.getValueInt()); break;
+          case 104: custom_sensor->setKnownPpm(request.getValueInt()); break;
+          case 105: custom_sensor->setCalibrationSamples(request.getValueInt()); break;
           case 106: custom_sensor->setCalibrationSampleInterval(request.getValueInt()); break;
-          case 107: custom_sensor->setReadSampleTimes(request.getValueInt()); break;
-          case 108: custom_sensor->setReadSampleInterval(request.getValueInt()); break;
+          case 107: custom_sensor->setSamples(request.getValueInt()); break;
+          case 108: custom_sensor->setSampleInterval(request.getValueInt()); break;
+          case 109: custom_sensor->setPoint1Ppm(request.getValueFloat()); break;
+          case 110: custom_sensor->setPoint1Ratio(request.getValueFloat()); break;
+          case 111: custom_sensor->setPoint2Ppm(request.getValueFloat()); break;
+          case 112: custom_sensor->setPoint2Ratio(request.getValueFloat()); break;
+          case 113: custom_sensor->setCurveScalingFactor(request.getValueFloat()); break;
+          case 114: custom_sensor->setCurveExponent(request.getValueFloat()); break; 
           default: return;
         }
       }
@@ -4577,6 +4670,16 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           case 102: custom_sensor->setMoistureRange(request.getValueInt()); break;
           case 103: custom_sensor->setReturnMoistureNormalized(request.getValueInt()); break;
           case 104: custom_sensor->setReturnLightReversed(request.getValueInt()); break;
+          default: return;
+        }
+      }
+      #endif
+      #ifdef USE_FPM10A
+      if (strcmp(sensor->getName(),"FPM10A") == 0) {
+        SensorFPM10A* custom_sensor = (SensorFPM10A*)sensor;
+        switch(function) {
+          case 101: custom_sensor->setMinConfidence(request.getValueInt()); break;
+          case 102: custom_sensor->setWaitFingerForSeconds(request.getValueInt()); break;
           default: return;
         }
       }
@@ -5172,7 +5275,7 @@ void NodeManager::_onInterrupt_2() {
 // send a message by providing the source child, type of the message and value
 void NodeManager::sendMessage(int child_id, int type, int value) {
   _message.clear();
-  _message.set((uint32_t) value);
+  _message.set(value);
   _sendMessage(child_id,type);
 }
 void NodeManager::sendMessage(int child_id, int type, float value, int precision) {
@@ -5287,7 +5390,15 @@ void NodeManager::_sleep() {
   int interrupt_1_pin = _interrupt_1_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_1);
   int interrupt_2_pin = _interrupt_2_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_2);
   // enter smart sleep for the requested sleep interval and with the configured interrupts
-  interrupt = sleep(interrupt_1_pin,_interrupt_1_mode,interrupt_2_pin,_interrupt_2_mode,sleep_time*1000,_smart_sleep);
+  if (interrupt_1_pin != INTERRUPT_NOT_DEFINED && interrupt_2_pin != INTERRUPT_NOT_DEFINED) {
+    interrupt = sleep(interrupt_1_pin,_interrupt_1_mode,interrupt_2_pin,_interrupt_2_mode,sleep_time*1000,_smart_sleep);
+  } else if (interrupt_1_pin != INTERRUPT_NOT_DEFINED) {
+    interrupt = sleep(interrupt_1_pin,_interrupt_1_mode,sleep_time*1000,_smart_sleep);
+  } else if (interrupt_2_pin != INTERRUPT_NOT_DEFINED) {
+    interrupt = sleep(interrupt_2_pin,_interrupt_2_mode,sleep_time*1000,_smart_sleep);
+  } else {
+    sleep(INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,sleep_time*1000,_smart_sleep);
+  }
   // woke up by an interrupt
   if (interrupt > -1) {
     // register the interrupt pin

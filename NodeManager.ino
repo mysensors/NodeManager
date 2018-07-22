@@ -76,11 +76,11 @@ SensorBMP280             | 3     | USE_BMP280         | BMP280 sensor, return te
 SensorSonoff             | 1     | USE_SONOFF         | Sonoff wireless smart switch                                                                      | https://github.com/thomasfredericks/Bounce2
 SensorHCSR04             | 1     | USE_HCSR04         | HC-SR04 sensor, return the distance between the sensor and an object                              | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/NewPing
 SensorMCP9808            | 1     | USE_MCP9808        | MCP9808 sensor, measure the temperature through the attached module                               | https://github.com/adafruit/Adafruit_MCP9808_Library
-SensorMQ                 | 1     | USE_MQ             | MQ sensor, return ppm of the target gas                                                           | -
+SensorMQ                 | 1     | USE_MQ             | MQ sensor, return ppm of the target gas. Tuned by default for MQ135 and CO2                       | -
 SensorMHZ19              | 1     | USE_MHZ19          | MH-Z19 CO2 sensor via UART (SoftwareSerial, default on pins 6(Rx) and 7(Tx)                       | -
 SensorAM2320             | 2     | USE_AM2320         | AM2320 sensors, return temperature/humidity based on the attached AM2320 sensor                   | https://github.com/thakshak/AM2320
 SensorTSL2561            | 1     | USE_TSL2561        | TSL2561 sensor, return light in lux                                                               | https://github.com/adafruit/TSL2561-Arduino-Library
-SensorPT100              | 1     | USE_PT100          | DFRobot Driver high temperature sensor, return the temperature from the attached PT100 sensor     | -
+SensorPT100              | 1     | USE_PT100          | DFRobot Driver high temperature sensor, return the temperature from the attached PT100 sensor     | https://github.com/nxcosa/HighTemperatureSensor
 SensorDimmer             | 1     | USE_DIMMER         | Generic dimmer sensor used to drive a pwm output                                                  | -
 SensorRainGauge          | 1     | USE_PULSE_METER    | Rain gauge sensor                                                                                 | -
 SensorPowerMeter         | 1     | USE_PULSE_METER    | Power meter pulse sensor                                                                          | -
@@ -97,6 +97,7 @@ SensorServo              | 1     | USE_SERVO          | Control a generic Servo 
 SensorAPDS9960           | 1     | USE_APDS9960       | SparkFun RGB and Gesture Sensor                                                                   | https://github.com/sparkfun/APDS-9960_RGB_and_Gesture_Sensor
 SensorNeopixel           | 1     | USE_NEOPIXEL       | Control a Neopixel LED                                                                            | https://github.com/adafruit/Adafruit_NeoPixel
 SensorSDS011             | 2     | USE_SDS011         | SDS011 air quality sensor, return concentrations of 2.5 and 10 micrometer particles.              | https://github.com/ricki-z/SDS011
+SensorFPM10A             | 1     | USE_FPM10A         | FPM10A fingerprint sensor                                                                         | https://github.com/adafruit/Adafruit-Fingerprint-Sensor-Library
 
 NodeManager provides useful built-in features which can be disabled if you need 
 to save some storage for your code. To enable/disable a buil-in feature:
@@ -290,6 +291,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define USE_APDS9960
 //#define USE_NEOPIXEL
 //#define USE_SDS011
+//#define USE_FPM10A
 
 /***********************************
  * NodeManager built-in features
@@ -354,7 +356,7 @@ NodeManager node;
 //SensorBMP180 bmp180(node);
 //SensorBMP280 bmp280(node);
 //SensorSonoff sonoff(node);
-//SensorHCSR04 hcsr04(node,6);
+//SensorHCSR04 hcsr04(node,6,7);
 //SensorMCP9808 mcp9808(node);
 //SensorMQ mq(node,A0);
 //SensorMHZ19 mhz19(node,6,7);
@@ -377,6 +379,7 @@ NodeManager node;
 //SensorAPDS9960 apds9960(node,3);
 //SensorNeopixel neopixel(node,6);
 //SensorSDS011 sds011(node,6,7);
+//SensorFPM10A fpm10a(node,4,5);
 
 /***********************************
  * Main Sketch

@@ -1,4 +1,4 @@
-# NodeManager
+# NodeManager [![Build Status](https://travis-ci.org/mysensors/NodeManager.svg?branch=development)](https://travis-ci.org/mysensors/NodeManager)
 
 NodeManager is intended to take care on your behalf of all those common tasks that a MySensors node has to accomplish, speeding up the development cycle of your projects. 
 Consider it as a sort of frontend for your MySensors projects. When you need to add a sensor (which requires just uncommeting a single line),
@@ -18,18 +18,18 @@ NodeManager will take care of importing the required library, presenting the sen
 * Calculate battery level without requiring an additional pin and the resistors
 * Report signal level periodically and automatically or on demand
 * Allow collecting and averaging multiple samples, tracking the last value and forcing periodic updates for any sensor
-* Provide buil-in capabilities to handle interrupt-based sensors 
+* Provide built-in capabilities to handle interrupt-based sensors 
 
 ### Built-in sensors
 
 NodeManager provides built-in implementation of a number of sensors through ad-hoc classes. 
-To use a buil-in sensor:
+To use a built-in sensor:
 * Install the required library if any
 * Enable the corresponding module (uncomment it) in the main sketch
 * Declare the sensor (uncomment it) in the main sketch
 
 Once created, the sensor will automatically present one or more child to the gateway and controller.
-A list of buil-in sensors, module to enable, required dependencies and the number of child automatically created is presented below:
+A list of built-in sensors, module to enable, required dependencies and the number of child automatically created is presented below:
 
 Sensor Name              |#Child | Module to enable   | Description                                                                                       | Dependencies
 -------------------------|-------|--------------------|---------------------------------------------------------------------------------------------------|----------------------------------------------------------
@@ -65,11 +65,11 @@ SensorBMP280             | 3     | USE_BMP280         | BMP280 sensor, return te
 SensorSonoff             | 1     | USE_SONOFF         | Sonoff wireless smart switch                                                                      | https://github.com/thomasfredericks/Bounce2
 SensorHCSR04             | 1     | USE_HCSR04         | HC-SR04 sensor, return the distance between the sensor and an object                              | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/NewPing
 SensorMCP9808            | 1     | USE_MCP9808        | MCP9808 sensor, measure the temperature through the attached module                               | https://github.com/adafruit/Adafruit_MCP9808_Library
-SensorMQ                 | 1     | USE_MQ             | MQ sensor, return ppm of the target gas                                                           | -
+SensorMQ                 | 1     | USE_MQ             | MQ sensor, return ppm of the target gas. Tuned by default for MQ135 and CO2                       | -
 SensorMHZ19              | 1     | USE_MHZ19          | MH-Z19 CO2 sensor via UART (SoftwareSerial, default on pins 6(Rx) and 7(Tx)                       | -
 SensorAM2320             | 2     | USE_AM2320         | AM2320 sensors, return temperature/humidity based on the attached AM2320 sensor                   | https://github.com/thakshak/AM2320
 SensorTSL2561            | 1     | USE_TSL2561        | TSL2561 sensor, return light in lux                                                               | https://github.com/adafruit/TSL2561-Arduino-Library
-SensorPT100              | 1     | USE_PT100          | DFRobot Driver high temperature sensor, return the temperature from the attached PT100 sensor     | -
+SensorPT100              | 1     | USE_PT100          | DFRobot Driver high temperature sensor, return the temperature from the attached PT100 sensor     | https://github.com/nxcosa/HighTemperatureSensor
 SensorDimmer             | 1     | USE_DIMMER         | Generic dimmer sensor used to drive a pwm output                                                  | -
 SensorRainGauge          | 1     | USE_PULSE_METER    | Rain gauge sensor                                                                                 | -
 SensorPowerMeter         | 1     | USE_PULSE_METER    | Power meter pulse sensor                                                                          | -
@@ -86,16 +86,17 @@ SensorServo              | 1     | USE_SERVO          | Control a generic Servo 
 SensorAPDS9960           | 1     | USE_APDS9960       | SparkFun RGB and Gesture Sensor                                                                   | https://github.com/sparkfun/APDS-9960_RGB_and_Gesture_Sensor
 SensorNeopixel           | 1     | USE_NEOPIXEL       | Control a Neopixel LED                                                                            | https://github.com/adafruit/Adafruit_NeoPixel
 SensorSDS011             | 2     | USE_SDS011         | SDS011 air quality sensor, return concentrations of 2.5 and 10 micrometer particles.              | https://github.com/ricki-z/SDS011
+SensorFPM10A             | 1     | USE_FPM10A         | FPM10A fingerprint sensor                                                                         | https://github.com/adafruit/Adafruit-Fingerprint-Sensor-Library
 
 ### Built-in features
 
 NodeManager built-in features can be enabled/disabled also when you need to save some storage for your code. 
-To enable/disable a buil-in feature:
+To enable/disable a built-in feature:
 * Install the required library if any
 * Enable the corresponding feature by setting it to ON in the main sketch. To disable it, set it to OFF
 * When a feature is enabled additional functions may be made available. Have a look at the API documentation for details
 
-A list of buil-in features and the required dependencies is presented below:
+A list of built-in features and the required dependencies is presented below:
 
 Feature                     | Default | Description                                                                                      | Dependencies
 ----------------------------|---------|--------------------------------------------------------------------------------------------------|----------------------------------------------------------
@@ -365,6 +366,8 @@ The following methods are available for all the sensors:
     // [14] manually turn the power off
     void powerOff();
 #endif
+    // [21] enable/disable reporting to the gateway (default: true)
+    void setReporting(bool value);
     // [17] After how many minutes the sensor will report back its measure (default: 10 minutes)
     void setReportIntervalSeconds(int value);
     // [16] After how many minutes the sensor will report back its measure (default: 10 minutes)
@@ -591,38 +594,42 @@ Each sensor class exposes additional methods.
 
 * SensorHCSR04
 ~~~c
-    // [101] Arduino pin tied to trigger pin on the ultrasonic sensor (default: the pin set while registering the sensor)
-    void setTriggerPin(int value);
-    // [102] Arduino pin tied to echo pin on the ultrasonic sensor (default: the pin set while registering the sensor)
-    void setEchoPin(int value);
     // [103] Maximum distance we want to ping for (in centimeters) (default: 300)
     void setMaxDistance(int value);
+    // [104] Report the measure even if is invalid (e.g. 0) (default: true)
+    void setReportIfInvalid(bool value);
 ~~~
 
 * SensorMQ
 ~~~c
-    // [101] define the target gas whose ppm has to be returned. 0: LPG, 1: CO, 2: Smoke (default: 1);
-    void setTargetGas(int value);
-    // [102] define the load resistance on the board, in kilo ohms (default: 1);
+    // [102] set the load resistance on the board, in ohms (default: 1000);
     void setRlValue(float value);
-    // [103] define the Ro resistance on the board (default: 10000);
+    // [103] set the Ro resistance in ohms. By default will be calculated at startup during the calibration phase using the known ppm provided
     void setRoValue(float value);
-    // [104] Sensor resistance in clean air (default: 9.83);
-    void setCleanAirFactor(float value);
-    // [105] define how many samples you are going to take in the calibration phase (default: 50);
-    void setCalibrationSampleTimes(int value);
-    // [106] define the time interal(in milisecond) between each samples in the cablibration phase (default: 500);
+    // [104] set the ppm used during the calibration (default: 411);
+    void setKnownPpm(float value);
+    // [105] define how many samples we are going to take in the calibration phase (default: 50);
+    void setCalibrationSamples(int value);
+    // [106] define the time (in milisecond) between each sample in the cablibration phase (default: 500);
     void setCalibrationSampleInterval(int value);
     // [107] define how many samples you are going to take in normal operation (default: 50);
-    void setReadSampleTimes(int value);
-    // [108] define the time interal(in milisecond) between each samples in the normal operations (default: 5);
-    void setReadSampleInterval(int value);
-    // set the LPGCurve array (default: {2.3,0.21,-0.47})
-    void setLPGCurve(float *value);
-    // set the COCurve array (default: {2.3,0.72,-0.34})
-    void setCOCurve(float *value);
-    // set the SmokeCurve array (default: {2.3,0.53,-0.44})
-    void setSmokeCurve(float *value);
+    void setSamples(int value);
+    // [108] define the time (in milisecond) between each sample in the normal operations (default: 5);
+    void setSampleInterval(int value);
+    // [109] set the ppm (x) of a random point on the gas curve (default: 200)
+    void setPoint1Ppm(float value); 
+    // [110] set the Rs/Ro ratio (y) of the same random point on the gas curve (default: 5)
+    void setPoint1Ratio(float value);
+    // [111] set the ppm (x) of another random point on the gas curve (default: 10000)
+    void setPoint2Ppm(float value);
+    // [112] set the Rs/Ro ratio (y) of the same random point on the gas curve (default: 1.2)
+    void setPoint2Ratio(float value);
+    // [113] with ppm = scaling_factor*x^exponent set the value manually, otherwise will be calculated automatically based on the two points provided
+    void setCurveScalingFactor(float value); 
+    // [114] with ppm = scaling_factor*x^exponent set the value manually, otherwise will be calculated automatically based on the two points provided
+    void setCurveExponent(float value); 
+    // do not report for the given number of minutes, waiting for the sensor to warm up (default: 0);
+    void setWarmupMinutes(int value);
 ~~~
 
 * SensorTSL2561
@@ -746,6 +753,18 @@ Each sensor class exposes additional methods.
     //<pixel_number>,<RGB color in a packed 24 bit format>
     //<RGB color in a packed 24 bit format>
     void setColor(char* string);
+~~~
+
+* SensorFPM10A
+~~~c
+   // set the baud rate of the serial port for connecting to the sensor (default: 57600)
+   void setBaudRate(uint32_t value);
+   // set the password for connecting to the sensor (default: 0)
+   void setPassword(uint32_t value);
+   // [101] set the minimum confidence below which the match is not considered valid (default: 0)
+   void setMinConfidence(uint16_t value);
+   // [102] wait for a valid fingerprint for the given amount of seconds. Useful when battery powered (default: 0)
+   void setWaitFingerForSeconds(int value);
 ~~~
 
 ### Remote API
@@ -1174,8 +1193,11 @@ Before applying any change, ensure you have the latest development version avail
 Create a branch for the fix/feature you want to work on and apply changes to the code:
 * Create and switch to a new branch (give it a significant name, e.g. fix/enum-sensors): `git checkout -b <yourbranch>`
 * Do any required change to the code
+* If adding a new sensor, add your code just below the last sensor in all the files so to keep the list in order
+* If adding a new sensor, add an additional job in the Travis CI configuration file `.travis.yml`
+* If adding a new function to a sensor, ensure to make it accessible through SensorConfiguration (if applicable) and add it in the README.md file as well
 * Include all the files changed for your commit: `git add .`
-* Ensure both the main sketch and the config.h file do not present any change
+* Ensure the main sketch does not present any change (e.g. keep default values before committing)
 * Commit the changes: `git  commit -m"Use enum instead of define for defining each sensor #121"`
 * Push the branch with the changes to your repository: `git push origin <yourbranch>`
 * Visit `https://github.com/<username>/NodeManager/branches` and click the "New pull request" button just aside your newly created branch
