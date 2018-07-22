@@ -866,6 +866,32 @@ class SensorACS712: public Sensor {
 };
 #endif
 
+
+#ifdef USE_PH
+/*
+   SensorPh: read the ph from an analog signal amplifier + ph probe
+*/
+class SensorPh: public Sensor {
+  public:
+    SensorPh(NodeManager& node_manager, int pin, int child_id = -255);
+    // [101] setting AnalogRefValue (default: 5.0)
+    void setVoltageRef(float value);
+    // [102] setting the voltage value @ph = 7 (default: 2.52)
+    void setPH7Voltage(float value);
+    // [103] setting the voltage value @ph = 4 (default: 3.04)
+    void setPH4Voltage(float value);
+    // define what to do at each stage of the sketch
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(MyMessage* message);
+  protected:
+    float _voltage_ref = 5.0;
+    float _ph7_voltage = 2.52;
+    float _ph4_voltage = 3.04;
+    float _ph_step = 1 - ( 1 + (_ph7_voltage - _ph4_voltage) / (7 - 4));
+};
+#endif
+
 #ifdef USE_DIGITAL_INPUT
 /*
    SensorDigitalInput: read the digital input of the configured pin

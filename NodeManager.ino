@@ -53,7 +53,7 @@ SensorRain               | 1     | USE_ANALOG_INPUT   | Rain sensor, return the 
 SensorSoilMoisture       | 1     | USE_ANALOG_INPUT   | Soil moisture sensor, return the percentage of moisture from an attached analog sensor            | -
 SensorThermistor         | 1     | USE_THERMISTOR     | Thermistor sensor, return the temperature based on the attached thermistor                        | -
 SensorML8511             | 1     | USE_ML8511         | ML8511 sensor, return UV intensity                                                                | -
-SensorACS712             | 1     | USE_ACS712         | ACS712 sensor, measure the current going through the attached module                              | -
+SensorACS712             | 1     | USE_ACS712         | ACS712 sensor, measure the current going through the attached module                              | -SensorPH                 | 1     | USE_PH             | PH ( SKU SEN161 ) sensor, measure the analog value from the amplifier module                      | -
 SensorDigitalInput       | 1     | USE_DIGITAL_INPUT  | Generic digital sensor, return a pin's digital value                                              | -
 SensorDigitalOutput      | 1     | USE_DIGITAL_OUTPUT | Generic digital output sensor, allows setting the digital output of a pin to the requested value  | -
 SensorRelay              | 1     | USE_DIGITAL_OUTPUT | Relay sensor, allows activating the relay                                                         | -
@@ -257,6 +257,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define USE_THERMISTOR
 //#define USE_ML8511
 //#define USE_ACS712
+//#define USE_PH
 //#define USE_DIGITAL_INPUT
 //#define USE_DIGITAL_OUTPUT
 //#define USE_DHT
@@ -334,6 +335,7 @@ NodeManager node;
 //SensorThermistor thermistor(node,A0);
 //SensorML8511 ml8511(node,A0);
 //SensorACS712 acs712(node,A0);
+//SensorPh ph(node,A0);
 //SensorDigitalInput digitalIn(node,6);
 //SensorDigitalOutput digitalOut(node,6);
 //SensorRelay relay(node,6);
