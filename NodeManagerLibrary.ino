@@ -1229,6 +1229,89 @@ void SensorACS712::onReceive(MyMessage* message) {
 
 #endif
 
+
+#ifdef USE_PH
+/*
+   SensorPh
+*/
+
+// contructor
+SensorPh::SensorPh(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
+  _name = "PH";
+  children.allocateBlocks(1);
+  new ChildFloat(this,_node->getAvailableChildId(child_id),S_WATER_QUALITY,V_PH,_name);
+}
+
+// setter/getter
+void SensorPh::setVoltageRef(float value) {
+  _voltage_ref = value;
+}
+void SensorPh::setPH7Voltage(float value) {
+  _ph7_voltage = value;
+}
+void SensorPh::setPH4Voltage(float value) {
+  _ph4_voltage = value;
+}
+
+// what to do during setup
+void SensorPh::onSetup() {
+  // set the pin as input
+  float _ph_step = 1 - ( 1 + (_ph7_voltage - _ph4_voltage) / (7 - 4));
+  pinMode(_pin, INPUT);
+}
+
+// what to do during loop
+void SensorPh::onLoop(Child* child) {
+  int buf[10],temp;
+  // read the voltage across the amplifier and store 10 measurements
+  for (int i=0; i<10; i++) { 
+    float adc = analogRead(_pin);
+    // calculate the ph
+    double reading = _voltage_ref / 1024.0 * adc; 
+    float ph = 7 + ((_ph7_voltage - reading) / _ph_step);
+    buf[i]= ph * 1000;
+    delay(10);
+  }
+  // ordering : higher to lower values
+  for (int i=0; i<9; i++) {
+    for (int j=i+1; j<10; j++) {
+     if (buf[i] > buf[j]) {
+      temp = buf[i];
+      buf[i] = buf[j];
+      buf[j] = temp;
+     }
+    }
+  }
+  // discard the 2 highest and lowest walues and calculate mean of 6 remaining values
+  unsigned long int avgValue = 0;
+  float ph = 0; 
+  for (int i=2; i<8; i++) {
+    avgValue += buf[i];
+    ph = (float)avgValue/1000/6;  
+  }
+ 
+  #if FEATURE_DEBUG == ON
+    Serial.print(_name);
+    Serial.print(F(" I="));
+    Serial.print(child->getChildId());
+    Serial.print(F(" ^="));
+    Serial.print(_ph_step, 3);
+    Serial.print(F(" PH="));
+    Serial.println(ph,3);
+  #endif
+    //delay(20);
+  // store the value
+  ((ChildFloat*)child)->setValueFloat(ph);
+}
+
+// what to do as the main task when receiving a message
+void SensorPh::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
+}
+#endif
+
 #ifdef USE_DIGITAL_INPUT
 /*
    SensorDigitalInput
