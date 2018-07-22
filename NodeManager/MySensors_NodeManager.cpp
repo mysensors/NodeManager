@@ -6,6 +6,26 @@
 #include <Arduino.h>
 #include <MySensors_NodeManager.h>
 
+void debugPrint(const char *fmt, ... ) {
+	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
+	va_list args;
+	va_start (args, fmt );
+	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
+	va_end (args);
+	MY_DEBUGDEVICE.print(fmtBuffer);
+	MY_DEBUGDEVICE.flush();
+	
+	
+	/*
+	va_list args;
+    va_start(args, fmt);
+	hwDebugPrint(PSTR("%d: "),millis());
+    	hwDebugPrint(fmt,args);
+    va_end(args);
+*/
+
+}
+
 /***************************************
 PowerManager
 */
@@ -3411,7 +3431,7 @@ void SensorNeopixel::setColor(char* string) {
 		color = strtol(string + pos + 1, NULL, 16);
 -		debug(PSTR("%s(%d): N=%d"),_name,child->getChildId(),pixel_num);
 		if (pixel_num != pixel_end) debug(PSTR("-%d"),pixel_end);
-		debug(PSTR(" C=%d"),color);
+		debug(PSTR(" C=%d\n"),color);
 		//set LED to color
 		for(int i=pixel_num;i<=pixel_end;i++)
 		_pixels->setPixelColor(i,color);
@@ -4076,7 +4096,7 @@ void NodeManager::registerSensor(Sensor* sensor) {
 // setup NodeManager
 void NodeManager::before() {
 	// print out the version
-	debug(PSTR("NodeManager v%d\n"),VERSION);
+	debug(PSTR("NodeManager v" VERSION "\n"));
 	// setup the reboot pin if needed
 	if (_reboot_pin > -1) {
 		debug(PSTR("REB P=%d\n"),_reboot_pin);
@@ -4084,11 +4104,11 @@ void NodeManager::before() {
 		digitalWrite(_reboot_pin, HIGH);
 	}
 	// print out MySensors' library capabilities
-	debug(PSTR("LIB V=%s R=%c"),MYSENSORS_LIBRARY_VERSION,MY_CAP_RADIO);
+	debug(PSTR("LIB V=" MYSENSORS_LIBRARY_VERSION " R=" MY_CAP_RADIO));
 	#ifdef MY_CAP_ENCR
-	debug(PSTR(" E=%c"),MY_CAP_ENCR);
+	debug(PSTR(" E=" MY_CAP_ENCR));
 	#endif
-	debug(PSTR(" T=%c A=%c S=%c B=%c\n"),MY_CAP_TYPE,MY_CAP_ARCH,MY_CAP_SIGN,MY_CAP_RXBUF);
+	debug(PSTR(" T=" MY_CAP_TYPE " A=" MY_CAP_ARCH " S=" MY_CAP_SIGN " B=" MY_CAP_RXBUF "\n"));
 #if FEATURE_EEPROM == ON
 	// restore the sleep settings saved in the eeprom
 	if (_save_sleep_settings) _loadSleepSettings();
@@ -4109,6 +4129,7 @@ void NodeManager::presentation() {
 	debug(PSTR("OK\n"));
 	// Send the sketch version information to the gateway and Controller
 	_sleepBetweenSend();
+	debug(PSTR(SKETCH_NAME " v" SKETCH_VERSION "\n"));
 	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
 	_sleepBetweenSend();
 	// present each sensor
@@ -4130,7 +4151,7 @@ void NodeManager::presentation() {
 void NodeManager::setup() {
 	// retrieve and store isMetric from the controller
 	if (_get_controller_config) _is_metric = getControllerConfig().isMetric;
-	debug(PSTR("NODE(%d): M="),getNodeId(),_is_metric);
+	debug(PSTR("NODE(%d): M=\n"),getNodeId(),_is_metric);
 #if FEATURE_TIME == ON
 	// sync the time with the controller
 	syncTime();
@@ -4171,6 +4192,7 @@ void NodeManager::setup() {
 
 // run the main function for all the register sensors
 void NodeManager::loop() {
+	debug("LOOP");
 #if FEATURE_TIME == ON
 	// if the time was last updated more than 60 minutes ago, update it
 	if (_time_is_valid && (now() - _time_last_sync) > 60*60) syncTime();

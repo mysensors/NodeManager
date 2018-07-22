@@ -137,9 +137,11 @@ Default configuration settings
 #define FEATURE_DEBUG OFF
 #endif
 
+void debugPrint(const char *fmt, ... );
 // define debug output macro
 #if FEATURE_DEBUG == ON
-#define debug(x,...)		hwDebugPrint(x, ##__VA_ARGS__)
+//#define debug(x,...)		hwDebugPrint(x, ##__VA_ARGS__)
+#define debug(x,...)		debugPrint(x, ##__VA_ARGS__)
 #else
 #define debug(x,...)
 #endif
