@@ -167,49 +167,6 @@ float Timer::getElapsed() {
 
 
 /******************************************
-	Request
-*/
-
-// contructor, tokenize a request in the format "child_id,function,value"
-Request::Request(int recipient_child_id, const char* string) {
-	_recipient_child_id = recipient_child_id;
-	char* ptr;
-	// tokenize the string and get child id
-	_child_id = atoi(strtok_r(const_cast<char*>(string), ",", &ptr));
-	// tokenize the string and get function id
-	_function = atoi(strtok_r(NULL, ",", &ptr));
-	// tokenize the string and get the value
-	_value = atof(strtok_r(NULL, ",", &ptr));
-	debug(PSTR("CONF(%d): %d->%d\n"),_child_id,_function,_value);
-}
-
-// return the child id
-int Request::getRecipientChildId() {
-	return _recipient_child_id;
-}
-
-// return the child id
-int Request::getChildId() {
-	return _child_id;
-}
-
-// return the parsed function
-int Request::getFunction() {
-	return _function;
-}
-
-// return the value as an int
-int Request::getValueInt() {
-  return (int)_value;
-  
-}
-
-// return the value as a float
-float Request::getValueFloat() {
-  return _value;
-}
-
-/******************************************
 	Sensors
 */
 
@@ -3634,7 +3591,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
   // expect a REQ, V_CUSTOM message
   if (message->getCommand() != C_REQ && message->type != V_CUSTOM) return;
   // parse the request
-  Request request = Request(message->sensor,message->getString());
+  ConfigurationRequest request = ConfigurationRequest(message->sensor,message->getString());
   int function = request.getFunction();
   int child_id = request.getChildId();
   // if the message is for the board itself
@@ -3943,6 +3900,49 @@ void SensorConfiguration::onReceive(MyMessage* message) {
     }
   }
   _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,function);
+}
+
+/******************************************
+	ConfigurationRequest
+*/
+
+// contructor, tokenize a configuration request in the format "child_id,function,value"
+ConfigurationRequest::ConfigurationRequest(int recipient_child_id, const char* string) {
+	_recipient_child_id = recipient_child_id;
+	char* ptr;
+	// tokenize the string and get child id
+	_child_id = atoi(strtok_r(const_cast<char*>(string), ",", &ptr));
+	// tokenize the string and get function id
+	_function = atoi(strtok_r(NULL, ",", &ptr));
+	// tokenize the string and get the value
+	_value = atof(strtok_r(NULL, ",", &ptr));
+	debug(PSTR("CONF(%d): %d->%d\n"),_child_id,_function,_value);
+}
+
+// return the child id
+int ConfigurationRequest::getRecipientChildId() {
+	return _recipient_child_id;
+}
+
+// return the child id
+int ConfigurationRequest::getChildId() {
+	return _child_id;
+}
+
+// return the parsed function
+int ConfigurationRequest::getFunction() {
+	return _function;
+}
+
+// return the value as an int
+int ConfigurationRequest::getValueInt() {
+  return (int)_value;
+  
+}
+
+// return the value as a float
+float ConfigurationRequest::getValueFloat() {
+  return _value;
 }
 #endif
 

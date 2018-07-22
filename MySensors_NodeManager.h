@@ -433,30 +433,6 @@ private:
 	long _last = 0;
 };
 
-/*
-Request
-*/
-
-class Request {
-public:
-	Request(int child_id, const char* string);
-	// return the child id the message has been requested to
-	int getRecipientChildId();
-	// return the child id the request is for
-	int getChildId();
-	// return the parsed function
-	int getFunction();
-	// return the value as an int
-	int getValueInt();
-	// return the value as a float
-	float getValueFloat();
-private:
-	int _function = -1;
-	int _child_id = -1;
-	int _recipient_child_id = -1;
-	float _value;
-};
-
 /***************************************
 Child: child class
 */
@@ -739,6 +715,30 @@ public:
 	void onLoop(Child* child);
 	void onReceive(MyMessage* message);
 protected:
+};
+
+/*
+ConfigurationRequest
+*/
+
+class ConfigurationRequest {
+public:
+	ConfigurationRequest(int child_id, const char* string);
+	// return the child id the message has been requested to
+	int getRecipientChildId();
+	// return the child id the request is for
+	int getChildId();
+	// return the parsed function
+	int getFunction();
+	// return the value as an int
+	int getValueInt();
+	// return the value as a float
+	float getValueFloat();
+private:
+	int _function = -1;
+	int _child_id = -1;
+	int _recipient_child_id = -1;
+	float _value;
 };
 #endif
 
