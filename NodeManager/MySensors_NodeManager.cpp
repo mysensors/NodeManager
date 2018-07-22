@@ -36,7 +36,7 @@ void PowerManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
 // turn on the sensor by activating its power pins
 void PowerManager::powerOn() {
 	if (_vcc_pin == -1) return;
-	debug(PSTR("PWR(%d,%d): ON\n",_ground_pin,_vcc_pin));
+	debug(PSTR("PWR(%d,%d): ON\n"),_ground_pin,_vcc_pin);
 	// power on the sensor by turning high the vcc pin
 	digitalWrite(_vcc_pin, HIGH);
 	// wait a bit for the device to settle down
@@ -46,7 +46,7 @@ void PowerManager::powerOn() {
 // turn off the sensor
 void PowerManager::powerOff() {
 	if (_vcc_pin == -1) return;
-	debug(PSTR("PWR(%d,%d): OFF\n",_ground_pin,_vcc_pin));
+	debug(PSTR("PWR(%d,%d): OFF\n"),_ground_pin,_vcc_pin);
 	// power off the sensor by turning low the vcc pin
 	digitalWrite(_vcc_pin, LOW);
 }
@@ -3617,7 +3617,7 @@ SensorConfiguration::SensorConfiguration(NodeManager& node_manager): Sensor(node
 
 // what to do during before
 void SensorConfiguration::onBefore() {
-  new ChildInt(this,CONFIGURATION_CHILD_ID,S_CUSTOM,V_CUSTOM);
+  new ChildInt(this,CONFIGURATION_CHILD_ID,S_CUSTOM,V_CUSTOM,_name);
 }
 
 // what to do during setup
