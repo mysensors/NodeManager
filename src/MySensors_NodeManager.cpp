@@ -2,6 +2,10 @@
  * NodeManager Library
  */
  
+// include dependencies
+#include <Arduino.h>
+#include <MySensors_NodeManager.h>
+ 
 /***************************************
    PowerManager
 */

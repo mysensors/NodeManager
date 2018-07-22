@@ -2056,4 +2056,7 @@ class NodeManager {
 #endif
 };
 
+// include NodeManager's library file
+#include "src/MySensors_NodeManager.cpp"
+
 #endif

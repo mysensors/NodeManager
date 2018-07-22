@@ -313,7 +313,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
  * Load NodeManager Library
  */
 
-#include "NodeManagerLibrary.h"
+#include <MySensors_NodeManager.h>
 NodeManager node;
 
 /***********************************
