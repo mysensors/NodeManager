@@ -1960,6 +1960,7 @@ public:
 	// handle interrupts
 	static void _onInterrupt_1();
 	static void _onInterrupt_2();
+	static void _saveInterrupt(int pin);
 #endif
 	// send a message by providing the source child, type of the message and value
 	void sendMessage(int child_id, int type, int value);
@@ -2005,9 +2006,8 @@ private:
 	int _interrupt_2_initial = -1;
 	static int _last_interrupt_pin;
 	static int _last_interrupt_value;
-	static long _interrupt_debounce;
-	static long _last_interrupt_1;
-	static long _last_interrupt_2;
+	static long unsigned _interrupt_debounce;
+	static long unsigned _last_interrupt_millis;
 #endif
 	bool _ack = false;
 #if FEATURE_SLEEP == ON
