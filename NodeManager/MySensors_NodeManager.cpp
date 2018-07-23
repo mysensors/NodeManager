@@ -275,7 +275,7 @@ ChildInt::ChildInt(Sensor* sensor, int child_id, int presentation, int type, con
 
 // store a new value and update the total
 void ChildInt::setValue(int value) {
-	if (! isnan(value)) return;
+	if (isnan(value)) return;
 	_total = _total + value;
 	_samples++;
 	// averages the values
@@ -340,7 +340,7 @@ ChildFloat::ChildFloat(Sensor* sensor, int child_id, int presentation, int type,
 
 // store a new value and update the total
 void ChildFloat::setValue(float value) {
-	if (! isnan(value)) return;
+	if (isnan(value)) return;
 	_total = _total + value;
 	_samples++;
 	// averages the values
@@ -410,7 +410,7 @@ ChildDouble::ChildDouble(Sensor* sensor, int child_id, int presentation, int typ
 
 // store a new value and update the total
 void ChildDouble::setValue(double value) {
-	if (! isnan(value)) return;
+	if (isnan(value)) return;
 	_total = _total + value;
 	_samples++;
 	// averages the values
