@@ -185,6 +185,12 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define FIRMWARE_MAX_REQUESTS 2
 //#define MY_OTA_RETRY 2
 
+// OTA debug output
+//#define MY_DEBUG_OTA (0)
+//#define MY_OTA_LOG_SENDER_FEATURE
+//#define MY_OTA_LOG_RECEIVER_FEATURE
+//#define MY_DEBUG_OTA_DISABLE_ACK
+
 // Advanced settings
 #define MY_BAUD_RATE 9600
 //#define MY_SMART_SLEEP_WAIT_DURATION_MS 500
