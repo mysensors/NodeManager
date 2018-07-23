@@ -351,7 +351,7 @@ void ChildFloat::setValue(float value) {
 		else _value = float((int) (_value * (_float_precision*10))) / (_float_precision*10);
 	}
 	// print out a debug message
-	debug(PSTR("%s(%d): %f\n"),_description,_child_id,_value);
+	debug(PSTR("%s(%d): %d.%02d\n"),_description,_child_id,(int)_value, (int)(_value*100)%100);
 }
 
 // return the value
@@ -421,7 +421,7 @@ void ChildDouble::setValue(double value) {
 		else _value = double((int) (_value * (_float_precision*10))) / (_float_precision*10);
 	}
 	// print out a debug message
-	debug(PSTR("%s(%d): %f\n"),_description,_child_id,_value);
+	debug(PSTR("%s(%d): %d.%04d\n"),_description,_child_id,(int)_value, (int)(_value*10000)%10000);
 }
 
 // return the value
@@ -2169,7 +2169,7 @@ void SensorMQ::onSetup() {
 		rs = _getRsValue(_calibration_samples,_calibration_sample_interval);
 		_ro = (long)(rs * exp( log(_curve_scaling_factor/_known_ppm) / _curve_exponent ));
 	}
-	debug(PSTR("%s: Rs=%d Ro=%d Rl=_rl F=%d x^=%f\n"),_name,rs,_ro,_rl,_curve_scaling_factor,_curve_exponent);
+	debug(PSTR("%s: Rs=%d Ro=%d Rl=_rl F=%d.%02d x^=%d.%02d\n"),_name,rs,_ro,_rl,(int)_curve_scaling_factor, (int)(_curve_scaling_factor*100)%100,(int)_curve_exponent, (int)(_curve_exponent*100)%100);
 }
 
 // what to do during loop
@@ -2180,7 +2180,7 @@ void SensorMQ::onLoop(Child* child) {
 	float rs_ro_ratio = rs / _ro;
 	// calculate ppm 
 	int ppm = _curve_scaling_factor * pow(rs_ro_ratio, _curve_exponent);
-	debug(PSTR("%s(%d): Rs=%f Rs/Ro=%f ppm=ppm\n"),_name,child->getChildId(),rs,rs_ro_ratio,ppm);
+	debug(PSTR("%s(%d): Rs=%d Rs/Ro=%d.%02d ppm=ppm\n"),_name,child->getChildId(),rs,(int)rs_ro_ratio, (int)(rs_ro_ratio*100)%100,ppm);
 	// ppm cannot be negative
 	if (ppm < 0) ppm = 0;
 	// if warmup is configured, do not send the value back if within the warmup period
@@ -4509,7 +4509,7 @@ void NodeManager::loop() {
 		_message.setType(type);
 		// send the message, multiple times if requested
 		for (int i = 0; i < _retries; i++) {
-			debug(PSTR("SEND(%d): D=%d T=%d C=%d S=%s D=%d F=%f\n"),_message.sensor,_message.destination,_message.type,_message.getCommand(),_message.getString(),_message.getInt(),_message.getFloat());
+			debug(PSTR("SEND(%d): D=%d T=%d C=%d S=%s D=%d F=%d.%02d\n"),_message.sensor,_message.destination,_message.type,_message.getCommand(),_message.getString(),_message.getInt(),(int)_message.getFloat(),(int)(_message.getFloat()*100)%100);
 			send(_message, _ack);
 			// if configured, sleep beetween each send
 			_sleepBetweenSend();
