@@ -1244,7 +1244,6 @@ public:
 	// define what to do at each stage of the sketch
 	void onSetup();
 	void onLoop(Child* child);
-	void onProcess(Request & request);
 protected:
 	int _trigger_pin;
 	int _echo_pin;
@@ -1377,7 +1376,6 @@ public:
 	// define what to do at each stage of the sketch
 	void onSetup();
 	void onLoop(Child* child);
-	void onProcess(Request & request);
 	// constants
 	const static int ADDR_FLOAT = 0;
 	const static int ADDR_LOW = 1;
@@ -1479,7 +1477,6 @@ public:
 	void onSetup();
 	void onLoop(Child* child);
 	void onReceive(MyMessage* message);
-	void onProcess(Request & request);
 	void onInterrupt();
 protected:
 	long _count = 0;

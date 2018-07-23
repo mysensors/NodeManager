@@ -4151,7 +4151,7 @@ void NodeManager::presentation() {
 void NodeManager::setup() {
 	// retrieve and store isMetric from the controller
 	if (_get_controller_config) _is_metric = getControllerConfig().isMetric;
-	debug(PSTR("NODE(%d): M=\n"),getNodeId(),_is_metric);
+	debug(PSTR("NODE(%d): M=%d\n"),getNodeId(),_is_metric);
 #if FEATURE_TIME == ON
 	// sync the time with the controller
 	syncTime();
@@ -4192,7 +4192,6 @@ void NodeManager::setup() {
 
 // run the main function for all the register sensors
 void NodeManager::loop() {
-	debug("LOOP");
 #if FEATURE_TIME == ON
 	// if the time was last updated more than 60 minutes ago, update it
 	if (_time_is_valid && (now() - _time_last_sync) > 60*60) syncTime();
