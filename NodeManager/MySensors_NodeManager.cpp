@@ -3407,7 +3407,7 @@ void SensorNeopixel::setColor(char* string) {
 			pixel_end = pixel_num;
 		}
 		color = strtol(string + pos + 1, NULL, 16);
--		debug(PSTR("%s(%d): N=%d"),_name,child->getChildId(),pixel_num);
+		debug(PSTR("%s(%d): N=%d"),_name,child->getChildId(),pixel_num);
 		if (pixel_num != pixel_end) debug(PSTR("-%d"),pixel_end);
 		debug(PSTR(" C=%d\n"),color);
 		//set LED to color
