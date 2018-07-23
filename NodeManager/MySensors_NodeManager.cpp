@@ -6,26 +6,6 @@
 #include <Arduino.h>
 #include <MySensors_NodeManager.h>
 
-void debugPrint(const char *fmt, ... ) {
-	char fmtBuffer[MY_SERIAL_OUTPUT_SIZE];
-	va_list args;
-	va_start (args, fmt );
-	vsnprintf_P(fmtBuffer, sizeof(fmtBuffer), fmt, args);
-	va_end (args);
-	MY_DEBUGDEVICE.print(fmtBuffer);
-	MY_DEBUGDEVICE.flush();
-	
-	
-	/*
-	va_list args;
-    va_start(args, fmt);
-	hwDebugPrint(PSTR("%d: "),millis());
-    	hwDebugPrint(fmt,args);
-    va_end(args);
-*/
-
-}
-
 /***************************************
 PowerManager
 */
@@ -2158,14 +2138,13 @@ void SensorMQ::setWarmupMinutes(int value) {
 void SensorMQ::onSetup() {
 	// prepare the pin for input
 	pinMode(_pin, INPUT);
-	// The curve function is ppm = scaling_factor*ratio^exponent
-	// since we know two points (ppm1,ratio1) and (ppm2,ratio2) we can calculate scaling_factor and exponent approximating a power regression
+	// The curve function is ppm = scaling_factor*ratio^exponent. Since we know two points (ppm1,ratio1) and (ppm2,ratio2) we can calculate scaling_factor and exponent approximating a power regression
 	if (_curve_exponent == 0) _curve_exponent = log(_point2_ppm/_point1_ppm)/log(_point2_ratio/_point1_ratio);
 	if (_curve_scaling_factor == 0) _curve_scaling_factor = exp((log(_point1_ratio)*log(_point2_ppm)-log(_point2_ratio)*log(_point1_ppm))/(_point1_ratio-_point2_ratio));
 	int rs = 0;
 	if (_ro == 0) {
-		// calibrate the sensor (the Ro resistance) if requested
-		// since ppm = scaling_factor*(rs/ro)^exponent, we need Rs to calculate Ro for the given ppm
+		// calibrate the sensor (the Ro resistance) if requested. Since ppm = scaling_factor*(rs/ro)^exponent, we need Rs to calculate Ro for the given ppm
+		debug(PSTR("CALIBRATING"));
 		rs = _getRsValue(_calibration_samples,_calibration_sample_interval);
 		_ro = (long)(rs * exp( log(_curve_scaling_factor/_known_ppm) / _curve_exponent ));
 	}
@@ -2196,7 +2175,6 @@ float SensorMQ::_getRsValue(int samples, int sample_interval) {
 		int adc = analogRead(_pin);
 		float rs = ( ((float)_rl*(1023-adc)/adc));
 		total += rs;
-		debug(PSTR("."));
 		wait(sample_interval);
 	}
 	debug(PSTR("\n"));
@@ -2246,11 +2224,11 @@ int SensorMHZ19::_readCO2() {
 	for (int i=0; i<9; i++) debug(PSTR("0x%x-"),response[i]);
 	debug(PSTR("\n"));
 	if (response[0] != 0xFF) {
-		debug(PSTR("ERR byte"));
+		debug(PSTR("%s: ERR byte\n"),_name);
 		return -1;
 	}
 	if (response[1] != 0x86) {
-		debug(PSTR("ERR cmd"));
+		debug(PSTR("%s: ERR cmd\n"),_name);
 		return -1;
 	}
 	int responseHigh = (int) response[2];
@@ -2359,7 +2337,7 @@ void SensorTSL2561::onSetup() {
 			break;
 		}
 	}
-	else debug(PSTR("ERROR"));
+	else debug(PSTR("%s: ERROR"),_name);
 }
 
 // what do to during loop
@@ -4104,11 +4082,10 @@ void NodeManager::before() {
 		digitalWrite(_reboot_pin, HIGH);
 	}
 	// print out MySensors' library capabilities
-	debug(PSTR("LIB V=" MYSENSORS_LIBRARY_VERSION " R=" MY_CAP_RADIO));
+	debug(PSTR("LIB V=" MYSENSORS_LIBRARY_VERSION " R=" MY_CAP_RADIO" T=" MY_CAP_TYPE " A=" MY_CAP_ARCH " S=" MY_CAP_SIGN " B=" MY_CAP_RXBUF "\n"));
 	#ifdef MY_CAP_ENCR
-	debug(PSTR(" E=" MY_CAP_ENCR));
+	debug(PSTR("LIB E=" MY_CAP_ENCR "\n"));
 	#endif
-	debug(PSTR(" T=" MY_CAP_TYPE " A=" MY_CAP_ARCH " S=" MY_CAP_SIGN " B=" MY_CAP_RXBUF "\n"));
 #if FEATURE_EEPROM == ON
 	// restore the sleep settings saved in the eeprom
 	if (_save_sleep_settings) _loadSleepSettings();
@@ -4121,12 +4098,12 @@ void NodeManager::before() {
 		// call each sensor's before()
 		sensor->before();
 	}
-	debug(PSTR("RADIO..."));
+	debug(PSTR("WAIT RADIO\n"));
 }
 
 // present NodeManager and its sensors
 void NodeManager::presentation() {
-	debug(PSTR("OK\n"));
+	debug(PSTR("RADIO OK\n"));
 	// Send the sketch version information to the gateway and Controller
 	_sleepBetweenSend();
 	debug(PSTR(SKETCH_NAME " v" SKETCH_VERSION "\n"));
@@ -4160,7 +4137,6 @@ void NodeManager::setup() {
 	// initialize connection to the SD card
 	if (sd_card.init(SPI_HALF_SPEED)) {
 		#if FEATURE_DEBUG == ON
-		debug(PSTR("SD: T="));
 		switch(sd_card.type()) {
 		case SD_CARD_TYPE_SD1:
 			debug(PSTR("SD1\n")); break;
@@ -4546,7 +4522,7 @@ void NodeManager::loop() {
 		int retries = 10;
 		// ask the controller for the time up to 10 times until received
 		while ( ! _time_is_valid && retries >= 0) {
-			debug(PSTR("REQ TIME"));
+			debug(PSTR("REQ TIME\n"));
 			requestTime();
 			wait(1000);
 			retries = retries - 1;
