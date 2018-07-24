@@ -3648,7 +3648,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
 			case 21: sensor->setReporting(request.getValueInt()); break;
 #if FEATURE_INTERRUPTS == ON			
 			case 22: sensor->setInterruptMode(request.getValueInt()); break;
-			case 23: sensor->setWaitAfterTrigger(request.getValueInt()); break;
+			case 23: sensor->setWaitAfterInterrupt(request.getValueInt()); break;
 #endif
 			default: return;
 			}
