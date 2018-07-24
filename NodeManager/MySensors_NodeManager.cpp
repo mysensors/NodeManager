@@ -261,7 +261,7 @@ void ChildInt::setValue(int value) {
 	// averages the values
 	_value = (int) (_total / _samples);
 	// print out a debug message
-	debug(PSTR("NM:LOOP:%s(%d):SET v=%d\n"),_description,_child_id,_value);
+	debug(PSTR("NM:LOOP:%s(%d):SET t=%d v=%d\n"),_description,_child_id,_type,_value);
 }
 
 // return the value
@@ -331,7 +331,7 @@ void ChildFloat::setValue(float value) {
 		else _value = float((int) (_value * (_float_precision*10))) / (_float_precision*10);
 	}
 	// print out a debug message
-	debug(PSTR("NM:LOOP:%s(%d):SET v=%d.%02d\n"),_description,_child_id,(int)_value, (int)(_value*100)%100);
+	debug(PSTR("NM:LOOP:%s(%d):SET t=%d v=%d.%02d\n"),_description,_child_id,_type,(int)_value, (int)(_value*100)%100);
 }
 
 // return the value
@@ -401,7 +401,7 @@ void ChildDouble::setValue(double value) {
 		else _value = double((int) (_value * (_float_precision*10))) / (_float_precision*10);
 	}
 	// print out a debug message
-	debug(PSTR("NM:LOOP:%s(%d):SET v=%d.%04d\n"),_description,_child_id,(int)_value, (int)(_value*10000)%10000);
+	debug(PSTR("NM:LOOP:%s(%d):SET t=%d v=%d.%04d\n"),_description,_child_id,_type,(int)_value, (int)(_value*10000)%10000);
 }
 
 // return the value
@@ -461,7 +461,7 @@ ChildString::ChildString(Sensor* sensor, int child_id, int presentation, int typ
 void ChildString::setValue(const char* value) {
 	_value = value;
 	// print out a debug message
-	debug(PSTR("NM:LOOP:%s(%d):SET v=%s\n"),_description,_child_id,_value);
+	debug(PSTR("NM:LOOP:%s(%d):SET t=%d v=%s\n"),_description,_child_id,_type,_value);
 }
 
 // return the value
@@ -4194,7 +4194,7 @@ void NodeManager::loop() {
 #if FEATURE_RECEIVE == ON
 	// dispacth inbound messages
 	void NodeManager::receive(const MyMessage &message) {
-		debug(PSTR("NM:MSG:RECV(%d) c=%d t=%d: %s\n"),message.sensor,message.getCommand(),message.type,message.getString());
+		debug(PSTR("NM:MSG:RECV(%d) c=%d t=%d p=%s\n"),message.sensor,message.getCommand(),message.type,message.getString());
 		// dispatch the message to the registered sensor
 		Sensor* sensor = getSensorWithChild(message.sensor);
 		if (sensor != nullptr) {
@@ -4464,7 +4464,7 @@ void NodeManager::loop() {
 		_message.setType(type);
 		// send the message, multiple times if requested
 		for (int i = 0; i < _retries; i++) {
-			debug(PSTR("NM:MSG:SEND(%d) t=%d: %s\n"),_message.sensor,_message.type,_message.getString(_convBuffer));
+			debug(PSTR("NM:MSG:SEND(%d) t=%d p=%s\n"),_message.sensor,_message.type,_message.getString(_convBuffer));
 			send(_message, _ack);
 			// if configured, sleep beetween each send
 			_sleepBetweenSend();
