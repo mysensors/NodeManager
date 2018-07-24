@@ -3642,8 +3642,8 @@ void SensorConfiguration::onReceive(MyMessage* message) {
 			case 20: sensor->setReportIntervalDays(request.getValueInt()); break;
 			case 21: sensor->setReporting(request.getValueInt()); break;
 #if FEATURE_INTERRUPTS == ON			
-			case 22: custom_sensor->setInterruptMode(request.getValueInt()); break;
-			case 23: custom_sensor->setWaitAfterTrigger(request.getValueInt()); break;
+			case 22: sensor->setInterruptMode(request.getValueInt()); break;
+			case 23: sensor->setWaitAfterTrigger(request.getValueInt()); break;
 #endif
 			default: return;
 			}
