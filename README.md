@@ -379,10 +379,18 @@ The following methods are available for all the sensors:
     // return true if the report interval has been already configured
     bool isReportIntervalConfigured();
 #if FEATURE_INTERRUPTS == ON
-    // return the pin the interrupt is attached to
-    int getInterruptPin();
-    // listen for interrupts on the given pin so interrupt() will be called when occurring
-    void setInterrupt(int pin, int mode, int initial);
+	// return the pin the interrupt is attached to
+	int getInterruptPin();
+	// listen for interrupts on the given pin so interrupt() will be called when occurring
+	void setInterrupt(int pin, int mode, int initial);
+	// set initial value of the configured pin. Can be used for internal pull up
+	void setPinInitialValue(int value);
+	// for interrupt-based sensor, set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
+	void setInterruptMode(int value);
+	// [22] for interrupt-based sensor, milliseconds to wait/sleep after the interrupt before reporting (default: 0)
+	void setWaitAfterInterrupt(int value);
+	// [23] for interrupt-based sensor, the value of the pin is checked and the interrupt ignored if RISING and not HIGH or FALLING and not LOW (default: true)
+	void setInterruptStrict(bool value);
 #endif
 #if FEATURE_POWER_MANAGER == ON
     // set a previously configured PowerManager to the sensor so to powering it up with custom pins
@@ -542,16 +550,8 @@ Each sensor class exposes additional methods.
 
 *  SensorInterrupt / SensorDoor / SensorMotion
 ~~~c
-    // [101] set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
-    void setInterruptMode(int value);
-    // [103] milliseconds to wait/sleep after the interrupt before reporting (default: 0)
-    void setWaitAfterTrigger(int value);
-    // [104] Set initial value on the interrupt pin. Can be used for internal pull up (default: HIGH)
-    void setInitialValue(int value);
     // [105] Invert the value to report. E.g. if FALLING and value is LOW, report HIGH (default: false) 
     void setInvertValueToReport(bool value);
-	// [106] After an interrupt is triggered, the value is checked and the interrupt ignored if RISING and not HIGH or FALLING and not LOW (default: true)
-	void setInterruptStrict(bool value);
 #if FEATURE_TIME == ON
     // [107] when keeping track of the time, trigger only after X consecutive interrupts within the same minute (default: 1)
     void setThreshold(int value);
@@ -676,14 +676,6 @@ Each sensor class exposes additional methods.
 ~~~c
     // [102] set how many pulses for each unit (e.g. 1000 pulses for 1 kwh of power, 9 pulses for 1 mm of rain, etc.)
     void setPulseFactor(float value);
-    // Set initial value on the interrupt pin. Can be used for internal pull up (default: HIGH)
-    void setInitialValue(int value);
-    // set the interrupt mode. Can be CHANGE, RISING, FALLING (default: FALLING)
-    void setInterruptMode(int value);
-    // milliseconds to wait/sleep after the interrupt before reporting (default: 0)
-    void setWaitAfterTrigger(int value);
-	// [103] After an interrupt is triggered, the value is checked and the interrupt ignored if RISING and not HIGH or FALLING and not LOW (default: true)
-	void setInterruptStrict(bool value);
 ~~~
 
 * DisplaySSD1306

@@ -546,6 +546,18 @@ void Sensor::powerOff() {
 int Sensor::getInterruptPin() {
 	return _interrupt_pin;
 }
+void Sensor::setInterruptMode(int value) {
+	_interrupt_mode = value;
+}
+void Sensor::setWaitAfterInterrupt(int value) {
+	_wait_after_interrupt = value;
+}
+void Sensor::setPinInitialValue(int value) {
+	_initial_value = value;
+}
+void Sensor::setInterruptStrict(bool value) {
+	_interrupt_strict = value;
+}
 #endif
 
 // enable/disable reporting to the gateway
@@ -579,14 +591,6 @@ bool Sensor::isReportIntervalConfigured() {
 	return _report_timer->isConfigured();
 }
 
-#if FEATURE_INTERRUPTS == ON
-// listen for interrupts on the given pin so interrupt() will be called when occurring
-void Sensor::setInterrupt(int pin, int mode, int initial) {
-	_interrupt_pin = pin;
-	_node->setInterrupt(pin,mode,initial);
-}
-#endif
-
 // register a child
 void Sensor::registerChild(Child* child) {
 	children.push(child);
@@ -614,6 +618,11 @@ void Sensor::before() {
 // call the sensor-specific implementation of setup
 void Sensor::setup() {
 	onSetup();
+#if FEATURE_INTERRUPTS == ON
+	// for interrupt based sensors, register a callback for the interrupt
+	_interrupt_pin = _pin;
+	_node->setInterrupt(_pin,_interrupt_mode,_initial_value);
+#endif
 #if FEATURE_HOOKING == ON
 	// if a hook function is defined, call it
 	if (_setup_hook != 0) _setup_hook(this); 
@@ -674,13 +683,18 @@ void Sensor::loop(MyMessage* message) {
 
 #if FEATURE_INTERRUPTS == ON
 // receive and handle an interrupt
-void Sensor::interrupt() {
-	// call the implementation of onInterrupt()
+bool Sensor::interrupt() {
+	// ignore the interrupt if the value is not matching the one expected
+	if (_interrupt_strict && ((_interrupt_mode == RISING && _node->getLastInterruptValue() != HIGH ) || (_interrupt_mode == FALLING && _node->getLastInterruptValue() != LOW))) return false;
+	// call the sensor's implementation of onInterrupt()
 	onInterrupt();
+	// wait after interrupt if needed
+	if (_wait_after_interrupt > 0) _node->sleepOrWait(_wait_after_interrupt);
 #if FEATURE_HOOKING == ON
 	// if a hook function is defined, call it
 	if (_interrupt_hook != 0) _interrupt_hook(this); 
 #endif
+	return true;
 }
 #endif
 
@@ -1415,23 +1429,13 @@ SensorInterrupt::SensorInterrupt(NodeManager& node_manager, int pin, int child_i
 	_name = "INTERRUPT";
 	children.allocateBlocks(1);
 	new ChildInt(this,_node->getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
+	setPinInitialValue(HIGH);
+	setInterruptMode(CHANGE);
 }
 
 // setter/getter
-void SensorInterrupt::setInterruptMode(int value) {
-	_interrupt_mode = value;
-}
-void SensorInterrupt::setWaitAfterTrigger(int value) {
-	_wait_after_trigger = value;
-}
-void SensorInterrupt::setInitialValue(int value) {
-	_initial_value = value;
-}
 void SensorInterrupt::setInvertValueToReport(bool value) {
 	_invert_value_to_report = value;
-}
-void SensorInterrupt::setInterruptStrict(bool value) {
-	_interrupt_strict = value;
 }
 #if FEATURE_TIME == ON
 void SensorInterrupt::setThreshold(int value) {
@@ -1442,8 +1446,6 @@ void SensorInterrupt::setThreshold(int value) {
 
 // what to do during setup
 void SensorInterrupt::onSetup() {
-	// set the interrupt pin so it will be called only when waking up from that interrupt
-	setInterrupt(_pin,_interrupt_mode,_initial_value);
 	// report immediately
 	_report_timer->unset();
 }
@@ -1473,8 +1475,6 @@ void SensorInterrupt::onInterrupt() {
 	Child* child = children.get(1);
 	// read the value of the pin
 	int value = _node->getLastInterruptValue();
-	// ignore the interrupt if the value is not matching the one expected
-	if (_interrupt_strict && ((_interrupt_mode == RISING && value != HIGH ) || (_interrupt_mode == FALLING && value != LOW))) return;
 	// invert the value if needed
 	if (_invert_value_to_report) value = !value;
 #if FEATURE_TIME == ON
@@ -1482,8 +1482,6 @@ void SensorInterrupt::onInterrupt() {
 	if (_counter < _threshold) return;
 #endif
 	((ChildInt*)child)->setValue(value);
-	// allow the signal to be restored to its normal value before reporting
-	if (_wait_after_trigger > 0) _node->sleepOrWait(_wait_after_trigger);
 }
 
 /*
@@ -1505,7 +1503,7 @@ SensorMotion::SensorMotion(NodeManager& node_manager, int pin, int child_id): Se
 	children.get(1)->setType(V_TRIPPED);
 	children.get(1)->setDescription(_name);
 	// trigger only when rising a HIGH value from the sensor
-	setInitialValue(LOW);
+	setPinInitialValue(LOW);
 	setInterruptMode(RISING);
 }
 
@@ -2521,29 +2519,17 @@ SensorPulseMeter
 // contructor
 SensorPulseMeter::SensorPulseMeter(NodeManager& node_manager, int pin, int child_id): Sensor(node_manager, pin) {
 	_name = "PULSE";
+	setPinInitialValue(HIGH);
+	setInterruptMode(FALLING);
 }
 
 // setter/getter
 void SensorPulseMeter::setPulseFactor(float value) {
 	_pulse_factor = value;
 }
-void SensorPulseMeter::setInitialValue(int value) {
-	_initial_value = value;
-}
-void SensorPulseMeter::setInterruptMode(int value) {
-	_interrupt_mode = value;
-}
-void SensorPulseMeter::setWaitAfterTrigger(int value) {
-	_wait_after_trigger = value;
-}
-void SensorPulseMeter::setInterruptStrict(bool value) {
-	_interrupt_strict = value;
-}
 
 // what to do during setup
 void SensorPulseMeter::onSetup() {
-	// configure the interrupt pin so onInterrupt() will be called on tip
-	setInterrupt(_pin,_interrupt_mode,_initial_value);
 }
 
 // what to do during loop
@@ -2568,15 +2554,9 @@ void SensorPulseMeter::onReceive(MyMessage* message) {
 
 // what to do when receiving an interrupt
 void SensorPulseMeter::onInterrupt() {
-	// read the value of the pin
-	int value = _node->getLastInterruptValue();
-	// ignore the interrupt if the value is not matching the one expected
-	if (_interrupt_strict && ((_interrupt_mode == RISING && value != HIGH ) || (_interrupt_mode == FALLING && value != LOW))) return;
 	// increase the counter
 	_count++;
 	debug(PSTR("NM:SENS:%s:INT++"),_name);
-	// allow the signal to be restored to its normal value before reporting
-	if (_wait_after_trigger > 0) _node->sleepOrWait(_wait_after_trigger);
 }
 
 // return the total based on the pulses counted
@@ -3160,6 +3140,8 @@ SensorTTP::SensorTTP(NodeManager& node_manager, int child_id): Sensor(node_manag
 	_name = "TTP";
 	children.allocateBlocks(1);
 	new ChildInt(this,_node->getAvailableChildId(child_id),S_INFO,V_TEXT,_name);
+	setPinInitialValue(LOW);
+	setInterruptMode(RISING);
 }
 // setter/getter
 void SensorTTP::setPasscodeLength(int value) {
@@ -3187,8 +3169,8 @@ void SensorTTP::onSetup() {
 	pinMode(_sdo_pin, INPUT);
 	pinMode(_rst_pin, OUTPUT); 
 	pinMode(_clock_pin, OUTPUT);
-	// set the interrupt on the DV pin
-	setInterrupt(_dv_pin,RISING,LOW);
+	// this will allow to register the interrupt
+	_pin = _dv_pin
 	// report immediately
 	_report_timer->unset();
 	digitalWrite(_rst_pin, LOW);
@@ -3225,22 +3207,22 @@ void SensorTTP::onInterrupt() {
 
 // fetch data from the keypad
 int SensorTTP::_fetchData() {
-	int Key = 0;
-	int Ziro = 0;
+	int key = 0;
+	int ziro = 0;
 	// Send 8 clock pulses and check each data bit as it arrives
 	for(int i = 1; i < 9; i++) {       
 		digitalWrite(_clock_pin,1);
 		delayMicroseconds(1000);
 		// If data bit, high, then that key was pressed.
 		if(digitalRead(_sdo_pin) == HIGH)  
-		Key=i; 
+		key=i; 
 		else 
-		Ziro++;
+		ziro++;
 		digitalWrite(_clock_pin,0);
 		// Don't use delay(1) as it will mess up interrupts
 		delayMicroseconds(1000);  
 	}
-	if(Key>0 && Ziro==7) return Key;
+	if(key > 0 && ziro == 7) return key;
 	return 0;
 }
 #endif
@@ -3296,6 +3278,8 @@ SensorAPDS9960::SensorAPDS9960(NodeManager& node_manager, int pin, int child_id)
 	_name = "APDS9960";
 	children.allocateBlocks(1);
 	new ChildString(this,_node->getAvailableChildId(child_id),S_INFO,V_TEXT,_name);
+	setPinInitialValue(HIGH);
+	setInterruptMode(FALLING);
 }
 
 // what to do during setup
@@ -3657,6 +3641,10 @@ void SensorConfiguration::onReceive(MyMessage* message) {
 			case 19: sensor->setReportIntervalHours(request.getValueInt()); break;
 			case 20: sensor->setReportIntervalDays(request.getValueInt()); break;
 			case 21: sensor->setReporting(request.getValueInt()); break;
+#if FEATURE_INTERRUPTS == ON			
+			case 22: custom_sensor->setInterruptMode(request.getValueInt()); break;
+			case 23: custom_sensor->setWaitAfterTrigger(request.getValueInt()); break;
+#endif
 			default: return;
 			}
 		} else {
@@ -3739,11 +3727,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
 			if (strcmp(sensor->getName(),"INTERRUPT") == 0 || strcmp(sensor->getName(),"DOOR") == 0 || strcmp(sensor->getName(),"MOTION") == 0) {
 				SensorInterrupt* custom_sensor = (SensorInterrupt*)sensor;
 				switch(function) {
-				case 101: custom_sensor->setInterruptMode(request.getValueInt()); break;
-				case 103: custom_sensor->setWaitAfterTrigger(request.getValueInt()); break;
-				case 104: custom_sensor->setInitialValue(request.getValueInt()); break;
 				case 105: custom_sensor->setInvertValueToReport(request.getValueInt()); break;
-				case 106: custom_sensor->setInterruptStrict(request.getValueInt()); break;
 				default: return;
 				}
 			}
@@ -3856,7 +3840,6 @@ void SensorConfiguration::onReceive(MyMessage* message) {
 				SensorPulseMeter* custom_sensor = (SensorPulseMeter*)sensor;
 				switch(function) {
 				case 102: custom_sensor->setPulseFactor(request.getValueFloat()); break;
-				case 103: custom_sensor->setInterruptStrict(request.getValueInt()); break;
 				default: return;
 				}
 			}

@@ -587,8 +587,14 @@ public:
 #if FEATURE_INTERRUPTS == ON
 	// return the pin the interrupt is attached to
 	int getInterruptPin();
-	// listen for interrupts on the given pin so interrupt() will be called when occurring
-	void setInterrupt(int pin, int mode, int initial);
+	// set initial value of the configured pin. Can be used for internal pull up
+	void setPinInitialValue(int value);
+	// for interrupt-based sensor, set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
+	void setInterruptMode(int value);
+	// [22] for interrupt-based sensor, milliseconds to wait/sleep after the interrupt before reporting (default: 0)
+	void setWaitAfterInterrupt(int value);
+	// [23] for interrupt-based sensor, the value of the pin is checked and the interrupt ignored if RISING and not HIGH or FALLING and not LOW (default: true)
+	void setInterruptStrict(bool value);
 #endif
 #if FEATURE_POWER_MANAGER == ON
 	// set a previously configured PowerManager to the sensor so to powering it up with custom pins
@@ -609,7 +615,7 @@ public:
 	// list of configured child
 	List<Child*> children;
 #if FEATURE_INTERRUPTS == ON
-	void interrupt();
+	bool interrupt();
 #endif
 	Child* getChild(int child_id);
 	// register a child
@@ -637,6 +643,10 @@ protected:
 	bool _reporting = true;
 #if FEATURE_INTERRUPTS == ON
 	int _interrupt_pin = -1;
+	int _interrupt_mode = -1;
+	int _wait_after_interrupt = 0;
+	int _initial_value = -1;
+	bool _interrupt_strict = true;
 #endif
 #if FEATURE_POWER_MANAGER == ON
 	PowerManager* _powerManager = nullptr;
@@ -1009,16 +1019,8 @@ public:
 class SensorInterrupt: public Sensor {
 public:
 	SensorInterrupt(NodeManager& node_manager, int pin, int child_id = -255);
-	// [101] set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
-	void setInterruptMode(int value);
-	// [103] milliseconds to wait/sleep after the interrupt before reporting (default: 0)
-	void setWaitAfterTrigger(int value);
-	// [104] Set initial value on the interrupt pin. Can be used for internal pull up (default: HIGH)
-	void setInitialValue(int value);
 	// [105] Invert the value to report. E.g. if FALLING and value is LOW, report HIGH (default: false) 
 	void setInvertValueToReport(bool value);
-	// [106] After an interrupt is triggered, the value is checked and the interrupt ignored if RISING and not HIGH or FALLING and not LOW (default: true)
-	void setInterruptStrict(bool value);
 #if FEATURE_TIME == ON
 	// [107] when keeping track of the time, trigger only after X consecutive interrupts within the same minute (default: 1)
 	void setThreshold(int value);
@@ -1029,11 +1031,7 @@ public:
 	void onReceive(MyMessage* message);
 	void onInterrupt();
 protected:
-	int _wait_after_trigger = 0;
-	int _interrupt_mode = CHANGE;
-	int _initial_value = HIGH;
 	bool _invert_value_to_report = false;
-	bool _interrupt_strict = true;
 #if FEATURE_TIME == ON
 	int _threshold = 1;
 	int _counter = 0;
@@ -1462,14 +1460,6 @@ public:
 	SensorPulseMeter(NodeManager& node_manager, int pin, int child_id = -255);
 	// [102] set how many pulses for each unit (e.g. 1000 pulses for 1 kwh of power, 9 pulses for 1 mm of rain, etc.)
 	void setPulseFactor(float value);
-	// Set initial value on the interrupt pin. Can be used for internal pull up (default: HIGH)
-	void setInitialValue(int value);
-	// set the interrupt mode. Can be CHANGE, RISING, FALLING (default: FALLING)
-	void setInterruptMode(int value);
-	// milliseconds to wait/sleep after the interrupt before reporting (default: 0)
-	void setWaitAfterTrigger(int value);
-	// [103] After an interrupt is triggered, the value is checked and the interrupt ignored if RISING and not HIGH or FALLING and not LOW (default: true)
-	void setInterruptStrict(bool value);
 	// define what to do at each stage of the sketch
 	void onSetup();
 	void onLoop(Child* child);
@@ -1478,10 +1468,6 @@ public:
 protected:
 	long _count = 0;
 	float _pulse_factor;
-	int _initial_value = HIGH;
-	int _interrupt_mode = FALLING;
-	int _wait_after_trigger = 0;
-	bool _interrupt_strict = true;
 	virtual void _reportTotal(Child* child);
 };
 
