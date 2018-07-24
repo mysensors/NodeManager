@@ -550,8 +550,6 @@ Each sensor class exposes additional methods.
     void setInitialValue(int value);
     // [105] Invert the value to report. E.g. if FALLING and value is LOW, report HIGH (default: false) 
     void setInvertValueToReport(bool value);
-    // [106] Set armed, if false the sensor will not trigger until armed (default: true) 
-    void setArmed(bool value);
 #if FEATURE_TIME == ON
     // [107] when keeping track of the time, trigger only after X consecutive interrupts within the same minute (default: 1)
     void setThreshold(int value);
