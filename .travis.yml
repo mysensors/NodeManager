@@ -193,6 +193,7 @@ jobs:
        - arduino --install-library "Adafruit Unified Sensor,Adafruit BME280 Library"
        - sed -r -i 's/\/\/(SensorBME280 .+)/\1/' $SKETCH
        - sed -r -i 's/\/\/(#define USE_BME280)/\1/' $SKETCH
+       - export CONFIGURATION_SENSOR=0
        - eval $RUN
     - name: "SensorBMP085"
       script: 
@@ -205,6 +206,7 @@ jobs:
        - arduino --install-library "Adafruit BMP085 Library"
        - sed -r -i 's/\/\/(SensorBMP180 .+)/\1/' $SKETCH
        - sed -r -i 's/\/\/(#define USE_BMP085_180)/\1/' $SKETCH
+       - export CONFIGURATION_SENSOR=0
        - eval $RUN
     - name: "SensorBMP280"
       script: 

@@ -679,7 +679,7 @@ void Sensor::interrupt() {
 	onInterrupt();
 #if FEATURE_HOOKING == ON
 	// if a hook function is defined, call it
-	if (_interrupt_hook != 0) 3hook(this); 
+	if (_interrupt_hook != 0) _interrupt_hook(this); 
 #endif
 }
 #endif

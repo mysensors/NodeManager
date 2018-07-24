@@ -131,20 +131,6 @@ Default configuration settings
 #define FEATURE_HOOKING OFF
 #endif
 
-// disable sleep and debug when running as a serial gateway
-#ifdef MY_GATEWAY_SERIAL
-#define FEATURE_SLEEP OFF
-#endif
-
-// define debug output macro
-#if FEATURE_DEBUG == ON
-#define debug(x,...)		hwDebugPrint(x, ##__VA_ARGS__)
-//#define MAX_PAYLOAD (25u)
-char _convBuffer[25u*2+1];
-#else
-#define debug(x,...)
-#endif
-
 /***********************************
 Libraries
 */
@@ -158,6 +144,16 @@ Libraries
 #endif
 // load MySensors library
 #include <MySensors.h>
+
+// define debug output macro
+#if FEATURE_DEBUG == ON
+#define debug(x,...)		hwDebugPrint(x, ##__VA_ARGS__)
+#ifndef MY_GATEWAY_FEATURE
+char _convBuffer[MAX_PAYLOAD*2+1];
+#endif
+#else
+#define debug(x,...)
+#endif
 
 // include third party libraries
 #ifdef USE_SIGNAL
