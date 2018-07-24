@@ -759,6 +759,8 @@ Each sensor class exposes additional methods.
    void setMinConfidence(uint16_t value);
    // [102] wait for a valid fingerprint for the given amount of seconds. Useful when battery powered (default: 0)
    void setWaitFingerForSeconds(int value);
+	// return true if the fingerprint was recognized successfully, false otherwise. Useful when a hook function needs to act upon the result
+	bool getFingerprintIsValid();
 ~~~
 
 ### Remote API

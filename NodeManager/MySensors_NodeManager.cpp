@@ -3472,7 +3472,6 @@ SensorFPM10A::SensorFPM10A(NodeManager & node_manager, int rxpin, int txpin, int
 }
 
 //setter/getter
-// what to do during setup
 void SensorFPM10A::setBaudRate(uint32_t value) {
 	_baud_rate = value;
 }
@@ -3483,7 +3482,10 @@ void SensorFPM10A::setMinConfidence(uint16_t value) {
 	_min_confidence = value;
 }
 void SensorFPM10A::setWaitFingerForSeconds(int value) {
-	_timer->start(value,SECONDS);
+	_wait_finger_for_seconds = value;
+}
+bool SensorFPM10A::getFingerprintIsValid() {
+	return _fingerprint_is_valid;
 }
 
 // what to do during setup
@@ -3505,25 +3507,28 @@ void SensorFPM10A::onSetup(){
 
 // what to do during loop
 void SensorFPM10A::onLoop(Child* child){
-	// restart the timer if set
-	if (_timer->isRunning()) _timer->restart();
+	_fingerprint_is_valid = false;
+	if (_first_time) {
+		_first_time = false;
+		return;
+	}
+	// start the timer
+	long start_millis = millis();
 	while(true) {
-		if (_timer->isRunning()) {
-			// if a timer is set, leave the cycle if over
-			_timer->update();
-			if (_timer->isOver()) break;
-		}
+		// if a timer is set, leave the cycle if over
+		if (_wait_finger_for_seconds > 0 && ((millis() - start_millis) > (unsigned long)_wait_finger_for_seconds*1000)) break;
 		// read the fingerprint
 		int finger = _readFingerprint();
 		if (finger > 0) {
+			_fingerprint_is_valid = true;
 			// fingerprint match found, send the template ID back
-			((ChildInt*)child)->setValue(finger);
+			((ChildInt*)child)->setValueInt(finger);
 			// leave the loop so we can report back
 			break;
 		}
 		//don't need to run this at full speed
 		wait(50);
-	}
+  }
 }
 
 // read the fingerprint from the sensor

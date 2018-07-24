@@ -1824,6 +1824,8 @@ public:
 	void setMinConfidence(uint16_t value);
 	// [102] wait for a valid fingerprint for the given amount of seconds. Useful when battery powered (default: 0)
 	void setWaitFingerForSeconds(int value);
+	// return true if the fingerprint was recognized successfully, false otherwise. Useful when a hook function needs to act upon the result
+	bool getFingerprintIsValid();
 	// define what to do at each stage of the sketch
 	void onSetup();
 	void onLoop(Child* child);
@@ -1832,11 +1834,13 @@ protected:
 	SoftwareSerial* _serial;
 	int _rx_pin;
 	int _tx_pin;
-	Timer* _timer;
+	int _wait_finger_for_seconds = 0;
 	uint32_t _baud_rate = 57600;
 	uint32_t _password = 0;
 	uint16_t _min_confidence = 0;
 	int _readFingerprint();
+	bool _first_time = true;
+	bool _fingerprint_is_valid = false;
 };
 #endif
 
