@@ -36,7 +36,7 @@ void PowerManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
 // turn on the sensor by activating its power pins
 void PowerManager::powerOn() {
 	if (_vcc_pin == -1) return;
-	debug(PSTR("PWR(%d,%d): ON\n"),_ground_pin,_vcc_pin);
+	debug(PSTR("NM:PWR:ON p=%d\n"),_vcc_pin);
 	// power on the sensor by turning high the vcc pin
 	digitalWrite(_vcc_pin, HIGH);
 	// wait a bit for the device to settle down
@@ -46,7 +46,7 @@ void PowerManager::powerOn() {
 // turn off the sensor
 void PowerManager::powerOff() {
 	if (_vcc_pin == -1) return;
-	debug(PSTR("PWR(%d,%d): OFF\n"),_ground_pin,_vcc_pin);
+	debug(PSTR("NM:PWR:OFF p=%d\n"),_ground_pin);
 	// power off the sensor by turning low the vcc pin
 	digitalWrite(_vcc_pin, LOW);
 }
@@ -261,7 +261,7 @@ void ChildInt::setValue(int value) {
 	// averages the values
 	_value = (int) (_total / _samples);
 	// print out a debug message
-	debug(PSTR("%s(%d): %d\n"),_description,_child_id,_value);
+	debug(PSTR("NM:LOOP:%s(%d):SET v=%d\n"),_description,_child_id,_value);
 }
 
 // return the value
@@ -331,7 +331,7 @@ void ChildFloat::setValue(float value) {
 		else _value = float((int) (_value * (_float_precision*10))) / (_float_precision*10);
 	}
 	// print out a debug message
-	debug(PSTR("%s(%d): %d.%02d\n"),_description,_child_id,(int)_value, (int)(_value*100)%100);
+	debug(PSTR("NM:LOOP:%s(%d):SET v=%d.%02d\n"),_description,_child_id,(int)_value, (int)(_value*100)%100);
 }
 
 // return the value
@@ -401,7 +401,7 @@ void ChildDouble::setValue(double value) {
 		else _value = double((int) (_value * (_float_precision*10))) / (_float_precision*10);
 	}
 	// print out a debug message
-	debug(PSTR("%s(%d): %d.%04d\n"),_description,_child_id,(int)_value, (int)(_value*10000)%10000);
+	debug(PSTR("NM:LOOP:%s(%d):SET v=%d.%04d\n"),_description,_child_id,(int)_value, (int)(_value*10000)%10000);
 }
 
 // return the value
@@ -461,7 +461,7 @@ ChildString::ChildString(Sensor* sensor, int child_id, int presentation, int typ
 void ChildString::setValue(const char* value) {
 	_value = value;
 	// print out a debug message
-	debug(PSTR("%s(%d): %s\n"),_description,_child_id,_value);
+	debug(PSTR("NM:LOOP:%s(%d):SET v=%s\n"),_description,_child_id,_value);
 }
 
 // return the value
@@ -596,7 +596,7 @@ void Sensor::registerChild(Child* child) {
 void Sensor::presentation() {
 	for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
 		Child* child = *itr;
-		debug(PSTR("PRES(%d): %d (%s)\n"),child->getChildId(),child->getPresentation(),child->getDescription());
+		debug(PSTR("NM:PRES:%s(%d)\n"),child->getDescription(),child->getChildId());
 		present(child->getChildId(), child->getPresentation(), child->getDescription(), _node->getAck());
 	}
 
@@ -607,7 +607,7 @@ void Sensor::before() {
 	onBefore();
 	for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
 		Child* child = *itr;
-		debug(PSTR("%s(%d): P=%d T=%d\n"),_name,child->getChildId(),child->getPresentation(),child->getType());
+		debug(PSTR("NM:BFR:%s(%d):REG p=%d t=%d\n"),_name,child->getChildId(),child->getPresentation(),child->getType());
 	}
 }
 
@@ -1769,11 +1769,11 @@ uint8_t SensorBosch::detectI2CAddress(uint8_t chip_id) {
 		uint8_t value = Wire.read();
 		// found the expected chip id, this is the correct i2c address to use
 		if (value == chip_id) {
-			debug(PSTR("I2C: 0x%x\n"),i2c_address);
+			debug(PSTR("NM:SENS:%s:I2C a=0x%x\n"),_name,i2c_address);
 			return i2c_address;
 		}
 	}
-	debug(PSTR("I2C FAIL\n"));
+	debug(PSTR("!NM:SENS:%s:I2C ADDR\n"),_name);
 	return addresses[0]; 
 }
 #endif
@@ -2145,11 +2145,11 @@ void SensorMQ::onSetup() {
 	int rs = 0;
 	if (_ro == 0) {
 		// calibrate the sensor (the Ro resistance) if requested. Since ppm = scaling_factor*(rs/ro)^exponent, we need Rs to calculate Ro for the given ppm
-		debug(PSTR("CALIBRATING"));
+		debug(PSTR("NM:SENS:%s:CAL"),_name);
 		rs = _getRsValue(_calibration_samples,_calibration_sample_interval);
 		_ro = (long)(rs * exp( log(_curve_scaling_factor/_known_ppm) / _curve_exponent ));
 	}
-	debug(PSTR("%s: Rs=%d Ro=%d Rl=_rl F=%d.%02d x^=%d.%02d\n"),_name,rs,_ro,_rl,(int)_curve_scaling_factor, (int)(_curve_scaling_factor*100)%100,(int)_curve_exponent, (int)(_curve_exponent*100)%100);
+	debug(PSTR("NM:SENS:%s:CAL OK Rs=%d Ro=%d Rl=_rl F=%d.%02d x^=%d.%02d\n"),_name,rs,_ro,_rl,(int)_curve_scaling_factor, (int)(_curve_scaling_factor*100)%100,(int)_curve_exponent, (int)(_curve_exponent*100)%100);
 }
 
 // what to do during loop
@@ -2160,7 +2160,7 @@ void SensorMQ::onLoop(Child* child) {
 	float rs_ro_ratio = rs / _ro;
 	// calculate ppm 
 	int ppm = _curve_scaling_factor * pow(rs_ro_ratio, _curve_exponent);
-	debug(PSTR("%s(%d): Rs=%d Rs/Ro=%d.%02d ppm=ppm\n"),_name,child->getChildId(),rs,(int)rs_ro_ratio, (int)(rs_ro_ratio*100)%100,ppm);
+	debug(PSTR("NM:SENS:%s(%d):READ Rs=%d Rs/Ro=%d.%02d ppm=%d\n"),_name,child->getChildId(),rs,(int)rs_ro_ratio, (int)(rs_ro_ratio*100)%100,ppm);
 	// ppm cannot be negative
 	if (ppm < 0) ppm = 0;
 	// if warmup is configured, do not send the value back if within the warmup period
@@ -2178,7 +2178,6 @@ float SensorMQ::_getRsValue(int samples, int sample_interval) {
 		total += rs;
 		wait(sample_interval);
 	}
-	debug(PSTR("\n"));
 	return total/(float)samples;
 }
 #endif
@@ -2222,14 +2221,13 @@ int SensorMHZ19::_readCO2() {
 	_ser->write(cmd, 9); //request PPM CO2
 	// Then for 1 second listen for 9 bytes of data.
 	_ser->readBytes(response, 9);
-	for (int i=0; i<9; i++) debug(PSTR("0x%x-"),response[i]);
-	debug(PSTR("\n"));
+	for (int i=0; i<9; i++) debug(PSTR("NM:SENS:%s:READ i=%d v=0x%x\n"),_name,i,response[i]);
 	if (response[0] != 0xFF) {
-		debug(PSTR("%s: ERR byte\n"),_name);
+		debug(PSTR("!NM:SENS:%s:BYTE\n"),_name);
 		return -1;
 	}
 	if (response[1] != 0x86) {
-		debug(PSTR("%s: ERR cmd\n"),_name);
+		debug(PSTR("!NM:SENS:%s:CMD\n"),_name);
 		return -1;
 	}
 	int responseHigh = (int) response[2];
@@ -2338,7 +2336,7 @@ void SensorTSL2561::onSetup() {
 			break;
 		}
 	}
-	else debug(PSTR("%s: ERROR"),_name);
+	else debug(PSTR("!NM:SENS:%s:STP"),_name);
 }
 
 // what do to during loop
@@ -2575,7 +2573,7 @@ void SensorPulseMeter::onInterrupt() {
 	if ( (_interrupt_mode == RISING && value == HIGH ) || (_interrupt_mode == FALLING && value == LOW) || (_interrupt_mode == CHANGE) )  {
 		// increase the counter
 		_count++;
-		debug(PSTR("%s++"),_name);
+		debug(PSTR("NM:SENS:%s:INT++"),_name);
 	}
 }
 
@@ -2671,7 +2669,7 @@ void SensorPlantowerPMS::onLoop(Child* child) {
 	if (!_valuesRead || _valuesReadError) {
 		_valuesReadError = !_pms->readUntil(_data, 1000);
 		if (_valuesReadError) {
-			debug(PSTR("ERR PMS read\n"));
+			debug(PSTR("!NM:SENS:%s:READ\n"),_name);
 			return;
 		}
 		_valuesRead = true;
@@ -2687,7 +2685,7 @@ void SensorPlantowerPMS::onLoop(Child* child) {
 		// PM 10.0 values
 		val = _data.PM_AE_UG_10_0;
 	} else {
-		debug(PSTR("ERR child\n"));
+		debug(PSTR("!NM:SENS:%s:CHILD\n"),_name);
 		return;
 	}
 	// store the value
@@ -3054,7 +3052,7 @@ void SensorChirp::onSetup() {
 	Wire.begin();
 	_chirp->begin();
 	wait(1000);
-	debug(PSTR("%s: A=0x%x V=\n"),_name,_chirp->getAddress(),_chirp->getVersion());
+	debug(PSTR("NM:SENS:%s:STP a=0x%x v=%d\n"),_name,_chirp->getAddress(),_chirp->getVersion());
 }
 
 // what to do during loop
@@ -3205,7 +3203,7 @@ void SensorTTP::onInterrupt() {
 	int value = _fetchData();
 	// invalid value, return
 	if (value == 0) return;
-	debug(PSTR("%s(%d): %d\n"),_name,child->getChildId(),value);
+	debug(PSTR("NM:SENS:%s(%d):READ v=%d\n"),_name,child->getChildId(),value);
 	// add the value to the passcode array
 	_passcode.push(value);
 	// time to send the passcode back
@@ -3408,9 +3406,9 @@ void SensorNeopixel::setColor(char* string) {
 			pixel_end = pixel_num;
 		}
 		color = strtol(string + pos + 1, NULL, 16);
-		debug(PSTR("%s(%d): N=%d"),_name,child->getChildId(),pixel_num);
-		if (pixel_num != pixel_end) debug(PSTR("-%d"),pixel_end);
-		debug(PSTR(" C=%d\n"),color);
+		debug(PSTR("NM:SENS:%s(%d):PIX n=%d\n"),_name,child->getChildId(),pixel_num);
+		if (pixel_num != pixel_end) debug(PSTR("NM:SENS:%s(%d):PIX e=%d"),_name,child->getChildId(),pixel_end);
+		debug(PSTR("NM:SENS:%s(%d):PIX c=%d"),_name,child->getChildId(),color);
 		//set LED to color
 		for(int i=pixel_num;i<=pixel_end;i++)
 		_pixels->setPixelColor(i,color);
@@ -3510,12 +3508,11 @@ void SensorFPM10A::onSetup(){
 	_finger = new Adafruit_Fingerprint(_serial,_password);
 	// connect to the sensor
 	_finger->begin(_baud_rate);
-	debug(PSTR("%s: "),_name);
 	if (_finger->verifyPassword()) {
 		_finger->getTemplateCount();
-		debug(PSTR("T=%d\n"),_finger->templateCount);
+		debug(PSTR("NM:SENS:%s:CONN OK t=%d\n"),_name,_finger->templateCount);
 	}
-	else debug(PSTR("ERROR\n"));
+	else debug(PSTR("!NM:SENS:%s:CONN KO\n"));
 	// report immediately
 	_report_timer->unset();
 }
@@ -3555,7 +3552,7 @@ int SensorFPM10A::_readFingerprint() {
 	p = _finger->fingerFastSearch();
 	if (p != FINGERPRINT_OK) return -1;
 	// fingerprint found
-	debug(PSTR("%s: T=%d C=%d\n"),_name,_finger->fingerID,_finger->confidence);
+	debug(PSTR("NM:SENS:%s:READ t=%d c=%d\n"),_name,_finger->fingerID,_finger->confidence);
 	// ignore the match if not confident enough
 	if (_finger->confidence < _min_confidence) return -1;
 	return _finger->fingerID; 
@@ -3915,7 +3912,7 @@ ConfigurationRequest::ConfigurationRequest(int recipient_child_id, const char* s
 	_function = atoi(strtok_r(NULL, ",", &ptr));
 	// tokenize the string and get the value
 	_value = atof(strtok_r(NULL, ",", &ptr));
-	debug(PSTR("CONF(%d): %d->%d\n"),_child_id,_function,_value);
+	debug(PSTR("NM:CONF:REQ f=%d v=%d\n"),_function,_value);
 }
 
 // return the child id
@@ -3953,7 +3950,16 @@ NodeManager
 NodeManager::NodeManager(int sensor_count) {
 	// setup the message container
 	_message = MyMessage();
+	// allocate block for all the sensors if sensor_count is provided
 	if (sensor_count > 0) sensors.allocateBlocks(sensor_count);
+	// setup serial port baud rate
+	Serial.begin(MY_BAUD_RATE);
+	// print out the version
+	debug(PSTR("NM:INIT:VER=" VERSION "\n"));
+	// print out sketch name
+	debug(PSTR("NM:INIT:INO=" SKETCH_NAME "(" SKETCH_VERSION ")\n"));
+	// print out MySensors' library capabilities
+	debug(PSTR("NM:INIT:LIB VER=" MYSENSORS_LIBRARY_VERSION " CP=" MY_CAPABILITIES " \n"));
 }
 
 #if FEATURE_INTERRUPTS == ON
@@ -4071,19 +4077,12 @@ void NodeManager::registerSensor(Sensor* sensor) {
 
 // setup NodeManager
 void NodeManager::before() {
-	// print out the version
-	debug(PSTR("NodeManager v" VERSION "\n"));
 	// setup the reboot pin if needed
 	if (_reboot_pin > -1) {
-		debug(PSTR("REB P=%d\n"),_reboot_pin);
+		debug(PSTR("NM:INIT:REBOOT p=%d\n"),_reboot_pin);
 		pinMode(_reboot_pin, OUTPUT);
 		digitalWrite(_reboot_pin, HIGH);
 	}
-	// print out MySensors' library capabilities
-	debug(PSTR("LIB V=" MYSENSORS_LIBRARY_VERSION " R=" MY_CAP_RADIO" T=" MY_CAP_TYPE " A=" MY_CAP_ARCH " S=" MY_CAP_SIGN " B=" MY_CAP_RXBUF "\n"));
-	#ifdef MY_CAP_ENCR
-	debug(PSTR("ENC=" MY_CAP_ENCR "\n"));
-	#endif
 #if FEATURE_EEPROM == ON
 	// restore the sleep settings saved in the eeprom
 	if (_save_sleep_settings) _loadSleepSettings();
@@ -4096,15 +4095,14 @@ void NodeManager::before() {
 		// call each sensor's before()
 		sensor->before();
 	}
-	debug(PSTR("WAIT RADIO\n"));
+	debug(PSTR("NM:BFR:RADIO INIT\n"));
 }
 
 // present NodeManager and its sensors
 void NodeManager::presentation() {
-	debug(PSTR("RADIO OK\n"));
+	debug(PSTR("NM:BFR:RADIO OK\n"));
 	// Send the sketch version information to the gateway and Controller
 	_sleepBetweenSend();
-	debug(PSTR(SKETCH_NAME " v" SKETCH_VERSION "\n"));
 	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
 	_sleepBetweenSend();
 	// present each sensor
@@ -4114,7 +4112,6 @@ void NodeManager::presentation() {
 		sensor->presentation();
 		_sleepBetweenSend();
 	}
-	debug(PSTR("READY\n\n"));
 	// wait a bit before leaving this function
 	_sleepBetweenSend();
 	_sleepBetweenSend();
@@ -4126,7 +4123,7 @@ void NodeManager::presentation() {
 void NodeManager::setup() {
 	// retrieve and store isMetric from the controller
 	if (_get_controller_config) _is_metric = getControllerConfig().isMetric;
-	debug(PSTR("NODE(%d): M=%d\n"),getNodeId(),_is_metric);
+	debug(PSTR("NM:STP:NODE ID=%d M=%d\n"),getNodeId(),_is_metric);
 #if FEATURE_TIME == ON
 	// sync the time with the controller
 	syncTime();
@@ -4134,18 +4131,7 @@ void NodeManager::setup() {
 #if FEATURE_SD == ON
 	// initialize connection to the SD card
 	if (sd_card.init(SPI_HALF_SPEED)) {
-		#if FEATURE_DEBUG == ON
-		switch(sd_card.type()) {
-		case SD_CARD_TYPE_SD1:
-			debug(PSTR("SD1\n")); break;
-		case SD_CARD_TYPE_SD2:
-			debug(PSTR("SD2\n")); break;
-		case SD_CARD_TYPE_SDHC:
-			debug(PSTR("SDHC\n")); break;
-		default:
-			debug(PSTR("?\n"));
-		}
-		#endif
+		debug(PSTR("NM:STP:SD T=%d\n"),sd_card.type());
 		// initialize the volume
 		sd_volume.init(sd_card);
 		// open up the volume
@@ -4208,7 +4194,7 @@ void NodeManager::loop() {
 #if FEATURE_RECEIVE == ON
 	// dispacth inbound messages
 	void NodeManager::receive(const MyMessage &message) {
-		debug(PSTR("RECV S=%d I=%d C=%d T=%d P=%s\n"),message.sender,message.sensor,message.getCommand(),message.type,message.getString());
+		debug(PSTR("NM:MSG:RECV(%d) c=%d t=%d: %s\n"),message.sensor,message.getCommand(),message.type,message.getString());
 		// dispatch the message to the registered sensor
 		Sensor* sensor = getSensorWithChild(message.sensor);
 		if (sensor != nullptr) {
@@ -4229,7 +4215,7 @@ void NodeManager::loop() {
 #if FEATURE_TIME == ON
 	// receive the time from the controller and save it
 	void NodeManager::receiveTime(unsigned long ts) {
-		debug(PSTR("TIME: %d\n"),ts);
+		debug(PSTR("NM:TIME:OK ts=%d\n"),ts);
 		// time is now valid
 		_time_is_valid = true;
 #if FEATURE_RTC == ON
@@ -4252,7 +4238,7 @@ void NodeManager::loop() {
 
 	// reboot the board
 	void NodeManager::reboot() {
-		debug(PSTR("REBOOT\n"));
+		debug(PSTR("NM:PWR:REBOOT\n"));
 		if (_reboot_pin > -1) {
 			// reboot the board through the reboot pin which is connected to RST by setting it to low
 			digitalWrite(_reboot_pin, LOW);
@@ -4272,7 +4258,7 @@ void NodeManager::loop() {
 #if FEATURE_EEPROM == ON
 	// clear the EEPROM
 	void NodeManager::clearEeprom() {
-		debug(PSTR("CLEAR\n"));
+		debug(PSTR("NM:EEPR:CLEAR\n"));
 		for (uint16_t i=0; i<EEPROM_LOCAL_CONFIG_ADDRESS; i++) saveState(i, 0xFF);
 	}
 
@@ -4290,7 +4276,7 @@ void NodeManager::loop() {
 #if FEATURE_SLEEP == ON
 	// wake up the board
 	void NodeManager::wakeup() {
-		debug(PSTR("WAKEUP\n"));
+		debug(PSTR("NM:SLP:WAKEUP\n"));
 		_status = AWAKE;
 	}
 
@@ -4345,7 +4331,7 @@ void NodeManager::loop() {
 			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, _interrupt_1_mode);
 #endif
 		}
-		debug(PSTR("INT(%d): M=%d\n"),INTERRUPT_PIN_1,_interrupt_1_mode);
+		debug(PSTR("NM:BFR:INT p=%d m=%d\n"),INTERRUPT_PIN_1,_interrupt_1_mode);
 		if (_interrupt_2_mode != MODE_NOT_DEFINED) {
 			pinMode(INTERRUPT_PIN_2, INPUT);
 			if (_interrupt_2_initial > -1) digitalWrite(INTERRUPT_PIN_2,_interrupt_2_initial);
@@ -4356,7 +4342,7 @@ void NodeManager::loop() {
 			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, _interrupt_2_mode);
 #endif
 		}
-		debug(PSTR("INT(%d): M=%d\n"),INTERRUPT_PIN_2,_interrupt_2_mode);
+		debug(PSTR("NM:BFR:INT p=%d m=%d\n"),INTERRUPT_PIN_2,_interrupt_2_mode);
 	}
 
 	// return the pin from which the last interrupt came
@@ -4445,7 +4431,7 @@ void NodeManager::loop() {
 		// save pin and value
 		_last_interrupt_pin = pin;
 		_last_interrupt_value = digitalRead(pin);
-		debug(PSTR("INT(%d): %d\n"),_last_interrupt_pin,_last_interrupt_value);
+		debug(PSTR("NM:LOOP:INT p=%d v=%d\n"),_last_interrupt_pin,_last_interrupt_value);
 	}
 #endif
 
@@ -4478,7 +4464,7 @@ void NodeManager::loop() {
 		_message.setType(type);
 		// send the message, multiple times if requested
 		for (int i = 0; i < _retries; i++) {
-			debug(PSTR("SEND(%d): D=%d T=%d C=%d S=%s D=%d F=%d.%02d\n"),_message.sensor,_message.destination,_message.type,_message.getCommand(),_message.getString(),_message.getInt(),(int)_message.getFloat(),(int)(_message.getFloat()*100)%100);
+			debug(PSTR("NM:MSG:SEND(%d) t=%d: %s\n"),_message.sensor,_message.type,_message.getString(_convBuffer));
 			send(_message, _ack);
 			// if configured, sleep beetween each send
 			_sleepBetweenSend();
@@ -4515,7 +4501,7 @@ void NodeManager::loop() {
 		int retries = 10;
 		// ask the controller for the time up to 10 times until received
 		while ( ! _time_is_valid && retries >= 0) {
-			debug(PSTR("REQ TIME\n"));
+			debug(PSTR("NM:TIME:REQ\n"));
 			requestTime();
 			wait(1000);
 			retries = retries - 1;
@@ -4536,7 +4522,7 @@ void NodeManager::loop() {
 		// if there is time still to sleep, sleep for that timeframe only
 		if (_remainder_sleep_time > 0) sleep_time = _remainder_sleep_time;
 #endif
-		debug(PSTR("SLEEP %ds\n\n"),sleep_time);
+		debug(PSTR("NM:SLP:SLEEP s=%d\n\n"),sleep_time);
 		// go to sleep
 		int interrupt = -1;
 #if FEATURE_INTERRUPTS == ON
@@ -4564,7 +4550,7 @@ void NodeManager::loop() {
 		sleep(INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,INTERRUPT_NOT_DEFINED,MODE_NOT_DEFINED,sleep_time*1000,_smart_sleep);
 #endif
 		// coming out of sleep
-		debug(PSTR("AWAKE\n"));
+		debug(PSTR("NM:SLP:AWAKE\n"));
 #if FEATURE_TIME == ON
 		// keep track of the old time so to calculate the amount of time slept
 		long old_time = now();
@@ -4594,7 +4580,7 @@ void NodeManager::loop() {
 			int bit_2 = loadState(EEPROM_SLEEP_2);
 			int bit_3 = loadState(EEPROM_SLEEP_3);
 			_sleep_time = bit_3*255*255 + bit_2*255 + bit_1;
-			debug(PSTR("LOADSLP T=%d\n"),_sleep_time);
+			debug(PSTR("NM:SLP:LOAD s=%d\n"),_sleep_time);
 		}
 	}
 

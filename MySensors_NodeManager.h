@@ -139,6 +139,8 @@ Default configuration settings
 // define debug output macro
 #if FEATURE_DEBUG == ON
 #define debug(x,...)		hwDebugPrint(x, ##__VA_ARGS__)
+//#define MAX_PAYLOAD (25u)
+char _convBuffer[25u*2+1];
 #else
 #define debug(x,...)
 #endif
