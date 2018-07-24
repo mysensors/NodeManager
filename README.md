@@ -550,6 +550,8 @@ Each sensor class exposes additional methods.
     void setInitialValue(int value);
     // [105] Invert the value to report. E.g. if FALLING and value is LOW, report HIGH (default: false) 
     void setInvertValueToReport(bool value);
+	// [106] After an interrupt is triggered, the value is checked and the interrupt ignored if RISING and not HIGH or FALLING and not LOW (default: true)
+	void setInterruptStrict(bool value);
 #if FEATURE_TIME == ON
     // [107] when keeping track of the time, trigger only after X consecutive interrupts within the same minute (default: 1)
     void setThreshold(int value);
@@ -680,6 +682,8 @@ Each sensor class exposes additional methods.
     void setInterruptMode(int value);
     // milliseconds to wait/sleep after the interrupt before reporting (default: 0)
     void setWaitAfterTrigger(int value);
+	// [103] After an interrupt is triggered, the value is checked and the interrupt ignored if RISING and not HIGH or FALLING and not LOW (default: true)
+	void setInterruptStrict(bool value);
 ~~~
 
 * DisplaySSD1306

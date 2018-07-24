@@ -1017,6 +1017,8 @@ public:
 	void setInitialValue(int value);
 	// [105] Invert the value to report. E.g. if FALLING and value is LOW, report HIGH (default: false) 
 	void setInvertValueToReport(bool value);
+	// [106] After an interrupt is triggered, the value is checked and the interrupt ignored if RISING and not HIGH or FALLING and not LOW (default: true)
+	void setInterruptStrict(bool value);
 #if FEATURE_TIME == ON
 	// [107] when keeping track of the time, trigger only after X consecutive interrupts within the same minute (default: 1)
 	void setThreshold(int value);
@@ -1031,6 +1033,7 @@ protected:
 	int _interrupt_mode = CHANGE;
 	int _initial_value = HIGH;
 	bool _invert_value_to_report = false;
+	bool _interrupt_strict = true;
 #if FEATURE_TIME == ON
 	int _threshold = 1;
 	int _counter = 0;
@@ -1465,6 +1468,8 @@ public:
 	void setInterruptMode(int value);
 	// milliseconds to wait/sleep after the interrupt before reporting (default: 0)
 	void setWaitAfterTrigger(int value);
+	// [103] After an interrupt is triggered, the value is checked and the interrupt ignored if RISING and not HIGH or FALLING and not LOW (default: true)
+	void setInterruptStrict(bool value);
 	// define what to do at each stage of the sketch
 	void onSetup();
 	void onLoop(Child* child);
@@ -1476,6 +1481,7 @@ protected:
 	int _initial_value = HIGH;
 	int _interrupt_mode = FALLING;
 	int _wait_after_trigger = 0;
+	bool _interrupt_strict = true;
 	virtual void _reportTotal(Child* child);
 };
 

@@ -1430,8 +1430,8 @@ void SensorInterrupt::setInitialValue(int value) {
 void SensorInterrupt::setInvertValueToReport(bool value) {
 	_invert_value_to_report = value;
 }
-void SensorInterrupt::setArmed(bool value) {
-	_armed = value;
+void SensorInterrupt::setInterruptStrict(bool value) {
+	_interrupt_strict = value;
 }
 #if FEATURE_TIME == ON
 void SensorInterrupt::setThreshold(int value) {
@@ -1473,20 +1473,17 @@ void SensorInterrupt::onInterrupt() {
 	Child* child = children.get(1);
 	// read the value of the pin
 	int value = _node->getLastInterruptValue();
-	// process the value
-	if ( (_interrupt_mode == RISING && value == HIGH ) || (_interrupt_mode == FALLING && value == LOW) || (_interrupt_mode == CHANGE) )  {
-		// invert the value if Active State is set to LOW
-		if (_invert_value_to_report) value = !value;
-		// retunr if not armed
-		if (! _armed) return;
+	// ignore the interrupt if the value is not matching the one expected
+	if (_interrupt_strict && ((_interrupt_mode == RISING && value != HIGH ) || (_interrupt_mode == FALLING && value != LOW))) return;
+	// invert the value if needed
+	if (_invert_value_to_report) value = !value;
 #if FEATURE_TIME == ON
-		// report only when there are at least _threshold triggers
-		if (_counter < _threshold) return;
+	// report only when there are at least _threshold triggers
+	if (_counter < _threshold) return;
 #endif
-		((ChildInt*)child)->setValue(value);
-		// allow the signal to be restored to its normal value before reporting
-		if (_wait_after_trigger > 0) _node->sleepOrWait(_wait_after_trigger);
-	}
+	((ChildInt*)child)->setValue(value);
+	// allow the signal to be restored to its normal value before reporting
+	if (_wait_after_trigger > 0) _node->sleepOrWait(_wait_after_trigger);
 }
 
 /*
@@ -2539,6 +2536,9 @@ void SensorPulseMeter::setInterruptMode(int value) {
 void SensorPulseMeter::setWaitAfterTrigger(int value) {
 	_wait_after_trigger = value;
 }
+void SensorPulseMeter::setInterruptStrict(bool value) {
+	_interrupt_strict = value;
+}
 
 // what to do during setup
 void SensorPulseMeter::onSetup() {
@@ -2570,11 +2570,13 @@ void SensorPulseMeter::onReceive(MyMessage* message) {
 void SensorPulseMeter::onInterrupt() {
 	// read the value of the pin
 	int value = _node->getLastInterruptValue();
-	if ( (_interrupt_mode == RISING && value == HIGH ) || (_interrupt_mode == FALLING && value == LOW) || (_interrupt_mode == CHANGE) )  {
-		// increase the counter
-		_count++;
-		debug(PSTR("NM:SENS:%s:INT++"),_name);
-	}
+	// ignore the interrupt if the value is not matching the one expected
+	if (_interrupt_strict && ((_interrupt_mode == RISING && value != HIGH ) || (_interrupt_mode == FALLING && value != LOW))) return;
+	// increase the counter
+	_count++;
+	debug(PSTR("NM:SENS:%s:INT++"),_name);
+	// allow the signal to be restored to its normal value before reporting
+	if (_wait_after_trigger > 0) _node->sleepOrWait(_wait_after_trigger);
 }
 
 // return the total based on the pulses counted
@@ -3741,7 +3743,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
 				case 103: custom_sensor->setWaitAfterTrigger(request.getValueInt()); break;
 				case 104: custom_sensor->setInitialValue(request.getValueInt()); break;
 				case 105: custom_sensor->setInvertValueToReport(request.getValueInt()); break;
-				case 106: custom_sensor->setArmed(request.getValueInt()); break;
+				case 106: custom_sensor->setInterruptStrict(request.getValueInt()); break;
 				default: return;
 				}
 			}
@@ -3854,6 +3856,7 @@ void SensorConfiguration::onReceive(MyMessage* message) {
 				SensorPulseMeter* custom_sensor = (SensorPulseMeter*)sensor;
 				switch(function) {
 				case 102: custom_sensor->setPulseFactor(request.getValueFloat()); break;
+				case 103: custom_sensor->setInterruptStrict(request.getValueInt()); break;
 				default: return;
 				}
 			}
