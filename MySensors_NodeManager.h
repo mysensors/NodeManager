@@ -145,9 +145,22 @@ Libraries
 // load MySensors library
 #include <MySensors.h>
 
-// define debug output macro
+// define debug output macro and log prefix
 #if FEATURE_DEBUG == ON
 #define debug(x,...)		hwDebugPrint(x, ##__VA_ARGS__)
+#define LOG_PREFIX 			"NM:"
+#define LOG_INIT			LOG_PREFIX "INIT:"
+#define LOG_BEFORE			LOG_PREFIX "BFR:"
+#define LOG_PRESENTATION	LOG_PREFIX "PRES:"
+#define LOG_SETUP			LOG_PREFIX "STP:"
+#define LOG_LOOP			LOG_PREFIX "LOOP:"
+#define LOG_POWER			LOG_PREFIX "PWR:"
+#define LOG_SLEEP			LOG_PREFIX "SLP:"
+#define LOG_MSG				LOG_PREFIX "MSG:"
+#define LOG_TIME			LOG_PREFIX "TIME:"
+#define LOG_EEPROM			LOG_PREFIX "EEPR:"
+#define LOG_CONF			LOG_PREFIX "CONF:"
+#define LOG_SENSOR			LOG_PREFIX "SENS:"
 #ifndef MY_GATEWAY_FEATURE
 char _convBuffer[MAX_PAYLOAD*2+1];
 #endif
