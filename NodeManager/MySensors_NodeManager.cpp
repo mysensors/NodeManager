@@ -2586,7 +2586,7 @@ SensorPowerMeter::SensorPowerMeter(NodeManager& node_manager, int pin, int child
 	children.allocateBlocks(1);
 	new ChildDouble(this,_node->getAvailableChildId(child_id),S_POWER,V_KWH,_name);
 	setPulseFactor(1000);
-	setInitialValue(LOW);
+	setPinInitialValue(LOW);
 	setInterruptMode(RISING);
 }
 
@@ -2604,7 +2604,7 @@ SensorWaterMeter::SensorWaterMeter(NodeManager& node_manager, int pin, int child
 	children.allocateBlocks(1);
 	new ChildDouble(this,_node->getAvailableChildId(child_id),S_WATER,V_VOLUME,_name);
 	setPulseFactor(1000);
-	setInitialValue(LOW);
+	setPinInitialValue(LOW);
 	setInterruptMode(RISING);
 }
 
@@ -3462,7 +3462,6 @@ SensorFPM10A::SensorFPM10A(NodeManager & node_manager, int rxpin, int txpin, int
 	_tx_pin = txpin;
 	children.allocateBlocks(1);
 	new ChildInt(this, _node->getAvailableChildId(child_id), S_CUSTOM, V_CUSTOM, _name);
-	_timer = new Timer(_node);
 }
 
 //setter/getter
@@ -4243,7 +4242,7 @@ void NodeManager::loop() {
 #if FEATURE_EEPROM == ON
 	// clear the EEPROM
 	void NodeManager::clearEeprom() {
-		debug(LOG_EEPROM PSTR("CLR\n"));
+		debug(PSTR(LOG_EEPROM "CLR\n"));
 		for (uint16_t i=0; i<EEPROM_LOCAL_CONFIG_ADDRESS; i++) saveState(i, 0xFF);
 	}
 

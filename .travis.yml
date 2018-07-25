@@ -14,7 +14,7 @@ env:
     - MYSENSORS_VERSION=2.2.0
     - SKETCH="$PWD/examples/Template/Template.ino"
     - CONFIGURATION_SENSOR=1
-    - RUN="if [ $CONFIGURATION_SENSOR == 1 ]; then sed -i 's/\/\/SensorConfiguration configuration(node);/SensorConfiguration configuration(node);/g' $SKETCH && sed -i 's/\/\/#define USE_CONFIGURATION/#define USE_CONFIGURATION/g' $SKETCH && echo 'Enabled SensorConfiguration' ; fi ; cat $SKETCH; arduino --verify --board arduino:avr:mini:cpu=atmega328 $SKETCH"
+    - RUN="if [ $CONFIGURATION_SENSOR == 1 ]; then sed -i 's/\/\/Sensor3tion configuration(node);/SensorConfiguration configuration(node);/g' $SKETCH && sed -i 's/\/\/#define USE_CONFIGURATION/#define USE_CONFIGURATION/g' $SKETCH && echo 'Enabled SensorConfiguration' ; fi ; cat $SKETCH; arduino --verify --board arduino:avr:mini:cpu=atmega328 $SKETCH"
 before_install:
   # setup X environment
   - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16"
@@ -54,11 +54,11 @@ jobs:
     - name: "Features ON"
       script: 
        - arduino --install-library "DS3232RTC,Time"
-       - sed -r -i s/OFF/ON/g $SKETCH
+       - sed -r -i s/(#define FEATURE_.+) OFF/\1 ON/g $SKETCH
        - eval $RUN
     - name: "Features OFF"
       script: 
-       - sed -r -i s/ON/OFF/g $SKETCH
+       - sed -r -i s/(#define FEATURE_.+) ON/\1 OFF/g $SKETCH
        - eval $RUN
     - name: "SensorBattery"
       script: 
@@ -197,7 +197,6 @@ jobs:
        - arduino --install-library "Adafruit Unified Sensor,Adafruit BME280 Library"
        - sed -r -i 's/\/\/(SensorBME280 .+)/\1/' $SKETCH
        - sed -r -i 's/\/\/(#define USE_BME280)/\1/' $SKETCH
-       - export CONFIGURATION_SENSOR=0
        - eval $RUN
     - name: "SensorBMP085"
       script: 
@@ -210,7 +209,6 @@ jobs:
        - arduino --install-library "Adafruit BMP085 Library"
        - sed -r -i 's/\/\/(SensorBMP180 .+)/\1/' $SKETCH
        - sed -r -i 's/\/\/(#define USE_BMP085_180)/\1/' $SKETCH
-       - export CONFIGURATION_SENSOR=0
        - eval $RUN
     - name: "SensorBMP280"
       script: 
@@ -288,16 +286,16 @@ jobs:
        - sed -r -i 's/\/\/(SensorWaterMeter .+)/\1/' $SKETCH
        - sed -r -i 's/\/\/(#define USE_PULSE_METER)/\1/' $SKETCH
        - eval $RUN
+    - name: "SensorPowerMeter"
+      script: 
+       - sed -r -i 's/\/\/(SensorPowerMeter .+)/\1/' $SKETCH
+       - sed -r -i 's/\/\/(#define USE_PULSE_METER)/\1/' $SKETCH
+       - eval $RUN
     - name: "SensorPlantowerPMS"
       script: 
        - arduino --install-library "PMS Library"
        - sed -r -i 's/\/\/(SensorPlantowerPMS .+)/\1/' $SKETCH
        - sed -r -i 's/\/\/(#define USE_PMS)/\1/' $SKETCH
-       - eval $RUN
-    - name: "SensorPowerMeter"
-      script: 
-       - sed -r -i 's/\/\/(SensorPowerMeter .+)/\1/' $SKETCH
-       - sed -r -i 's/\/\/(#define USE_PULSE_METER)/\1/' $SKETCH
        - eval $RUN
     - name: "SensorVL53L0X"
       script: 
