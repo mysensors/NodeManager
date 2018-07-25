@@ -210,6 +210,11 @@
 #ifdef USE_DIMMER
   #include <math.h>
 #endif
+#if defined(USE_PCA9685W) || defined(USE_PCA9685RGB) || defined(USE_PCA9685RGBW)
+  #include <math.h>
+  #include <Wire.h>
+  #include <Adafruit_PWMServoDriver.h>
+#endif
 #ifdef USE_PMS
   #include <PMS.h>
   #include <SoftwareSerial.h> 
@@ -1469,6 +1474,187 @@ class SensorDimmer: public Sensor {
     float _getEasing(float t, float b, float c, float d);
 };
 #endif
+
+/*
+    SensorPca9685LED
+*/
+#if defined(USE_PCA9685W) || defined(USE_PCA9685RGB) || defined(USE_PCA9685RGBW)
+class SensorPca9685Led {
+  public:
+    SensorPca9685Led(int channel = 0, uint8_t i2c_addr = 0x40, Adafruit_PWMServoDriver* pca9685 = NULL);
+    void onSetup();
+    
+    void setEasing(int value);
+    void setDuration(int value);
+    void setStepDuration(int value);
+    
+    // getter/setter of color values of the dimmer
+    void setVal(int value);
+    void setValHex(String hexstring);
+    void setValPercentage(int percentage);
+    int getVal();
+    int getValPercentage();
+    String getValHex();
+
+    //get fading delta for one step
+    void faderInc();
+    
+    enum _easing_list {
+      EASE_LINEAR = 0,
+      EASE_INSINE = 1,
+      EASE_OUTSINE = 2,
+      EASE_INOUTSINE = 3
+    };
+  protected:
+    // pca9685
+    Adafruit_PWMServoDriver* _pca9685;
+    bool _ownPca9685 = false;
+    uint8_t _i2c_addr = 0xFF;
+    int _pwm_ch = 0;
+    int _target_color = 0;
+    int _start_color = 0;
+    int _cur_color = 0;
+    unsigned long _start_time = 0;
+    
+    int _status = OFF;
+    int _easing = EASE_LINEAR;
+    int _duration = 1000;
+    int _step_duration = 100;
+    float _getEasing(float t, float b, float c, float d);
+};
+#endif
+
+/*
+    SensorPca9685W
+*/
+#ifdef USE_PCA9685W
+class SensorPca9685W: public Sensor {
+  public:
+    SensorPca9685W(NodeManager& node_manager,  int child_id = -255, int channel = 0,uint8_t i2c_addr = 0x40, Adafruit_PWMServoDriver* pca9685 = NULL);
+    // [101] set the effect to use for a smooth transition, can be one of SensorPca9685Rgbw::EASE_LINEAR (0), SensorPca9685Rgbw::EASE_INSINE (1), SensorPca9685Rgbw::EASE_OUTSINE (2), SensorPca9685Rgbw::EASE_INOUTSINE (3) (default: EASE_LINEAR)
+    void setEasing(int value);
+    // [102] the duration of entire the transition in milliseconds (default: 1000)
+    void setDuration(int value);
+    // [103] the duration of a single step of the transition in milliseconds (default: 100)
+    void setStepDuration(int value);
+
+    //get instance of PCA9685-board
+    Adafruit_PWMServoDriver* getPWMServoDriver();
+    //set instance of PCA9685-board, if using more than one pca9685-dimmer sensor on the same pca9685-board
+    void setPWMServoDriver(Adafruit_PWMServoDriver* servoDriver);
+    // set the W value as status -- STATUS: 0=0%; 1=100%
+    void setStatus(bool mystatus);
+    // get the W value as status -- STATUS: 0=0%; 1 .. if >0%
+    bool getStatus();
+    // set the W value in percentage
+    void setWVal(int percentage);
+    // get the W value in percentage
+    int getWVal();
+   
+    // define what to do at each stage of the sketch
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(MyMessage* message);
+  protected:
+    SensorPca9685Led* _pca9685w;
+    int _channel = -1;
+    int _i2c_addr = 0xFF;
+    Adafruit_PWMServoDriver* _pca9685 = NULL;
+    int _status = OFF;
+    int _easing = SensorPca9685Led::EASE_LINEAR;
+    int _duration = 1000;
+    int _step_duration = 100;
+};
+#endif
+
+/*
+    SensorPca9685RGB
+*/
+#ifdef USE_PCA9685RGB
+class SensorPca9685Rgb: public Sensor {
+  public:
+    SensorPca9685Rgb(NodeManager& node_manager,  int child_id = -255, int ch_r = 0,int ch_g = 0,int ch_b = 0,uint8_t i2c_addr = 0x40, Adafruit_PWMServoDriver* pca9685 = NULL);
+    // [101] set the effect to use for a smooth transition, can be one of SensorPca9685Rgbw::EASE_LINEAR (0), SensorPca9685Rgbw::EASE_INSINE (1), SensorPca9685Rgbw::EASE_OUTSINE (2), SensorPca9685Rgbw::EASE_INOUTSINE (3) (default: EASE_LINEAR)
+    void setEasing(int value);
+    // [102] the duration of entire the transition in milliseconds (default: 1000)
+    void setDuration(int value);
+    // [103] the duration of a single step of the transition in milliseconds (default: 100)
+    void setStepDuration(int value);
+
+    //get instance of PCA9685-board
+    Adafruit_PWMServoDriver* getPWMServoDriver();
+    //set instance of PCA9685-board, if using more than one pca9685-dimmer sensor on the same pca9685-board
+    void setPWMServoDriver(Adafruit_PWMServoDriver* servoDriver);
+    //set the RGB (red/green/blue) value as hex-string (e.g. 000000...black/off, ff0000...red, 00ff00...green, 0000ff...blue, ffa500...orange, ffffff...white)
+    void setRgbVal(String hexstring);
+    //get the current RGB (red/green/blue) value as hex-string
+    String getRgbVal();
+    
+    // define what to do at each stage of the sketch
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(MyMessage* message);
+  protected:
+    SensorPca9685Led* _pca9685r;
+    SensorPca9685Led* _pca9685g;
+    SensorPca9685Led* _pca9685b;
+    int _ch_r = -1;
+    int _ch_g = -1;
+    int _ch_b = -1;
+    int _i2c_addr = 0xFF;
+    Adafruit_PWMServoDriver* _pca9685 = NULL;
+    int _status = OFF;
+    int _easing = SensorPca9685Led::EASE_LINEAR;
+    int _duration = 1000;
+    int _step_duration = 100;
+};
+#endif
+
+/*
+    SensorPca9685RGBW
+*/
+#ifdef USE_PCA9685RGBW
+class SensorPca9685Rgbw: public Sensor {
+  public:
+    SensorPca9685Rgbw(NodeManager& node_manager,  int child_id = -255, int ch_r = 0,int ch_g = 0,int ch_b = 0,int ch_w = 0, uint8_t i2c_addr = 0x40, Adafruit_PWMServoDriver* pca9685 = NULL);
+    // [101] set the effect to use for a smooth transition, can be one of SensorPca9685Rgbw::EASE_LINEAR (0), SensorPca9685Rgbw::EASE_INSINE (1), SensorPca9685Rgbw::EASE_OUTSINE (2), SensorPca9685Rgbw::EASE_INOUTSINE (3) (default: EASE_LINEAR)
+    void setEasing(int value);
+    // [102] the duration of entire the transition in milliseconds (default: 1000)
+    void setDuration(int value);
+    // [103] the duration of a single step of the transition in milliseconds (default: 100)
+    void setStepDuration(int value);
+
+    //get instance of PCA9685-board
+    Adafruit_PWMServoDriver* getPWMServoDriver();
+    //set instance of PCA9685-board, if using more than one pca9685-dimmer sensor on the same pca9685-board
+    void setPWMServoDriver(Adafruit_PWMServoDriver* servoDriver);
+    //set the RGBW (red/green/blue/white) value as hex-string (see RGB-examples from PCA9685RGB and add "00".."ff" for the white-channel)
+    void setRgbwVal(String hexstring);
+    //get the current RGBW (red/green/blue/white) value as hex-string
+    String getRgbwVal();
+        
+    // define what to do at each stage of the sketch
+    void onSetup();
+    void onLoop(Child* child);
+    void onReceive(MyMessage* message);
+  protected:
+    SensorPca9685Led* _pca9685r;
+    SensorPca9685Led* _pca9685g;
+    SensorPca9685Led* _pca9685b;
+    SensorPca9685Led* _pca9685w;
+    int _ch_r = -1;
+    int _ch_g = -1;
+    int _ch_b = -1;
+    int _ch_w = -1;
+    int _i2c_addr = 0xFF;
+    Adafruit_PWMServoDriver* _pca9685 = NULL;
+    int _status = OFF;
+    int _easing = SensorPca9685Led::EASE_LINEAR;
+    int _duration = 1000;
+    int _step_duration = 100;
+};
+#endif
+
 
 /*
     SensorPulseMeter
