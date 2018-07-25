@@ -51,10 +51,14 @@ jobs:
       script: 
        - sed -r -i 's/\/\/(#define MY_GATEWAY_SERIAL)/\1/' $SKETCH
        - eval $RUN
-    - name: "Features"
+    - name: "Features ON"
       script: 
        - arduino --install-library "DS3232RTC,Time"
        - sed -r -i s/OFF/ON/g $SKETCH
+       - eval $RUN
+    - name: "Features OFF"
+      script: 
+       - sed -r -i s/ON/OFF/g $SKETCH
        - eval $RUN
     - name: "SensorBattery"
       script: 

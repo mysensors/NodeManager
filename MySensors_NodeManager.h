@@ -159,11 +159,8 @@ Libraries
 #define LOG_MSG				LOG_PREFIX "MSG:"
 #define LOG_TIME			LOG_PREFIX "TIME:"
 #define LOG_EEPROM			LOG_PREFIX "EEPR:"
-#define LOG_CONF			LOG_PREFIX "CONF:"
+#define LOG_OTA				LOG_PREFIX "OTA:"
 #define LOG_SENSOR			LOG_PREFIX "SENS:"
-#ifndef MY_GATEWAY_FEATURE
-char _convBuffer[MAX_PAYLOAD*2+1];
-#endif
 #else
 #define debug(x,...)
 #endif

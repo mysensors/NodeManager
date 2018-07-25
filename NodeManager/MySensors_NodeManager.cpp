@@ -3897,7 +3897,7 @@ ConfigurationRequest::ConfigurationRequest(int recipient_child_id, const char* s
 	_function = atoi(strtok_r(NULL, ",", &ptr));
 	// tokenize the string and get the value
 	_value = atof(strtok_r(NULL, ",", &ptr));
-	debug(PSTR(LOG_CONF "REQ f=%d v=%d\n"),_function,_value);
+	debug(PSTR(LOG_OTA "REQ f=%d v=%d\n"),_function,_value);
 }
 
 // return the child id
@@ -3942,10 +3942,9 @@ NodeManager::NodeManager(int sensor_count) {
 	// print out the version
 	debug(PSTR(LOG_INIT "VER=" VERSION "\n"));
 	// print out sketch name
-	debug(PSTR(LOG_INIT "INO=" SKETCH_NAME "(" SKETCH_VERSION ")\n"));
+	debug(PSTR(LOG_INIT "INO=" SKETCH_NAME " v" SKETCH_VERSION "\n"));
 	// print out MySensors' library capabilities
 	debug(PSTR(LOG_INIT "LIB VER=" MYSENSORS_LIBRARY_VERSION " CP=" MY_CAPABILITIES " \n"));
-	debug(PSTR(LOG_INIT"\n"));
 }
 
 #if FEATURE_INTERRUPTS == ON
@@ -4065,7 +4064,7 @@ void NodeManager::registerSensor(Sensor* sensor) {
 void NodeManager::before() {
 	// setup the reboot pin if needed
 	if (_reboot_pin > -1) {
-		debug(PSTR(LOG_INIT "REBOOT p=%d\n"),_reboot_pin);
+		debug(PSTR(LOG_INIT "RBT p=%d\n"),_reboot_pin);
 		pinMode(_reboot_pin, OUTPUT);
 		digitalWrite(_reboot_pin, HIGH);
 	}
@@ -4081,12 +4080,12 @@ void NodeManager::before() {
 		// call each sensor's before()
 		sensor->before();
 	}
-	debug(PSTR(LOG_BEFORE "RADIO INIT\n"));
+	debug(PSTR(LOG_BEFORE "INIT\n"));
 }
 
 // present NodeManager and its sensors
 void NodeManager::presentation() {
-	debug(PSTR(LOG_BEFORE "RADIO OK\n"));
+	debug(PSTR(LOG_BEFORE "OK\n"));
 	// Send the sketch version information to the gateway and Controller
 	_sleepBetweenSend();
 	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
@@ -4109,7 +4108,7 @@ void NodeManager::presentation() {
 void NodeManager::setup() {
 	// retrieve and store isMetric from the controller
 	if (_get_controller_config) _is_metric = getControllerConfig().isMetric;
-	debug(PSTR(LOG_SETUP "NODE ID=%d M=%d\n"),getNodeId(),_is_metric);
+	debug(PSTR(LOG_SETUP "ID=%d M=%d\n"),getNodeId(),_is_metric);
 #if FEATURE_TIME == ON
 	// sync the time with the controller
 	syncTime();
@@ -4224,7 +4223,7 @@ void NodeManager::loop() {
 
 	// reboot the board
 	void NodeManager::reboot() {
-		debug(PSTR(LOG_POWER "REBOOT\n"));
+		debug(PSTR(LOG_POWER "RBT\n"));
 		if (_reboot_pin > -1) {
 			// reboot the board through the reboot pin which is connected to RST by setting it to low
 			digitalWrite(_reboot_pin, LOW);
@@ -4244,7 +4243,7 @@ void NodeManager::loop() {
 #if FEATURE_EEPROM == ON
 	// clear the EEPROM
 	void NodeManager::clearEeprom() {
-		debug(LOG_EEPROM PSTR("CLEAR\n"));
+		debug(LOG_EEPROM PSTR("CLR\n"));
 		for (uint16_t i=0; i<EEPROM_LOCAL_CONFIG_ADDRESS; i++) saveState(i, 0xFF);
 	}
 
@@ -4262,7 +4261,7 @@ void NodeManager::loop() {
 #if FEATURE_SLEEP == ON
 	// wake up the board
 	void NodeManager::wakeup() {
-		debug(PSTR(LOG_SLEEP "WAKEUP\n"));
+		debug(PSTR(LOG_SLEEP "WKP\n"));
 		_status = AWAKE;
 	}
 
@@ -4316,8 +4315,8 @@ void NodeManager::loop() {
 #else
 			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, _interrupt_1_mode);
 #endif
+			debug(PSTR(LOG_BEFORE "INT p=%d m=%d\n"),INTERRUPT_PIN_1,_interrupt_1_mode);
 		}
-		debug(PSTR(LOG_BEFORE "INT p=%d m=%d\n"),INTERRUPT_PIN_1,_interrupt_1_mode);
 		if (_interrupt_2_mode != MODE_NOT_DEFINED) {
 			pinMode(INTERRUPT_PIN_2, INPUT);
 			if (_interrupt_2_initial > -1) digitalWrite(INTERRUPT_PIN_2,_interrupt_2_initial);
@@ -4327,8 +4326,8 @@ void NodeManager::loop() {
 #else
 			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, _interrupt_2_mode);
 #endif
+			debug(PSTR(LOG_BEFORE "INT p=%d m=%d\n"),INTERRUPT_PIN_2,_interrupt_2_mode);
 		}
-		debug(PSTR(LOG_BEFORE "INT p=%d m=%d\n"),INTERRUPT_PIN_2,_interrupt_2_mode);
 	}
 
 	// return the pin from which the last interrupt came
@@ -4450,7 +4449,9 @@ void NodeManager::loop() {
 		_message.setType(type);
 		// send the message, multiple times if requested
 		for (int i = 0; i < _retries; i++) {
-			debug(PSTR(LOG_MSG "SEND(%d) t=%d p=%s\n"),_message.sensor,_message.type,_message.getString(_convBuffer));
+			if (mGetPayloadType(_message) == P_INT16) debug(PSTR(LOG_MSG "SEND(%d) t=%d p=%d\n"),_message.sensor,_message.type,_message.getInt());
+			if (mGetPayloadType(_message) == P_FLOAT32) debug(PSTR(LOG_MSG "SEND(%d) t=%d p=%d.%02d\n"),_message.sensor,_message.type,(int)_message.getFloat(), (int)(_message.getFloat()*100)%100);
+			if (mGetPayloadType(_message) == P_STRING) debug(PSTR(LOG_MSG "SEND(%d) t=%d p=%s\n"),_message.sensor,_message.type,_message.getString());
 			send(_message, _ack);
 			// if configured, sleep beetween each send
 			_sleepBetweenSend();
