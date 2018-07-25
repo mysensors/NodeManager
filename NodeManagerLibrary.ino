@@ -3005,6 +3005,485 @@ float SensorDimmer::_getEasing(float t, float b, float c, float d) {
 #endif
 
 /*
+   PCA9685LED
+*/
+
+#if defined(USE_PCA9685W) || defined(USE_PCA9685RGB) || defined(USE_PCA9685RGBW)
+// contructor
+SensorPca9685Led::SensorPca9685Led(int channel,uint8_t i2c_addr, Adafruit_PWMServoDriver* pca9685) {
+  _i2c_addr = i2c_addr;
+  _pwm_ch = channel;
+
+  // only create new ServoDriver if no one exists
+  if (pca9685 == NULL)
+  {
+    _pca9685 = new Adafruit_PWMServoDriver(_i2c_addr);
+    _ownPca9685 = true;  
+  }
+  else
+  {
+    _pca9685 = pca9685;
+    _ownPca9685 = false;
+  }
+}
+
+// setter/getter
+void SensorPca9685Led::setEasing(int value) {
+  _easing = value;
+}
+void SensorPca9685Led::setDuration(int value) {
+  _duration = value;
+}
+void SensorPca9685Led::setStepDuration(int value) {
+  _step_duration = value;
+}
+
+
+// what to do during setup
+void SensorPca9685Led::onSetup() {
+  //only initialize PCA9685, if its ours
+  if (_ownPca9685) {
+    _pca9685->reset();
+    _pca9685->begin();
+    _pca9685->setPWMFreq(1600);  // This is the maximum PWM frequency
+    _pca9685->setPWM(_pwm_ch, 0, 0); //set LED OFF; TODO: set all LED off
+  }
+}
+
+// set the LED value
+void SensorPca9685Led::setVal(int value) {
+  
+  // load fader with target colors 12bit (4095)   
+  _target_color = value;
+    
+  // load fader with start colors;
+  _start_color = _cur_color;
+  
+  // load fader with start time
+  unsigned long current_time = millis();
+  _start_time = current_time;
+  
+  #if FEATURE_DEBUG == ON
+    Serial.print(F("DEBUG setWVal  channel="));
+    Serial.print(_pwm_ch);
+    Serial.print(F(" _target_color="));
+    Serial.print(_target_color);
+    Serial.print(F(" _start_time="));
+    Serial.println(_start_time);
+  #endif
+}
+
+// set the LED value as HEX-String
+void SensorPca9685Led::setValHex(String hexstring) {
+  //scale from 8bit to 12bit and call setVal
+  this->setVal((strtoul( hexstring.c_str(), NULL, 16) * 4095./255.));
+}
+
+// set the LED value as Percentage
+void SensorPca9685Led::setValPercentage(int percentage) {
+  //scale from 100% to 12bit and call setVal
+  this->setVal(percentage * 4095./100.);
+}
+
+
+// get the LED value
+int SensorPca9685Led::getVal() {
+  return _target_color;
+}
+// get the LED value as Percentage
+int SensorPca9685Led::getValPercentage() {
+  return (_target_color * 100./4095.);
+}
+// get the LED value as Hex-String (8-bit)
+String SensorPca9685Led::getValHex() {
+  return String((_target_color * 255./4095.),HEX);
+}
+
+
+void SensorPca9685Led::faderInc() {
+  int delta = 0;
+  unsigned long current_step = 0;
+  unsigned long current_time = millis();
+  
+  //do nothing if start_time is smaller than current time OR if color already set
+  //TODO: Handle current_time resp millis() overflow
+  if ((current_time < _start_time) || (_target_color == _cur_color) ) return;
+
+  //fade within _duration
+  if((_start_time + _duration) > current_time)
+  {
+    // calculate the delta between the target value and the current
+    delta = _target_color - _start_color;
+
+    //calculate current timestep for this fader
+    current_step = current_time - _start_time;
+  
+    // calculate the smooth transition
+    _cur_color = (int)(_getEasing(current_step,_start_color,delta,_duration));
+  } 
+  else
+  {
+    _cur_color = _target_color;
+  }
+    
+  // write to the PWM output
+  _pca9685->setPWM(_pwm_ch, 0, _cur_color);
+  
+  #if FEATURE_DEBUG == ON 
+    //makes fading very slow; only uncomment if necessary
+    /*
+    Serial.print("DEBUG _faderInc:  ");
+    Serial.print(F(" _pwm_ch="));
+    Serial.print(_pwm_ch);
+    Serial.print(F(" _target_color="));
+    Serial.print(_target_color);
+    Serial.print(F(" _start_color="));
+    Serial.print(_start_color);
+    Serial.print(F(" _start_time="));
+    Serial.print(_start_time);
+    Serial.print(F(" current_time="));
+    Serial.print(current_time);
+    Serial.print(F(" current_step="));
+    Serial.print(current_step);
+    Serial.print(F(" _duration="));
+    Serial.print(_duration);
+    Serial.print(F(" value="));
+    Serial.println(_cur_color);
+    */
+  #endif
+}
+
+// for smooth transitions. t: current time, b: beginning value, c: change in value, d: duration
+float SensorPca9685Led::_getEasing(float t, float b, float c, float d) {
+  if (_easing == EASE_INSINE) return -c * cos(t/d * (M_PI/2)) + c + b;
+  else if (_easing == EASE_OUTSINE) return c * sin(t/d * (M_PI/2)) + b;
+  else if (_easing == EASE_INOUTSINE) return -c/2 * (cos(M_PI*t/d) - 1) + b;
+  else return c*t/d + b;
+}
+#endif
+
+/*
+   PCA9685W
+*/
+
+#ifdef USE_PCA9685W
+// contructor
+SensorPca9685W::SensorPca9685W(NodeManager& node_manager,int child_id,int channel, uint8_t i2c_addr, Adafruit_PWMServoDriver* pca9685): Sensor(node_manager) {
+  _name = "Pca9685W";
+
+  //present as Dimmer
+  children.allocateBlocks(2);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_DIMMER,V_PERCENTAGE,_name);  //intern child 1
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_DIMMER,V_STATUS,_name);      //intern child 2
+
+  //store values for PWMServoDriver
+  _channel = channel;
+  _i2c_addr = i2c_addr;
+  _pca9685 = pca9685;
+}
+
+// setter/getter
+void SensorPca9685W::setEasing(int value) {
+  _pca9685w->setEasing(value);
+}
+void SensorPca9685W::setDuration(int value) {
+  _pca9685w->setDuration(value);
+}
+void SensorPca9685W::setStepDuration(int value) {
+  _pca9685w->setStepDuration(value);
+}
+void SensorPca9685W::setPWMServoDriver(Adafruit_PWMServoDriver* servoDriver) {
+  _pca9685 = servoDriver;
+}
+Adafruit_PWMServoDriver* SensorPca9685W::getPWMServoDriver() {
+  return _pca9685;
+}
+
+// what to do during setup
+void SensorPca9685W::onSetup() {
+  //init pca9685
+  _pca9685w = new SensorPca9685Led (_channel, _i2c_addr, _pca9685); 
+  _pca9685w->onSetup();
+  //get current value from host
+  request( children.get(1)->getChildId(), V_PERCENTAGE );
+  request( children.get(2)->getChildId(), V_STATUS );
+  // report immediately
+  _report_timer->unset();
+}
+
+// what to do during loop
+void SensorPca9685W::onLoop(Child* child) {
+  _pca9685w->faderInc();
+}
+
+// what to do as the main task when receiving a message
+void SensorPca9685W::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  
+  // heandle a SET command
+  if (message->getCommand() == C_SET && (message->type == V_PERCENTAGE || message->type == V_STATUS)) {
+    // if changing the w value
+    if (message->type == V_PERCENTAGE)  setWVal(message->getInt());
+    else if (message->type == V_STATUS) setStatus(message->getInt());
+  }
+  // handle REQ command
+  else if (message->getCommand() == C_REQ && (message->type == V_PERCENTAGE || message->type == V_STATUS)) {
+    // return the current percentage
+    if (message->type == V_PERCENTAGE)  ((ChildInt*)children.get(1))->setValueInt(getWVal());
+    else if (message->type == V_STATUS) ((ChildInt*)children.get(2))->setValueInt(getStatus());
+  }
+}
+
+// set the W value as status -- STATUS: 0=0%; 1=100%
+void SensorPca9685W::setStatus(bool mystatus) {
+ //write to hw
+  _pca9685w->setValPercentage((int)mystatus * 100);
+ //also write to children
+ ((ChildInt*)children.get(1))->setValueInt(getWVal());
+ ((ChildInt*)children.get(2))->setValueInt(getStatus());   
+}
+
+// get the W value as status -- STATUS: 0=0%; 1 .. if>0%
+bool SensorPca9685W::getStatus() {
+  return (_pca9685w->getValPercentage()>0 ? 1 : 0);  
+}
+
+// set the W value in percentage
+void SensorPca9685W::setWVal(int percentage) {
+  //write to hw
+  _pca9685w->setValPercentage(percentage);  
+  //also write to children
+ ((ChildInt*)children.get(1))->setValueInt(getWVal());
+ ((ChildInt*)children.get(2))->setValueInt(getStatus());   
+}
+
+// get the W value in percentage
+int SensorPca9685W::getWVal() {
+  return _pca9685w->getValPercentage();
+}
+#endif
+
+/*
+   PCA9685RGB
+*/
+
+#ifdef USE_PCA9685RGB
+// contructor
+SensorPca9685Rgb::SensorPca9685Rgb(NodeManager& node_manager,int child_id, int ch_r,int ch_g,int ch_b, uint8_t i2c_addr, Adafruit_PWMServoDriver* pca9685): Sensor(node_manager) {
+  _name = "Pca9685Rgb";
+
+  //present as RGB
+  children.allocateBlocks(2);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_RGB_LIGHT,V_RGB,_name);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_RGB_LIGHT,V_WATT,_name);
+
+  //store values for PWMServoDriver
+  _ch_r = ch_r;
+  _ch_g = ch_g;
+  _ch_b = ch_b;
+  _i2c_addr = i2c_addr;
+  _pca9685 = pca9685;
+}
+
+// setter/getter
+void SensorPca9685Rgb::setEasing(int value) {
+  _pca9685r->setEasing(value);
+  _pca9685g->setEasing(value);
+  _pca9685b->setEasing(value);
+}
+void SensorPca9685Rgb::setDuration(int value) {
+  _pca9685r->setDuration(value);
+  _pca9685g->setDuration(value);
+  _pca9685b->setDuration(value);
+}
+void SensorPca9685Rgb::setStepDuration(int value) {
+  _pca9685r->setStepDuration(value);
+  _pca9685g->setStepDuration(value);
+  _pca9685b->setStepDuration(value);
+}
+void SensorPca9685Rgb::setPWMServoDriver(Adafruit_PWMServoDriver* servoDriver) {
+  _pca9685 = servoDriver;
+}
+Adafruit_PWMServoDriver* SensorPca9685Rgb::getPWMServoDriver() {
+  return _pca9685;
+}
+
+// what to do during setup
+void SensorPca9685Rgb::onSetup() {
+  //init pca9685
+  _pca9685r = new SensorPca9685Led (_ch_r, _i2c_addr, _pca9685); 
+  _pca9685g = new SensorPca9685Led (_ch_g, _i2c_addr, _pca9685); 
+  _pca9685b = new SensorPca9685Led (_ch_b, _i2c_addr, _pca9685); 
+  _pca9685r->onSetup();
+  _pca9685g->onSetup();
+  _pca9685b->onSetup();
+  //get current value from host
+  request( children.get(1)->getChildId(), V_RGB );
+  // report immediately
+  _report_timer->unset();
+}
+
+// what to do during loop
+void SensorPca9685Rgb::onLoop(Child* child) {
+  _pca9685r->faderInc();
+  _pca9685g->faderInc();
+  _pca9685b->faderInc();
+}
+
+// what to do as the main task when receiving a message
+void SensorPca9685Rgb::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  // heandle a SET command
+  if (message->getCommand() == C_SET && message->type == child->getType()) {
+    // if changing the rgb value
+    if (child->getType() == V_RGB) setRgbVal(String(message->getString()));
+  }
+  // handle REQ command
+  else if (message->getCommand() == C_REQ && message->type == child->getType()) {
+    // return the current status
+    if (child->getType() == V_RGB) ((ChildString*)child)->setValueString(getRgbVal().c_str());
+  }
+}
+
+// set the RGB value
+void SensorPca9685Rgb::setRgbVal(String hexstring) {
+  //set value for hw
+  _pca9685r->setValHex(hexstring.substring(0,2));
+  _pca9685g->setValHex(hexstring.substring(2,4));
+  _pca9685b->setValHex(hexstring.substring(4,6));
+  //also write to children
+  ((ChildString*)children.get(1))->setValueString(getRgbVal().c_str()); 
+}
+
+// get the RGB value
+String SensorPca9685Rgb::getRgbVal() {
+  String return_value = "";
+  
+  return_value += _pca9685r->getValHex();
+  return_value += _pca9685g->getValHex();
+  return_value += _pca9685b->getValHex();
+  
+  return return_value;
+}
+#endif
+
+/*
+   PCA9685RGBW
+*/
+
+#ifdef USE_PCA9685RGBW
+// contructor
+SensorPca9685Rgbw::SensorPca9685Rgbw(NodeManager& node_manager,int child_id, int ch_r,int ch_g,int ch_b,int ch_w, uint8_t i2c_addr, Adafruit_PWMServoDriver* pca9685): Sensor(node_manager) {
+  _name = "Pca9685Rgbw";
+
+  //present as RGBW
+  children.allocateBlocks(2);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_RGBW_LIGHT,V_RGBW,_name);
+  new ChildInt(this,_node->getAvailableChildId(child_id),S_RGBW_LIGHT,V_WATT,_name);
+
+  //store values for PWMServoDriver
+  _ch_r = ch_r;
+  _ch_g = ch_g;
+  _ch_b = ch_b;
+  _ch_w = ch_w;
+  _i2c_addr = i2c_addr;
+  _pca9685 = pca9685;
+}
+
+// setter/getter
+void SensorPca9685Rgbw::setEasing(int value) {
+  _pca9685r->setEasing(value);
+  _pca9685g->setEasing(value);
+  _pca9685b->setEasing(value);
+  _pca9685w->setEasing(value);
+}
+void SensorPca9685Rgbw::setDuration(int value) {
+  _pca9685r->setDuration(value);
+  _pca9685g->setDuration(value);
+  _pca9685b->setDuration(value);
+  _pca9685w->setDuration(value);
+}
+void SensorPca9685Rgbw::setStepDuration(int value) {
+  _pca9685r->setStepDuration(value);
+  _pca9685g->setStepDuration(value);
+  _pca9685b->setStepDuration(value);
+  _pca9685w->setStepDuration(value);
+}
+void SensorPca9685Rgbw::setPWMServoDriver(Adafruit_PWMServoDriver* servoDriver) {
+  _pca9685 = servoDriver;
+}
+Adafruit_PWMServoDriver* SensorPca9685Rgbw::getPWMServoDriver() {
+  return _pca9685;
+}
+
+// what to do during setup
+void SensorPca9685Rgbw::onSetup() {
+  //init pca9685
+  _pca9685r = new SensorPca9685Led (_ch_r, _i2c_addr, _pca9685); 
+  _pca9685g = new SensorPca9685Led (_ch_g, _i2c_addr, _pca9685); 
+  _pca9685b = new SensorPca9685Led (_ch_b, _i2c_addr, _pca9685); 
+  _pca9685w = new SensorPca9685Led (_ch_w, _i2c_addr, _pca9685);
+  _pca9685r->onSetup();
+  _pca9685g->onSetup();
+  _pca9685b->onSetup();
+  _pca9685w->onSetup();
+  //get current value from host
+  request( children.get(2)->getChildId(), V_RGB );
+  // report immediately
+  _report_timer->unset();
+}
+
+// what to do during loop
+void SensorPca9685Rgbw::onLoop(Child* child) {
+  _pca9685r->faderInc();
+  _pca9685g->faderInc();
+  _pca9685b->faderInc();
+  _pca9685w->faderInc();
+}
+
+// what to do as the main task when receiving a message
+void SensorPca9685Rgbw::onReceive(MyMessage* message) {
+  Child* child = getChild(message->sensor);
+  if (child == nullptr) return;
+  // heandle a SET command
+  if (message->getCommand() == C_SET && message->type == child->getType()) {
+    // if changing the rgb value
+    if (child->getType() == V_RGBW) setRgbwVal(String(message->getString()));
+  }
+  // handle REQ command
+  else if (message->getCommand() == C_REQ && message->type == child->getType()) {
+    // return the current status
+    if (child->getType() == V_RGW)  ((ChildString*)child)->setValueString(getRgbwVal().c_str());
+  }
+}
+
+// set the RGB value
+void SensorPca9685Rgbw::setRgbwVal(String hexstring) {
+  //write to hw
+  _pca9685r->setValHex(hexstring.substring(0,2));
+  _pca9685g->setValHex(hexstring.substring(2,4));
+  _pca9685b->setValHex(hexstring.substring(4,6));
+  _pca9685w->setValHex(hexstring.substring(6,8));
+  //also write to children
+  ((ChildString*)children.get(1))->setValueString(getRgbwVal().c_str());
+}
+
+// get the RGBW value
+String SensorPca9685Rgbw::getRgbwVal() {
+  String return_value = "";
+  
+  return_value += _pca9685r->getValHex();
+  return_value += _pca9685g->getValHex();
+  return_value += _pca9685b->getValHex();
+  return_value += _pca9685w->getValHex();
+  
+  return return_value;
+}
+#endif
+
+/*
    SensorPulseMeter
 */
 #ifdef USE_PULSE_METER
@@ -4553,6 +5032,19 @@ void SensorConfiguration::onReceive(MyMessage* message) {
           case 102: custom_sensor->setDuration(request.getValueInt()); break;
           case 103: custom_sensor->setStepDuration(request.getValueInt()); break;
           case 104: custom_sensor->setReverse(request.getValueInt()); break;
+          default: return;
+        }
+      }
+      #endif
+      #ifdef defined(USE_PCA9685W) || defined(USE_PCA9685RGB) || defined(USE_PCA9685RGBW)
+      if ((strcmp(sensor->getName(),"Pca9685W")    == 0) ||
+          (strcmp(sensor->getName(),"Pca9685Rgb")  == 0) ||
+          (strcmp(sensor->getName(),"Pca9685Rgbw") == 0) ||) {
+        SensorDimmer* custom_sensor = (SensorDimmer*)sensor;
+        switch(function) {
+          case 101: custom_sensor->setEasing(request.getValueInt()); break;
+          case 102: custom_sensor->setDuration(request.getValueInt()); break;
+          case 103: custom_sensor->setStepDuration(request.getValueInt()); break;
           default: return;
         }
       }
