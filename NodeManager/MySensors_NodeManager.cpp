@@ -2562,8 +2562,6 @@ void SensorPulseMeter::onInterrupt() {
 // return the total based on the pulses counted
 void SensorPulseMeter::_reportTotal(Child* child) {
 	((ChildFloat*)child)->setValue(_count / _pulse_factor);
-	// allow the signal to be restored to its normal value before reporting
-	if (_wait_after_trigger > 0) _node->sleepOrWait(_wait_after_trigger);
 }
 
 /*
@@ -2593,8 +2591,6 @@ SensorPowerMeter::SensorPowerMeter(NodeManager& node_manager, int pin, int child
 // return the total based on the pulses counted
 void SensorPowerMeter::_reportTotal(Child* child) {
 	((ChildDouble*)child)->setValue(_count / _pulse_factor);
-	// allow the signal to be restored to its normal value before reporting
-	if (_wait_after_trigger > 0) _node->sleepOrWait(_wait_after_trigger);
 }
 
 /*
@@ -2613,8 +2609,6 @@ SensorWaterMeter::SensorWaterMeter(NodeManager& node_manager, int pin, int child
 // return the total based on the pulses counted
 void SensorWaterMeter::_reportTotal(Child* child) {
 	((ChildDouble*)child)->setValue(_count / _pulse_factor);
-	// allow the signal to be restored to its normal value before reporting
-	if (_wait_after_trigger > 0) _node->sleepOrWait(_wait_after_trigger);
 }
 #endif
 
@@ -3170,7 +3164,7 @@ void SensorTTP::onSetup() {
 	pinMode(_rst_pin, OUTPUT); 
 	pinMode(_clock_pin, OUTPUT);
 	// this will allow to register the interrupt
-	_pin = _dv_pin
+	_pin = _dv_pin;
 	// report immediately
 	_report_timer->unset();
 	digitalWrite(_rst_pin, LOW);
@@ -3286,8 +3280,6 @@ SensorAPDS9960::SensorAPDS9960(NodeManager& node_manager, int pin, int child_id)
 void SensorAPDS9960::onSetup() {
 	_apds = new SparkFun_APDS9960();
 	pinMode(_pin, INPUT);
-	// set the interrupt
-	setInterrupt(_pin,FALLING,HIGH);
 	// report immediately
 	_report_timer->unset();
 	// initialize the library
@@ -3522,7 +3514,7 @@ void SensorFPM10A::onLoop(Child* child){
 		if (finger > 0) {
 			_fingerprint_is_valid = true;
 			// fingerprint match found, send the template ID back
-			((ChildInt*)child)->setValueInt(finger);
+			((ChildInt*)child)->setValue(finger);
 			// leave the loop so we can report back
 			break;
 		}
