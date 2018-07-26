@@ -54,11 +54,11 @@ jobs:
     - name: "Features ON"
       script: 
        - arduino --install-library "DS3232RTC,Time"
-       - sed -r -i s/(#define FEATURE_.+) OFF/\1 ON/g $SKETCH
+       - sed -r -i 's/(#define FEATURE_.+) OFF/\1 ON/g' $SKETCH
        - eval $RUN
     - name: "Features OFF"
       script: 
-       - sed -r -i s/(#define FEATURE_.+) ON/\1 OFF/g $SKETCH
+       - sed -r -i 's/(#define FEATURE_.+) ON/\1 OFF/g' $SKETCH
        - eval $RUN
     - name: "SensorBattery"
       script: 

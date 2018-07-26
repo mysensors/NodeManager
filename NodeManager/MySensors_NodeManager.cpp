@@ -2740,7 +2740,6 @@ Display::Display(NodeManager& node_manager, int child_id): Sensor(node_manager) 
 	new ChildString(this, _node->getAvailableChildId(child_id), S_INFO, V_TEXT,_name);
 	// prevent reporting to the gateway at each display update
 	setReporting(false);
-	_report_timer->unset();
 }
 // setter/getter
 void Display::setCaption(const char* value) {
@@ -3521,7 +3520,7 @@ void SensorFPM10A::onLoop(Child* child){
 		}
 		//don't need to run this at full speed
 		wait(50);
-  }
+	}
 }
 
 // read the fingerprint from the sensor
@@ -4149,10 +4148,10 @@ void NodeManager::loop() {
 		Sensor* sensor = *itr;
 #if FEATURE_INTERRUPTS == ON
 		if (_last_interrupt_pin != -1 && sensor->getInterruptPin() == _last_interrupt_pin) {
-			// if there was an interrupt for this sensor, call the sensor's interrupt() and then loop()
+			// if there was an interrupt for this sensor, call the sensor's interrupt()
 			_message.clear();
-			sensor->interrupt();
-			sensor->loop(nullptr);
+			// call the sensor loop, provided the interrupt has been "accepted" by interrupt()
+			if (sensor->interrupt()) sensor->loop(nullptr);
 			// reset the last interrupt pin
 			_last_interrupt_pin = -1;
 		}
