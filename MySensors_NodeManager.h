@@ -426,8 +426,6 @@ public:
 	bool isRunning();
 	// return true if the timer has been configured
 	bool isConfigured();
-	// return true if this is the first time the timer runs
-	bool isFirstRun();
 	// return the current elapsed time
 	float getElapsed();
 private:
@@ -436,7 +434,6 @@ private:
 	long _elapsed = 0;
 	bool _is_running = false;
 	bool _is_configured = false;
-	bool _first_run = true;
 	long _last = 0;
 };
 
@@ -651,6 +648,7 @@ protected:
 	int _samples = 1;
 	int _samples_interval = 0;
 	bool _reporting = true;
+	bool _first_run = true;
 #if FEATURE_INTERRUPTS == ON
 	int _interrupt_pin = -1;
 	int _interrupt_mode = -1;
@@ -1849,7 +1847,6 @@ protected:
 	uint32_t _password = 0;
 	uint16_t _min_confidence = 0;
 	int _readFingerprint();
-	bool _first_time = true;
 	bool _fingerprint_is_valid = false;
 };
 #endif

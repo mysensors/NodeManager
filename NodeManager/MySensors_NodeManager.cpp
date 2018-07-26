@@ -131,7 +131,6 @@ void Timer::update() {
 		_elapsed = (long)((millis() - _last)/1000);
 	}
 #endif
-	_first_run = false;
 }
 
 // return true if the time is over
@@ -153,11 +152,6 @@ bool Timer::isRunning() {
 // return true if the time is configured
 bool Timer::isConfigured() {
 	return _is_configured;
-}
-
-// return true if this is the first time the timer runs
-bool Timer::isFirstRun() {
-	return _first_run;
 }
 
 // return elapsed seconds so far
@@ -636,13 +630,12 @@ void Sensor::loop(MyMessage* message) {
 	// update the timers if within a loop cycle
 	if (message == nullptr) {
 		if (_report_timer->isRunning()) {
-			// keep track if it is the first time
-			bool first_run = _report_timer->isFirstRun();
 			// update the timer
 			_report_timer->update();
 			// if it is not the time yet to report a new measure, just return (unless it is the first time)
-			if (! _report_timer->isOver() && ! first_run) return;
+			if (! _report_timer->isOver() && ! _first_run) return;
 		}
+		if (_first_run) _first_run = false;
 	}
 #if FEATURE_HOOKING == ON
 	// if a hook function is defined, call it
@@ -3500,10 +3493,6 @@ void SensorFPM10A::onSetup(){
 // what to do during loop
 void SensorFPM10A::onLoop(Child* child){
 	_fingerprint_is_valid = false;
-	if (_first_time) {
-		_first_time = false;
-		return;
-	}
 	// start the timer
 	long start_millis = millis();
 	while(true) {
