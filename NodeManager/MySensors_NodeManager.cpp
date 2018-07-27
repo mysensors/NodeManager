@@ -81,8 +81,12 @@ void Timer::start() {
 	_last = 0;
 	_is_running = true;
 #if FEATURE_TIME == ON
-	// keep track of the time the timer has started
-	_last = now();
+	// save the current timestamp (which is sync'ed when sleeping or not sleeping)
+	if (_mode == TIME_INTERVAL) _last = now();
+	// keep track of the current minute/hour/day
+	if (_mode == EVERY_MINUTE) _last = minute();
+	if (_mode == EVERY_HOUR) _last = hour();
+	if (_mode == EVERY_DAY) _last = day();
 #else
 	// keep track of millis() for calculating the difference
 	_last = millis();
@@ -97,14 +101,33 @@ void Timer::stop() {
 // return true if the time is over
 bool Timer::isOver() {
 	if (_mode == DO_NOT_REPORT || _mode == NOT_CONFIGURED) return false;
-	else if (_mode == IMMEDIATELY) return true;
-	else if (_mode == TIME_INTERVAL) {
+	if (_mode == IMMEDIATELY) return true;
+	if (_mode == TIME_INTERVAL) {
 		if (! _is_running) return false;
 		long elapsed = getElapsed();
 		// check if time has elapsed or millis has started over
 		if (elapsed >= _value || elapsed < 0) return true;
 		return false;
 	}
+#if FEATURE_TIME == ON
+	// if the minute/hour/day has changed, the timer is over
+	if (_mode == EVERY_HOUR && hour() != _last) return true;
+	if (_mode == EVERY_HOUR && hour() != _last) return true;
+	if (_mode == EVERY_DAY && day() != _last) return true;
+	// if we are in the requested minute/hour/day and not already reported, timer is over
+	if (_mode == AT_MINUTE && minute() >= _value && ! _already_reported) { ! 
+		_already_reported = true;
+		return true;
+	}
+	if (_mode == AT_HOUR && hour() >= _value && ! _already_reported) { ! 
+		_already_reported = true;
+		return true;
+	}
+	if (_mode == AT_DAY && day() >= _value && ! _already_reported) { ! 
+		_already_reported = true;
+		return true;
+	}
+#endif
 	return false;
 }
 
@@ -531,10 +554,31 @@ void Sensor::setMeasureTimerMode(timer_mode value) {
 	_measure_timer->setMode(value);
 }
 
-// After how many seconds the sensor will report back its measure
 void Sensor::setMeasureTimerValue(int value) {
 	_measure_timer->setValue(value);
 }
+
+// After how many seconds the sensor will report back its measure
+void Sensor::setReportIntervalSeconds(int value) {
+	_report_timer->setMode(TIME_INTERVAL);
+	_report_timer->setValue(value);
+}
+
+// After how many minutes the sensor will report back its measure 
+void Sensor::setReportIntervalMinutes(int value) {
+  setReportIntervalSeconds(value*60);
+}
+
+// After how many hours the sensor will report back its measure 
+void Sensor::setReportIntervalHours(int value) {
+  setReportIntervalSeconds(value*60*60);
+}
+
+// After how many days the sensor will report back its measure 
+void Sensor::setReportIntervalDays(int value) {
+  setReportIntervalSeconds(value*60*60*24);
+}
+
 
 // register a child
 void Sensor::registerChild(Child* child) {
@@ -556,7 +600,7 @@ void Sensor::setup() {
 	// configure default reporting interval if not already set by the user
 	if (_report_timer->getMode() == NOT_CONFIGURED) {
 		_report_timer->setMode(TIME_INTERVAL);
-		_report_timer->setValue(_node->getDefaultReportTimerValue());
+		_report_timer->setValue(_node->getReportIntervalSeconds());
 	}
 	// if the user has not set any custom measurement timer, measure and reporting timer will be the same
 	if (_measure_timer->getMode() == NOT_CONFIGURED) {
@@ -721,7 +765,7 @@ SensorBattery::SensorBattery(NodeManager& node_manager, int child_id): Sensor(no
 	children.allocateBlocks(1);
 	new ChildFloat(this,child_id,S_MULTIMETER,V_VOLTAGE,_name);
 	// report battery level every 60 minutes by default
-	setReportTimerValue(60*60);
+	setReportIntervalMinutes(60);
 }
 void SensorBattery::setMinVoltage(float value) {
 	_battery_min = value;
@@ -782,7 +826,7 @@ SensorSignal::SensorSignal(NodeManager& node_manager, int child_id): Sensor(node
 	children.allocateBlocks(1);
 	new ChildInt(this,child_id,S_SOUND,V_LEVEL,_name);
 	// report signal level every 60 minutes by default
-	setReportTimerValue(60*60);
+	setReportIntervalMinutes(60);
 }
 // setter/getter
 void SensorSignal::setSignalCommand(int value) {
@@ -3547,6 +3591,10 @@ void SensorConfiguration::onReceive(MyMessage* message) {
 		case 30: _node->setSleepOrWait(request.getValueInt()); break;
 		case 31: _node->setRebootPin(request.getValueInt()); break;
 		case 32: _node->setADCOff(); break;
+		case 43: _node->setReportTimerMode(request.getValueInt()); break;
+		case 44: _node->setReportTimerValue(request.getValueInt()); break;
+		case 45: _node->setMeasureTimerMode(request.getValueInt()); break;
+		case 46: _node->setMeasureTimerValue(request.getValueInt()); break;
 		case 36: _node->setReportIntervalSeconds(request.getValueInt()); break;
 		case 37: _node->setReportIntervalMinutes(request.getValueInt()); break;
 		case 38: _node->setReportIntervalHours(request.getValueInt()); break;
@@ -3576,7 +3624,6 @@ void SensorConfiguration::onReceive(MyMessage* message) {
 			case 17: sensor->setReportIntervalSeconds(request.getValueInt()); break;
 			case 19: sensor->setReportIntervalHours(request.getValueInt()); break;
 			case 20: sensor->setReportIntervalDays(request.getValueInt()); break;
-			case 21: sensor->setReporting(request.getValueInt()); break;
 #if FEATURE_INTERRUPTS == ON			
 			case 22: sensor->setInterruptMode(request.getValueInt()); break;
 			case 23: sensor->setWaitAfterInterrupt(request.getValueInt()); break;
@@ -4270,13 +4317,27 @@ void NodeManager::loop() {
 	}
 #endif
 
-	int NodeManager::getDefaultReportTimerValue() {
-		return _default_report_timer_value;
+	// set the default interval in seconds all the sensors will report their measures
+	void NodeManager::setReportIntervalSeconds(int value) {
+		_report_interval_seconds = value;
+	}
+	int NodeManager::getReportIntervalSeconds() {
+		return _report_interval_seconds;
 	}
 	
-	// set the default interval in seconds all the sensors will report their measures
-	void NodeManager::setDefaultReportTimerValue(int value) {
-		_default_report_timer_value = value;
+	// set the default interval in minutes all the sensors will report their measures
+	void NodeManager::setReportIntervalMinutes(int value) {
+		_report_interval_seconds = value*60;
+	}
+
+	// set the default interval in hours all the sensors will report their measures
+	void NodeManager::setReportIntervalHours(int value) {
+		_report_interval_seconds = value*60*60;
+	}
+
+	// set the default interval in days all the sensors will report their measures
+	void NodeManager::setReportIntervalDays(int value) {
+		_report_interval_seconds = value*60*60*24;
 	}
 
 	// if set and when the board is battery powered, sleep() is always called instead of wait()
