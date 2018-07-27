@@ -545,21 +545,10 @@ void Sensor::registerChild(Child* child) {
 void Sensor::presentation() {
 	for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
 		Child* child = *itr;
-		debug(PSTR(LOG_PRESENTATION "%s(%d)\n"),child->getDescription(),child->getChildId());
+		debug(PSTR(LOG_PRESENTATION "%s(%d) p=%d t=%d\n"),child->getDescription(),child->getChildId(),child->getPresentation(),child->getType());
 		present(child->getChildId(), child->getPresentation(), child->getDescription(), _node->getAck());
 	}
 
-}
-
-// call the sensor-specific implementation of before
-void Sensor::before() {
-	onBefore();
-#if FEATURE_DEBUG == ON
-	for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
-		Child* child = *itr;
-		debug(PSTR(LOG_BEFORE "%s(%d):REG p=%d t=%d\n"),_name,child->getChildId(),child->getPresentation(),child->getType());
-	}
-#endif
 }
 
 // call the sensor-specific implementation of setup
@@ -625,6 +614,8 @@ void Sensor::loop(MyMessage* message) {
 		// turn the sensor off
 		powerOff();
 #endif
+		// restart the timer if over
+		if (_measure_timer->isOver()) _measure_timer->start();
 	}
 	// send the latest measure back to the network if the timer is over OR it is the first run OR we've been called from receive()
 	if (_report_timer->isOver() || _first_run || message != nullptr) {
@@ -638,10 +629,9 @@ void Sensor::loop(MyMessage* message) {
 			// reset the counters
 			child->reset();
 		}
+		// restart the timer if over
+		if (_report_timer->isOver()) _report_timer->start();
 	}
-	// if called from loop(), restart the report timer if over
-	if (_report_timer->isOver()) _report_timer->start();
-	if (_measure_timer->isOver()) _measure_timer->start();
 	// unset first run if set
 	if (_first_run) _first_run = false;
 }
@@ -708,9 +698,6 @@ void Sensor::setReceiveHook(void (*function)(Sensor* sensor, MyMessage* message)
 #endif
 
 // virtual functions
-void Sensor::onBefore() {
-}
-
 void Sensor::onSetup(){
 }
 void Sensor::onLoop(Child* child){}
@@ -4022,12 +4009,6 @@ void NodeManager::before() {
 	// restore the sleep settings saved in the eeprom
 	if (_save_sleep_settings) _loadSleepSettings();
 #endif
-	// setup individual sensors
-	for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
-		Sensor* sensor = *itr;
-		// call each sensor's before()
-		sensor->before();
-	}
 	debug(PSTR(LOG_BEFORE "INIT\n"));
 }
 

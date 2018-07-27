@@ -616,7 +616,6 @@ public:
 	void registerChild(Child* child);
 	NodeManager* _node;
 	// define what to do at each stage of the sketch
-	void before();
 	void presentation();
 	void setup();
 	void loop(MyMessage* message);
@@ -624,7 +623,6 @@ public:
 	void receive(MyMessage* message);
 #endif
 	// abstract functions, subclasses need to implement
-	virtual void onBefore();
 	virtual void onSetup();
 	virtual void onLoop(Child* child);
 	virtual void onReceive(MyMessage* message);
