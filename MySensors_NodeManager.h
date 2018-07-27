@@ -911,7 +911,7 @@ public:
 	// [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
 	void setLegacyMode(bool value);
 	// [105] automatically turn the output off after the given number of minutes
-	void setSafeguardTimerValue(int value);
+	void setSafeguard(int value);
 	// [106] if true the input value becomes a duration in minutes after which the output will be automatically turned off (default: false)
 	void setInputIsElapsed(bool value);
 	// [107] optionally wait for the given number of milliseconds after changing the status (default: 0)

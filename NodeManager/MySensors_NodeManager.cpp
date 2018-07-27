@@ -115,15 +115,15 @@ bool Timer::isOver() {
 	if (_mode == EVERY_HOUR && hour() != _last) return true;
 	if (_mode == EVERY_DAY && day() != _last) return true;
 	// if we are in the requested minute/hour/day and not already reported, timer is over
-	if (_mode == AT_MINUTE && minute() >= _value && ! _already_reported) { ! 
+	if (_mode == AT_MINUTE && minute() >= _value && ! _already_reported) {
 		_already_reported = true;
 		return true;
 	}
-	if (_mode == AT_HOUR && hour() >= _value && ! _already_reported) { ! 
+	if (_mode == AT_HOUR && hour() >= _value && ! _already_reported) {
 		_already_reported = true;
 		return true;
 	}
-	if (_mode == AT_DAY && day() >= _value && ! _already_reported) { ! 
+	if (_mode == AT_DAY && day() >= _value && ! _already_reported) { 
 		_already_reported = true;
 		return true;
 	}
@@ -1160,7 +1160,7 @@ void SensorDigitalOutput::onSetup() {
 void SensorDigitalOutput::setLegacyMode(bool value) {
 	_legacy_mode = value;
 }
-void SensorDigitalOutput::setSafeguardTimerValue(int value) {
+void SensorDigitalOutput::setSafeguard(int value) {
 	_safeguard_timer->setMode(TIME_INTERVAL);
 	_safeguard_timer->setValue(value*60);
 }
@@ -1186,7 +1186,7 @@ void SensorDigitalOutput::setPinOff(int value) {
 // main task
 void SensorDigitalOutput::onLoop(Child* child) {
 	// if the time is over, turn the output off
-	if (__safeguard_timer->isOver()) {
+	if (_safeguard_timer->isOver()) {
 		setStatus(OFF);
 		_safeguard_timer->stop();
 	}
