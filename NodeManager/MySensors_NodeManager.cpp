@@ -3591,10 +3591,6 @@ void SensorConfiguration::onReceive(MyMessage* message) {
 		case 30: _node->setSleepOrWait(request.getValueInt()); break;
 		case 31: _node->setRebootPin(request.getValueInt()); break;
 		case 32: _node->setADCOff(); break;
-		case 43: _node->setReportTimerMode(request.getValueInt()); break;
-		case 44: _node->setReportTimerValue(request.getValueInt()); break;
-		case 45: _node->setMeasureTimerMode(request.getValueInt()); break;
-		case 46: _node->setMeasureTimerValue(request.getValueInt()); break;
 		case 36: _node->setReportIntervalSeconds(request.getValueInt()); break;
 		case 37: _node->setReportIntervalMinutes(request.getValueInt()); break;
 		case 38: _node->setReportIntervalHours(request.getValueInt()); break;
@@ -3620,6 +3616,10 @@ void SensorConfiguration::onReceive(MyMessage* message) {
 			case 13: sensor->powerOn(); break;
 			case 14: sensor->powerOff(); break;
 #endif
+			case 24: sensor->setReportTimerMode((timer_mode)request.getValueInt()); break;
+			case 25: sensor->setReportTimerValue(request.getValueInt()); break;
+			case 26: sensor->setMeasureTimerMode((timer_mode)request.getValueInt()); break;
+			case 27: sensor->setMeasureTimerValue(request.getValueInt()); break;
 			case 16: sensor->setReportIntervalMinutes(request.getValueInt()); break;
 			case 17: sensor->setReportIntervalSeconds(request.getValueInt()); break;
 			case 19: sensor->setReportIntervalHours(request.getValueInt()); break;
