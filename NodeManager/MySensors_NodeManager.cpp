@@ -60,16 +60,32 @@ Timer::Timer(NodeManager* node_manager) {
 	_node = node_manager;
 }
 
-// start the timer
-void Timer::start(int target, int unit) {
-	set(target,unit);
-	start();
+void Timer::setMode(timer_mode mode) {
+	_mode = mode;
 }
+timer_mode Timer::getMode() {
+	return _mode;
+}
+
+void Timer::setValue(int value) {
+	_value = value;
+}
+
+int Timer::getValue() {
+	return _value;
+}
+
+// start the timer
 void Timer::start() {
-	if (_is_configured) _is_running = true;
+	// reset the timer
+	_last = 0;
+	_is_running = true;
 #if FEATURE_TIME == ON
 	// keep track of the time the timer has started
 	_last = now();
+#else
+	// keep track of millis() for calculating the difference
+	_last = millis();
 #endif
 }
 
@@ -78,85 +94,37 @@ void Timer::stop() {
 	_is_running = false;
 }
 
-// reset the timer
-void Timer::reset() {
-	// reset the timer
-	_elapsed = 0;
-	_last = 0;
-}
-
-// restart the timer
-void Timer::restart() {
-	if (! isRunning()) return;
-	stop();
-	reset();
-	// if using millis(), keep track of the current timestamp for calculating the difference
-	if (! _node->isSleepingNode()) _last = millis();
-	start();
-}
-
-// setup the timer
-void Timer::set(int target, int unit) {
-	reset();
-	// save the settings
-	_target = target;
-	if (unit == MINUTES) _target = _target * 60;
-	else if (unit == HOURS) _target = _target * 60 *60;
-	else if (unit == DAYS) _target = _target * 60 * 60 *24;
-	_is_running = false;
-	_is_configured = true;
-}
-
-// unset the timer
-void Timer::unset() {
-	stop();
-	_is_configured = true;
-}
-
-// update the timer at every cycle
-void Timer::update() {
-	if (! isRunning()) return;
-#if FEATURE_TIME == ON
-	// system time is available so use now() to calculated the elapsed time
-	_elapsed = (long)(now() - _last);
-#else
-#if FEATURE_SLEEP == ON
-	if (_node->isSleepingNode()) {
-		// millis() is not reliable while sleeping so calculate how long a sleep cycle would last in seconds and update the elapsed time
-		_elapsed += _node->getSleepSeconds();
-	}
-#endif
-	if (! _node->isSleepingNode()) {
-		// use millis() to calculate the elapsed time in seconds
-		_elapsed = (long)((millis() - _last)/1000);
-	}
-#endif
-}
-
 // return true if the time is over
 bool Timer::isOver() {
-	if (! isRunning()) return false;
-	// time has elapsed
-	if (_elapsed >= _target) return true;
-	// millis has started over
-	if (_elapsed < 0 ) return true;
+	if (_mode == DO_NOT_REPORT || _mode == NOT_CONFIGURED) return false;
+	else if (_mode == IMMEDIATELY) return true;
+	else if (_mode == TIME_INTERVAL) {
+		if (! _is_running) return false;
+		long elapsed = getElapsed();
+		// check if time has elapsed or millis has started over
+		if (elapsed >= _value || elapsed < 0) return true;
+		return false;
+	}
 	return false;
 }
 
-// return true if the timer is running
-bool Timer::isRunning() {
-	if (! isConfigured()) return false;
-	return _is_running;
-}
-
-// return true if the time is configured
-bool Timer::isConfigured() {
-	return _is_configured;
-}
-
 // return elapsed seconds so far
-float Timer::getElapsed() {
-	return _elapsed;
+long Timer::getElapsed() {
+	// calculate the elapsed time
+	long elapsed = 0;
+#if FEATURE_TIME == ON
+	// system time is available so use now() to calculated the elapsed time
+	elapsed = (long)(now() - _last);
+#else
+	// system time is not available
+#if FEATURE_SLEEP == ON
+	// millis() is not reliable while sleeping so calculate how long a sleep cycle would last in seconds and update the elapsed time
+	if (_node->isSleepingNode()) elapsed += _node->getSleepSeconds();
+#endif
+	// use millis() to calculate the elapsed time in seconds
+	if (! _node->isSleepingNode()) elapsed = (long)((millis() - _last)/1000);
+#endif
+	return elapsed;
 }
 
 
@@ -179,6 +147,7 @@ Child::Child(Sensor* sensor, int child_id, int presentation, int type, const cha
 	_type = type;
 	_description = description;
 	_sensor = sensor;
+	// register the child with the sensor
 	_sensor->registerChild(this);
 #if FEATURE_CONDITIONAL_REPORT == ON
 	// initialize the timer for forcing updates to the gateway after a given timeframe
@@ -215,8 +184,9 @@ const char* Child::getDescription() {
 	return _description;
 }
 #if FEATURE_CONDITIONAL_REPORT == ON
-void Child::setForceUpdateMinutes(int value) {
-	_force_update_timer->start(value,MINUTES);
+void Child::setForceUpdateTimerValue(int value) {
+	_force_update_timer->setMode(TIME_INTERVAL);
+	_force_update_timer->setValue(value*60);
 }
 void Child::setMinThreshold(float value) {
 	_min_threshold = value;
@@ -268,14 +238,11 @@ void ChildInt::sendValue(bool force) {
 	if (_samples == 0) return;
 #if FEATURE_CONDITIONAL_REPORT == ON
 	if (! force) {
-		// update the force update timer if running
-		if (_force_update_timer->isRunning()) _force_update_timer->update();
 		// if below or above the thresholds, do not send the value
 		if (_value < _min_threshold || _value > _max_threshold) return;
 		// if the force update timer is over, send the value regardless and restart it
-		if (_force_update_timer->isRunning() && _force_update_timer->isOver()) {
-			_force_update_timer->restart();
-		} else {
+		if (_force_update_timer->isOver()) _force_update_timer->start();
+		else {
 			// if the value does not differ enough from the previous one, do not send the value
 			if (_value > (_last_value - _value_delta) && _value < (_last_value + _value_delta)) {
 				// keep track of the previous value
@@ -338,14 +305,11 @@ void ChildFloat::sendValue(bool force) {
 	if (_samples == 0) return;
 #if FEATURE_CONDITIONAL_REPORT == ON
 	if (! force) {
-		// update the force update timer if running
-		if (_force_update_timer->isRunning()) _force_update_timer->update();
 		// if below or above the thresholds, do not send the value
 		if (_value < _min_threshold || _value > _max_threshold) return;
 		//   if the force update timer is over, send the value regardless and restart it
-		if (_force_update_timer->isRunning() && _force_update_timer->isOver()) {
-			_force_update_timer->restart();
-		} else {
+		if (_force_update_timer->isOver()) _force_update_timer->start();
+		else {
 			// if the value does not differ enough from the previous one, do not send the value
 			if (_value > (_last_value - _value_delta) && _value < (_last_value + _value_delta)) {
 				// keep track of the previous value
@@ -408,14 +372,11 @@ void ChildDouble::sendValue(bool force) {
 	if (_samples == 0) return;
 #if FEATURE_CONDITIONAL_REPORT == ON
 	if (! force) {
-		// update the force update timer if running
-		if (_force_update_timer->isRunning()) _force_update_timer->update();
 		// if below or above the thresholds, do not send the value
 		if (_value < _min_threshold || _value > _max_threshold) return;
 		// if the force update timer is over, send the value regardless and restart it
-		if (_force_update_timer->isRunning() && _force_update_timer->isOver()) {
-			_force_update_timer->restart();
-		} else {
+		if (_force_update_timer->isOver()) _force_update_timer->start();
+		else {
 			// if the value does not differ enough from the previous one, do not send the value
 			if (_value > (_last_value - _value_delta) && _value < (_last_value + _value_delta)) {
 				// keep track of the previous value
@@ -500,7 +461,10 @@ Sensor::Sensor() {
 Sensor::Sensor(NodeManager& node_manager, int pin) {
 	_node = &node_manager;
 	_pin = pin;
+	// initialize the timers
 	_report_timer = new Timer(_node);
+	_measure_timer = new Timer(_node);
+	// register the sensor with the node
 	_node->registerSensor(this);
 }
 
@@ -554,35 +518,22 @@ void Sensor::setInterruptStrict(bool value) {
 }
 #endif
 
-// enable/disable reporting to the gateway
-void Sensor::setReporting(bool value) {
-	_reporting = value;
+void Sensor::setReportTimerMode(timer_mode value) {
+	_report_timer->setMode(value);
 }
 
 // After how many seconds the sensor will report back its measure
-void Sensor::setReportIntervalSeconds(int value) {
-	_report_timer->start(value,SECONDS);
+void Sensor::setReportTimerValue(int value) {
+	_report_timer->setValue(value);
 }
 
-// After how many minutes the sensor will report back its measure 
-void Sensor::setReportIntervalMinutes(int value) {
-	_report_timer->start(value,MINUTES);
+void Sensor::setMeasureTimerMode(timer_mode value) {
+	_measure_timer->setMode(value);
 }
 
-// After how many minutes the sensor will report back its measure 
-void Sensor::setReportIntervalHours(int value) {
-	_report_timer->start(value,HOURS);
-}
-
-// After how many minutes the sensor will report back its measure 
-void Sensor::setReportIntervalDays(int value) {
-	_report_timer->start(value,DAYS);
-}
-
-
-// return true if the report interval has been already configured
-bool Sensor::isReportIntervalConfigured() {
-	return _report_timer->isConfigured();
+// After how many seconds the sensor will report back its measure
+void Sensor::setMeasureTimerValue(int value) {
+	_measure_timer->setValue(value);
 }
 
 // register a child
@@ -613,7 +564,21 @@ void Sensor::before() {
 
 // call the sensor-specific implementation of setup
 void Sensor::setup() {
+	// configure default reporting interval if not already set by the user
+	if (_report_timer->getMode() == NOT_CONFIGURED) {
+		_report_timer->setMode(TIME_INTERVAL);
+		_report_timer->setValue(_node->getDefaultReportTimerValue());
+	}
+	// if the user has not set any custom measurement timer, measure and reporting timer will be the same
+	if (_measure_timer->getMode() == NOT_CONFIGURED) {
+		_measure_timer->setMode(_report_timer->getMode());
+		_measure_timer->setValue(_report_timer->getValue());
+	}
+	// call onSetup(), the sensor implementation of setup()
 	onSetup();
+	// start the timers
+	_report_timer->start();
+	_measure_timer->start();
 #if FEATURE_INTERRUPTS == ON
 	// for interrupt based sensors, register a callback for the interrupt
 	_interrupt_pin = _pin;
@@ -627,53 +592,58 @@ void Sensor::setup() {
 
 // call the sensor-specific implementation of loop
 void Sensor::loop(MyMessage* message) {
-	// update the timers if within a loop cycle
-	if (message == nullptr) {
-		if (_report_timer->isRunning()) {
-			// update the timer
-			_report_timer->update();
-			// if it is not the time yet to report a new measure, just return (unless it is the first time)
-			if (! _report_timer->isOver() && ! _first_run) return;
-		}
-		if (_first_run) _first_run = false;
-	}
-#if FEATURE_HOOKING == ON
-	// if a hook function is defined, call it
-	if (_pre_loop_hook != 0) _pre_loop_hook(this); 
-#endif
-	// turn the sensor on
+	// run the sensor's loop() function if the timer is over OR it is the first run OR we've been called from receive()
+	if (_measure_timer->isOver() || _first_run || message != nullptr) {
 #if FEATURE_POWER_MANAGER == ON
-	powerOn();
+		// turn the sensor on
+		powerOn();
 #endif
-	// iterates over all the children
-	for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
-		Child* child = *itr;
-		// if a specific child is requested, skip all the others
-		if (message != nullptr && message->sensor != child->getChildId()) continue;
-		// collect multiple samples if needed
-		for (int i = 0; i < _samples; i++) {
-			// we've been called from receive(), pass the message along
-			if (message != nullptr) onReceive(message);
-			// we'be been called from loop()
-			else onLoop(child);
-			// wait between samples
-			if (_samples_interval > 0) _node->sleepOrWait(_samples_interval);
-		}
-		// send the value back to the controller
-		if (_reporting) child->sendValue(message != nullptr);
-		// reset the counters
-		child->reset();
-	}
 #if FEATURE_HOOKING == ON
-	// if a hook function is defined, call it
-	if (_post_loop_hook != 0) _post_loop_hook(this); 
+		// if a hook function is defined, call it
+		if (_pre_loop_hook != 0) _pre_loop_hook(this); 
 #endif
-	// turn the sensor off
+		// iterates over all the children
+		for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
+			Child* child = *itr;
+			// if a specific child is requested from receive(), skip all the others
+			if (message != nullptr && message->sensor != child->getChildId()) continue;
+			// collect multiple samples if needed
+			for (int i = 0; i < _samples; i++) {
+				// we've been called from receive(), pass the message along
+				if (message != nullptr) onReceive(message);
+				// we'be been called from loop()
+				else onLoop(child);
+				// wait between samples
+				if (_samples_interval > 0) _node->sleepOrWait(_samples_interval);
+			}
+		}
+#if FEATURE_HOOKING == ON
+		// if a hook function is defined, call it
+		if (_post_loop_hook != 0) _post_loop_hook(this); 
+#endif
 #if FEATURE_POWER_MANAGER == ON
-	powerOff();
+		// turn the sensor off
+		powerOff();
 #endif
+	}
+	// send the latest measure back to the network if the timer is over OR it is the first run OR we've been called from receive()
+	if (_report_timer->isOver() || _first_run || message != nullptr) {
+		// iterates over all the children
+		for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
+			Child* child = *itr;
+			// if a specific child is requested from receive(), skip all the others
+			if (message != nullptr && message->sensor != child->getChildId()) continue;
+			// send the value back to the controller
+			child->sendValue(message != nullptr);
+			// reset the counters
+			child->reset();
+		}
+	}
 	// if called from loop(), restart the report timer if over
-	if (message == nullptr && _report_timer->isRunning() && _report_timer->isOver()) _report_timer->restart();
+	if (_report_timer->isOver()) _report_timer->start();
+	if (_measure_timer->isOver()) _measure_timer->start();
+	// unset first run if set
+	if (_first_run) _first_run = false;
 }
 
 #if FEATURE_INTERRUPTS == ON
@@ -764,7 +734,7 @@ SensorBattery::SensorBattery(NodeManager& node_manager, int child_id): Sensor(no
 	children.allocateBlocks(1);
 	new ChildFloat(this,child_id,S_MULTIMETER,V_VOLTAGE,_name);
 	// report battery level every 60 minutes by default
-	setReportIntervalMinutes(60);
+	setReportTimerValue(60*60);
 }
 void SensorBattery::setMinVoltage(float value) {
 	_battery_min = value;
@@ -825,7 +795,7 @@ SensorSignal::SensorSignal(NodeManager& node_manager, int child_id): Sensor(node
 	children.allocateBlocks(1);
 	new ChildInt(this,child_id,S_SOUND,V_LEVEL,_name);
 	// report signal level every 60 minutes by default
-	setReportIntervalMinutes(60);
+	setReportTimerValue(60*60);
 }
 // setter/getter
 void SensorSignal::setSignalCommand(int value) {
@@ -1150,7 +1120,7 @@ void SensorDigitalOutput::onSetup() {
 	// setup the off pin if needed
 	if (_pin_off > 0) pinMode(_pin_off, OUTPUT);
 	// report immediately
-	_report_timer->unset();
+	setReportTimerMode(IMMEDIATELY);
 	// turn the relay off by default
 	setStatus(OFF);
 }
@@ -1159,8 +1129,9 @@ void SensorDigitalOutput::onSetup() {
 void SensorDigitalOutput::setLegacyMode(bool value) {
 	_legacy_mode = value;
 }
-void SensorDigitalOutput::setSafeguard(int value) {
-	_safeguard_timer->set(value,MINUTES);
+void SensorDigitalOutput::setSafeguardTimerValue(int value) {
+	_safeguard_timer->setMode(TIME_INTERVAL);
+	_safeguard_timer->setValue(value*60);
 }
 int SensorDigitalOutput::getStatus() {
 	return _status;
@@ -1183,15 +1154,10 @@ void SensorDigitalOutput::setPinOff(int value) {
 
 // main task
 void SensorDigitalOutput::onLoop(Child* child) {
-	// if a safeguard is set, check if it is time for it
-	if (_safeguard_timer->isRunning()) {
-		// update the timer
-		_safeguard_timer->update();
-		// if the time is over, turn the output off
-		if (_safeguard_timer->isOver()) {
-			setStatus(OFF);
-			_safeguard_timer->stop();
-		}
+	// if the time is over, turn the output off
+	if (__safeguard_timer->isOver()) {
+		setStatus(OFF);
+		_safeguard_timer->stop();
 	}
 }
 
@@ -1218,14 +1184,15 @@ void SensorDigitalOutput::setStatus(int requested_status) {
 		// received a request to turn it off immediately, stop the timer
 		if (elapsed == 0) _safeguard_timer->stop();
 		else {
-			// configure and start the timer
-			_safeguard_timer->start(elapsed,MINUTES);
+			// configure the timer with the provided elapsed time and start it
+			_safeguard_timer->setValue(elapsed*60);
+			_safeguard_timer->start();
 			// set the status just to ON, not to the requested elapsed
 			requested_status = ON;
 		}
 	} else {
 		// if turning the output on and a safeguard timer is configured, start it
-		if (requested_status == ON && _safeguard_timer->isConfigured() && ! _safeguard_timer->isRunning()) _safeguard_timer->start();
+		if (requested_status == ON && _safeguard_timer->getMode() == TIME_INTERVAL) _safeguard_timer->start();
 	}
 	// switch the actual output
 	_switchOutput(requested_status);
@@ -1442,7 +1409,7 @@ void SensorInterrupt::setThreshold(int value) {
 // what to do during setup
 void SensorInterrupt::onSetup() {
 	// report immediately
-	_report_timer->unset();
+	setReportTimerMode(IMMEDIATELY);
 }
 
 // what to do during loop
@@ -2420,7 +2387,7 @@ void SensorDimmer::setReverse(bool value) {
 void SensorDimmer::onSetup() {
 	pinMode(_pin, OUTPUT);
 	// report immediately
-	_report_timer->unset();
+	setReportTimerMode(IMMEDIATELY);
 }
 
 // what to do during loop
@@ -2732,7 +2699,7 @@ Display::Display(NodeManager& node_manager, int child_id): Sensor(node_manager) 
 	children.allocateBlocks(1);
 	new ChildString(this, _node->getAvailableChildId(child_id), S_INFO, V_TEXT,_name);
 	// prevent reporting to the gateway at each display update
-	setReporting(false);
+	setReportTimerMode(DO_NOT_REPORT);
 }
 // setter/getter
 void Display::setCaption(const char* value) {
@@ -3160,7 +3127,7 @@ void SensorTTP::onSetup() {
 	// this will allow to register the interrupt
 	_pin = _dv_pin;
 	// report immediately
-	_report_timer->unset();
+	setReportTimerMode(IMMEDIATELY);
 	digitalWrite(_rst_pin, LOW);
 }
 
@@ -3230,7 +3197,7 @@ SensorServo::SensorServo(NodeManager& node_manager, int pin, int child_id): Sens
 void SensorServo::onSetup() {
 	_servo.attach(_pin);
 	// report immediately
-	_report_timer->unset();
+	setReportTimerMode(IMMEDIATELY);
 }
 
 // what to do during loop
@@ -3275,7 +3242,7 @@ void SensorAPDS9960::onSetup() {
 	_apds = new SparkFun_APDS9960();
 	pinMode(_pin, INPUT);
 	// report immediately
-	_report_timer->unset();
+	setReportTimerMode(IMMEDIATELY);
 	// initialize the library
 	_apds->init();
 	_apds->enableGestureSensor(true);
@@ -3487,7 +3454,7 @@ void SensorFPM10A::onSetup(){
 	}
 	else debug(PSTR("!" LOG_SENSOR "%s:CONN KO\n"));
 	// report immediately
-	_report_timer->unset();
+	setReportTimerMode(IMMEDIATELY);
 }
 
 // what to do during loop
@@ -3538,16 +3505,12 @@ SensorConfiguration
 // contructor
 SensorConfiguration::SensorConfiguration(NodeManager& node_manager): Sensor(node_manager) {
 	_name = "CONFIG";
-}
-
-// what to do during before
-void SensorConfiguration::onBefore() {
+	children.allocateBlocks(1);
 	new ChildInt(this,CONFIGURATION_CHILD_ID,S_CUSTOM,V_CUSTOM,_name);
 }
 
 // what to do during setup
 void SensorConfiguration::onSetup() {
-
 }
 
 // what to do during loop
@@ -4062,8 +4025,6 @@ void NodeManager::before() {
 	// setup individual sensors
 	for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
 		Sensor* sensor = *itr;
-		// configure reporting interval
-		if (! sensor->isReportIntervalConfigured()) sensor->setReportIntervalSeconds(_report_interval_seconds);
 		// call each sensor's before()
 		sensor->before();
 	}
@@ -4328,24 +4289,13 @@ void NodeManager::loop() {
 	}
 #endif
 
+	int NodeManager::getDefaultReportTimerValue() {
+		return _default_report_timer_value;
+	}
+	
 	// set the default interval in seconds all the sensors will report their measures
-	void NodeManager::setReportIntervalSeconds(int value) {
-		_report_interval_seconds = value;
-	}
-
-	// set the default interval in minutes all the sensors will report their measures
-	void NodeManager::setReportIntervalMinutes(int value) {
-		_report_interval_seconds = value*60;
-	}
-
-	// set the default interval in hours all the sensors will report their measures
-	void NodeManager::setReportIntervalHours(int value) {
-		_report_interval_seconds = value*60*60;
-	}
-
-	// set the default interval in days all the sensors will report their measures
-	void NodeManager::setReportIntervalDays(int value) {
-		_report_interval_seconds = value*60*60*24;
+	void NodeManager::setDefaultReportTimerValue(int value) {
+		_default_report_timer_value = value;
 	}
 
 	// if set and when the board is battery powered, sleep() is always called instead of wait()

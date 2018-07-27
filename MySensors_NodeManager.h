@@ -13,20 +13,25 @@
 /***********************************
 Constants
 */
-// define board sleep status
-#define AWAKE 0
-#define SLEEP 1
-
-// define time unit
-#define SECONDS 0
-#define MINUTES 1
-#define HOURS 2
-#define DAYS 3
-
 // define on/off
 #define OFF 0
 #define ON 1
 
+// define board sleep status
+enum status {
+	AWAKE,
+	SLEEP	
+};
+
+//define Timer type
+enum timer_mode {
+	NOT_CONFIGURED,
+	TIME_INTERVAL,
+	IMMEDIATELY,
+	DO_NOT_REPORT,
+	HOURLY,
+	DAILY
+} ;
 
 /***********************************
 Chip type
@@ -406,34 +411,23 @@ Timer
 class Timer {
 public:
 	Timer(NodeManager* node_manager);
-	// start the timer which will be over when the configured target passes by
-	void start(int target, int unit);
+	void setMode(timer_mode mode);
+	timer_mode getMode();
+	void setValue(int value);
+	int getValue();
+	// start the timer
 	void start();
 	// stop the timer
 	void stop();
-	// reset the timer
-	void reset();
-	// reset the timer and start over
-	void restart();
-	// set the timer configuration but do not start it
-	void set(int target, int unit);
-	void unset();
-	// update the timer. To be called at every cycle
-	void update();
 	// return true if the time is over
 	bool isOver();
-	// return true if the timer is running
-	bool isRunning();
-	// return true if the timer has been configured
-	bool isConfigured();
-	// return the current elapsed time
-	float getElapsed();
+	// return elapsed time in seconds
+	long getElapsed();
 private:
 	NodeManager* _node;
-	int _target = 0;
-	long _elapsed = 0;
+	timer_mode _mode = NOT_CONFIGURED;
+	int _value = 0;
 	bool _is_running = false;
-	bool _is_configured = false;
 	long _last = 0;
 };
 
@@ -461,7 +455,7 @@ public:
 	const char* getDescription();
 #if FEATURE_CONDITIONAL_REPORT == ON
 	// force to send an update after the configured number of minutes
-	void setForceUpdateMinutes(int value);
+	void setForceUpdateTimerValue(int value);
 	// never report values below this threshold (default: FLT_MIN)
 	void setMinThreshold(float value);
 	// never report values above this threshold (default: FLT_MAX)
@@ -579,18 +573,11 @@ public:
 	// [14] manually turn the power off
 	void powerOff();
 #endif
-	// [21] enable/disable reporting to the gateway (default: true)
-	void setReporting(bool value);
+	void setReportTimerMode(timer_mode value);
 	// [17] After how many minutes the sensor will report back its measure (default: 10 minutes)
-	void setReportIntervalSeconds(int value);
-	// [16] After how many minutes the sensor will report back its measure (default: 10 minutes)
-	void setReportIntervalMinutes(int value);
-	// [19] After how many hours the sensor will report back its measure (default: 10 minutes)
-	void setReportIntervalHours(int value);
-	// [20] After how many days the sensor will report back its measure (default: 10 minutes)
-	void setReportIntervalDays(int value);
-	// return true if the report interval has been already configured
-	bool isReportIntervalConfigured();
+	void setReportTimerValue(int value);
+	void setMeasureTimerMode(timer_mode value);
+	void setMeasureTimerValue(int value);
 #if FEATURE_INTERRUPTS == ON
 	// return the pin the interrupt is attached to
 	int getInterruptPin();
@@ -647,7 +634,6 @@ protected:
 	int _pin = -1;
 	int _samples = 1;
 	int _samples_interval = 0;
-	bool _reporting = true;
 	bool _first_run = true;
 #if FEATURE_INTERRUPTS == ON
 	int _interrupt_pin = -1;
@@ -660,6 +646,7 @@ protected:
 	PowerManager* _powerManager = nullptr;
 #endif
 	Timer* _report_timer;
+	Timer* _measure_timer;
 #if FEATURE_HOOKING == ON
 	void (*_setup_hook)(Sensor* sensor);
 	void (*_pre_loop_hook)(Sensor* sensor);
@@ -725,7 +712,6 @@ class SensorConfiguration: public Sensor {
 public:
 	SensorConfiguration(NodeManager& nodeManager);
 	// define what to do at each stage of the sketch
-	void onBefore();
 	void onSetup();
 	void onLoop(Child* child);
 	void onReceive(MyMessage* message);
@@ -907,7 +893,7 @@ public:
 	// [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
 	void setLegacyMode(bool value);
 	// [105] automatically turn the output off after the given number of minutes
-	void setSafeguard(int value);
+	void setSafeguardTimerValue(int value);
 	// [106] if true the input value becomes a duration in minutes after which the output will be automatically turned off (default: false)
 	void setInputIsElapsed(bool value);
 	// [107] optionally wait for the given number of milliseconds after changing the status (default: 0)
@@ -1931,14 +1917,9 @@ public:
 	// return the value of the pin from which the last interrupt came
 	int getLastInterruptValue();
 #endif
+	int getDefaultReportTimerValue();
 	// [36] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
-	void setReportIntervalSeconds(int value);
-	// [37] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
-	void setReportIntervalMinutes(int value);
-	// [38] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
-	void setReportIntervalHours(int value);
-	// [39] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. or sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
-	void setReportIntervalDays(int value);
+	void setDefaultReportTimerValue(int value);
 	// [30] if set and when the board is battery powered, sleep() is always called instead of wait() (default: true)
 	void setSleepOrWait(bool value);
 	// sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 
@@ -1992,7 +1973,7 @@ private:
 #endif
 	MyMessage _message;
 	void _sendMessage(int child_id, int type);
-	int _status = AWAKE;
+	status _status = AWAKE;
 	long _sleep_time = 0;
 	int _sleep_interrupt_pin = -1;
 	int _retries = 1;
@@ -2015,7 +1996,7 @@ private:
 	void _present(int child_id, int type);
 	bool _get_controller_config = true;
 	int _is_metric = 1;
-	int _report_interval_seconds = 10*60;
+	int _default_report_timer_value = 10*60;
 	bool _sleep_or_wait = true;
 	int _reboot_pin = -1;
 #if FEATURE_EEPROM == ON
