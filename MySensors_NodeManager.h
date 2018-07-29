@@ -177,20 +177,8 @@ Libraries
 #endif
 
 // include third party libraries
-#ifdef USE_SIGNAL
-#define MY_SIGNAL_REPORT_ENABLED
-#endif
-#ifdef USE_DHT
-#include <DHT.h>
-#endif
-#ifdef USE_SHT21
-#include <Wire.h>
-#include <Sodaq_SHT2x.h>
-#endif
-#ifdef USE_DS18B20
-#include <OneWire.h>
-#include <DallasTemperature.h>
-#endif
+
+
 #ifdef USE_BH1750
 #include <BH1750.h>
 #include <Wire.h>
@@ -561,6 +549,32 @@ private:
 Sensor: generic sensor class
 */
 
+#ifdef USE_CONFIGURATION
+/*
+ConfigurationRequest
+*/
+
+class ConfigurationRequest {
+public:
+	ConfigurationRequest(int child_id, const char* string);
+	// return the child id the message has been requested to
+	int getRecipientChildId();
+	// return the child id the request is for
+	int getChildId();
+	// return the parsed function
+	int getFunction();
+	// return the value as an int
+	int getValueInt();
+	// return the value as a float
+	float getValueFloat();
+private:
+	int _function = -1;
+	int _child_id = -1;
+	int _recipient_child_id = -1;
+	float _value;
+};
+#endif
+
 class Sensor {
 public:
 	Sensor();
@@ -647,6 +661,9 @@ public:
 	virtual void onLoop(Child* child);
 	virtual void onReceive(MyMessage* message);
 	virtual void onInterrupt();
+#ifdef USE_CONFIGURATION
+	virtual void onConfiguration(ConfigurationRequest* request);
+#endif
 protected:
 	const char* _name = "";
 	int _pin = -1;
@@ -674,58 +691,11 @@ protected:
 #endif
 };
 
-#ifdef USE_BATTERY
-/*
-SensorBattery: report battery level
-*/
-class SensorBattery: public Sensor {
-public:
-	SensorBattery(NodeManager& nodeManager, int child_id = BATTERY_CHILD_ID);
-	// [102] the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
-	void setMinVoltage(float value);
-	// [103] the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
-	void setMaxVoltage(float value);
-	// [104] if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
-	void setBatteryInternalVcc(bool value);
-	// [105] if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
-	void setBatteryPin(int value);
-	// [106] if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
-	void setBatteryVoltsPerBit(float value);
-	// [107] change battery voltage calibration factor
-	void setBatteryCalibrationFactor(float value);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	float _battery_min = 2.6;
-	float _battery_max = 3.3;
-	bool _battery_internal_vcc = true;
-	int _battery_pin = -1;
-	float _battery_volts_per_bit = 0.003363075;
-	float _battery_adj_factor = 1.0;
-};
-#endif
-
-#ifdef USE_SIGNAL
-/*
-SensorSignal: report RSSI signal strength from the radio
-*/
-class SensorSignal: public Sensor {
-public:
-	SensorSignal(NodeManager& nodeManager, int child_id = SIGNAL_CHILD_ID);
-	// [101] define which signal report to send. Possible values are SR_UPLINK_QUALITY, SR_TX_POWER_LEVEL, SR_TX_POWER_PERCENT, SR_TX_RSSI, SR_RX_RSSI, SR_TX_SNR, SR_RX_SNR (default: SR_RX_RSSI)
-	void setSignalCommand(int value);
-	// define what to do at each stage of the sketch
-	void onLoop(Child* child);
-protected:
-	int _signal_command = SR_RX_RSSI;
-};
-#endif
-
 #ifdef USE_CONFIGURATION
 /*
 SensorConfiguration: allow remote configuration of the board and any configured sensor
 */
+
 class SensorConfiguration: public Sensor {
 public:
 	SensorConfiguration(NodeManager& nodeManager);
@@ -735,360 +705,16 @@ public:
 	void onReceive(MyMessage* message);
 protected:
 };
-
-/*
-ConfigurationRequest
-*/
-
-class ConfigurationRequest {
-public:
-	ConfigurationRequest(int child_id, const char* string);
-	// return the child id the message has been requested to
-	int getRecipientChildId();
-	// return the child id the request is for
-	int getChildId();
-	// return the parsed function
-	int getFunction();
-	// return the value as an int
-	int getValueInt();
-	// return the value as a float
-	float getValueFloat();
-private:
-	int _function = -1;
-	int _child_id = -1;
-	int _recipient_child_id = -1;
-	float _value;
-};
 #endif
 
-#ifdef USE_ANALOG_INPUT
-/*
-SensorAnalogInput: read the analog input of a configured pin
-*/
-class SensorAnalogInput: public Sensor {
-public:
-	SensorAnalogInput(NodeManager& node_manager, int pin, int child_id = -255);
-	// [101] the analog reference to use (default: not set, can be either INTERNAL or DEFAULT)
-	void setReference(int value);
-	// [102] reverse the value or the percentage (e.g. 70% -> 30%) (default: false)
-	void setReverse(bool value);
-	// [103] when true returns the value as a percentage (default: true)
-	void setOutputPercentage(bool value);
-	// [104] minimum value for calculating the percentage (default: 0)
-	void setRangeMin(int value);
-	// [105] maximum value for calculating the percentage (default: 1024)
-	void setRangeMax(int value);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	int _reference = -1;
-	bool _reverse = false;
-	bool _output_percentage = true;
-	int _range_min = 0;
-	int _range_max = 1024;
-	int _getPercentage(int value);
-	int _getAnalogRead();
-};
 
-/*
-SensorLDR: return the percentage of light from a Light dependent resistor
-*/
-class SensorLDR: public SensorAnalogInput {
-public:
-	SensorLDR(NodeManager& node_manager, int pin, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-};
 
-/*
-SensorRain
-*/
-class SensorRain: public SensorAnalogInput {
-public:
-	SensorRain(NodeManager& node_manager, int pin, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-};
+//XXXX
 
-/*
-SensorSoilMoisture
-*/
-class SensorSoilMoisture: public SensorAnalogInput {
-public:
-	SensorSoilMoisture(NodeManager& node_manager, int pin, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-};
-#endif
 
-#ifdef USE_THERMISTOR
-/*
-SensorThermistor: read the temperature from a thermistor
-*/
-class SensorThermistor: public Sensor {
-public:
-	SensorThermistor(NodeManager& node_manager, int pin, int child_id = -255);
-	// [101] resistance at 25 degrees C (default: 10000)
-	void setNominalResistor(long value);
-	// [102] temperature for nominal resistance (default: 25)
-	void setNominalTemperature(int value);
-	// [103] The beta coefficient of the thermistor (default: 3950)
-	void setBCoefficient(int value);
-	// [104] the value of the resistor in series with the thermistor (default: 10000)
-	void setSeriesResistor(long value);
-	// [105] set a temperature offset
-	void setOffset(float value);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	long _nominal_resistor = 10000;
-	int _nominal_temperature = 25;
-	int _b_coefficient = 3950;
-	long _series_resistor = 10000;
-	float _offset = 0;
-};
-#endif
 
-#ifdef USE_ML8511
-/*
-	SensorML8511
-*/
 
-class SensorML8511: public Sensor {
-public:
-	SensorML8511(NodeManager& node_Manager, int pin, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	float _mapfloat(float x, float in_min, float in_max, float out_min, float out_max);
-};
-#endif
 
-#ifdef USE_ACS712
-/*
-	SensorACS712
-*/
-
-class SensorACS712: public Sensor {
-public:
-	SensorACS712(NodeManager& node_manager, int pin, int child_id = -255);
-	// [101] set how many mV are equivalent to 1 Amp. The value depends on the module (100 for 20A Module, 66 for 30A Module) (default: 185);
-	void setmVPerAmp(int value);
-	// [102] set ACS offset (default: 2500);
-	void setOffset(int value);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	int _ACS_offset = 2500;
-	int _mv_per_amp = 185;
-};
-#endif
-
-#ifdef USE_DIGITAL_INPUT
-/*
-SensorDigitalInput: read the digital input of the configured pin
-*/
-class SensorDigitalInput: public Sensor {
-public:
-	SensorDigitalInput(NodeManager& node_manager, int pin, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-};
-#endif
-
-#ifdef USE_DIGITAL_OUTPUT
-/*
-SensorDigitalOutput: control a digital output of the configured pin
-*/
-class SensorDigitalOutput: public Sensor {
-public:
-	SensorDigitalOutput(NodeManager& node_manager, int pin, int child_id = -255);
-	// [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
-	void setLegacyMode(bool value);
-	// [105] automatically turn the output off after the given number of minutes
-	void setSafeguard(int value);
-	// [106] if true the input value becomes a duration in minutes after which the output will be automatically turned off (default: false)
-	void setInputIsElapsed(bool value);
-	// [107] optionally wait for the given number of milliseconds after changing the status (default: 0)
-	void setWaitAfterSet(int value);
-	// [108] when switching on, turns the output off after the given number of milliseconds. For latching relay controls the pulse width (default: 0)
-	void setPulseWidth(int value);
-	// [109] Invert the value to write. E.g. if ON is received, write LOW (default: false) 
-	void setInvertValueToWrite(bool value);
-	// [110] for a 2-pins latching relay, set the pin which turns the relay off (default: -1)
-	void setPinOff(int value);
-	// manually switch the output to the provided status (ON or OFF)
-	void setStatus(int value);
-	// toggle the status
-	void toggleStatus();
-	// get the current state
-	int getStatus();
-	void onSetup();
-	void onLoop(Child* child);
-	void onReceive(MyMessage* message);
-protected:
-	int _status = OFF;
-	int _pin_off = -1;
-	bool _legacy_mode = false;
-	bool _input_is_elapsed = false;
-	int _wait_after_set = 0;
-	int _pulse_width = 0;
-	bool _invert_value_to_write = false;
-	Timer* _safeguard_timer = new Timer(_node);
-	virtual void _switchOutput(int value);
-};
-
-/*
-SensorRelay
-*/
-class SensorRelay: public SensorDigitalOutput {
-public:
-	SensorRelay(NodeManager& node_manager, int pin, int child_id = -255);
-};
-
-/*
-SensorLatchingRelay1Pin
-*/
-class SensorLatchingRelay1Pin: public SensorRelay {
-public:
-	SensorLatchingRelay1Pin(NodeManager& node_manager, int pin, int child_id = -255);
-};
-
-/*
-SensorLatchingRelay2Pins
-*/
-class SensorLatchingRelay2Pins: public SensorRelay {
-public:
-	SensorLatchingRelay2Pins(NodeManager& node_manager, int pin_off, int pin_on, int child_id = -255);
-};
-#endif
-
-/*
-SensorDHT
-*/
-#ifdef USE_DHT
-class SensorDHT: public Sensor {
-public:
-	SensorDHT(NodeManager& node_manager, int pin, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	DHT* _dht;
-	int _dht_type;
-	float _offset = 0;
-};
-
-/*
-SensorDHT11
-*/
-class SensorDHT11: public SensorDHT {
-public:
-	SensorDHT11(NodeManager& node_manager, int pin, int child_id = -255);
-};
-
-/*
-SensorDHT22
-*/
-class SensorDHT22: public SensorDHT {
-public:
-	SensorDHT22(NodeManager& node_manager, int pin, int child_id = -255);
-};
-#endif
-
-/*
-SensorSHT21: temperature and humidity sensor
-*/
-#ifdef USE_SHT21
-class SensorSHT21: public Sensor {
-public:
-	SensorSHT21(NodeManager& node_manager, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-};
-
-/*
-SensorHTU21D: temperature and humidity sensor
-*/
-
-class SensorHTU21D: public SensorSHT21 {
-public:
-	SensorHTU21D(NodeManager& nodeManager, int child_id = -255);
-};
-#endif
-
-/*
-* SensorInterrupt
-*/
-#ifdef USE_INTERRUPT
-class SensorInterrupt: public Sensor {
-public:
-	SensorInterrupt(NodeManager& node_manager, int pin, int child_id = -255);
-	// [105] Invert the value to report. E.g. if FALLING and value is LOW, report HIGH (default: false) 
-	void setInvertValueToReport(bool value);
-#if FEATURE_TIME == ON
-	// [107] when keeping track of the time, trigger only after X consecutive interrupts within the same minute (default: 1)
-	void setThreshold(int value);
-#endif
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-	void onReceive(MyMessage* message);
-	void onInterrupt();
-protected:
-	bool _invert_value_to_report = false;
-#if FEATURE_TIME == ON
-	int _threshold = 1;
-	int _counter = 0;
-	int _current_minute = minute();
-#endif
-};
-
-/*
-* SensorDoor
-*/
-class SensorDoor: public SensorInterrupt {
-public:
-	SensorDoor(NodeManager& node_manager, int pin, int child_id = -255);
-};
-
-/*
-* SensorMotion
-*/
-class SensorMotion: public SensorInterrupt {
-public:
-	SensorMotion(NodeManager& node_manager, int pin, int child_id = -255);
-};
-#endif
-/*
-SensorDs18b20
-*/
-#ifdef USE_DS18B20
-class SensorDs18b20: public Sensor {
-public:
-	SensorDs18b20(NodeManager& node_manager, int pin, int child_id = -255);
-	// returns the sensor's resolution in bits
-	int getResolution();
-	// [101] set the sensor's resolution in bits
-	void setResolution(int value);
-	// [102] sleep while DS18B20 calculates temperature (default: false)
-	void setSleepDuringConversion(bool value);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	bool _sleep_during_conversion = false;
-	DallasTemperature* _sensors;
-	char* _getAddress(int index);
-};
-#endif
 
 /*
 SensorBH1750
@@ -2038,5 +1664,48 @@ private:
 
 // include NodeManager's library file
 #include "NodeManager/MySensors_NodeManager.cpp"
+
+#ifdef USE_BATTERY
+#include "sensors/SensorBattery.h"
+#endif
+#ifdef USE_SIGNAL
+#include "sensors/SensorSignal.h"
+#endif
+#ifdef USE_ANALOG_INPUT
+#include "sensors/SensorAnalogInput.h"
+#include "sensors/SensorLDR.h"
+#include "sensors/SensorRain.h"
+#include "sensors/SensorSoilMoisture.h"
+#endif
+#ifdef USE_THERMISTOR
+#include "sensors/SensorThermistor.h"
+#endif
+#ifdef USE_ML8511
+#include "sensors/SensorML8511.h"
+#endif
+#ifdef USE_ACS712
+#include "sensors/SensorACS712.h"
+#endif
+#ifdef USE_DIGITAL_INPUT
+#include "sensors/SensorDigitalInput.h"
+#endif
+#ifdef USE_DIGITAL_OUTPUT
+#include "sensors/SensorDigitalOutput.h"
+#endif
+#ifdef USE_SHT21
+#include "sensors/SensorSHT21.h"
+#endif
+#ifdef USE_INTERRUPT
+#include "sensors/SensorInterrupt.h"
+#endif
+#ifdef USE_DS18B20
+#include "sensors/SensorDs18b20.h"
+#endif
+
+#ifdef USE_DHT
+#include "sensors/SensorDHT.h"
+#endif
+
+
 
 #endif
