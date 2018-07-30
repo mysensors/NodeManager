@@ -52,7 +52,7 @@ public:
 	
 #if NODEMANAGER_OTA_CONFIGURATION == ON
 	// define what to do when receiving an OTA configuration request
-	void onConfiguration(ConfigurationRequest* request) {
+	void onOTAConfiguration(ConfigurationRequest* request) {
 		switch(request->getFunction()) {
 		case 101: setSignalCommand(request->getValueInt()); break;
 		default: return;

@@ -116,7 +116,7 @@ public:
 				default: return;
 				}
 			} else {
-				sensor->onConfiguration(&request);
+				sensor->onOTAConfiguration(&request);
 			}
 		}
 		_node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,function);

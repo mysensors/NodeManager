@@ -107,7 +107,7 @@ public:
 	
 #if NODEMANAGER_OTA_CONFIGURATION == ON
 	// define what to do when receiving an OTA configuration request
-	void onConfiguration(ConfigurationRequest* request) {
+	void onOTAConfiguration(ConfigurationRequest* request) {
 		switch(request->getFunction()) {
 		case 101: setMoistureOffset(request->getValueInt()); break;
 		case 102: setMoistureRange(request->getValueInt()); break;

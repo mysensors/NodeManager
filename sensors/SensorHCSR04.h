@@ -66,7 +66,7 @@ public:
 	
 #if NODEMANAGER_OTA_CONFIGURATION == ON
 	// define what to do when receiving an OTA configuration request
-	void onConfiguration(ConfigurationRequest* request) {
+	void onOTAConfiguration(ConfigurationRequest* request) {
 		switch(request->getFunction()) {
 		case 103: setMaxDistance(request->getValueInt()); break;
 		case 104: setReportIfInvalid(request->getValueInt()); break;

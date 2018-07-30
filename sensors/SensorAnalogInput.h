@@ -81,7 +81,7 @@ public:
 
 #if NODEMANAGER_OTA_CONFIGURATION == ON
 	// define what to do when receiving an OTA configuration request
-	virtual void onConfiguration(ConfigurationRequest* request) {
+	virtual void onOTAConfiguration(ConfigurationRequest* request) {
 		switch(request->getFunction()) {
 		case 101: setReference(request->getValueInt()); break;
 		case 102: setReverse(request->getValueInt()); break;

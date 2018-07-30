@@ -131,7 +131,7 @@ public:
 	
 #if NODEMANAGER_OTA_CONFIGURATION == ON
 	// define what to do when receiving an OTA configuration request
-	void onConfiguration(ConfigurationRequest* request) {
+	void onOTAConfiguration(ConfigurationRequest* request) {
 		switch(request->getFunction()) {
 		case 102: setContrast((uint8_t)request->getValueInt()); break;
 		case 104: rotateDisplay((bool)request->getValueInt()); break;

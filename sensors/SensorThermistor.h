@@ -86,7 +86,7 @@ public:
 
 #if NODEMANAGER_OTA_CONFIGURATION == ON
 	// define what to do when receiving an OTA configuration request
-	virtual void onConfiguration(ConfigurationRequest* request) {
+	virtual void onOTAConfiguration(ConfigurationRequest* request) {
 		switch(request->getFunction()) {
 		case 101: setNominalResistor((long)request->getValueInt()); break;
 		case 102: setNominalTemperature(request->getValueInt()); break;

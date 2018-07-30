@@ -299,5 +299,5 @@ void Sensor::onReceive(MyMessage* message){
 }
 void Sensor::onInterrupt(){}
 #if NODEMANAGER_OTA_CONFIGURATION == ON
-void Sensor::onConfiguration(ConfigurationRequest* request) {}
+void Sensor::onOTAConfiguration(ConfigurationRequest* request) {}
 #endif

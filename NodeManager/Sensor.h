@@ -117,7 +117,7 @@ public:
 	virtual void onReceive(MyMessage* message);
 	virtual void onInterrupt();
 #if NODEMANAGER_OTA_CONFIGURATION == ON
-	virtual void onConfiguration(ConfigurationRequest* request);
+	virtual void onOTAConfiguration(ConfigurationRequest* request);
 #endif
 protected:
 	const char* _name = "";
