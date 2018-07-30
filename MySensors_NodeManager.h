@@ -47,6 +47,7 @@ Include required third-party libraries
 #include <TimeLib.h>
 #endif
 #if NODEMANAGER_RTC == ON
+#undef NODEMANAGER_TIME
 #define NODEMANAGER_TIME ON
 #include <DS3232RTC.h>
 #endif
