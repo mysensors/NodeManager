@@ -27,6 +27,7 @@ NodeManager: manages all the aspects of the node
 
 class NodeManager {
 public:
+	// instantiate a NodeManager object. An optional fixed number of sensors can be passed as an argument
 	NodeManager(int sensorcount = 0);
 	// [10] send the same message multiple times (default: 1)
 	void setRetries(int value);
@@ -124,6 +125,7 @@ public:
 	void syncTime();
 	// [42] returns the current system time
 	long getTime();
+	// receiveTime() callback
 	void receiveTime(unsigned long ts);
 #endif
 #if NODEMANAGER_INTERRUPTS == ON
@@ -138,13 +140,19 @@ public:
 	void sendMessage(int child_id, int type, double value, int precision);
 	void sendMessage(int child_id, int type, const char* value);
 #if NODEMANAGER_POWER_MANAGER == ON
+	// configure a PowerManager common to all the sensors
 	void setPowerManager(PowerManager& powerManager);
 #endif
+	// return the next-available child id
 	int getAvailableChildId(int child_id = -255);
+	// list containing all the registered sensors
 	List<Sensor*> sensors;
+	// return the Child object of the given child_id
 	Child* getChild(int child_id);
+	// return the sensor object of the given child_id
 	Sensor* getSensorWithChild(int child_id);
 #if NODEMANAGER_SD == ON
+	// SD card variables
 	Sd2Card sd_card;
 	SdVolume sd_volume;
 	SdFile sd_root;

@@ -253,10 +253,9 @@ NODEMANAGER_HOOKING             | OFF     | allow custom code to be hooked in th
 //#define MY_DEFAULT_TX_LED_PIN  6
 
 /***********************************
- * NodeManager built-in features
+ * NodeManager configuration
  */
 
-// Enable/disable NodeManager's features
 #define NODEMANAGER_DEBUG ON
 #define NODEMANAGER_POWER_MANAGER OFF
 #define NODEMANAGER_INTERRUPTS ON
@@ -270,18 +269,15 @@ NODEMANAGER_HOOKING             | OFF     | allow custom code to be hooked in th
 #define NODEMANAGER_HOOKING OFF
 #define NODEMANAGER_OTA_CONFIGURATION OFF
 
-/***********************************
- * Load NodeManager Library
- */
-
 #include <MySensors_NodeManager.h>
 NodeManager node;
 
 /***********************************
- * Add your sensors below
+ * Add your sensors
  */
 
-// built-in sensors
+//PowerManager power(5,6);
+ 
 //#include <sensors/SensorBattery.h>
 //SensorBattery battery(node);
 
@@ -291,9 +287,6 @@ NodeManager node;
 //#include <sensors/SensorSignal.h>
 //SensorSignal signal(node);
 
-//PowerManager power(5,6);
-
-// Attached sensors
 //#include <sensors/SensorAnalogInput.h>
 //SensorAnalogInput analog(node,A0);
 
@@ -453,9 +446,10 @@ NodeManager node;
 
 // before
 void before() {
-  /*
-  * Configure your sensors below
-  */
+	
+  /***********************************
+   * Configure your sensors
+   */
   // report measures of every attached sensors every 10 seconds
   //node.setReportIntervalSeconds(10);
   // report measures of every attached sensors every 10 minutes
@@ -474,9 +468,7 @@ void before() {
   //analog.children.get(1)->setMinThreshold(40);
   // power all the nodes through dedicated pins
   //node.setPowerManager(power);
-  /*
-  * Configure your sensors above
-  */
+
   node.before();
 }
 

@@ -371,3 +371,12 @@ jobs:
        - sed -r -i 's/\/\/(SensorFPM10A .+)/\1/' $SKETCH
        - sed -r -i 's/\/\/(#include <sensors\/SensorFPM10A.h>)/\1/' $SKETCH
        - eval $RUN
+    - name: "examples/AnalogLightAndTemperatureSensor"
+      script: 
+       - arduino --verify --board arduino:avr:mini:cpu=atmega328 examples/AnalogLightAndTemperatureSensor/AnalogLightAndTemperatureSensor.ino
+    - name: "examples/BoilerSensor"
+      script: 
+       - arduino --verify --board arduino:avr:mini:cpu=atmega328 examples/BoilerSensor/BoilerSensor.ino
+    - name: "examples/MotionSensor"
+      script: 
+       - arduino --verify --board arduino:avr:mini:cpu=atmega328 examples/MotionSensor/MotionSensor.ino
