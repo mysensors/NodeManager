@@ -137,7 +137,7 @@ public:
 #endif
 protected:
 	// fade to the provided value
-	void _fadeTo(Child* child, int value) {
+	void _fadeTo(Child* child, int target_percentage) {
 		// count how many steps we need to do
 		int steps = _duration / _step_duration;
 		int start_from = _percentage;

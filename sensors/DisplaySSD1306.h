@@ -54,7 +54,7 @@ public:
 	};
 	// set text font (default: &Adafruit5x7)
 	void setFont(const uint8_t* font) {
-		_font = value;
+		_font = font;
 	};
 	// [102] set the contrast of the display (0-255)
 	void setContrast(uint8_t value) {

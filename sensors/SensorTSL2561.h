@@ -136,7 +136,7 @@ public:
 	// define what to do when receiving an OTA configuration request
 	void onConfiguration(ConfigurationRequest* request) {
 		switch(request->getFunction()) {
-		case 101: setGain(request.>getValueInt()); break;
+		case 101: setGain(request->getValueInt()); break;
 		case 102: setTiming(request->getValueInt()); break;
 		case 103: setSpectrum(request->getValueInt()); break;
 		case 104: setAddress(request->getValueInt()); break;
