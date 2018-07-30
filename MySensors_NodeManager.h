@@ -42,7 +42,7 @@ Include required third-party libraries
 // include MySensors library
 #include <MySensors.h>
 
-// include additional libraries based on the configuration
+// include additional libraries based on the requested configuration
 #if FEATURE_TIME == ON
 #include <TimeLib.h>
 #endif
