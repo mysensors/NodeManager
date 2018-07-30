@@ -23,7 +23,7 @@
 	SensorRainGauge
 */
 
-#include "sensors/SensorPulseMeter.h"
+#include "SensorPulseMeter.h"
 
 class SensorRainGauge: public SensorPulseMeter {
 public:

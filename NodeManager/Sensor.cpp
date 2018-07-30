@@ -298,6 +298,6 @@ void Sensor::onReceive(MyMessage* message){
 	if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 void Sensor::onInterrupt(){}
-#ifdef USE_CONFIGURATION
+#if FEATURE_OTA_CONFIGURATION == ON
 void Sensor::onConfiguration(ConfigurationRequest* request) {}
 #endif

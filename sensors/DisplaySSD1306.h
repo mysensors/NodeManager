@@ -26,7 +26,7 @@
 #include <SSD1306Ascii.h>
 #include <SSD1306AsciiAvrI2c.h>
 
-#include "sensors/Display.h"
+#include "Display.h"
 
 class DisplaySSD1306: public Display {
 protected:
@@ -129,7 +129,7 @@ public:
 		clear();
 	};
 	
-#ifdef USE_CONFIGURATION
+#if FEATURE_OTA_CONFIGURATION == ON
 	// define what to do when receiving an OTA configuration request
 	void onConfiguration(ConfigurationRequest* request) {
 		switch(request->getFunction()) {

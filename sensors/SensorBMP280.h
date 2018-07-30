@@ -27,7 +27,7 @@ SensorBMP280
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BMP280.h>
 
-#include "sensors/SensorBosch.h"
+#include "SensorBosch.h"
 
 class SensorBMP280: public SensorBosch {
 protected:

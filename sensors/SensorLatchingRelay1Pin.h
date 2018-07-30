@@ -23,7 +23,7 @@
 SensorLatchingRelay1Pin
 */
 
-#include "sensors/SensorDigitalOutput.h"
+#include "SensorRelay.h"
 
 class SensorLatchingRelay1Pin: public SensorRelay {
 public:

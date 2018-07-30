@@ -253,52 +253,6 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 //#define MY_DEFAULT_TX_LED_PIN  6
 
 /***********************************
- * NodeManager modules for supported sensors
- */
-
-//#define USE_BATTERY
-//#define USE_SIGNAL
-//#define USE_CONFIGURATION
-//#define USE_ANALOG_INPUT
-//#define USE_THERMISTOR
-//#define USE_ML8511
-//#define USE_ACS712
-//#define USE_DIGITAL_INPUT
-//#define USE_DIGITAL_OUTPUT
-//#define USE_DHT
-//#define USE_SHT21
-//#define USE_INTERRUPT
-//#define USE_DS18B20
-//#define USE_BH1750
-//#define USE_MLX90614
-//#define USE_BME280
-//#define USE_BMP085_180
-//#define USE_BMP280
-//#define USE_SONOFF
-//#define USE_HCSR04
-//#define USE_MCP9808
-//#define USE_MQ
-//#define USE_MHZ19
-//#define USE_AM2320
-//#define USE_TSL2561
-//#define USE_PT100
-//#define USE_DIMMER
-//#define USE_PULSE_METER
-//#define USE_PMS
-//#define USE_VL53L0X
-//#define USE_SSD1306
-//#define USE_SHT31
-//#define USE_SI7021
-//#define USE_CHIRP
-//#define USE_HD44780
-//#define USE_TTP
-//#define USE_SERVO
-//#define USE_APDS9960
-//#define USE_NEOPIXEL
-//#define USE_SDS011
-//#define USE_FPM10A
-
-/***********************************
  * NodeManager built-in features
  */
 
@@ -314,6 +268,7 @@ FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the ou
 #define FEATURE_RTC OFF
 #define FEATURE_SD OFF
 #define FEATURE_HOOKING OFF
+#define FEATURE_OTA_CONFIGURATION OFF
 
 /***********************************
  * Load NodeManager Library
@@ -327,62 +282,169 @@ NodeManager node;
  */
 
 // built-in sensors
+//#include <sensors/SensorBattery.h>
 //SensorBattery battery(node);
+
+//#include <sensors/SensorConfiguration.h>
 //SensorConfiguration configuration(node);
+
+//#include <sensors/SensorSignal.h>
 //SensorSignal signal(node);
+
 //PowerManager power(5,6);
 
 // Attached sensors
+//#include <sensors/SensorAnalogInput.h>
 //SensorAnalogInput analog(node,A0);
+
+//#include <sensors/SensorLDR.h>
 //SensorLDR ldr(node,A0);
+
+//#include <sensors/SensorRain.h>
 //SensorRain rain(node,A0);
+
+//#include <sensors/SensorSoilMoisture.h>
 //SensorSoilMoisture soil(node,A0);
+
+//#include <sensors/SensorThermistor.h>
 //SensorThermistor thermistor(node,A0);
+
+//#include <sensors/SensorML8511.h>
 //SensorML8511 ml8511(node,A0);
+
+//#include <sensors/SensorACS712.h>
 //SensorACS712 acs712(node,A0);
+
+//#include <sensors/SensorDigitalInput.h>
 //SensorDigitalInput digitalIn(node,6);
+
+//#include <sensors/SensorDigitalOutput.h>
 //SensorDigitalOutput digitalOut(node,6);
+
+//#include <sensors/SensorRelay.h>
 //SensorRelay relay(node,6);
+
+//#include <sensors/SensorLatchingRelay1Pin.h>
 //SensorLatchingRelay1Pin latching1pin(node,6);
+
+//#include <sensors/SensorLatchingRelay2Pins.h>
 //SensorLatchingRelay2Pins latching2pins(node,6,7);
+
+//#include <sensors/SensorDHT11.h>
 //SensorDHT11 dht11(node,6);
+
+//#include <sensors/SensorDHT22.h>
 //SensorDHT22 dht22(node,6);
+
+//#include <sensors/SensorSHT21.h>
 //SensorSHT21 sht21(node);
+
+//#include <sensors/SensorHTU21D.h>
 //SensorHTU21D htu21(node);
+
+//#include <sensors/SensorInterrupt.h>
 //SensorInterrupt interrupt(node,3);
+
+//#include <sensors/SensorDoor.h>
 //SensorDoor door(node,3);
+
+//#include <sensors/SensorMotion.h>
 //SensorMotion motion(node,3);
+
+//#include <sensors/SensorDs18b20.h>
 //SensorDs18b20 ds18b20(node,6);
+
+//#include <sensors/SensorBH1750.h>
 //SensorBH1750 bh1750(node);
+
+//#include <sensors/SensorMLX90614.h>
 //SensorMLX90614 mlx90614(node);
+
+//#include <sensors/SensorBME280.h>
 //SensorBME280 bme280(node);
+
+//#include <sensors/SensorBMP085.h>
 //SensorBMP085 bmp085(node);
+
+//#include <sensors/SensorBMP180.h>
 //SensorBMP180 bmp180(node);
+
+//#include <sensors/SensorBMP280.h>
 //SensorBMP280 bmp280(node);
+
+//#include <sensors/SensorSonoff.h>
 //SensorSonoff sonoff(node);
+
+//#include <sensors/SensorHCSR04.h>
 //SensorHCSR04 hcsr04(node,6,7);
+
+//#include <sensors/SensorMCP9808.h>
 //SensorMCP9808 mcp9808(node);
+
+//#include <sensors/SensorMQ.h>
 //SensorMQ mq(node,A0);
+
+//#include <sensors/SensorMHZ19.h>
 //SensorMHZ19 mhz19(node,6,7);
+
+//#include <sensors/SensorAM2320.h>
 //SensorAM2320 am2320(node);
+
+//#include <sensors/SensorTSL2561.h>
 //SensorTSL2561 tsl2561(node);
+
+//#include <sensors/SensorPT100.h>
 //SensorPT100 pt100(node,6);
+
+//#include <sensors/SensorDimmer.h>
 //SensorDimmer dimmer(node,3);
+
+//#include <sensors/SensorRainGauge.h>
 //SensorRainGauge rainGauge(node,3);
+
+//#include <sensors/SensorPowerMeter.h>
 //SensorPowerMeter powerMeter(node,3);
+
+//#include <sensors/SensorWaterMeter.h>
 //SensorWaterMeter waterMeter(node,3);
+
+//#include <sensors/SensorPlantowerPMS.h>
 //SensorPlantowerPMS pms(node,6,7);
+
+//#include <sensors/SensorVL53L0X.h>
 //SensorVL53L0X vl53l0x(node,3);
+
+//#include <sensors/DisplaySSD1306.h>
 //DisplaySSD1306 ssd1306(node);
+
+//#include <sensors/SensorSHT31.h>
 //SensorSHT31 sht31(node);
+
+//#include <sensors/SensorSI7021.h>
 //SensorSI7021 si7021(node);
+
+//#include <sensors/SensorChirp.h>
 //SensorChirp chirp(node);
+
+//#include <sensors/DisplayHD44780.h>
 //DisplayHD44780 hd44780(node);
+
+//#include <sensors/SensorTTP.h>
 //SensorTTP ttp(node);
+
+//#include <sensors/SensorServo.h>
 //SensorServo servo(node,6);
+
+//#include <sensors/SensorAPDS9960.h>
 //SensorAPDS9960 apds9960(node,3);
+
+//#include <sensors/SensorNeopixel.h>
 //SensorNeopixel neopixel(node,6);
+
+//#include <sensors/SensorSDS011.h>
 //SensorSDS011 sds011(node,6,7);
+
+//#include <sensors/SensorFPM10A.h>
 //SensorFPM10A fpm10a(node,4,5);
 
 /***********************************
@@ -391,8 +453,6 @@ NodeManager node;
 
 // before
 void before() {
-  // setup the serial port baud rate
-  Serial.begin(MY_BAUD_RATE);
   /*
   * Configure your sensors below
   */

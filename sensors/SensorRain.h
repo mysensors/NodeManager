@@ -23,7 +23,7 @@
 SensorRain
 */
 
-#include "sensors/SensorAnalogInput.h"
+#include "SensorAnalogInput.h"
 
 class SensorRain: public SensorAnalogInput {
 public:

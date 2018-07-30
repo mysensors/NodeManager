@@ -23,7 +23,7 @@
 SensorRelay
 */
 
-#include "sensors/SensorDigitalOutput.h"
+#include "SensorDigitalOutput.h"
 
 class SensorRelay: public SensorDigitalOutput {
 public:

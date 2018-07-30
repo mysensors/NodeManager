@@ -172,7 +172,9 @@ void NodeManager::presentation() {
 	debug(PSTR(LOG_BEFORE "OK\n"));
 	// Send the sketch version information to the gateway and Controller
 	_sleepBetweenSend();
+#ifdef SKETCH_NAME
 	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
+#endif
 	_sleepBetweenSend();
 	// present each sensor
 	for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
@@ -479,7 +481,6 @@ void NodeManager::loop() {
 	int NodeManager::getAvailableChildId(int child_id) {
 		if (child_id > -1) return child_id;
 		for (int i = 1; i < 255; i++) {
-			if (i == CONFIGURATION_CHILD_ID || i == BATTERY_CHILD_ID || i == SIGNAL_CHILD_ID) continue;
 			Child* child = getChild(i);
 			if (child == nullptr) return i;
 		}

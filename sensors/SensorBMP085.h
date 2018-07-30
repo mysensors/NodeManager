@@ -26,7 +26,7 @@ SensorBMP085
 #include <Wire.h>
 #include <Adafruit_BMP085.h>
 
-#include "sensors/SensorBosch.h"
+#include "SensorBosch.h"
 
 class SensorBMP085: public SensorBosch {
 protected:

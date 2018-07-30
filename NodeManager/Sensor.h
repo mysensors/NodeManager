@@ -116,7 +116,7 @@ public:
 	virtual void onLoop(Child* child);
 	virtual void onReceive(MyMessage* message);
 	virtual void onInterrupt();
-#ifdef USE_CONFIGURATION
+#if FEATURE_OTA_CONFIGURATION == ON
 	virtual void onConfiguration(ConfigurationRequest* request);
 #endif
 protected:

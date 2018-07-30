@@ -26,7 +26,7 @@
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
 
-#include "sensors/Display.h"
+#include "Display.h"
 
 class DisplayHD44780: public Display {
 protected:

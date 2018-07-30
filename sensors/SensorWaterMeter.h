@@ -23,7 +23,7 @@
 	SensorWaterMeter
 */
 
-#include "sensors/SensorPulseMeter.h"
+#include "SensorPulseMeter.h"
 
 class SensorWaterMeter: public SensorPulseMeter {
 public:

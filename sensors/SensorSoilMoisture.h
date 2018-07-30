@@ -23,7 +23,7 @@
 SensorSoilMoisture
 */
 
-#include "sensors/SensorAnalogInput.h"
+#include "SensorAnalogInput.h"
 
 class SensorSoilMoisture: public SensorAnalogInput {
 public:

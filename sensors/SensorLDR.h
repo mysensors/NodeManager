@@ -23,7 +23,7 @@
 SensorLDR: return the percentage of light from a Light dependent resistor
 */
 
-#include "sensors/SensorAnalogInput.h"
+#include "SensorAnalogInput.h"
 
 class SensorLDR: public SensorAnalogInput {
 public:

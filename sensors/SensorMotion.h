@@ -23,7 +23,7 @@
 * SensorDoor
 */
 
-#include "sensors/SensorInterrupt.h"
+#include "SensorInterrupt.h"
 
 /*
 * SensorMotion

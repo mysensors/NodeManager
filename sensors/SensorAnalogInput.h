@@ -79,7 +79,7 @@ public:
 		((ChildInt*)child)->setValue(_output_percentage ? percentage : adc);
 	};
 
-#ifdef USE_CONFIGURATION
+#if FEATURE_OTA_CONFIGURATION == ON
 	// define what to do when receiving an OTA configuration request
 	virtual void onConfiguration(ConfigurationRequest* request) {
 		switch(request->getFunction()) {

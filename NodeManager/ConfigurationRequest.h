@@ -16,30 +16,31 @@
 * modify it under the terms of the GNU General Public License
 * version 2 as published by the Free Software Foundation.
 */
-#ifndef SensorPowerMeter_h
-#define SensorPowerMeter_h
+#ifndef ConfigurationRequest_h
+#define ConfigurationRequest_h
 
 /*
-	SensorPowerMeter
+ConfigurationRequest
 */
 
-#include "SensorPulseMeter.h"
-
-class SensorPowerMeter: public SensorPulseMeter {
+class ConfigurationRequest {
 public:
-	SensorPowerMeter(NodeManager& node_manager, int pin, int child_id = -255): SensorPulseMeter(node_manager, pin, child_id) {
-		_name = "POWER";
-		children.allocateBlocks(1);
-		new ChildDouble(this,_node->getAvailableChildId(child_id),S_POWER,V_KWH,_name);
-		setPulseFactor(1000);
-		setPinInitialValue(LOW);
-		setInterruptMode(RISING);
-	};
-	
-protected:
-	// return the total based on the pulses counted
-	void _reportTotal(Child* child) {
-		((ChildDouble*)child)->setValue(_count / _pulse_factor);
-	};
+	ConfigurationRequest(int child_id, const char* string);
+	// return the child id the message has been requested to
+	int getRecipientChildId();
+	// return the child id the request is for
+	int getChildId();
+	// return the parsed function
+	int getFunction();
+	// return the value as an int
+	int getValueInt();
+	// return the value as a float
+	float getValueFloat();
+private:
+	int _function = -1;
+	int _child_id = -1;
+	int _recipient_child_id = -1;
+	float _value;
 };
+
 #endif
