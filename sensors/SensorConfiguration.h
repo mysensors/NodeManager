@@ -41,7 +41,7 @@ public:
 		ConfigurationRequest request = ConfigurationRequest(message->sensor,message->getString());
 		int function = request.getFunction();
 		int child_id = request.getChildId();
-		// if the message is for the board itself
+		// if the message is for the node itself
 		if (child_id == 0) {
 			switch(function) {
 			case 1: _node->hello(); break;
@@ -61,7 +61,7 @@ public:
 			case 27: _node->saveToMemory(0,request.getValueInt()); break;
 			case 40: _node->setSaveSleepSettings(request.getValueInt()); break;
 #endif
-			case 8: _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,VERSION); return;
+			case 8: _node->sendMessage(children.get(1)->getChildId(),V_CUSTOM,VERSION); return;
 			case 10: _node->setRetries(request.getValueInt()); break;
 #if NODEMANAGER_INTERRUPTS == ON
 			case 19: _node->setSleepInterruptPin(request.getValueInt()); break;
@@ -82,13 +82,12 @@ public:
 			case 39: _node->setReportIntervalDays(request.getValueInt()); break;
 #if NODEMANAGER_TIME == ON
 			case 41: _node->syncTime(); break;
-			case 42: _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,(int)_node->getTime()); return;
+			case 42: _node->sendMessage(children.get(1)->getChildId(),V_CUSTOM,(int)_node->getTime()); return;
 #endif
 			default: return; 
 			}
-			// the request is for a sensor
 		} else {
-			// retrieve the sensor the child is belonging to
+			// the request is for a sensor, retrieve the sensor the child is belonging to
 			Sensor* sensor = _node->getSensorWithChild(child_id);
 			if (sensor == nullptr) return;
 			// if the message is for a function common to all the sensors
@@ -116,10 +115,12 @@ public:
 				default: return;
 				}
 			} else {
+				// dispatch the message to onOTAConfiguration() implemented by each sensor
 				sensor->onOTAConfiguration(&request);
 			}
 		}
-		_node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,function);
+		// reply echoing back the request
+		_node->sendMessage(children.get(1)->getChildId(),V_CUSTOM,function);
 	};
 };
 #endif
