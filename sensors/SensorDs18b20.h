@@ -91,7 +91,7 @@ public:
 		((ChildFloat*)child)->setValue(temperature);
 	};
 	
-#if FEATURE_OTA_CONFIGURATION == ON
+#if NODEMANAGER_OTA_CONFIGURATION == ON
 	// define what to do when receiving an OTA configuration request
 	void onConfiguration(ConfigurationRequest* request) {
 		switch(request->getFunction()) {

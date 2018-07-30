@@ -39,7 +39,7 @@ NodeManager::NodeManager(int sensor_count) {
 	debug(PSTR(LOG_INIT "LIB VER=" MYSENSORS_LIBRARY_VERSION " CP=" MY_CAPABILITIES " \n"));
 }
 
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 int NodeManager::_last_interrupt_pin = -1;
 int NodeManager::_last_interrupt_value = LOW;
 long unsigned NodeManager::_last_interrupt_millis = millis();
@@ -53,14 +53,14 @@ void NodeManager::setRetries(int value) {
 int NodeManager::getRetries() {
 	return _retries;
 }
-#if FEATURE_SLEEP == ON
+#if NODEMANAGER_SLEEP == ON
 void NodeManager::setSleepSeconds(int value) {
 	// set the status to AWAKE if the time provided is 0, SLEEP otherwise
 	if (value == 0) _status = AWAKE;
 	else _status = SLEEP;
 	// store the time
 	_sleep_time = value;
-#if FEATURE_EEPROM == ON
+#if NODEMANAGER_EEPROM == ON
 	// save sleep settings to eeprom
 	if (_save_sleep_settings) _saveSleepSettings();
 #endif
@@ -81,7 +81,7 @@ void NodeManager::setSleepBetweenSend(int value) {
 	_sleep_between_send = value;
 }
 #endif
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 void NodeManager::setSleepInterruptPin(int value) {
 	_sleep_interrupt_pin = value;
 }
@@ -99,7 +99,7 @@ void NodeManager::setInterruptDebounce(long value) {
 	_interrupt_debounce = value;
 }
 #endif
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
 void NodeManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
 	if (_powerManager == nullptr) return;
 	_powerManager->setPowerPins(ground_pin, vcc_pin, wait_time);
@@ -128,7 +128,7 @@ void NodeManager::setIsMetric(bool value) {
 bool NodeManager::getIsMetric() {
 	return _is_metric;
 }
-#if FEATURE_EEPROM == ON
+#if NODEMANAGER_EEPROM == ON
 void NodeManager::setSaveSleepSettings(bool value) {
 	_save_sleep_settings = value;
 }
@@ -160,7 +160,7 @@ void NodeManager::before() {
 		pinMode(_reboot_pin, OUTPUT);
 		digitalWrite(_reboot_pin, HIGH);
 	}
-#if FEATURE_EEPROM == ON
+#if NODEMANAGER_EEPROM == ON
 	// restore the sleep settings saved in the eeprom
 	if (_save_sleep_settings) _loadSleepSettings();
 #endif
@@ -195,11 +195,11 @@ void NodeManager::setup() {
 	// retrieve and store isMetric from the controller
 	if (_get_controller_config) _is_metric = getControllerConfig().isMetric;
 	debug(PSTR(LOG_SETUP "ID=%d M=%d\n"),getNodeId(),_is_metric);
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 	// sync the time with the controller
 	syncTime();
 #endif
-#if FEATURE_SD == ON
+#if NODEMANAGER_SD == ON
 	// initialize connection to the SD card
 	if (sd_card.init(SPI_HALF_SPEED)) {
 		debug(PSTR(LOG_SETUP "SD T=%d\n"),sd_card.type());
@@ -215,7 +215,7 @@ void NodeManager::setup() {
 		// call each sensor's setup()
 		sensor->setup();
 	}
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 	// setup the interrupt pins
 	setupInterrupts();
 #endif
@@ -223,18 +223,18 @@ void NodeManager::setup() {
 
 // run the main function for all the register sensors
 void NodeManager::loop() {
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 	// if the time was last updated more than 60 minutes ago, update it
 	if (_time_is_valid && (now() - _time_last_sync) > 60*60) syncTime();
 #endif
 	// turn on the pin powering all the sensors
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
 	powerOn();
 #endif
 	// run loop for all the registered sensors
 	for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
 		Sensor* sensor = *itr;
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 		if (_last_interrupt_pin != -1 && sensor->getInterruptPin() == _last_interrupt_pin) {
 			// if there was an interrupt for this sensor, call the sensor's interrupt()
 			_message.clear();
@@ -253,16 +253,16 @@ void NodeManager::loop() {
 			}
 		}
 		// turn off the pin powering all the sensors
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
 		powerOff();
 #endif
-#if FEATURE_SLEEP == ON
+#if NODEMANAGER_SLEEP == ON
 		// continue/start sleeping as requested
 		if (isSleepingNode()) _sleep();
 #endif
 	}
 
-#if FEATURE_RECEIVE == ON
+#if NODEMANAGER_RECEIVE == ON
 	// dispacth inbound messages
 	void NodeManager::receive(const MyMessage &message) {
 		debug(PSTR(LOG_MSG "RECV(%d) c=%d t=%d p=%s\n"),message.sensor,message.getCommand(),message.type,message.getString());
@@ -270,26 +270,26 @@ void NodeManager::loop() {
 		Sensor* sensor = getSensorWithChild(message.sensor);
 		if (sensor != nullptr) {
 			// turn on the pin powering all the sensors
-			#if FEATURE_POWER_MANAGER == ON
+			#if NODEMANAGER_POWER_MANAGER == ON
 			powerOn();
 			#endif
 			// call the sensor's receive()
 			sensor->receive((MyMessage*) &message);
 			// turn off the pin powering all the sensors
-			#if FEATURE_POWER_MANAGER == ON
+			#if NODEMANAGER_POWER_MANAGER == ON
 			powerOff();
 			#endif
 		}
 	}
 #endif
 
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 	// receive the time from the controller and save it
 	void NodeManager::receiveTime(unsigned long ts) {
 		debug(PSTR(LOG_TIME "OK ts=%d\n"),ts);
 		// time is now valid
 		_time_is_valid = true;
-#if FEATURE_RTC == ON
+#if NODEMANAGER_RTC == ON
 		// set the RTC time to the time received from the controller
 		RTC.set(ts);
 		// sync the system time with the RTC
@@ -326,7 +326,7 @@ void NodeManager::loop() {
 #endif
 	}
 
-#if FEATURE_EEPROM == ON
+#if NODEMANAGER_EEPROM == ON
 	// clear the EEPROM
 	void NodeManager::clearEeprom() {
 		debug(PSTR(LOG_EEPROM "CLR\n"));
@@ -344,7 +344,7 @@ void NodeManager::loop() {
 	}
 #endif
 
-#if FEATURE_SLEEP == ON
+#if NODEMANAGER_SLEEP == ON
 	// wake up the board
 	void NodeManager::wakeup() {
 		debug(PSTR(LOG_SLEEP "WKP\n"));
@@ -383,7 +383,7 @@ void NodeManager::loop() {
 #endif
 	}
 
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 	// setup the interrupt pins
 	void NodeManager::setupInterrupts() {
 		// configure wakeup pin if needed
@@ -487,7 +487,7 @@ void NodeManager::loop() {
 		return 254;
 	}
 
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 	// handle an interrupt
 	void NodeManager::_onInterrupt_1() {
 		_saveInterrupt(INTERRUPT_PIN_1);
@@ -546,7 +546,7 @@ void NodeManager::loop() {
 		}
 	}
 
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
 	void NodeManager::setPowerManager(PowerManager& powerManager) {
 		_powerManager = &powerManager;
 	}
@@ -569,7 +569,7 @@ void NodeManager::loop() {
 		return nullptr;  
 	}
 
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 	// sync the time with the controller
 	void NodeManager::syncTime() {
 		_time_is_valid = false;
@@ -589,18 +589,18 @@ void NodeManager::loop() {
 	}
 #endif
 
-#if FEATURE_SLEEP == ON
+#if NODEMANAGER_SLEEP == ON
 	// wrapper of smart sleep
 	void NodeManager::_sleep() {
 		long sleep_time = _sleep_time;
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 		// if there is time still to sleep, sleep for that timeframe only
 		if (_remainder_sleep_time > 0) sleep_time = _remainder_sleep_time;
 #endif
 		debug(PSTR(LOG_SLEEP "SLEEP s=%d\n\n"),sleep_time);
 		// go to sleep
 		int interrupt = -1;
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 		// setup interrupt pins
 		int interrupt_1_pin = _interrupt_1_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_1);
 		int interrupt_2_pin = _interrupt_2_mode == MODE_NOT_DEFINED ? INTERRUPT_NOT_DEFINED  : digitalPinToInterrupt(INTERRUPT_PIN_2);
@@ -626,10 +626,10 @@ void NodeManager::loop() {
 #endif
 		// coming out of sleep
 		debug(PSTR(LOG_SLEEP "AWAKE\n"));
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 		// keep track of the old time so to calculate the amount of time slept
 		long old_time = now();
-#if FEATURE_RTC == ON
+#if NODEMANAGER_RTC == ON
 		// sync the time with the RTC
 		setSyncProvider(RTC.get);
 #else
@@ -646,7 +646,7 @@ void NodeManager::loop() {
 	}
 #endif
 
-#if FEATURE_EEPROM == ON
+#if NODEMANAGER_EEPROM == ON
 	// load the configuration stored in the eeprom
 	void NodeManager::_loadSleepSettings() {
 		if (loadState(EEPROM_SLEEP_SAVED) == 1) {

@@ -35,7 +35,7 @@ Child::Child(Sensor* sensor, int child_id, int presentation, int type, const cha
 	_sensor = sensor;
 	// register the child with the sensor
 	_sensor->registerChild(this);
-#if FEATURE_CONDITIONAL_REPORT == ON
+#if NODEMANAGER_CONDITIONAL_REPORT == ON
 	// initialize the timer for forcing updates to the gateway after a given timeframe
 	_force_update_timer = new Timer(_sensor->_node);
 #endif
@@ -69,7 +69,7 @@ void Child::setDescription(const char* value) {
 const char* Child::getDescription() {
 	return _description;
 }
-#if FEATURE_CONDITIONAL_REPORT == ON
+#if NODEMANAGER_CONDITIONAL_REPORT == ON
 void Child::setForceUpdateTimerValue(int value) {
 	_force_update_timer->setMode(TIME_INTERVAL);
 	_force_update_timer->setValue(value*60);
@@ -122,7 +122,7 @@ int ChildInt::getValue() {
 // send the value back to the controller
 void ChildInt::sendValue(bool force) {
 	if (_samples == 0) return;
-#if FEATURE_CONDITIONAL_REPORT == ON
+#if NODEMANAGER_CONDITIONAL_REPORT == ON
 	if (! force) {
 		// if below or above the thresholds, do not send the value
 		if (_value < _min_threshold || _value > _max_threshold) return;
@@ -189,7 +189,7 @@ float ChildFloat::getValue() {
 // send the value back to the controller
 void ChildFloat::sendValue(bool force) {
 	if (_samples == 0) return;
-#if FEATURE_CONDITIONAL_REPORT == ON
+#if NODEMANAGER_CONDITIONAL_REPORT == ON
 	if (! force) {
 		// if below or above the thresholds, do not send the value
 		if (_value < _min_threshold || _value > _max_threshold) return;
@@ -256,7 +256,7 @@ double ChildDouble::getValue() {
 // send the value back to the controller
 void ChildDouble::sendValue(bool force) {
 	if (_samples == 0) return;
-#if FEATURE_CONDITIONAL_REPORT == ON
+#if NODEMANAGER_CONDITIONAL_REPORT == ON
 	if (! force) {
 		// if below or above the thresholds, do not send the value
 		if (_value < _min_threshold || _value > _max_threshold) return;
@@ -312,7 +312,7 @@ const char* ChildString::getValue() {
 
 // send the value back to the controller
 void ChildString::sendValue(bool force) {
-#if FEATURE_CONDITIONAL_REPORT == ON
+#if NODEMANAGER_CONDITIONAL_REPORT == ON
 	if (! force) {
 		// if a delta is configured, do not report if the string is the same as the previous one
 		if (_value_delta > 0 && strcmp(_value, _last_value) == 0) {

@@ -14,7 +14,7 @@ env:
     - MYSENSORS_VERSION=2.2.0
     - SKETCH="$PWD/examples/Template/Template.ino"
     - CONFIGURATION_SENSOR=1
-    - RUN="if [ $CONFIGURATION_SENSOR == 1 ]; then sed -i 's/\/\/SensorConfiguration configuration(node);/SensorConfiguration configuration(node);/' $SKETCH && sed -i 's/\/\/(#include <sensors\/SensorConfiguration.h>)/\1/' $SKETCH && sed -i 's/#define FEATURE_OTA_CONFIGURATION OFF/#define FEATURE_OTA_CONFIGURATION ON/' $SKETCH && echo 'Enabled SensorConfiguration' ; fi ; cat $SKETCH; arduino --verify --board arduino:avr:mini:cpu=atmega328 $SKETCH"
+    - RUN="if [ $CONFIGURATION_SENSOR == 1 ]; then sed -i 's/\/\/SensorConfiguration configuration(node);/SensorConfiguration configuration(node);/' $SKETCH && sed -i 's/\/\/(#include <sensors\/SensorConfiguration.h>)/\1/' $SKETCH && sed -i 's/#define NODEMANAGER_OTA_CONFIGURATION OFF/#define NODEMANAGER_OTA_CONFIGURATION ON/' $SKETCH && echo 'Enabled SensorConfiguration' ; fi ; cat $SKETCH; arduino --verify --board arduino:avr:mini:cpu=atmega328 $SKETCH"
 before_install:
   # setup X environment
   - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16"
@@ -54,11 +54,11 @@ jobs:
     - name: "Features ON"
       script: 
        - arduino --install-library "DS3232RTC,Time"
-       - sed -r -i 's/(#define FEATURE_.+) OFF/\1 ON/g' $SKETCH
+       - sed -r -i 's/(#define NODEMANAGER_.+) OFF/\1 ON/g' $SKETCH
        - eval $RUN
     - name: "Features OFF"
       script: 
-       - sed -r -i 's/(#define FEATURE_.+) ON/\1 OFF/g' $SKETCH
+       - sed -r -i 's/(#define NODEMANAGER_.+) ON/\1 OFF/g' $SKETCH
        - eval $RUN
     - name: "SensorBattery"
       script: 

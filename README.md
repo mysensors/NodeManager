@@ -100,17 +100,17 @@ A list of built-in features and the required dependencies is presented below:
 
 Feature                     | Default | Description                                                                                      | Dependencies
 ----------------------------|---------|--------------------------------------------------------------------------------------------------|----------------------------------------------------------
-FEATURE_DEBUG               | ON      | NodeManager's debug output on serial console                                                     | - 
-FEATURE_POWER_MANAGER       | OFF     | allow powering on your sensors only while the node is awake                                      | - 
-FEATURE_INTERRUPTS          | ON      | allow managing interrupt-based sensors like a PIR or a door sensor                               | - 
-FEATURE_CONDITIONAL_REPORT  | OFF     | allow reporting a measure only when different from the previous or above/below a given threshold | - 
-FEATURE_EEPROM              | OFF     | allow keeping track of some information in the EEPROM                                            | - 
-FEATURE_SLEEP               | ON      | allow managing automatically the complexity behind battery-powered sleeping sensors              | - 
-FEATURE_RECEIVE             | ON      | allow the node to receive messages; can be used by the remote API or for triggering the sensors  | - 
-FEATURE_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
-FEATURE_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device (requires FEATURE_TIME)| https://github.com/JChristensen/DS3232RTC
-FEATURE_SD                  | OFF     | allow reading from and writing to SD cards                                                       | -
-FEATURE_HOOKING             | OFF     | allow custom code to be hooked in the out of the box sensors                                     | -
+NODEMANAGER_DEBUG               | ON      | NodeManager's debug output on serial console                                                     | - 
+NODEMANAGER_POWER_MANAGER       | OFF     | allow powering on your sensors only while the node is awake                                      | - 
+NODEMANAGER_INTERRUPTS          | ON      | allow managing interrupt-based sensors like a PIR or a door sensor                               | - 
+NODEMANAGER_CONDITIONAL_REPORT  | OFF     | allow reporting a measure only when different from the previous or above/below a given threshold | - 
+NODEMANAGER_EEPROM              | OFF     | allow keeping track of some information in the EEPROM                                            | - 
+NODEMANAGER_SLEEP               | ON      | allow managing automatically the complexity behind battery-powered sleeping sensors              | - 
+NODEMANAGER_RECEIVE             | ON      | allow the node to receive messages; can be used by the remote API or for triggering the sensors  | - 
+NODEMANAGER_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
+NODEMANAGER_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device (requires NODEMANAGER_TIME)| https://github.com/JChristensen/DS3232RTC
+NODEMANAGER_SD                  | OFF     | allow reading from and writing to SD cards                                                       | -
+NODEMANAGER_HOOKING             | OFF     | allow custom code to be hooked in the out of the box sensors                                     | -
 
 ## Installation
 
@@ -192,7 +192,7 @@ Please note, if you configure a sleep cycle, this may have an impact on the repo
 Once finished configuring your node, upload your sketch to your arduino board as you are used to.
 
 Check your gateway's logs to ensure the node is working as expected. You should see the node presenting itself, presenting all the registered sensors and reporting new measures at the configured reporting interval.
-When `FEATURE_DEBUG` is enabled, detailed information will be available through the serial port. Remember to disable debug once the tests have been completed to save additional storage.
+When `NODEMANAGER_DEBUG` is enabled, detailed information will be available through the serial port. Remember to disable debug once the tests have been completed to save additional storage.
 
 ## Communicate with the sensors
 
@@ -217,7 +217,7 @@ You can interact with each class provided by NodeManager through a set of API fu
     // [10] send the same message multiple times (default: 1)
     void setRetries(int value);
     int getRetries();
-#if FEATURE_SLEEP == ON
+#if NODEMANAGER_SLEEP == ON
     // [3] set the duration (in seconds) of a sleep cycle
     void setSleepSeconds(int value);
     long getSleepSeconds();
@@ -234,7 +234,7 @@ You can interact with each class provided by NodeManager through a set of API fu
     // use smart sleep for sleeping boards (default: true)
     void setSmartSleep(bool value);
 #endif
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
     // [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
     void setSleepInterruptPin(int value);
     // configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
@@ -245,7 +245,7 @@ You can interact with each class provided by NodeManager through a set of API fu
     // register a sensor
     void registerSensor(Sensor* sensor);
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
     void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
     // [24] manually turn the power on
     void powerOn();
@@ -268,7 +268,7 @@ You can interact with each class provided by NodeManager through a set of API fu
     void hello();
     // [6] reboot the board
     void reboot();
-#if FEATURE_EEPROM == ON
+#if NODEMANAGER_EEPROM == ON
     // [7] clear the EEPROM
     void clearEeprom();
     // return the value stored at the requested index from the EEPROM
@@ -280,7 +280,7 @@ You can interact with each class provided by NodeManager through a set of API fu
 #endif
     // return vcc in V
     float getVcc();
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
     // setup the configured interrupt pins
     void setupInterrupts();
     // return the pin from which the last interrupt came
@@ -304,14 +304,14 @@ You can interact with each class provided by NodeManager through a set of API fu
     void setRebootPin(int value);
     // [32] turn the ADC off so to save 0.2 mA
     void setADCOff();
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
     // [41] synchronize the local time with the controller
     void syncTime();
     // [42] returns the current system time
     long getTime();
     void receiveTime(unsigned long ts);
 #endif
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
     // handle interrupts
     static void _onInterrupt_1();
     static void _onInterrupt_2();
@@ -321,14 +321,14 @@ You can interact with each class provided by NodeManager through a set of API fu
     void sendMessage(int child_id, int type, float value, int precision);
     void sendMessage(int child_id, int type, double value, int precision);
     void sendMessage(int child_id, int type, const char* value);
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
     void setPowerManager(PowerManager& powerManager);
 #endif
     int getAvailableChildId(int child_id = -255);
     List<Sensor*> sensors;
     Child* getChild(int child_id);
     Sensor* getSensorWithChild(int child_id);
-#if FEATURE_SD == ON
+#if NODEMANAGER_SD == ON
     Sd2Card sd_card;
     SdVolume sd_volume;
     SdFile sd_root;
@@ -339,7 +339,7 @@ You can interact with each class provided by NodeManager through a set of API fu
     void presentation();
     void setup();
     void loop();
-#if FEATURE_RECEIVE == ON
+#if NODEMANAGER_RECEIVE == ON
     void receive(const MyMessage & msg);
 #endif
 ~~~
@@ -358,7 +358,7 @@ The following methods are available for all the sensors:
     void setSamples(int value);
     // [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
     void setSamplesInterval(int value);
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
     // to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
     void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
     // [13] manually turn the power on
@@ -366,7 +366,7 @@ The following methods are available for all the sensors:
     // [14] manually turn the power off
     void powerOff();
 #endif
-	// [24] Set the way the timer used for reporting to the gateway should operate. It can be either TIME_INTERVAL (e.g. report every X seconds with the amount of time set with setReportTimerValue()), IMMEDIATELY (e.g. report at every cycle, useful for sensors like actuators which should report as soon as the value has changed), DO_NOT_REPORT (e.g. never report, useful for when there is no need to report, like a Display) and when FEATURE_TIME is ON, EVERY_MINUTE/EVERY_HOUR/EVERY_DAY (e.g. to report the value set in the previous timeframe, useful for sensors reporting an accumulated value linked to a timeframe at regular intervals), AT_MINUTE/AT_HOUR/AT_DAY (e.g. report at a given minute/hour/day, useful if the measure is expected at a specified time, set with setReportTimerValue())
+	// [24] Set the way the timer used for reporting to the gateway should operate. It can be either TIME_INTERVAL (e.g. report every X seconds with the amount of time set with setReportTimerValue()), IMMEDIATELY (e.g. report at every cycle, useful for sensors like actuators which should report as soon as the value has changed), DO_NOT_REPORT (e.g. never report, useful for when there is no need to report, like a Display) and when NODEMANAGER_TIME is ON, EVERY_MINUTE/EVERY_HOUR/EVERY_DAY (e.g. to report the value set in the previous timeframe, useful for sensors reporting an accumulated value linked to a timeframe at regular intervals), AT_MINUTE/AT_HOUR/AT_DAY (e.g. report at a given minute/hour/day, useful if the measure is expected at a specified time, set with setReportTimerValue())
 	void setReportTimerMode(timer_mode value);
 	// [25] Set the value for the reporting timer's mode which has been set with setReportTimerMode()
 	void setReportTimerValue(int value);
@@ -384,7 +384,7 @@ The following methods are available for all the sensors:
     void setReportIntervalDays(int value);
     // return true if the report interval has been already configured
     bool isReportIntervalConfigured();
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 	// return the pin the interrupt is attached to
 	int getInterruptPin();
 	// listen for interrupts on the given pin so interrupt() will be called when occurring
@@ -398,11 +398,11 @@ The following methods are available for all the sensors:
 	// [23] for interrupt-based sensor, the value of the pin is checked and the interrupt ignored if RISING and not HIGH or FALLING and not LOW (default: true)
 	void setInterruptStrict(bool value);
 #endif
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
     // set a previously configured PowerManager to the sensor so to powering it up with custom pins
     void setPowerManager(PowerManager& powerManager);
 #endif
-#if FEATURE_HOOKING == ON
+#if NODEMANAGER_HOOKING == ON
     // set a custom hook function to be called when the sensor executes its setup() function
     void setSetupHook(void (*function)(Sensor* sensor));
     // set a custom hook function to be called just before the sensor executes its loop() function
@@ -416,7 +416,7 @@ The following methods are available for all the sensors:
 #endif
     // list of configured child
     List<Child*> children;
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
     void interrupt();
 #endif
     Child* getChild(int child_id);
@@ -428,7 +428,7 @@ The following methods are available for all the sensors:
     void presentation();
     void setup();
     void loop(MyMessage* message);
-#if FEATURE_RECEIVE == ON
+#if NODEMANAGER_RECEIVE == ON
     void receive(MyMessage* message);
 #endif
 ~~~
@@ -452,7 +452,7 @@ The following methods are available for all the child:
     // set sensor description
     void setDescription(const char* value);
     const char* getDescription();
-#if FEATURE_CONDITIONAL_REPORT == ON
+#if NODEMANAGER_CONDITIONAL_REPORT == ON
     // force to send an update after the configured number of minutes
     void setForceUpdateMinutes(int value);
     // never report values below this threshold (default: FLT_MIN)
@@ -558,7 +558,7 @@ Each sensor class exposes additional methods.
 ~~~c
     // [105] Invert the value to report. E.g. if FALLING and value is LOW, report HIGH (default: false) 
     void setInvertValueToReport(bool value);
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
     // [107] when keeping track of the time, trigger only after X consecutive interrupts within the same minute (default: 1)
     void setThreshold(int value);
 #endif
@@ -947,7 +947,7 @@ void loop() {
   node.loop();
 }
 
-#if FEATURE_RECEIVE == ON
+#if NODEMANAGER_RECEIVE == ON
 // receive
 void receive(const MyMessage &message) {
   // call NodeManager receive routine
@@ -955,7 +955,7 @@ void receive(const MyMessage &message) {
 }
 #endif
 
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 // receiveTime
 void receiveTime(unsigned long ts) {
   // call NodeManager receiveTime routine
@@ -1041,7 +1041,7 @@ void loop() {
   node.loop();
 }
 
-#if FEATURE_RECEIVE == ON
+#if NODEMANAGER_RECEIVE == ON
 // receive
 void receive(const MyMessage &message) {
   // call NodeManager receive routine
@@ -1049,7 +1049,7 @@ void receive(const MyMessage &message) {
 }
 #endif
 
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 // receiveTime
 void receiveTime(unsigned long ts) {
   // call NodeManager receiveTime routine
@@ -1144,7 +1144,7 @@ void loop() {
   node.loop();
 }
 
-#if FEATURE_RECEIVE == ON
+#if NODEMANAGER_RECEIVE == ON
 // receive
 void receive(const MyMessage &message) {
   // call NodeManager receive routine
@@ -1152,7 +1152,7 @@ void receive(const MyMessage &message) {
 }
 #endif
 
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 // receiveTime
 void receiveTime(unsigned long ts) {
   // call NodeManager receiveTime routine
@@ -1306,7 +1306,7 @@ v1.7:
 * Optimized the code so to use the memory in a more efficient manner
 * Improved the overall user experience, also with sensors' patterns in the main sketch
 * Sensors can now be enabled by uncommenting the corresponding USE_* define and requiring a single line to be created and initialized
-* NodeManager's advanced features can be enabled/disabled by setting the corresponding FEATURE_* define
+* NodeManager's advanced features can be enabled/disabled by setting the corresponding NODEMANAGER_* define
 * Simplified the configuration of each sensor, now without the need of getting the sensor back through a nasty casting
 * Merged config.h into the main sketch so to centralize the configuration in a single place
 * Added time-aware capability, with or without an attached RTC

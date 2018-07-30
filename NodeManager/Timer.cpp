@@ -48,7 +48,7 @@ void Timer::start() {
 	// reset the timer
 	_last = 0;
 	_is_running = true;
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 	// save the current timestamp (which is sync'ed when sleeping or not sleeping)
 	if (_mode == TIME_INTERVAL) _last = now();
 	// keep track of the current minute/hour/day
@@ -77,7 +77,7 @@ bool Timer::isOver() {
 		if (elapsed >= _value || elapsed < 0) return true;
 		return false;
 	}
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 	// if the minute/hour/day has changed, the timer is over
 	if (_mode == EVERY_HOUR && hour() != _last) return true;
 	if (_mode == EVERY_HOUR && hour() != _last) return true;
@@ -103,12 +103,12 @@ bool Timer::isOver() {
 long Timer::getElapsed() {
 	// calculate the elapsed time
 	long elapsed = 0;
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 	// system time is available so use now() to calculated the elapsed time
 	elapsed = (long)(now() - _last);
 #else
 	// system time is not available
-#if FEATURE_SLEEP == ON
+#if NODEMANAGER_SLEEP == ON
 	// millis() is not reliable while sleeping so calculate how long a sleep cycle would last in seconds and update the elapsed time
 	if (_node->isSleepingNode()) elapsed += _node->getSleepSeconds();
 #endif

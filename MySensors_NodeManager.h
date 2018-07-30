@@ -22,7 +22,7 @@
 // include Arduino header file
 #include <Arduino.h>
 
-// include NodeManager's constants definition
+// include NodeManager's constants
 #include "NodeManager/Constants.h"
 
 /***********************************
@@ -43,17 +43,17 @@ Include required third-party libraries
 #include <MySensors.h>
 
 // include additional libraries based on the requested configuration
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 #include <TimeLib.h>
 #endif
-#if FEATURE_RTC == ON
-#define FEATURE_TIME ON
+#if NODEMANAGER_RTC == ON
+#define NODEMANAGER_TIME ON
 #include <DS3232RTC.h>
 #endif
-#if FEATURE_CONDITIONAL_REPORT == ON
+#if NODEMANAGER_CONDITIONAL_REPORT == ON
 #include <float.h>
 #endif
-#if FEATURE_SD == ON
+#if NODEMANAGER_SD == ON
 #include <SD.h>
 #endif
 
@@ -65,12 +65,12 @@ Include NodeManager core code
 #include "NodeManager/List.h"
 
 // PowerManager class
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
 #include "NodeManager/PowerManager.cpp"
 #endif
 
 // ConfigurationRequest class for OTA configuration
-#if FEATURE_OTA_CONFIGURATION == ON
+#if NODEMANAGER_OTA_CONFIGURATION == ON
 #include "NodeManager/ConfigurationRequest.cpp"
 #endif
 

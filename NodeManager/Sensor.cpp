@@ -54,7 +54,7 @@ void Sensor::setSamples(int value) {
 void Sensor::setSamplesInterval(int value) {
 	_samples_interval = value;
 }
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
 void Sensor::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
 	if (_powerManager == nullptr) return;
 	_powerManager->setPowerPins(ground_pin, vcc_pin, wait_time);
@@ -68,7 +68,7 @@ void Sensor::powerOff() {
 	_powerManager->powerOff();
 }
 #endif
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 int Sensor::getInterruptPin() {
 	return _interrupt_pin;
 }
@@ -157,12 +157,12 @@ void Sensor::setup() {
 	// start the timers
 	_report_timer->start();
 	_measure_timer->start();
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 	// for interrupt based sensors, register a callback for the interrupt
 	_interrupt_pin = _pin;
 	_node->setInterrupt(_pin,_interrupt_mode,_initial_value);
 #endif
-#if FEATURE_HOOKING == ON
+#if NODEMANAGER_HOOKING == ON
 	// if a hook function is defined, call it
 	if (_setup_hook != 0) _setup_hook(this); 
 #endif
@@ -172,11 +172,11 @@ void Sensor::setup() {
 void Sensor::loop(MyMessage* message) {
 	// run the sensor's loop() function if the timer is over OR it is the first run OR we've been called from receive()
 	if (_measure_timer->isOver() || _first_run || message != nullptr) {
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
 		// turn the sensor on
 		powerOn();
 #endif
-#if FEATURE_HOOKING == ON
+#if NODEMANAGER_HOOKING == ON
 		// if a hook function is defined, call it
 		if (_pre_loop_hook != 0) _pre_loop_hook(this); 
 #endif
@@ -195,11 +195,11 @@ void Sensor::loop(MyMessage* message) {
 				if (_samples_interval > 0) _node->sleepOrWait(_samples_interval);
 			}
 		}
-#if FEATURE_HOOKING == ON
+#if NODEMANAGER_HOOKING == ON
 		// if a hook function is defined, call it
 		if (_post_loop_hook != 0) _post_loop_hook(this); 
 #endif
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
 		// turn the sensor off
 		powerOff();
 #endif
@@ -225,7 +225,7 @@ void Sensor::loop(MyMessage* message) {
 	if (_first_run) _first_run = false;
 }
 
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 // receive and handle an interrupt
 bool Sensor::interrupt() {
 	// ignore the interrupt if the value is not matching the one expected
@@ -234,7 +234,7 @@ bool Sensor::interrupt() {
 	onInterrupt();
 	// wait after interrupt if needed
 	if (_wait_after_interrupt > 0) _node->sleepOrWait(_wait_after_interrupt);
-#if FEATURE_HOOKING == ON
+#if NODEMANAGER_HOOKING == ON
 	// if a hook function is defined, call it
 	if (_interrupt_hook != 0) _interrupt_hook(this); 
 #endif
@@ -242,12 +242,12 @@ bool Sensor::interrupt() {
 }
 #endif
 
-#if FEATURE_RECEIVE == ON
+#if NODEMANAGER_RECEIVE == ON
 // receive a message from the radio network
 void Sensor::receive(MyMessage* message) {
 	// a request would make the sensor executing its main task passing along the message
 	loop(message);
-#if FEATURE_HOOKING == ON
+#if NODEMANAGER_HOOKING == ON
 	// if a hook function is defined, call it
 	if (_receive_hook != 0) _receive_hook(this,message); 
 #endif
@@ -263,12 +263,12 @@ Child* Sensor::getChild(int child_id) {
 	return nullptr;
 }
 
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
 void Sensor::setPowerManager(PowerManager& powerManager) {
 	_powerManager = &powerManager;
 }
 #endif
-#if FEATURE_HOOKING == ON
+#if NODEMANAGER_HOOKING == ON
 void Sensor::setSetupHook(void (*function)(Sensor* sensor)) {
 	_setup_hook = function;
 }
@@ -298,6 +298,6 @@ void Sensor::onReceive(MyMessage* message){
 	if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
 void Sensor::onInterrupt(){}
-#if FEATURE_OTA_CONFIGURATION == ON
+#if NODEMANAGER_OTA_CONFIGURATION == ON
 void Sensor::onConfiguration(ConfigurationRequest* request) {}
 #endif

@@ -26,7 +26,7 @@ Sensor
 #include "NodeManager.h"
 #include "Timer.h"
 #include "Child.h"
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
 #include "PowerManager.h"
 #endif
 
@@ -43,7 +43,7 @@ public:
 	void setSamples(int value);
 	// [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
 	void setSamplesInterval(int value);
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
 	// to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
 	void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
 	// [13] manually turn the power on
@@ -51,7 +51,7 @@ public:
 	// [14] manually turn the power off
 	void powerOff();
 #endif
-	// [24] Set the way the timer used for reporting to the gateway should operate. It can be either TIME_INTERVAL (e.g. report every X seconds with the amount of time set with setReportTimerValue()), IMMEDIATELY (e.g. report at every cycle, useful for sensors like actuators which should report as soon as the value has changed), DO_NOT_REPORT (e.g. never report, useful for when there is no need to report, like a Display) and when FEATURE_TIME is ON, EVERY_MINUTE/EVERY_HOUR/EVERY_DAY (e.g. to report the value set in the previous timeframe, useful for sensors reporting an accumulated value linked to a timeframe at regular intervals), AT_MINUTE/AT_HOUR/AT_DAY (e.g. report at a given minute/hour/day, useful if the measure is expected at a specified time, set with setReportTimerValue())
+	// [24] Set the way the timer used for reporting to the gateway should operate. It can be either TIME_INTERVAL (e.g. report every X seconds with the amount of time set with setReportTimerValue()), IMMEDIATELY (e.g. report at every cycle, useful for sensors like actuators which should report as soon as the value has changed), DO_NOT_REPORT (e.g. never report, useful for when there is no need to report, like a Display) and when NODEMANAGER_TIME is ON, EVERY_MINUTE/EVERY_HOUR/EVERY_DAY (e.g. to report the value set in the previous timeframe, useful for sensors reporting an accumulated value linked to a timeframe at regular intervals), AT_MINUTE/AT_HOUR/AT_DAY (e.g. report at a given minute/hour/day, useful if the measure is expected at a specified time, set with setReportTimerValue())
 	void setReportTimerMode(timer_mode value);
 	// [25] Set the value for the reporting timer's mode which has been set with setReportTimerMode()
 	void setReportTimerValue(int value);
@@ -67,7 +67,7 @@ public:
     void setReportIntervalHours(int value);
     // [20] After how many days the sensor will report back its measure (default: 10 minutes)
     void setReportIntervalDays(int value);
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 	// return the pin the interrupt is attached to
 	int getInterruptPin();
 	// set initial value of the configured pin. Can be used for internal pull up
@@ -79,11 +79,11 @@ public:
 	// [23] for interrupt-based sensor, the value of the pin is checked and the interrupt ignored if RISING and not HIGH or FALLING and not LOW (default: true)
 	void setInterruptStrict(bool value);
 #endif
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
 	// set a previously configured PowerManager to the sensor so to powering it up with custom pins
 	void setPowerManager(PowerManager& powerManager);
 #endif
-#if FEATURE_HOOKING == ON
+#if NODEMANAGER_HOOKING == ON
 	// set a custom hook function to be called when the sensor executes its setup() function
 	void setSetupHook(void (*function)(Sensor* sensor));
 	// set a custom hook function to be called just before the sensor executes its loop() function
@@ -97,7 +97,7 @@ public:
 #endif
 	// list of configured child
 	List<Child*> children;
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 	bool interrupt();
 #endif
 	Child* getChild(int child_id);
@@ -108,7 +108,7 @@ public:
 	void presentation();
 	void setup();
 	void loop(MyMessage* message);
-#if FEATURE_RECEIVE == ON
+#if NODEMANAGER_RECEIVE == ON
 	void receive(MyMessage* message);
 #endif
 	// abstract functions, subclasses need to implement
@@ -116,7 +116,7 @@ public:
 	virtual void onLoop(Child* child);
 	virtual void onReceive(MyMessage* message);
 	virtual void onInterrupt();
-#if FEATURE_OTA_CONFIGURATION == ON
+#if NODEMANAGER_OTA_CONFIGURATION == ON
 	virtual void onConfiguration(ConfigurationRequest* request);
 #endif
 protected:
@@ -125,19 +125,19 @@ protected:
 	int _samples = 1;
 	int _samples_interval = 0;
 	bool _first_run = true;
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 	int _interrupt_pin = -1;
 	int _interrupt_mode = -1;
 	int _wait_after_interrupt = 0;
 	int _initial_value = -1;
 	bool _interrupt_strict = true;
 #endif
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
 	PowerManager* _powerManager = nullptr;
 #endif
 	Timer* _report_timer;
 	Timer* _measure_timer;
-#if FEATURE_HOOKING == ON
+#if NODEMANAGER_HOOKING == ON
 	void (*_setup_hook)(Sensor* sensor);
 	void (*_pre_loop_hook)(Sensor* sensor);
 	void (*_post_loop_hook)(Sensor* sensor);

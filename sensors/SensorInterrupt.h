@@ -26,7 +26,7 @@
 class SensorInterrupt: public Sensor {
 protected:
 	bool _invert_value_to_report = false;
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 	int _threshold = 1;
 	int _counter = 0;
 	int _current_minute = minute();
@@ -45,7 +45,7 @@ public:
 	void setInvertValueToReport(bool value) {
 		_invert_value_to_report = value;
 	};
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 	// [107] when keeping track of the time, trigger only after X consecutive interrupts within the same minute (default: 1)
 	void setThreshold(int value) {
 		_threshold = value;      
@@ -71,7 +71,7 @@ public:
 
 	// what to do when receiving an interrupt
 	void onInterrupt() {
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 		// if this interrupt came in a new minute, reset the counter
 		if (minute() != _current_minute) _counter = 0;
 		// increase the counter
@@ -82,14 +82,14 @@ public:
 		int value = _node->getLastInterruptValue();
 		// invert the value if needed
 		if (_invert_value_to_report) value = !value;
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 		// report only when there are at least _threshold triggers
 		if (_counter < _threshold) return;
 #endif
 		((ChildInt*)child)->setValue(value);
 	};
 
-#if FEATURE_OTA_CONFIGURATION == ON
+#if NODEMANAGER_OTA_CONFIGURATION == ON
 	// define what to do when receiving an OTA configuration request
 	void onConfiguration(ConfigurationRequest* request) {
 		switch(request->getFunction()) {

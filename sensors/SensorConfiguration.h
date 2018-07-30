@@ -45,7 +45,7 @@ public:
 		if (child_id == 0) {
 			switch(function) {
 			case 1: _node->hello(); break;
-#if FEATURE_SLEEP == ON
+#if NODEMANAGER_SLEEP == ON
 			case 3: _node->setSleepSeconds(request.getValueInt()); break;
 			case 4: _node->setSleepMinutes(request.getValueInt()); break;
 			case 5: _node->setSleepHours(request.getValueInt()); break;
@@ -56,20 +56,20 @@ public:
 #ifdef CHIP_AVR
 			case 6: _node->reboot(); return;
 #endif
-#if FEATURE_EEPROM == ON
+#if NODEMANAGER_EEPROM == ON
 			case 7: _node->clearEeprom(); break;
 			case 27: _node->saveToMemory(0,request.getValueInt()); break;
 			case 40: _node->setSaveSleepSettings(request.getValueInt()); break;
 #endif
 			case 8: _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,VERSION); return;
 			case 10: _node->setRetries(request.getValueInt()); break;
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 			case 19: _node->setSleepInterruptPin(request.getValueInt()); break;
 			case 28: _node->setInterruptDebounce(request.getValueInt()); break;
 #endif
 			case 21: _node->setAck(request.getValueInt()); break;
 			case 22: _node->setIsMetric(request.getValueInt()); break;
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
 			case 24: _node->powerOn(); break;
 			case 25: _node->powerOff(); break;
 #endif
@@ -80,7 +80,7 @@ public:
 			case 37: _node->setReportIntervalMinutes(request.getValueInt()); break;
 			case 38: _node->setReportIntervalHours(request.getValueInt()); break;
 			case 39: _node->setReportIntervalDays(request.getValueInt()); break;
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 			case 41: _node->syncTime(); break;
 			case 42: _node->sendMessage(CONFIGURATION_CHILD_ID,V_CUSTOM,(int)_node->getTime()); return;
 #endif
@@ -97,7 +97,7 @@ public:
 				case 1: sensor->setPin(request.getValueInt()); break;
 				case 5: sensor->setSamples(request.getValueInt()); break;
 				case 6: sensor->setSamplesInterval(request.getValueInt()); break;
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
 				case 13: sensor->powerOn(); break;
 				case 14: sensor->powerOff(); break;
 #endif
@@ -109,7 +109,7 @@ public:
 				case 17: sensor->setReportIntervalSeconds(request.getValueInt()); break;
 				case 19: sensor->setReportIntervalHours(request.getValueInt()); break;
 				case 20: sensor->setReportIntervalDays(request.getValueInt()); break;
-#if FEATURE_INTERRUPTS == ON			
+#if NODEMANAGER_INTERRUPTS == ON			
 				case 22: sensor->setInterruptMode(request.getValueInt()); break;
 				case 23: sensor->setWaitAfterInterrupt(request.getValueInt()); break;
 #endif

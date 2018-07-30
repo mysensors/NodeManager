@@ -46,7 +46,7 @@ private:
 	int _value = 0;
 	bool _is_running = false;
 	long _last = 0;
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 	bool _already_reported = false;
 #endif
 };

@@ -44,7 +44,7 @@ public:
 	// set sensor description
 	void setDescription(const char* value);
 	const char* getDescription();
-#if FEATURE_CONDITIONAL_REPORT == ON
+#if NODEMANAGER_CONDITIONAL_REPORT == ON
 	// force to send an update after the configured number of minutes
 	void setForceUpdateTimerValue(int value);
 	// never report values below this threshold (default: FLT_MIN)
@@ -68,7 +68,7 @@ protected:
 	int _type = V_CUSTOM;
 	int _float_precision;
 	const char* _description = "";
-#if FEATURE_CONDITIONAL_REPORT == ON
+#if NODEMANAGER_CONDITIONAL_REPORT == ON
 	Timer* _force_update_timer;
 	float _min_threshold = FLT_MIN;
 	float _max_threshold = FLT_MAX;
@@ -86,7 +86,7 @@ public:
 	void reset();
 private:
 	int _value;
-#if FEATURE_CONDITIONAL_REPORT == ON
+#if NODEMANAGER_CONDITIONAL_REPORT == ON
 	int _last_value = -256;
 #endif
 	int _total = 0;
@@ -102,7 +102,7 @@ public:
 	void reset();
 private:
 	float _value;
-#if FEATURE_CONDITIONAL_REPORT == ON
+#if NODEMANAGER_CONDITIONAL_REPORT == ON
 	float _last_value = -256;
 #endif
 	float _total = 0;
@@ -118,7 +118,7 @@ public:
 	void reset();
 private:
 	double _value;
-#if FEATURE_CONDITIONAL_REPORT == ON
+#if NODEMANAGER_CONDITIONAL_REPORT == ON
 	double _last_value = -256;
 #endif
 	double _total = 0;
@@ -134,7 +134,7 @@ public:
 	void reset();
 private:
 	const char* _value = "";
-#if FEATURE_CONDITIONAL_REPORT == ON
+#if NODEMANAGER_CONDITIONAL_REPORT == ON
 	const char* _last_value = "";
 #endif
 };

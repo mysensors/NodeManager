@@ -31,7 +31,7 @@ public:
 	// [10] send the same message multiple times (default: 1)
 	void setRetries(int value);
 	int getRetries();
-#if FEATURE_SLEEP == ON
+#if NODEMANAGER_SLEEP == ON
 	// [3] set the duration (in seconds) of a sleep cycle
 	void setSleepSeconds(int value);
 	long getSleepSeconds();
@@ -48,7 +48,7 @@ public:
 	// use smart sleep for sleeping boards (default: true)
 	void setSmartSleep(bool value);
 #endif
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 	// [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
 	void setSleepInterruptPin(int value);
 	// configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
@@ -59,7 +59,7 @@ public:
 	// register a sensor
 	void registerSensor(Sensor* sensor);
 	// to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
 	void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
 	// [24] manually turn the power on
 	void powerOn();
@@ -82,7 +82,7 @@ public:
 	void hello();
 	// [6] reboot the board
 	void reboot();
-#if FEATURE_EEPROM == ON
+#if NODEMANAGER_EEPROM == ON
 	// [7] clear the EEPROM
 	void clearEeprom();
 	// return the value stored at the requested index from the EEPROM
@@ -94,7 +94,7 @@ public:
 #endif
 	// return vcc in V
 	float getVcc();
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 	// setup the configured interrupt pins
 	void setupInterrupts();
 	// return the pin from which the last interrupt came
@@ -119,14 +119,14 @@ public:
 	void setRebootPin(int value);
 	// [32] turn the ADC off so to save 0.2 mA
 	void setADCOff();
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 	// [41] synchronize the local time with the controller
 	void syncTime();
 	// [42] returns the current system time
 	long getTime();
 	void receiveTime(unsigned long ts);
 #endif
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 	// handle interrupts
 	static void _onInterrupt_1();
 	static void _onInterrupt_2();
@@ -137,14 +137,14 @@ public:
 	void sendMessage(int child_id, int type, float value, int precision);
 	void sendMessage(int child_id, int type, double value, int precision);
 	void sendMessage(int child_id, int type, const char* value);
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
 	void setPowerManager(PowerManager& powerManager);
 #endif
 	int getAvailableChildId(int child_id = -255);
 	List<Sensor*> sensors;
 	Child* getChild(int child_id);
 	Sensor* getSensorWithChild(int child_id);
-#if FEATURE_SD == ON
+#if NODEMANAGER_SD == ON
 	Sd2Card sd_card;
 	SdVolume sd_volume;
 	SdFile sd_root;
@@ -155,11 +155,11 @@ public:
 	void presentation();
 	void setup();
 	void loop();
-#if FEATURE_RECEIVE == ON
+#if NODEMANAGER_RECEIVE == ON
 	void receive(const MyMessage & msg);
 #endif
 private:
-#if FEATURE_POWER_MANAGER == ON
+#if NODEMANAGER_POWER_MANAGER == ON
 	PowerManager* _powerManager = nullptr;
 #endif
 	MyMessage _message;
@@ -169,7 +169,7 @@ private:
 	int _sleep_interrupt_pin = -1;
 	int _retries = 1;
 	int _sleep_between_send = 0;
-#if FEATURE_INTERRUPTS == ON
+#if NODEMANAGER_INTERRUPTS == ON
 	int _interrupt_1_mode = MODE_NOT_DEFINED;
 	int _interrupt_2_mode = MODE_NOT_DEFINED;
 	int _interrupt_1_initial = -1;
@@ -180,7 +180,7 @@ private:
 	static long unsigned _last_interrupt_millis;
 #endif
 	bool _ack = false;
-#if FEATURE_SLEEP == ON
+#if NODEMANAGER_SLEEP == ON
 	void _sleep();
 	bool _smart_sleep = true;
 #endif
@@ -190,13 +190,13 @@ private:
 	int _report_interval_seconds = 10*60;
 	bool _sleep_or_wait = true;
 	int _reboot_pin = -1;
-#if FEATURE_EEPROM == ON
+#if NODEMANAGER_EEPROM == ON
 	bool _save_sleep_settings = false;
 	void _loadSleepSettings();
 	void _saveSleepSettings();
 #endif
 	void _sleepBetweenSend();
-#if FEATURE_TIME == ON
+#if NODEMANAGER_TIME == ON
 	bool _time_is_valid = false;
 	long _remainder_sleep_time = -1;
 	long _time_last_sync;
