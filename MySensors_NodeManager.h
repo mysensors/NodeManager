@@ -179,105 +179,9 @@ Libraries
 // include third party libraries
 
 
-#ifdef USE_BH1750
-#include <BH1750.h>
-#include <Wire.h>
-#endif
-#ifdef USE_MLX90614
-#include <Wire.h>
-#include <Adafruit_MLX90614.h>
-#endif
-#ifdef USE_BME280
-#include <Wire.h>
-#include <SPI.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BME280.h>
-#endif
-#ifdef USE_SONOFF
-#include <Bounce2.h>
-#endif
-#ifdef USE_BMP085_180
-#include <Wire.h>
-#include <Adafruit_BMP085.h>
-#endif
-#ifdef USE_HCSR04
-#include <NewPing.h>
-#endif
-#ifdef USE_MCP9808
-#include <Wire.h>
-#include "Adafruit_MCP9808.h"
-#endif
-#ifdef USE_MHZ19
-#include <SoftwareSerial.h>
-#endif
-#ifdef USE_AM2320
-#include <Wire.h>
-#include <AM2320.h>
-#endif
-#ifdef USE_TSL2561
-#include <TSL2561.h>
-#include <Wire.h>
-#endif
-#ifdef USE_PT100
-#include <DFRobotHighTemperatureSensor.h>
-#endif
-#ifdef USE_BMP280
-#include <Wire.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BMP280.h>
-#endif
-#ifdef USE_DIMMER
-#include <math.h>
-#endif
-#ifdef USE_PMS
-#include <PMS.h>
-#include <SoftwareSerial.h> 
-#endif
-#ifdef USE_VL53L0X
-#include <Wire.h>
-#include <VL53L0X.h>
-#endif
-#ifdef USE_SSD1306
-#include <SSD1306Ascii.h>
-#include <SSD1306AsciiAvrI2c.h>
-#endif
-#ifdef USE_SHT31
-#include <Wire.h>
-#include "Adafruit_SHT31.h"
-#endif
-#ifdef USE_SI7021
-#include <Wire.h>
-#include "SparkFun_Si7021_Breakout_Library.h"
-#endif
-#ifdef USE_CHIRP
-#include <Wire.h>
-#include <I2CSoilMoistureSensor.h>
-#endif
-#ifdef USE_HD44780
-#include <Wire.h> 
-#include <LiquidCrystal_I2C.h>
-#endif
-#ifdef USE_SERVO
-#include <Servo.h>
-#endif
-#ifdef USE_APDS9960
-#include <Wire.h>
-#include <SparkFun_APDS9960.h>
-#endif
-#ifdef USE_NEOPIXEL
-#if defined(ARDUINO_ARCH_STM32F0) || defined(ARDUINO_ARCH_STM32F1) || defined(ARDUINO_ARCH_STM32F3) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32L4)
-#include <NeoMaple.h>
-#else
-#include <Adafruit_NeoPixel.h>
-#endif
-#endif
-#ifdef USE_SDS011
-#include <SDS011.h>
-#endif
-#ifdef USE_FPM10A
-#include <Adafruit_Fingerprint.h>
-#include <SoftwareSerial.h>
-#endif
+
+
+
 
 // include third party libraries for enabled features
 #if FEATURE_TIME == ON
@@ -716,770 +620,9 @@ protected:
 
 
 
-/*
-SensorBH1750
-*/
-#ifdef USE_BH1750
-class SensorBH1750: public Sensor {
-public:
-	SensorBH1750(NodeManager& node_manager, int child_id = -255);
-	// [101] set sensor reading mode, e.g. BH1750_ONE_TIME_HIGH_RES_MODE
-	void setMode(uint8_t mode);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	BH1750* _lightSensor;
-};
-#endif
-
-/*
-SensorMLX90614
-*/
-#ifdef USE_MLX90614
-class SensorMLX90614: public Sensor {
-public:
-	SensorMLX90614(NodeManager& node_manager, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	Adafruit_MLX90614* _mlx;
-	int _sensor_type;
-};
-#endif
 
 
-/*
-* SensorBosch
-*/
 
-#if defined(USE_BME280) || defined(USE_BMP085_180) || defined(USE_BMP280)
-class SensorBosch: public Sensor {
-public:
-	SensorBosch(NodeManager& node_manager, int child_id = -255);
-	// [101] define how many pressure samples to keep track of for calculating the forecast (default: 5)
-	void setForecastSamplesCount(int value);
-	uint8_t detectI2CAddress(uint8_t chip_id);
-protected:
-	const char* _weather[6] = { "stable", "sunny", "cloudy", "unstable", "thunderstorm", "unknown" };
-	int _forecast_samples_count = 5;
-	float* _forecast_samples;
-	int _minute_count = 0;
-	float _pressure_avg;
-	float _pressure_avg2;
-	float _dP_dt;
-	bool _first_round = true;
-	float _getLastPressureSamplesAverage();
-	const char* _forecast(float pressure);
-};
-#endif
-
-/*
-SensorBME280
-*/
-#ifdef USE_BME280
-class SensorBME280: public SensorBosch {
-public:
-	SensorBME280(NodeManager& node_manager, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	Adafruit_BME280* _bm;
-};
-#endif
-
-/*
-SensorBMP085
-*/
-#ifdef USE_BMP085_180
-class SensorBMP085: public SensorBosch {
-public:
-	SensorBMP085(NodeManager& node_manager, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	Adafruit_BMP085* _bm;
-};
-
-/*
-SensorBMP180
-*/
-class SensorBMP180: public SensorBMP085 {
-public:
-	SensorBMP180(NodeManager& node_manager, int child_id = -255);
-};
-#endif
-
-/*
-SensorBMP280
-*/
-#ifdef USE_BMP280
-class SensorBMP280: public SensorBosch {
-public:
-	SensorBMP280(NodeManager& node_manager, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	Adafruit_BMP280* _bm;
-};
-#endif
-
-/*
-SensorSonoff
-*/
-#ifdef USE_SONOFF
-class SensorSonoff: public Sensor {
-public:
-	SensorSonoff(NodeManager& node_manager, int child_id = -255);
-	// [101] set the button's pin (default: 0)
-	void setButtonPin(int value);
-	// [102] set the relay's pin (default: 12)
-	void setRelayPin(int value);
-	// [103] set the led's pin (default: 13)
-	void setLedPin(int value);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-	void onReceive(MyMessage* message);
-protected:
-	Bounce _debouncer = Bounce();
-	int _button_pin = 0;
-	int _relay_pin = 12;
-	int _led_pin = 13;
-	int _old_value = 0;
-	bool _state = false;
-	int _relay_on = 1;
-	int _relay_off = 0;
-	int _led_on = 0;
-	int _led_off = 1;
-	void _blink();
-	void _toggle(Child* child);
-};
-#endif
-
-/*
-SensorHCSR04
-*/
-#ifdef USE_HCSR04
-class SensorHCSR04: public Sensor {
-public:
-	SensorHCSR04(NodeManager& node_manager, int echo_pin, int trigger_pin, int child_id = -255);
-	// [103] Maximum distance we want to ping for (in centimeters) (default: 300)
-	void setMaxDistance(int value);
-	// [104] Report the measure even if is invalid (e.g. 0) (default: true)
-	void setReportIfInvalid(bool value);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	int _trigger_pin;
-	int _echo_pin;
-	bool _report_if_invalid = true;
-	int _max_distance = 300;
-	NewPing* _sonar;
-};
-#endif
-
-/*
-SensorMCP9808
-*/
-#ifdef USE_MCP9808
-class SensorMCP9808: public Sensor {
-public:
-	SensorMCP9808(NodeManager& node_manager, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	Adafruit_MCP9808* _mcp;
-};
-#endif
-
-/*
-	SensorMQ
-*/
-#ifdef USE_MQ
-class SensorMQ: public Sensor {
-public:
-	SensorMQ(NodeManager& node_manager, int pin, int child_id = -255);
-	// [102] set the load resistance on the board, in ohms (default: 1000);
-	void setRlValue(float value);
-	// [103] set the Ro resistance in ohms. By default will be calculated at startup during the calibration phase using the known ppm provided
-	void setRoValue(float value);
-	// [104] set the ppm used during the calibration (default: 411);
-	void setKnownPpm(float value);
-	// [105] define how many samples we are going to take in the calibration phase (default: 50);
-	void setCalibrationSamples(int value);
-	// [106] define the time (in milisecond) between each sample in the cablibration phase (default: 500);
-	void setCalibrationSampleInterval(int value);
-	// [107] define how many samples you are going to take in normal operation (default: 50);
-	void setSamples(int value);
-	// [108] define the time (in milisecond) between each sample in the normal operations (default: 5);
-	void setSampleInterval(int value);
-	// [109] set the ppm (x) of a random point on the gas curve (default: 200)
-	void setPoint1Ppm(float value); 
-	// [110] set the Rs/Ro ratio (y) of the same random point on the gas curve (default: 5)
-	void setPoint1Ratio(float value);
-	// [111] set the ppm (x) of another random point on the gas curve (default: 10000)
-	void setPoint2Ppm(float value);
-	// [112] set the Rs/Ro ratio (y) of the same random point on the gas curve (default: 1.2)
-	void setPoint2Ratio(float value);
-	// [113] with ppm = scaling_factor*x^exponent set the value manually, otherwise will be calculated automatically based on the two points provided
-	void setCurveScalingFactor(float value); 
-	// [114] with ppm = scaling_factor*x^exponent set the value manually, otherwise will be calculated automatically based on the two points provided
-	void setCurveExponent(float value); 
-	// do not report for the given number of minutes, waiting for the sensor to warm up (default: 0);
-	void setWarmupMinutes(int value);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	long _rl = 1000;
-	long _ro = 0;
-	int _known_ppm = 411;
-	int _calibration_samples = 50;
-	int _calibration_sample_interval = 500;
-	int _sample_interval = 50;
-	int _samples = 5;
-	unsigned long _warmup_minutes = 0;
-	float _point1_ppm = 200;
-	float _point1_ratio = 5;
-	float _point2_ppm = 10000;
-	float _point2_ratio = 1.2;
-	float _curve_scaling_factor = 0;
-	float _curve_exponent = 0;
-	float _getRsValue(int samples, int sample_interval);
-};
-#endif
-
-/*
-SensorMHZ19
-*/
-#ifdef USE_MHZ19
-class SensorMHZ19: public Sensor {
-public:
-	SensorMHZ19(NodeManager& node_manager, int rxpin, int txpin, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	int _readCO2();
-	SoftwareSerial* _ser;
-	int _tx_pin = 6;
-	int _rx_pin = 7;
-};
-#endif
-
-/*
-SensorAM2320
-*/
-#ifdef USE_AM2320
-class SensorAM2320: public Sensor {
-public:
-	SensorAM2320(NodeManager& node_manager, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	AM2320* _th;
-};
-#endif
-
-/*
-SensorTSL2561
-*/
-#ifdef USE_TSL2561
-class SensorTSL2561: public Sensor {
-public:
-	SensorTSL2561(NodeManager& node_manager, int child_id = -255);
-	// [101] set the gain, possible values are SensorTSL2561::GAIN_0X (0), SensorTSL2561::GAIN_16X (1) (default 16x)
-	void setGain(int value);
-	// [102] set the timing, possible values are SensorTSL2561::INTEGRATIONTIME_13MS (0), SensorTSL2561::INTEGRATIONTIME_101MS (1), SensorTSL2561::INTEGRATIONTIME_402MS (2) (default: 13ms)
-	void setTiming(int value);
-	// [103] set the spectrum, possible values are SensorTSL2561::VISIBLE (0), SensorTSL2561::FULLSPECTRUM (1), SensorTSL2561::INFRARED (2), SensorTSL2561::FULL (3) (default: visible)
-	void setSpectrum(int value);
-	// [104] set the i2c address values are SensorTSL2561::ADDR_FLOAT, SensorTSL2561::ADDR_LOW, SensorTSL2561::ADDR_HIGH
-	void setAddress(int value);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-	// constants
-	const static int ADDR_FLOAT = 0;
-	const static int ADDR_LOW = 1;
-	const static int ADDR_HIGH = 2;
-	const static int GAIN_0X = 0;
-	const static int GAIN_16X = 1;
-	const static int INTEGRATIONTIME_13MS = 0;
-	const static int INTEGRATIONTIME_101MS = 1;
-	const static int INTEGRATIONTIME_402MS = 2;
-	const static int VISIBLE = 0;
-	const static int FULLSPECTRUM = 1;
-	const static int INFRARED = 2;
-	const static int FULL = 3;
-protected:
-	TSL2561* _tsl;
-	int _tsl_address = 0;
-	int _tsl_gain = 1;
-	int _tsl_timing = 0;
-	int _tsl_spectrum = 0;
-};
-#endif
-
-/*
-	SensorPT100
-*/
-#ifdef USE_PT100
-class SensorPT100: public Sensor {
-public:
-	SensorPT100(NodeManager& node_manager, int pin, int child_id = -255);
-	// [101] set the voltageRef used to compare with analog measures
-	void setVoltageRef(float value);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	DFRobotHighTemperature* _PT100;
-	float _voltageRef = 3.3;
-};
-#endif
-
-/*
-	SensorPT100
-*/
-#ifdef USE_DIMMER
-class SensorDimmer: public Sensor {
-public:
-	SensorDimmer(NodeManager& node_manager, int pin, int child_id = -255);
-	// [101] set the effect to use for a smooth transition, can be one of SensorDimmer::EASE_LINEAR, SensorDimmer::EASE_INSINE, SensorDimmer::EASE_OUTSINE, SensorDimmer::EASE_INOUTSINE (default: EASE_LINEAR)
-	void setEasing(int value);
-	// [102] the duration of entire the transition in seconds (default: 1)
-	void setDuration(int value);
-	// [103] the duration of a single step of the transition in milliseconds (default: 100)
-	void setStepDuration(int value);
-	// [104] reverse cathod and anode (default: false)
-	void setReverse(bool value);
-	// set the status of the dimmer
-	void setStatus(int value);
-	// set the percentage of the dimmer
-	void setPercentage(int value);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-	void onReceive(MyMessage* message);
-protected:
-	// fade the output from the current value to the target provided in the range 0-100
-	void _fadeTo(Child* child, int value);
-	enum _easing_list {
-		EASE_LINEAR,
-		EASE_INSINE,
-		EASE_OUTSINE,
-		EASE_INOUTSINE,
-	};
-	int _percentage = 100;
-	int _status = OFF;
-	int _easing = EASE_LINEAR;
-	int _duration = 1000;
-	int _step_duration = 100;
-	int _reverse = false;
-	float _getEasing(float t, float b, float c, float d);
-};
-#endif
-
-/*
-	SensorPulseMeter
-*/
-#ifdef USE_PULSE_METER
-class SensorPulseMeter: public Sensor {
-public:
-	SensorPulseMeter(NodeManager& node_manager, int pin, int child_id = -255);
-	// [102] set how many pulses for each unit (e.g. 1000 pulses for 1 kwh of power, 9 pulses for 1 mm of rain, etc.)
-	void setPulseFactor(float value);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-	void onReceive(MyMessage* message);
-	void onInterrupt();
-protected:
-	long _count = 0;
-	float _pulse_factor;
-	virtual void _reportTotal(Child* child);
-};
-
-/*
-	SensorRainGauge
-*/
-class SensorRainGauge: public SensorPulseMeter {
-public:
-	SensorRainGauge(NodeManager& node_manager, int pin, int child_id = -255);
-};
-
-/*
-	SensorPowerMeter
-*/
-class SensorPowerMeter: public SensorPulseMeter {
-public:
-	SensorPowerMeter(NodeManager& node_manager, int pin, int child_id = -255);
-protected:
-	void _reportTotal(Child* child);
-};
-
-/*
-	SensorWaterMeter
-*/
-class SensorWaterMeter: public SensorPulseMeter {
-public:
-	SensorWaterMeter(NodeManager& node_manager, int pin, int child_id = -255);
-protected:
-	void _reportTotal(Child* child);
-};
-#endif
-
-/*
-SensorPlantowerPMS
-*/
-#ifdef USE_PMS
-class SensorPlantowerPMS: public Sensor {
-public:
-	SensorPlantowerPMS(NodeManager& node_manager, int rxpin, int txpin, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	int _readSensorValues();
-	SoftwareSerial* _ser;
-	int _tx_pin = 4;
-	int _rx_pin = 3;
-	PMS *_pms;
-	PMS::DATA _data;
-	bool _valuesRead = false;
-	bool _valuesReadError = false;
-};
-#endif
-
-/*
-* VL53L0X Laser distance sensor
-*/
-#ifdef USE_VL53L0X
-class SensorVL53L0X: public Sensor {
-public:
-	SensorVL53L0X(NodeManager& node_manager, int xshut_pin, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	int _getDistance();
-	VL53L0X *_lox;
-};
-#endif
-
-/*
-* Display class
-*/
-#if defined(USE_SSD1306) || defined(USE_HD44780)
-class Display: public Sensor {
-public:
-	Display(NodeManager& node_manager, int child_id = -255);
-	// set a static caption text on header of the display
-	void setCaption(const char* value);
-	// print a static caption on top of the screen
-	virtual void printCaption(const char* value);
-	// print the given string
-	virtual void print(const char* value);
-	// print the given string and goes to the next line
-	virtual void println(const char* value);
-	// print the value of the given child
-	virtual void printChild(Child* child);
-	// clear the display
-	virtual void clear();
-	// set the cursor to the given position
-	virtual void setCursor(int col,int row);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-	void onReceive(MyMessage* message);
-protected:
-	const char* _caption = "";
-};
-#endif
-
-/*
-* SSD1306 OLED display
-*/
-#ifdef USE_SSD1306
-class DisplaySSD1306: public Display {
-public:
-	DisplaySSD1306(NodeManager& node_manager, int child_id = -255);
-	// set device
-	void setDev(const DevType* dev);
-	// set i2c address
-	void setI2CAddress(uint8_t i2caddress);
-	// set text font (default: &Adafruit5x7)
-	void setFont(const uint8_t* font);
-	// [102] set the contrast of the display (0-255)
-	void setContrast(uint8_t value);
-	// [104] Rotate the display 180 degree (use rotate=false to revert)
-	void rotateDisplay(bool rotate = true);
-	// [105] Text font size (possible are 1 and 2; default is 1)
-	void setFontSize(int fontsize);
-	// [106] Text caption font size (possible are 1 and 2; default is 2)
-	void setCaptionFontSize(int fontsize);
-	// [107] Invert display (black text on color background; use invert=false to revert)
-	void invertDisplay(bool invert = true);
-	// display specific functions
-	void printCaption(const char* value);
-	void print(const char* value);
-	void println(const char* value);
-	void printChild(Child* child);
-	void clear();
-	void setCursor(int col,int row);
-	// define what to do at each stage of the sketch
-	void onSetup();
-protected:
-	SSD1306AsciiAvrI2c *_oled;
-	const DevType* _dev = &Adafruit128x64;
-	uint8_t _i2caddress = 0x3c;
-	int _fontsize = 1;
-	int _caption_fontsize = 2;
-	const uint8_t* _font = Adafruit5x7;
-	uint8_t _contrast = -1;
-};
-#endif
-
-/*
-SensorSHT31: temperature and humidity sensor
-*/
-#ifdef USE_SHT31
-class SensorSHT31: public Sensor {
-public:
-	SensorSHT31(NodeManager& node_manager, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	Adafruit_SHT31* _sht31;
-};
-#endif
-
-/*
-SensorSI7021: temperature and humidity sensor
-*/
-#ifdef USE_SI7021
-class SensorSI7021: public Sensor {
-public:
-	SensorSI7021(NodeManager& node_manager, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	Weather* _si7021;
-};
-#endif
-
-/*
-SensorChirp: Chirp soil moisture sensor (includes temperature and light sensors)  
-*/
-#ifdef USE_CHIRP
-class SensorChirp: public Sensor {
-public:
-	SensorChirp(NodeManager& node_manager, int child_id = -255);
-	// [101] set the soil moisture offset (default: 0)
-	void setMoistureOffset(int value);
-	// [102] set the soil moisture range (default: 0)
-	void setMoistureRange(int value);
-	// [103] return the soil moisture normalized (default: false)
-	void setReturnMoistureNormalized(bool value);
-	// [104] reverse the light value (default: true)
-	void setReturnLightReversed(bool value); 
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	I2CSoilMoistureSensor* _chirp;
-	int _chirp_moistureoffset = 0;
-	int _chirp_moisturerange = 0;
-	bool _chirp_moisturenormalized = false;  
-	bool _chirp_lightreversed = true;
-};
-#endif
-
-/*
-* Hitachi HD44780 display
-*/
-#ifdef USE_HD44780
-class DisplayHD44780: public Display {
-public:
-	DisplayHD44780(NodeManager& node_manager, int child_id = -255);
-	// set i2c address (default: 0x38)
-	void setI2CAddress(uint8_t i2caddress);
-	// set the backlight (default: HIGH)
-	void setBacklight(uint8_t value);
-	// display specific functions
-	void printCaption(const char* value);
-	void print(const char* value);
-	void println(const char* value);
-	void printChild(Child* child);
-	void clear();
-	void setCursor(int col,int row);
-	// define what to do at each stage of the sketch
-	void onSetup();
-protected:
-	LiquidCrystal_I2C* _lcd;
-	uint8_t _i2caddress = 0x38;
-	int _column = 0;
-};
-#endif
-
-/*
-SensorTTP: TTP226/TTP229 Touch control sensor
-*/
-#ifdef USE_TTP
-class SensorTTP: public Sensor {
-public:
-	SensorTTP(NodeManager& node_manager, int child_id = -255);
-	// set the passcode length. Passcode will be sent to the controller only after this number of digits have been pressed (default: 4)
-	void setPasscodeLength(int value);
-	// set the clock pin (default: 6)
-	void setClockPin(int value);
-	// set the SDO pin (default: 5)
-	void setSdoPin(int value);
-	// set the DV pin (default: 3)
-	void setDvPin(int value);
-	// set the RST pin (default: 4)
-	void setRstPin(int value);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-	void onInterrupt();
-protected:
-	int _clock_pin = 6;
-	int _sdo_pin = 5;
-	int _dv_pin = 3;
-	int _rst_pin = 4;
-	int _fetchData();
-	List<int> _passcode;
-	int _passcode_length = 4;
-};
-#endif
-
-/*
-* Servo motor sensor
-*/
-#ifdef USE_SERVO
-class SensorServo: public Sensor {
-public:
-	SensorServo(NodeManager& node_manager, int pin, int child_id = -255);
-	// set the servo to the given percentage
-	void setPercentage(int value);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-	void onReceive(MyMessage* message);
-protected:
-	Servo _servo;
-	int _value;
-};
-#endif
-
-/*
-* SparkFun RGB and Gesture Sensor
-*/
-#ifdef USE_APDS9960
-class SensorAPDS9960: public Sensor {
-public:
-	SensorAPDS9960(NodeManager& node_manager, int pin, int child_id = -255);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-	void onInterrupt();
-protected:
-	SparkFun_APDS9960* _apds;
-};
-#endif
-
-/*
-* Neopixel LED Sensor
-*/
-#ifdef USE_NEOPIXEL
-class SensorNeopixel: public Sensor {
-public:
-	SensorNeopixel(NodeManager& node_manager, int pin, int child_id = -255);
-	// set how many NeoPixels are attached
-	void setNumPixels(int value);
-	// format expeted is "<pixel_number>,<RGB color in a packed 32 bit format>"
-	void setColor(char* string);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-	void onReceive(MyMessage* message);
-protected:
-#if defined(ARDUINO_ARCH_STM32F0) || defined(ARDUINO_ARCH_STM32F1) || defined(ARDUINO_ARCH_STM32F3) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32L4)
-	NeoMaple* _pixels;
-#else  
-	Adafruit_NeoPixel* _pixels;
-#endif
-	int _num_pixels = 16;
-};
-#endif
-
-/*
-SensorSDS011
-*/
-#ifdef USE_SDS011
-class SensorSDS011: public Sensor {
-public:
-	SensorSDS011(NodeManager& node_manager, int rxpin, int txpin, int child_id = -255);
-	// Sleep sensor during measurment aka stop fan.
-	void setSleep(bool value);
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	SDS011* _sds;
-	float _p10 = 0.;
-	float _p25 = 0.;
-	int _rx_pin = 6;
-	int _tx_pin = 7;
-	bool _slp = true;
-};
-#endif
-
-/*
-SensorFPM10A
-*/
-#ifdef USE_FPM10A
-class SensorFPM10A: public Sensor {
-public:
-	SensorFPM10A(NodeManager& node_manager, int rxpin, int txpin, int child_id = -255);
-	// set the baud rate of the serial port for connecting to the sensor (default: 57600)
-	void setBaudRate(uint32_t value);
-	// set the password for connecting to the sensor (default: 0)
-	void setPassword(uint32_t value);
-	// [101] set the minimum confidence below which the match is not considered valid (default: 0)
-	void setMinConfidence(uint16_t value);
-	// [102] wait for a valid fingerprint for the given amount of seconds. Useful when battery powered (default: 0)
-	void setWaitFingerForSeconds(int value);
-	// return true if the fingerprint was recognized successfully, false otherwise. Useful when a hook function needs to act upon the result
-	bool getFingerprintIsValid();
-	// define what to do at each stage of the sketch
-	void onSetup();
-	void onLoop(Child* child);
-protected:
-	Adafruit_Fingerprint* _finger;
-	SoftwareSerial* _serial;
-	int _rx_pin;
-	int _tx_pin;
-	int _wait_finger_for_seconds = 0;
-	uint32_t _baud_rate = 57600;
-	uint32_t _password = 0;
-	uint16_t _min_confidence = 0;
-	int _readFingerprint();
-	bool _fingerprint_is_valid = false;
-};
-#endif
 
 /***************************************
 NodeManager: manages all the aspects of the node
@@ -1672,7 +815,6 @@ private:
 #include "sensors/SensorSignal.h"
 #endif
 #ifdef USE_ANALOG_INPUT
-#include "sensors/SensorAnalogInput.h"
 #include "sensors/SensorLDR.h"
 #include "sensors/SensorRain.h"
 #include "sensors/SensorSoilMoisture.h"
@@ -1691,20 +833,110 @@ private:
 #endif
 #ifdef USE_DIGITAL_OUTPUT
 #include "sensors/SensorDigitalOutput.h"
+#include "sensors/SensorRelay.h"
+#include "sensors/SensorLatchingRelay1Pin.h"
+#include "sensors/SensorLatchingRelay2Pins.h"
+#endif
+#ifdef USE_DHT
+#include "sensors/SensorDHT11.h"
+#include "sensors/SensorDHT22.h"
 #endif
 #ifdef USE_SHT21
 #include "sensors/SensorSHT21.h"
 #endif
 #ifdef USE_INTERRUPT
 #include "sensors/SensorInterrupt.h"
+#include "sensors/SensorDoor.h"
+#include "sensors/SensorMotion.h"
 #endif
 #ifdef USE_DS18B20
 #include "sensors/SensorDs18b20.h"
 #endif
-
-#ifdef USE_DHT
-#include "sensors/SensorDHT.h"
+#ifdef USE_BH1750
+#include "sensors/SensorBH1750.h"
 #endif
+#ifdef USE_MLX90614
+#include "sensors/SensorMLX90614.h"
+#endif
+#ifdef USE_BME280
+#include "sensors/SensorBME280.h"
+#endif
+#ifdef USE_BMP085_180
+#include "sensors/SensorBMP085.h"
+#include "sensors/SensorBMP180.h"
+#endif
+#ifdef USE_BMP280
+#include "sensors/SensorBMP280.h"
+#endif
+#ifdef USE_SONOFF
+#include "sensors/SensorSonoff.h"
+#endif
+#ifdef USE_HCSR04
+#include "sensors/SensorHCSR04.h"
+#endif
+#ifdef USE_MCP9808
+#include "sensors/SensorMCP9808.h"
+#endif
+#ifdef USE_MQ
+#include "sensors/SensorMQ.h"
+#endif
+#ifdef USE_MHZ19
+#include "sensors/SensorMHZ19.h"
+#endif
+#ifdef USE_AM2320
+#include "sensors/SensorAM2320.h"
+#endif
+#ifdef USE_TSL2561
+#include "sensors/SensorTSL2561.h"
+#endif
+#ifdef USE_PT100
+#include "sensors/SensorPT100.h"
+#endif
+#ifdef USE_DIMMER
+#include "sensors/SensorDimmer.h"
+#endif
+#ifdef USE_PULSE_METER
+#include "sensors/SensorRainGauge.h"
+#include "sensors/SensorPowerMeter.h"
+#include "sensors/SensorWaterMeter.h"
+#endif
+#ifdef USE_PMS
+#include "sensors/SensorPlantowerPMS.h"
+#endif
+#ifdef USE_VL53L0X
+#include "sensors/SensorVL53L0X.h"
+#endif
+#ifdef USE_SSD1306
+#include "sensors/DisplaySSD1306.h"
+#endif
+#ifdef USE_SHT31
+#include "sensors/SensorSHT31.h"
+#endif
+#ifdef USE_SI7021
+#include "sensors/SensorSI7021.h"
+#endif
+#ifdef USE_HD44780
+#include "sensors/DisplayHD44780.h"
+#endif
+#ifdef USE_TTP
+#include "sensors/SensorTTP.h"
+#endif
+#ifdef USE_SERVO
+#include "sensors/SensorServo.h"
+#endif
+#ifdef USE_APDS9960
+#include "sensors/SensorAPDS9960.h"
+#endif
+#ifdef USE_NEOPIXEL
+#include "sensors/SensorNeopixel.h"
+#endif
+#ifdef USE_SDS011
+#include "sensors/SensorSDS011.h"
+#endif
+#ifdef USE_FPM10A
+#include "sensors/SensorFPM10A.h"
+#endif
+
 
 
 
