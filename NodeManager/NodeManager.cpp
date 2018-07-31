@@ -166,7 +166,8 @@ void NodeManager::before() {
 #endif
 #if NODEMANAGER_OTA_CONFIGURATION == ON
 	// initialize SensorConfiguration
-	SensorConfiguration configuration(*this);
+	SensorConfiguration* configuration = new SensorConfiguration(*this);
+	configuration->setReportTimerMode(IMMEDIATELY);
 #endif
 	debug(PSTR(LOG_BEFORE "INIT\n"));
 }

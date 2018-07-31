@@ -862,6 +862,7 @@ A NodeManager object has to be created the beginning of your sketch and the inte
 `NodeManager::before()`:
 * Setup the interrupt pins to wake up the board based on the configured interrupts
 * Restore from the EEPROM the latest sleeping settings, if setSaveSleepSettings() was set
+* Create and register an instance of SensorConfiguration
 
 `NodeManager::presentation()`:
 * Present the sketch
