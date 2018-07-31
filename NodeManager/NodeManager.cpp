@@ -265,7 +265,7 @@ void NodeManager::loop() {
 #if NODEMANAGER_RECEIVE == ON
 	// dispacth inbound messages
 	void NodeManager::receive(const MyMessage &message) {
-		debug(PSTR(LOG_MSG "RECV(%d) c=%d t=%d p=%s\n"),message.sensor,message.getCommand(),message.type,message.getString());
+		debug_verbose(PSTR(LOG_MSG "RECV(%d) c=%d t=%d p=%s\n"),message.sensor,message.getCommand(),message.type,message.getString());
 		// dispatch the message to the registered sensor
 		Sensor* sensor = getSensorWithChild(message.sensor);
 		if (sensor != nullptr) {
@@ -537,9 +537,9 @@ void NodeManager::loop() {
 		_message.setType(type);
 		// send the message, multiple times if requested
 		for (int i = 0; i < _retries; i++) {
-			if (mGetPayloadType(_message) == P_INT16) debug(PSTR(LOG_MSG "SEND(%d) t=%d p=%d\n"),_message.sensor,_message.type,_message.getInt());
-			if (mGetPayloadType(_message) == P_FLOAT32) debug(PSTR(LOG_MSG "SEND(%d) t=%d p=%d.%02d\n"),_message.sensor,_message.type,(int)_message.getFloat(), (int)(_message.getFloat()*100)%100);
-			if (mGetPayloadType(_message) == P_STRING) debug(PSTR(LOG_MSG "SEND(%d) t=%d p=%s\n"),_message.sensor,_message.type,_message.getString());
+			if (mGetPayloadType(_message) == P_INT16) debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%d\n"),_message.sensor,_message.type,_message.getInt());
+			if (mGetPayloadType(_message) == P_FLOAT32) debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%d.%02d\n"),_message.sensor,_message.type,(int)_message.getFloat(), (int)(_message.getFloat()*100)%100);
+			if (mGetPayloadType(_message) == P_STRING) debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%s\n"),_message.sensor,_message.type,_message.getString());
 			send(_message, _ack);
 			// if configured, sleep beetween each send
 			_sleepBetweenSend();

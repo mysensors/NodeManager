@@ -103,6 +103,9 @@ Default configuration settings
 #ifndef NODEMANAGER_DEBUG
 #define NODEMANAGER_DEBUG ON
 #endif
+#ifndef NODEMANAGER_DEBUG_VERBOSE
+#define NODEMANAGER_DEBUG_VERBOSE OFF
+#endif
 #ifndef NODEMANAGER_POWER_MANAGER
 #define NODEMANAGER_POWER_MANAGER OFF
 #endif
@@ -155,6 +158,12 @@ Default configuration settings
 #define LOG_SENSOR			LOG_PREFIX "SENS:"
 #else
 #define debug(x,...)
+#endif
+
+#if NODEMANAGER_DEBUG == ON && NODEMANAGER_DEBUG_VERBOSE == ON
+#define debug_verbose(x,...)		hwDebugPrint(x, ##__VA_ARGS__)
+#else
+#define debug_verbose(x,...)
 #endif
 
 #endif

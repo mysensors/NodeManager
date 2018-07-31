@@ -1,128 +1,29 @@
-/**
- * The MySensors Arduino library handles the wireless radio link and protocol
- * between your home built sensors/actuators and HA controller of choice.
- * The sensors forms a self healing radio network with optional repeaters. Each
- * repeater and gateway builds a routing tables in EEPROM which keeps track of the
- * network topology allowing messages to be routed to nodes.
- *
- * Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
- * Copyright (C) 2013-2016 Sensnology AB
- * Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
- *
- * Documentation: http://www.mysensors.org
- * Support Forum: http://forum.mysensors.org
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * version 2 as published by the Free Software Foundation.
- *
- *******************************
+/*
+* The MySensors Arduino library handles the wireless radio link and protocol
+* between your home built sensors/actuators and HA controller of choice.
+* The sensors forms a self healing radio network with optional repeaters. Each
+* repeater and gateway builds a routing tables in EEPROM which keeps track of the
+* network topology allowing messages to be routed to nodes.
+*
+* Created by Henrik Ekblad <henrik.ekblad@mysensors.org>
+* Copyright (C) 2013-2017 Sensnology AB
+* Full contributor list: https://github.com/mysensors/Arduino/graphs/contributors
+*
+* Documentation: http://www.mysensors.org
+* Support Forum: http://forum.mysensors.org
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* version 2 as published by the Free Software Foundation.
+*/
 
- DESCRIPTION
+/**************************
+Template
 
-NodeManager is intended to take care on your behalf of all those common tasks that a 
-MySensors node has to accomplish, speeding up the development cycle of your projects. 
-Consider it as a sort of frontend for your MySensors projects. When you need to add 
-a sensor (which requires just uncommeting a single line),
-NodeManager will take care of importing the required library, presenting the sensor 
-to the gateway/controller, executing periodically the main function of the sensor 
-(e.g. measure a temperature, detect a motion, etc.), allowing you to interact with 
-the sensor and even configuring it remotely.
-
-Documentation available on: https://github.com/mysensors/NodeManager
-NodeManager provides built-in implementation of a number of sensors through ad-hoc 
-classes. 
-
-To use a buil-in sensor:
-* Install the required library if any
-* Enable the corresponding module (uncomment it) in the main sketch
-* Declare the sensor (uncomment it) in the main sketch
-
-Once created, the sensor will automatically present one or more child to the gateway 
-and controller. A list of buil-in sensors, module to enable, required dependencies 
-and the number of child automatically created is presented below:
-
-Sensor Name              |#Child | Module to enable   | Description                                                                                       | Dependencies
--------------------------|-------|--------------------|---------------------------------------------------------------------------------------------------|----------------------------------------------------------
-SensorBattery            | 1     | USE_BATTERY        | Built-in sensor for automatic battery reporting                                                   | - 
-SensorSignal             | 1     | USE_SIGNAL         | Built-in sensor for automatic signal level reporting                                              | -
-SensorConfiguration      | 1     | USE_CONFIGURATION  | Built-in sensor for OTA remote configuration of any registered sensor                             | -
-SensorAnalogInput        | 1     | USE_ANALOG_INPUT   | Generic analog sensor, return a pin's analog value or its percentage                              | -
-SensorLDR                | 1     | USE_ANALOG_INPUT   | LDR sensor, return the light level of an attached light resistor in percentage                    | -
-SensorRain               | 1     | USE_ANALOG_INPUT   | Rain sensor, return the percentage of rain from an attached analog sensor                         | -
-SensorSoilMoisture       | 1     | USE_ANALOG_INPUT   | Soil moisture sensor, return the percentage of moisture from an attached analog sensor            | -
-SensorThermistor         | 1     | USE_THERMISTOR     | Thermistor sensor, return the temperature based on the attached thermistor                        | -
-SensorML8511             | 1     | USE_ML8511         | ML8511 sensor, return UV intensity                                                                | -
-SensorACS712             | 1     | USE_ACS712         | ACS712 sensor, measure the current going through the attached module                              | -
-SensorDigitalInput       | 1     | USE_DIGITAL_INPUT  | Generic digital sensor, return a pin's digital value                                              | -
-SensorDigitalOutput      | 1     | USE_DIGITAL_OUTPUT | Generic digital output sensor, allows setting the digital output of a pin to the requested value  | -
-SensorRelay              | 1     | USE_DIGITAL_OUTPUT | Relay sensor, allows activating the relay                                                         | -
-SensorLatchingRelay1Pin  | 1     | USE_DIGITAL_OUTPUT | Latching Relay sensor, allows toggling the relay with a pulse on the configured pin               | -
-SensorLatchingRelay2Pins | 1     | USE_DIGITAL_OUTPUT | Latching Relay sensor, allows turing the relay on and off with a pulse on the configured pins     | -
-SensorDHT11              | 2     | USE_DHT            | DHT11 sensor, return temperature/humidity based on the attached DHT sensor                        | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/DHT
-SensorDHT22              | 2     | USE_DHT            | DHT22 sensor, return temperature/humidity based on the attached DHT sensor                        | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/DHT
-SensorSHT21              | 2     | USE_SHT21          | SHT21 sensor, return temperature/humidity based on the attached SHT21 sensor                      | https://github.com/SodaqMoja/Sodaq_SHT2x
-SensorHTU21D             | 2     | USE_SHT21          | HTU21D sensor, return temperature/humidity based on the attached HTU21D sensor                    | https://github.com/SodaqMoja/Sodaq_SHT2x
-SensorInterrupt          | 1     | USE_INTERRUPT      | Generic interrupt-based sensor, wake up the board when a pin changes status                       | -
-SensorDoor               | 1     | USE_INTERRUPT      | Door sensor, wake up the board and report when an attached magnetic sensor has been opened/closed | -
-SensorMotion             | 1     | USE_INTERRUPT      | Motion sensor, wake up the board and report when an attached PIR has triggered                    | -
-SensorDs18b20            | 1+    | USE_DS18B20        | DS18B20 sensor, return the temperature based on the attached sensor                               | https://github.com/milesburton/Arduino-Temperature-Control-Library
-SensorBH1750             | 1     | USE_BH1750         | BH1750 sensor, return light level in lux                                                          | https://github.com/claws/BH1750
-SensorMLX90614           | 2     | USE_MLX90614       | MLX90614 contactless temperature sensor, return ambient and object temperature                    | https://github.com/adafruit/Adafruit-MLX90614-Library
-SensorBME280             | 4     | USE_BME280         | BME280 sensor, return temperature/humidity/pressure based on the attached BME280 sensor           | https://github.com/adafruit/Adafruit_BME280_Library
-SensorBMP085             | 3     | USE_BMP085_180     | BMP085 sensor, return temperature and pressure                                                    | https://github.com/adafruit/Adafruit-BMP085-Library
-SensorBMP180             | 3     | USE_BMP085_180     | BMP180 sensor, return temperature and pressure                                                    | https://github.com/adafruit/Adafruit-BMP085-Library
-SensorBMP280             | 3     | USE_BMP280         | BMP280 sensor, return temperature/pressure based on the attached BMP280 sensor                    | https://github.com/adafruit/Adafruit_BMP280_Library
-SensorSonoff             | 1     | USE_SONOFF         | Sonoff wireless smart switch                                                                      | https://github.com/thomasfredericks/Bounce2
-SensorHCSR04             | 1     | USE_HCSR04         | HC-SR04 sensor, return the distance between the sensor and an object                              | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/NewPing
-SensorMCP9808            | 1     | USE_MCP9808        | MCP9808 sensor, measure the temperature through the attached module                               | https://github.com/adafruit/Adafruit_MCP9808_Library
-SensorMQ                 | 1     | USE_MQ             | MQ sensor, return ppm of the target gas. Tuned by default for MQ135 and CO2                       | -
-SensorMHZ19              | 1     | USE_MHZ19          | MH-Z19 CO2 sensor via UART (SoftwareSerial, default on pins 6(Rx) and 7(Tx)                       | -
-SensorAM2320             | 2     | USE_AM2320         | AM2320 sensors, return temperature/humidity based on the attached AM2320 sensor                   | https://github.com/thakshak/AM2320
-SensorTSL2561            | 1     | USE_TSL2561        | TSL2561 sensor, return light in lux                                                               | https://github.com/adafruit/TSL2561-Arduino-Library
-SensorPT100              | 1     | USE_PT100          | DFRobot Driver high temperature sensor, return the temperature from the attached PT100 sensor     | https://github.com/nxcosa/HighTemperatureSensor
-SensorDimmer             | 1     | USE_DIMMER         | Generic dimmer sensor used to drive a pwm output                                                  | -
-SensorRainGauge          | 1     | USE_PULSE_METER    | Rain gauge sensor                                                                                 | -
-SensorPowerMeter         | 1     | USE_PULSE_METER    | Power meter pulse sensor                                                                          | -
-SensorWaterMeter         | 1     | USE_PULSE_METER    | Water meter pulse sensor                                                                          | -
-SensorPlantowerPMS       | 3     | USE_PMS            | Plantower PMS particulate matter sensors (reporting PM<=1.0, PM<=2.5 and PM<=10.0 in µg/m³)       | https://github.com/fu-hsi/pms
-SensorVL53L0X            | 1     | USE_VL53L0X        | VL53L0X laser time-of-flight distance sensor via I²C, sleep pin supported (optional)              | https://github.com/pololu/vl53l0x-arduino
-DisplaySSD1306           | 1     | USE_SSD1306        | SSD1306 128x64 OLED display (I²C); By default displays values of all sensors and children         | https://github.com/greiman/SSD1306Ascii.git
-SensorSHT31              | 2     | USE_SHT31          | SHT31 sensor, return temperature/humidity based on the attached SHT31 sensor                      | https://github.com/adafruit/Adafruit_SHT31
-SensorSI7021             | 2     | USE_SI7021         | SI7021 sensor, return temperature/humidity based on the attached SI7021 sensor                    | https://github.com/sparkfun/SparkFun_Si701_Breakout_Arduino_Library
-SensorChirp              | 3     | USE_CHIRP          | Chirp soil moisture sensor (includes temperature and light sensors)                               | https://github.com/Apollon77/I2CSoilMoistureSensor
-DisplayHD44780           | 1     | USE_HD44780        | Supports most Hitachi HD44780 based LCDs, by default displays values of all sensors and children  | https://github.com/cyberang3l/NewLiquidCrystal
-SensorTTP                | 1     | USE_TTP            | TTP226/TTP229 Touch control sensor                                                                | -
-SensorServo              | 1     | USE_SERVO          | Control a generic Servo motor sensor                                                              | -
-SensorAPDS9960           | 1     | USE_APDS9960       | SparkFun RGB and Gesture Sensor                                                                   | https://github.com/sparkfun/APDS-9960_RGB_and_Gesture_Sensor
-SensorNeopixel           | 1     | USE_NEOPIXEL       | Control a Neopixel LED                                                                            | https://github.com/adafruit/Adafruit_NeoPixel
-SensorSDS011             | 2     | USE_SDS011         | SDS011 air quality sensor, return concentrations of 2.5 and 10 micrometer particles.              | https://github.com/ricki-z/SDS011
-SensorFPM10A             | 1     | USE_FPM10A         | FPM10A fingerprint sensor                                                                         | https://github.com/adafruit/Adafruit-Fingerprint-Sensor-Library
-
-NodeManager provides useful built-in features which can be disabled if you need 
-to save some storage for your code. To enable/disable a buil-in feature:
-* Install the required library if any
-* Enable the corresponding feature by setting it to ON in the main sketch. To 
-disable it, set it to OFF
-* When a feature is enabled additional functions may be made available. Have a look 
-at the API documentation for details
-
-A list of buil-in features and the required dependencies is presented below:
-
-Feature                     | Default | Description                                                                                      | Dependencies
-----------------------------|---------|--------------------------------------------------------------------------------------------------|----------------------------------------------------------
-NODEMANAGER_DEBUG               | ON      | NodeManager's debug output on serial console                                                     | - 
-NODEMANAGER_POWER_MANAGER       | ON      | allow powering on your sensors only while the node is awake                                      | - 
-NODEMANAGER_INTERRUPTS          | ON      | allow managing interrupt-based sensors like a PIR or a door sensor                               | - 
-NODEMANAGER_CONDITIONAL_REPORT  | ON      | allow reporting a measure only when different from the previous or above/below a given threshold | - 
-NODEMANAGER_EEPROM              | ON      | allow keeping track of some information in the EEPROM                                            | - 
-NODEMANAGER_SLEEP               | ON      | allow managing automatically the complexity behind battery-powered sleeping sensors              | - 
-NODEMANAGER_RECEIVE             | ON      | allow the node to receive messages; can be used by the remote API or for triggering the sensors  | - 
-NODEMANAGER_TIME                | OFF     | allow keeping the current system time in sync with the controller                                | https://github.com/PaulStoffregen/Time
-NODEMANAGER_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device (requires NODEMANAGER_TIME)| https://github.com/JChristensen/DS3232RTC
-NODEMANAGER_SD                  | OFF     | allow reading from and writing to SD cards                                                       | -
-NODEMANAGER_HOOKING             | OFF     | allow custom code to be hooked in the out of the box sensors                                     | -
-**/
+This sketch can be used as a template since containing the most relevant MySensors library configuration settings, 
+NodeManager's settings, all its the supported sensors commented out and a sketch structure fully functional to operate with
+NodeManager. Just uncomment the settings you need and the sensors you want to add and configure the sensors in before()
+*/
 
 /**********************************
  * MySensors node configuration
@@ -257,6 +158,7 @@ NODEMANAGER_HOOKING             | OFF     | allow custom code to be hooked in th
  */
 
 #define NODEMANAGER_DEBUG ON
+#define NODEMANAGER_DEBUG_VERBOSE OFF
 #define NODEMANAGER_POWER_MANAGER OFF
 #define NODEMANAGER_INTERRUPTS ON
 #define NODEMANAGER_CONDITIONAL_REPORT OFF
