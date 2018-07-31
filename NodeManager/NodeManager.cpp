@@ -17,8 +17,8 @@
 * version 2 as published by the Free Software Foundation.
 */
 
-/*******************************************
-NodeManager
+/******************************************
+NodeManager: provide the most common functionalities a user would need when leveraging the MySensors library
 */
 
 #include "NodeManager.h"
@@ -49,9 +49,6 @@ long unsigned NodeManager::_interrupt_debounce = 0;
 // setter/getter
 void NodeManager::setRetries(int value) {
 	_retries = value;
-}
-int NodeManager::getRetries() {
-	return _retries;
 }
 #if NODEMANAGER_SLEEP == ON
 void NodeManager::setSleepSeconds(int value) {
@@ -226,7 +223,7 @@ void NodeManager::setup() {
 	}
 #if NODEMANAGER_INTERRUPTS == ON
 	// setup the interrupt pins
-	setupInterrupts();
+	_setupInterrupts();
 #endif
 }
 
@@ -407,38 +404,6 @@ void NodeManager::loop() {
 	}
 
 #if NODEMANAGER_INTERRUPTS == ON
-	// setup the interrupt pins
-	void NodeManager::setupInterrupts() {
-		// configure wakeup pin if needed
-		if (_sleep_interrupt_pin > -1) {
-			// set the interrupt when the pin is connected to ground
-			setInterrupt(_sleep_interrupt_pin,FALLING,HIGH);
-		}
-		// setup the interrupt pins
-		if (_interrupt_1_mode != MODE_NOT_DEFINED) {
-			pinMode(INTERRUPT_PIN_1,INPUT);
-			if (_interrupt_1_initial > -1) digitalWrite(INTERRUPT_PIN_1,_interrupt_1_initial);
-			// for non sleeping nodes, we need to handle the interrupt by ourselves  
-#if defined(CHIP_STM32)
-			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, (ExtIntTriggerMode)_interrupt_1_mode);
-#else
-			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, _interrupt_1_mode);
-#endif
-			debug(PSTR(LOG_BEFORE "INT p=%d m=%d\n"),INTERRUPT_PIN_1,_interrupt_1_mode);
-		}
-		if (_interrupt_2_mode != MODE_NOT_DEFINED) {
-			pinMode(INTERRUPT_PIN_2, INPUT);
-			if (_interrupt_2_initial > -1) digitalWrite(INTERRUPT_PIN_2,_interrupt_2_initial);
-			// for non sleeping nodes, we need to handle the interrupt by ourselves  
-#if defined(CHIP_STM32)
-			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, (ExtIntTriggerMode)_interrupt_2_mode);
-#else
-			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, _interrupt_2_mode);
-#endif
-			debug(PSTR(LOG_BEFORE "INT p=%d m=%d\n"),INTERRUPT_PIN_2,_interrupt_2_mode);
-		}
-	}
-
 	// return the pin from which the last interrupt came
 	int NodeManager::getLastInterruptPin() {
 		return _last_interrupt_pin;
@@ -511,6 +476,38 @@ void NodeManager::loop() {
 	}
 
 #if NODEMANAGER_INTERRUPTS == ON
+	// setup the interrupt pins
+	void NodeManager::_setupInterrupts() {
+		// configure wakeup pin if needed
+		if (_sleep_interrupt_pin > -1) {
+			// set the interrupt when the pin is connected to ground
+			setInterrupt(_sleep_interrupt_pin,FALLING,HIGH);
+		}
+		// setup the interrupt pins
+		if (_interrupt_1_mode != MODE_NOT_DEFINED) {
+			pinMode(INTERRUPT_PIN_1,INPUT);
+			if (_interrupt_1_initial > -1) digitalWrite(INTERRUPT_PIN_1,_interrupt_1_initial);
+			// for non sleeping nodes, we need to handle the interrupt by ourselves  
+#if defined(CHIP_STM32)
+			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, (ExtIntTriggerMode)_interrupt_1_mode);
+#else
+			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, _interrupt_1_mode);
+#endif
+			debug(PSTR(LOG_BEFORE "INT p=%d m=%d\n"),INTERRUPT_PIN_1,_interrupt_1_mode);
+		}
+		if (_interrupt_2_mode != MODE_NOT_DEFINED) {
+			pinMode(INTERRUPT_PIN_2, INPUT);
+			if (_interrupt_2_initial > -1) digitalWrite(INTERRUPT_PIN_2,_interrupt_2_initial);
+			// for non sleeping nodes, we need to handle the interrupt by ourselves  
+#if defined(CHIP_STM32)
+			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, (ExtIntTriggerMode)_interrupt_2_mode);
+#else
+			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, _interrupt_2_mode);
+#endif
+			debug(PSTR(LOG_BEFORE "INT p=%d m=%d\n"),INTERRUPT_PIN_2,_interrupt_2_mode);
+		}
+	}
+	
 	// handle an interrupt
 	void NodeManager::_onInterrupt_1() {
 		_saveInterrupt(INTERRUPT_PIN_1);

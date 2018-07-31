@@ -19,8 +19,8 @@
 #ifndef ConfigurationRequest_h
 #define ConfigurationRequest_h
 
-/*
-ConfigurationRequest
+/******************************************
+ConfigurationRequest: data structure for OTA configuration requests
 */
 
 class ConfigurationRequest {

@@ -19,8 +19,8 @@
 #ifndef Timer_h
 #define Timer_h
 
-/*
-Timer
+/******************************************
+Timer: helper class to keep track of the elapsed time
 */
 
 class NodeManager;

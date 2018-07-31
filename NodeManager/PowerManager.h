@@ -19,8 +19,8 @@
 #ifndef PowerManager_h
 #define PowerManager_h
 
-/*
-PowerManager
+/******************************************
+PowerManager: helper class to power sensors on-demand through the board's pins
 */
 
 class PowerManager {

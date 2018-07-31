@@ -17,9 +17,10 @@
 * version 2 as published by the Free Software Foundation.
 */
 
-/*
-Child class
+/******************************************
+Child: data structure for representing a Child of a Sensor
 */
+
 
 #include "Child.h"
 

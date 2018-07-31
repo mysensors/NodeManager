@@ -19,9 +19,10 @@
 #ifndef List_h
 #define List_h
 
-/*
-* List
+/******************************************
+List: data structure to dinamically store different types of objects
 */
+
 template<typename T> class List {
 public:
 	typedef T* iterator;

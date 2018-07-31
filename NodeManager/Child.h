@@ -19,8 +19,8 @@
 #ifndef Child_h
 #define Child_h
 
-/***************************************
-Child: child class
+/******************************************
+Child: data structure for representing a Child of a Sensor
 */
 
 class Sensor;
@@ -44,6 +44,12 @@ public:
 	// set sensor description
 	void setDescription(const char* value);
 	const char* getDescription();
+	// send the current value to the gateway
+	virtual void sendValue(bool force);
+	// print the current value on a LCD display
+	virtual void print(Print& device);
+	// reset all the counters
+	virtual void reset();
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	// force to send an update after the configured number of minutes
 	void setForceUpdateTimerValue(int value);
@@ -54,12 +60,6 @@ public:
 	// do not report values if too close to the previous one (default: 0)
 	void setValueDelta(float value);
 #endif
-	// send the current value to the gateway
-	virtual void sendValue(bool force);
-	// print the current value on a LCD display
-	virtual void print(Print& device);
-	// reset all the counters
-	virtual void reset();
 protected:
 	int _samples = 0;
 	Sensor* _sensor;

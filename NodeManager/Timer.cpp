@@ -17,9 +17,8 @@
 * version 2 as published by the Free Software Foundation.
 */
 
-
 /******************************************
-	Timer
+Timer: helper class to keep track of the elapsed time
 */
 
 #include "Timer.h"

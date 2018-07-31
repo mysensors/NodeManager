@@ -222,7 +222,56 @@ You can interact with each class provided by NodeManager through a set of API fu
 	NodeManager(int sensorcount = 0);
 	// [10] send the same message multiple times (default: 1)
 	void setRetries(int value);
-	int getRetries();
+	// [21] set this to true if you want destination node to send ack back to this node (default: false)
+	void setAck(bool value);
+	bool getAck();
+	// Request the controller's configuration on startup (default: true)
+	void setGetControllerConfig(bool value);
+	// [22] Manually set isMetric setting
+	void setIsMetric(bool value);
+	bool getIsMetric();
+	// Convert a temperature from celsius to fahrenheit depending on how isMetric is set
+	float celsiusToFahrenheit(float temperature);
+	// return true if sleep or wait is configured and hence this is a sleeping node
+	bool isSleepingNode();
+	// [1] Send a hello message back to the controller
+	void hello();
+	// [6] reboot the board
+	void reboot();
+	// return vcc in V
+	float getVcc();
+    // [36] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. On sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
+    void setReportIntervalSeconds(int value);
+	int getReportIntervalSeconds();
+    // [37] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. On sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
+    void setReportIntervalMinutes(int value);
+    // [38] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. On sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
+    void setReportIntervalHours(int value);
+    // [39] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. On sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
+    void setReportIntervalDays(int value);
+	// [30] if set and when the board is battery powered, sleep() is always called instead of wait() (default: true)
+	void setSleepOrWait(bool value);
+	// sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 
+	void sleepOrWait(long value);
+	// [31] set which pin is connected to RST of the board to reboot the board when requested. If not set the software reboot is used instead (default: -1)
+	void setRebootPin(int value);
+	// [32] turn the ADC off so to save 0.2 mA
+	void setADCOff();
+	// send a message by providing the source child, type of the message and value
+	void sendMessage(int child_id, int type, int value);
+	void sendMessage(int child_id, int type, float value, int precision);
+	void sendMessage(int child_id, int type, double value, int precision);
+	void sendMessage(int child_id, int type, const char* value);
+	// register a sensor
+	void registerSensor(Sensor* sensor);
+	// return the next-available child id
+	int getAvailableChildId(int child_id = -255);
+	// list containing all the registered sensors
+	List<Sensor*> sensors;
+	// return the Child object of the given child_id
+	Child* getChild(int child_id);
+	// return the sensor object of the given child_id
+	Sensor* getSensorWithChild(int child_id);
 #if NODEMANAGER_SLEEP == ON
 	// [3] set the duration (in seconds) of a sleep cycle
 	void setSleepSeconds(int value);
@@ -247,33 +296,21 @@ You can interact with each class provided by NodeManager through a set of API fu
 	void setInterrupt(int pin, int mode, int initial = -1);
 	// [28] ignore two consecutive interrupts if happening within this timeframe in milliseconds (default: 100)
 	void setInterruptDebounce(long value);
+	// return the pin from which the last interrupt came
+	int getLastInterruptPin();
+	// return the value of the pin from which the last interrupt came
+	int getLastInterruptValue();
 #endif
-	// register a sensor
-	void registerSensor(Sensor* sensor);
-	// to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
 #if NODEMANAGER_POWER_MANAGER == ON
+	// configure a PowerManager common to all the sensors
+	void setPowerManager(PowerManager& powerManager);
+	// to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
 	void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
 	// [24] manually turn the power on
 	void powerOn();
 	// [25] manually turn the power off
 	void powerOff();
 #endif
-	// [21] set this to true if you want destination node to send ack back to this node (default: false)
-	void setAck(bool value);
-	bool getAck();
-	// Request the controller's configuration on startup (default: true)
-	void setGetControllerConfig(bool value);
-	// [22] Manually set isMetric setting
-	void setIsMetric(bool value);
-	bool getIsMetric();
-	// Convert a temperature from celsius to fahrenheit depending on how isMetric is set
-	float celsiusToFahrenheit(float temperature);
-	// return true if sleep or wait is configured and hence this is a sleeping node
-	bool isSleepingNode();
-	// [1] Send a hello message back to the controller
-	void hello();
-	// [6] reboot the board
-	void reboot();
 #if NODEMANAGER_EEPROM == ON
 	// [7] clear the EEPROM
 	void clearEeprom();
@@ -284,33 +321,6 @@ You can interact with each class provided by NodeManager through a set of API fu
 	// [40] if set save the sleep settings in memory, also when changed remotely (default: false)
 	void setSaveSleepSettings(bool value);
 #endif
-	// return vcc in V
-	float getVcc();
-#if NODEMANAGER_INTERRUPTS == ON
-	// setup the configured interrupt pins
-	void setupInterrupts();
-	// return the pin from which the last interrupt came
-	int getLastInterruptPin();
-	// return the value of the pin from which the last interrupt came
-	int getLastInterruptValue();
-#endif
-    // [36] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. On sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
-    void setReportIntervalSeconds(int value);
-	int getReportIntervalSeconds();
-    // [37] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. On sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
-    void setReportIntervalMinutes(int value);
-    // [38] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. On sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
-    void setReportIntervalHours(int value);
-    // [39] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. On sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
-    void setReportIntervalDays(int value);
-	// [30] if set and when the board is battery powered, sleep() is always called instead of wait() (default: true)
-	void setSleepOrWait(bool value);
-	// sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 
-	void sleepOrWait(long value);
-	// [31] set which pin is connected to RST of the board to reboot the board when requested. If not set the software reboot is used instead (default: -1)
-	void setRebootPin(int value);
-	// [32] turn the ADC off so to save 0.2 mA
-	void setADCOff();
 #if NODEMANAGER_TIME == ON
 	// [41] synchronize the local time with the controller
 	void syncTime();
@@ -327,29 +337,6 @@ You can interact with each class provided by NodeManager through a set of API fu
 	// receiveTime() callback
 	void receiveTime(unsigned long ts);
 #endif
-#if NODEMANAGER_INTERRUPTS == ON
-	// handle interrupts
-	static void _onInterrupt_1();
-	static void _onInterrupt_2();
-	static void _saveInterrupt(int pin);
-#endif
-	// send a message by providing the source child, type of the message and value
-	void sendMessage(int child_id, int type, int value);
-	void sendMessage(int child_id, int type, float value, int precision);
-	void sendMessage(int child_id, int type, double value, int precision);
-	void sendMessage(int child_id, int type, const char* value);
-#if NODEMANAGER_POWER_MANAGER == ON
-	// configure a PowerManager common to all the sensors
-	void setPowerManager(PowerManager& powerManager);
-#endif
-	// return the next-available child id
-	int getAvailableChildId(int child_id = -255);
-	// list containing all the registered sensors
-	List<Sensor*> sensors;
-	// return the Child object of the given child_id
-	Child* getChild(int child_id);
-	// return the sensor object of the given child_id
-	Sensor* getSensorWithChild(int child_id);
 #if NODEMANAGER_SD == ON
 	// SD card variables
 	Sd2Card sd_card;
@@ -376,27 +363,10 @@ The following methods are available for all the sensors:
 	const char* getName();
 	// [1] where the sensor is attached to (default: not set)
 	void setPin(int value);
-	int getPin();
 	// [5] For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)
 	void setSamples(int value);
 	// [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
 	void setSamplesInterval(int value);
-#if NODEMANAGER_POWER_MANAGER == ON
-	// to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-	void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
-	// [13] manually turn the power on
-	void powerOn();
-	// [14] manually turn the power off
-	void powerOff();
-#endif
-	// [24] Set the way the timer used for reporting to the gateway should operate. It can be either TIME_INTERVAL (e.g. report every X seconds with the amount of time set with setReportTimerValue()), IMMEDIATELY (e.g. report at every cycle, useful for sensors like actuators which should report as soon as the value has changed), DO_NOT_REPORT (e.g. never report, useful for when there is no need to report, like a Display) and when NODEMANAGER_TIME is ON, EVERY_MINUTE/EVERY_HOUR/EVERY_DAY (e.g. to report the value set in the previous timeframe, useful for sensors reporting an accumulated value linked to a timeframe at regular intervals), AT_MINUTE/AT_HOUR/AT_DAY (e.g. report at a given minute/hour/day, useful if the measure is expected at a specified time, set with setReportTimerValue())
-	void setReportTimerMode(timer_mode value);
-	// [25] Set the value for the reporting timer's mode which has been set with setReportTimerMode()
-	void setReportTimerValue(int value);
-	// [26] Set the way the timer used for taking measures should operate. Takes the same parameters as setReportTimerMode(). If not set explicitly, will be set as the reporting timer
-	void setMeasureTimerMode(timer_mode value);
-	// [27] Set the value for the reporting timer's mode which has been set with setReportTimerMode() If not set explicitely, will be set with the same value as the reporting timer
-	void setMeasureTimerValue(int value);
     // [17] After how many seconds the sensor will report back its measure (default: 10 minutes)
     void setReportIntervalSeconds(int value);
     // [16] After how many minutes the sensor will report back its measure (default: 10 minutes)
@@ -405,6 +375,22 @@ The following methods are available for all the sensors:
     void setReportIntervalHours(int value);
     // [20] After how many days the sensor will report back its measure (default: 10 minutes)
     void setReportIntervalDays(int value);
+	// [24] Set the way the timer used for reporting to the gateway should operate. It can be either TIME_INTERVAL (e.g. report every X seconds with the amount of time set with setReportTimerValue()), IMMEDIATELY (e.g. report at every cycle, useful for sensors like actuators which should report as soon as the value has changed), DO_NOT_REPORT (e.g. never report, useful for when there is no need to report, like a Display) and when NODEMANAGER_TIME is ON, EVERY_MINUTE/EVERY_HOUR/EVERY_DAY (e.g. to report the value set in the previous timeframe, useful for sensors reporting an accumulated value linked to a timeframe at regular intervals), AT_MINUTE/AT_HOUR/AT_DAY (e.g. report at a given minute/hour/day, useful if the measure is expected at a specified time, set with setReportTimerValue())
+	void setReportTimerMode(timer_mode value);
+	// [25] Set the value for the reporting timer's mode which has been set with setReportTimerMode()
+	void setReportTimerValue(int value);
+	// [26] Set the way the timer used for taking measures should operate. Takes the same parameters as setReportTimerMode(). If not set explicitly, will be set as the reporting timer
+	void setMeasureTimerMode(timer_mode value);
+	// [27] Set the value for the reporting timer's mode which has been set with setReportTimerMode() If not set explicitely, will be set with the same value as the reporting timer
+	void setMeasureTimerValue(int value);
+	// list of configured child
+	List<Child*> children;
+	// return the child object based on the provided child_id
+	Child* getChild(int child_id);
+	// register a child
+	void registerChild(Child* child);
+	// reference to the NodeManager object
+	NodeManager* _node;
 #if NODEMANAGER_INTERRUPTS == ON
 	// return the pin the interrupt is attached to
 	int getInterruptPin();
@@ -420,6 +406,12 @@ The following methods are available for all the sensors:
 #if NODEMANAGER_POWER_MANAGER == ON
 	// set a previously configured PowerManager to the sensor so to powering it up with custom pins
 	void setPowerManager(PowerManager& powerManager);
+	// to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
+	void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
+	// [13] manually turn the power on
+	void powerOn();
+	// [14] manually turn the power off
+	void powerOff();
 #endif
 #if NODEMANAGER_HOOKING == ON
 	// set a custom hook function to be called when the sensor executes its setup() function
@@ -433,23 +425,17 @@ The following methods are available for all the sensors:
 	// set a custom hook function to be called when the sensor executes its receive() function
 	void setReceiveHook(void (*function)(Sensor* sensor, MyMessage* message));
 #endif
-	// list of configured child
-	List<Child*> children;
-#if NODEMANAGER_INTERRUPTS == ON
-	bool interrupt();
-#endif
-	Child* getChild(int child_id);
-	// register a child
-	void registerChild(Child* child);
-	NodeManager* _node;
 	// define what to do at each stage of the sketch
 	void presentation();
 	void setup();
 	void loop(MyMessage* message);
+#if NODEMANAGER_INTERRUPTS == ON
+	bool interrupt();
+#endif
 #if NODEMANAGER_RECEIVE == ON
 	void receive(MyMessage* message);
 #endif
-	// abstract functions, subclasses need to implement
+	// abstract functions, subclasses may implement
 	virtual void onSetup();
 	virtual void onLoop(Child* child);
 	virtual void onReceive(MyMessage* message);
@@ -478,6 +464,12 @@ The following methods are available for all the child:
 	// set sensor description
 	void setDescription(const char* value);
 	const char* getDescription();
+	// send the current value to the gateway
+	virtual void sendValue(bool force);
+	// print the current value on a LCD display
+	virtual void print(Print& device);
+	// reset all the counters
+	virtual void reset();
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	// force to send an update after the configured number of minutes
 	void setForceUpdateTimerValue(int value);
@@ -488,12 +480,6 @@ The following methods are available for all the child:
 	// do not report values if too close to the previous one (default: 0)
 	void setValueDelta(float value);
 #endif
-	// send the current value to the gateway
-	virtual void sendValue(bool force);
-	// print the current value on a LCD display
-	virtual void print(Print& device);
-	// reset all the counters
-	virtual void reset();
 ~~~
 
 ### Built-in sensors API

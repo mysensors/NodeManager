@@ -19,8 +19,8 @@
 #ifndef Constants_h
 #define Constants_h
 
-/***********************************
-Constants
+/******************************************
+Constants: define all the constants used by NodeManager
 */
 
 // define NodeManager version

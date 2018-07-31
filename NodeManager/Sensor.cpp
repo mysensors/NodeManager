@@ -17,8 +17,8 @@
 * version 2 as published by the Free Software Foundation.
 */
 
-/*
-Sensor class
+/******************************************
+Sensor: provide functionalities common to all the sensors
 */
 
 #include "Sensor.h"
@@ -44,9 +44,6 @@ const char* Sensor::getName() {
 // setter/getter
 void Sensor::setPin(int value) {
 	_pin = value;
-}
-int Sensor::getPin() {
-	return _pin;
 }
 void Sensor::setSamples(int value) {
 	_samples = value;

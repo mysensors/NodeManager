@@ -17,9 +17,8 @@
 * version 2 as published by the Free Software Foundation.
 */
 
-
 /******************************************
-	ConfigurationRequest
+ConfigurationRequest: data structure for OTA configuration requests
 */
 
 #include "ConfigurationRequest.h"

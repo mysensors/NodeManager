@@ -17,8 +17,8 @@
 * version 2 as published by the Free Software Foundation.
 */
 
-/***************************************
-PowerManager
+/******************************************
+PowerManager: helper class to power sensors on-demand through the board's pins
 */
 
 #include "PowerManager.h"
