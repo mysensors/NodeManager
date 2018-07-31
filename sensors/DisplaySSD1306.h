@@ -30,7 +30,7 @@
 
 class DisplaySSD1306: public Display {
 protected:
-	SSD1306AsciiAvrI2c *_oled;
+	SSD1306AsciiAvrI2c* _oled;
 	const DevType* _dev = &Adafruit128x64;
 	uint8_t _i2caddress = 0x3c;
 	int _fontsize = 1;
@@ -119,6 +119,9 @@ public:
 	void setCursor(int col,int row) {
 		_oled->setCursor(col,row);
 	};
+	SSD1306AsciiAvrI2c* getDisplay() {
+		return _oled;
+	};
 	
 	// define what to do during setup
 	void onSetup() {
@@ -126,7 +129,7 @@ public:
 		_oled->begin(_dev, _i2caddress);
 		_oled->setFont(_font);
 		if (_contrast > -1) _oled->setContrast(_contrast);
-		clear();
+		_oled->clear();
 	};
 	
 #if NODEMANAGER_OTA_CONFIGURATION == ON

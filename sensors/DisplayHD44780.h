@@ -72,6 +72,11 @@ public:
 		_lcd->setCursor(col,row);
 	};
 	
+	// return the display object
+	LiquidCrystal_I2C* getDisplay() {
+		return _lcd;
+	}
+	
 	// define what to do during setup
 	void onSetup() {
 		_lcd = new LiquidCrystal_I2C(_i2caddress, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);

@@ -719,6 +719,22 @@ Each sensor class may expose additional methods.
     void setHeaderFontSize(int fontsize);
     // [107] Invert display (black text on color background; use invert=false to revert)
     void invertDisplay(bool invert = true);
+	// set a static caption text on header of the display
+	void setCaption(const char* value);
+	// print a static caption on top of the screen
+	void printCaption(const char* value);
+	// print the given string
+	void print(const char* value);
+	// print the given string and goes to the next line
+	void println(const char* value);
+	// print the value of the given child
+	void printChild(Child* child);
+	// clear the display
+	void clear();
+	// set the cursor to the given position
+	void setCursor(int col,int row);
+	// return the display object
+	SSD1306AsciiAvrI2c* getDisplay();
 ~~~
 
 * SensorChirp
@@ -739,6 +755,22 @@ Each sensor class may expose additional methods.
     void setI2CAddress(uint8_t i2caddress);
     // set the backlight (default: HIGH)
     void setBacklight(uint8_t value);
+	// set a static caption text on header of the display
+	void setCaption(const char* value);
+	// print a static caption on top of the screen
+	void printCaption(const char* value);
+	// print the given string
+	void print(const char* value);
+	// print the given string and goes to the next line
+	void println(const char* value);
+	// print the value of the given child
+	void printChild(Child* child);
+	// clear the display
+	void clear();
+	// set the cursor to the given position
+	void setCursor(int col,int row);
+	// return the display object
+	LiquidCrystal_I2C* getDisplay();
 ~~~
 
 * SensorTTP
