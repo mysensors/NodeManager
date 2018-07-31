@@ -316,6 +316,8 @@ You can interact with each class provided by NodeManager through a set of API fu
 	void syncTime();
 	// [42] returns the current system time
 	long getTime();
+	// [43] set the hour offset for when syncronizing the time (default: 0)
+	void setTimezone(int value);
 	// receiveTime() callback
 	void receiveTime(unsigned long ts);
 #endif

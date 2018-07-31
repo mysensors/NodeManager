@@ -125,6 +125,8 @@ public:
 	void syncTime();
 	// [42] returns the current system time
 	long getTime();
+	// [43] set the hour offset for when syncronizing the time (default: 0)
+	void setTimezone(int value);
 	// receiveTime() callback
 	void receiveTime(unsigned long ts);
 #endif
@@ -208,6 +210,7 @@ private:
 	bool _time_is_valid = false;
 	long _remainder_sleep_time = -1;
 	long _time_last_sync;
+	int _timezone = 0;
 #endif
 };
 

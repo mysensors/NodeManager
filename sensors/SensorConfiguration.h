@@ -82,6 +82,7 @@ public:
 			case 39: _node->setReportIntervalDays(request.getValueInt()); break;
 #if NODEMANAGER_TIME == ON
 			case 41: _node->syncTime(); break;
+			case 33: _node->setTimezone(request.getValueInt()); break;
 			case 42: _node->sendMessage(children.get(1)->getChildId(),V_CUSTOM,(int)_node->getTime()); return;
 #endif
 			default: return; 

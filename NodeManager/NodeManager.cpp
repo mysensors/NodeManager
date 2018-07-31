@@ -262,16 +262,16 @@ void NodeManager::loop() {
 		powerOff();
 #endif
 #if NODEMANAGER_SERIAL_INPUT == ON
-	// read a string from the serial input. Timeout is 1000 millis and can be customized with Serial.setTimeout()
-	debug_verbose(PSTR(LOG_LOOP "INPUT...\n"));
-	String input = MY_SERIALDEVICE.readString();
-	if (input.length() != 0) {
-		debug_verbose(PSTR(LOG_LOOP "INPUT v=%s\n"),const_cast<char*>(input.c_str()));
-		// parse the message
-		_message.clear();
-		bool ok = protocolParse(_message,const_cast<char*>(input.c_str()));
-		if (ok) receive(_message);
-	}
+		// read a string from the serial input. Timeout is 1000 millis and can be customized with Serial.setTimeout()
+		debug_verbose(PSTR(LOG_LOOP "INPUT...\n"));
+		String input = MY_SERIALDEVICE.readString();
+		if (input.length() != 0) {
+			debug_verbose(PSTR(LOG_LOOP "INPUT v=%s\n"),const_cast<char*>(input.c_str()));
+			// parse the message
+			_message.clear();
+			bool ok = protocolParse(_message,const_cast<char*>(input.c_str()));
+			if (ok) receive(_message);
+		}
 #endif
 #if NODEMANAGER_SLEEP == ON
 		// continue/start sleeping as requested
@@ -303,6 +303,8 @@ void NodeManager::loop() {
 #if NODEMANAGER_TIME == ON
 	// receive the time from the controller and save it
 	void NodeManager::receiveTime(unsigned long ts) {
+		// apply time adjustment for the configured timezone
+		ts = ts + (long)_timezone*60*60;
 		debug(PSTR(LOG_TIME "OK ts=%d\n"),ts);
 		// time is now valid
 		_time_is_valid = true;
@@ -603,6 +605,11 @@ void NodeManager::loop() {
 	// returns the current system time
 	long NodeManager::getTime() {
 		return now();
+	}
+	
+	// set the hour offset for when syncronizing the time
+	void NodeManager::setTimezone(int value) {
+		_timezone = value;
 	}
 #endif
 
