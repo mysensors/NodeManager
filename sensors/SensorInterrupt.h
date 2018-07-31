@@ -33,10 +33,10 @@ protected:
 #endif
 
 public:
-	SensorInterrupt(NodeManager& node_manager, int pin, int child_id = -255): Sensor(node_manager, pin) {
+	SensorInterrupt(int pin, int child_id = -255): Sensor(pin) {
 		_name = "INTERRUPT";
 		children.allocateBlocks(1);
-		new ChildInt(this,_node->getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
+		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
 		setPinInitialValue(HIGH);
 		setInterruptMode(CHANGE);
 	};
@@ -79,7 +79,7 @@ public:
 #endif
 		Child* child = children.get(1);
 		// read the value of the pin
-		int value = _node->getLastInterruptValue();
+		int value = nodeManager.getLastInterruptValue();
 		// invert the value if needed
 		if (_invert_value_to_report) value = !value;
 #if NODEMANAGER_TIME == ON

@@ -27,10 +27,10 @@
 
 class SensorRainGauge: public SensorPulseMeter {
 public:
-	SensorRainGauge(NodeManager& node_manager, int pin, int child_id = -255): SensorPulseMeter(node_manager, pin, child_id) {
+	SensorRainGauge(int pin, int child_id = -255): SensorPulseMeter(pin, child_id) {
 		_name = "RAIN_GAUGE";
 		children.allocateBlocks(1);
-		new ChildFloat(this,_node->getAvailableChildId(child_id),S_RAIN,V_RAIN,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_RAIN,V_RAIN,_name);
 		setPulseFactor(9.09);
 	};
 };

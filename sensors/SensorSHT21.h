@@ -28,11 +28,11 @@ SensorSHT21: temperature and humidity sensor
 
 class SensorSHT21: public Sensor {
 public:
-	SensorSHT21(NodeManager& node_manager, int child_id = -255): Sensor(node_manager) {
+	SensorSHT21(int child_id = -255): Sensor(-1) {
 		_name = "SHT21";
 		children.allocateBlocks(2);
-		new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-		new ChildFloat(this,_node->getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
 	};
 	
 	// what to do during setup
@@ -48,7 +48,7 @@ public:
 			// read the temperature
 			float temperature = SHT2x.GetTemperature();
 			// convert it
-			temperature = _node->celsiusToFahrenheit(temperature);
+			temperature = nodeManager.celsiusToFahrenheit(temperature);
 			// store the value
 			((ChildFloat*)child)->setValue(temperature);
 		}

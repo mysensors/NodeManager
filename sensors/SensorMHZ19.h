@@ -32,12 +32,12 @@ protected:
 	int _rx_pin = 7;
 	
 public:
-	SensorMHZ19(NodeManager& node_manager, int rxpin, int txpin, int child_id = -255): Sensor(node_manager, rxpin) {
+	SensorMHZ19(int rxpin, int txpin, int child_id = -255): Sensor(rxpin) {
 		_name = "MHZ19";
 		_rx_pin = rxpin;
 		_tx_pin = txpin;
 		children.allocateBlocks(1);
-		new ChildInt(this,_node->getAvailableChildId(child_id),S_AIR_QUALITY,V_LEVEL,_name);
+		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_AIR_QUALITY,V_LEVEL,_name);
 	};
 
 	// define what to do during setup

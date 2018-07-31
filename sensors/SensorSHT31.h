@@ -31,11 +31,11 @@ protected:
 	Adafruit_SHT31* _sht31;
 	
 public:
-	SensorSHT31(NodeManager& node_manager, int child_id = -255): Sensor(node_manager) {
+	SensorSHT31(int child_id = -255): Sensor(-1) {
 		_name = "SHT31";
 		children.allocateBlocks(2);
-		new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-		new ChildFloat(this,_node->getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
 	};
 
 	// define what to do during setup
@@ -52,7 +52,7 @@ public:
 			// read the temperature
 			float temperature = _sht31->readTemperature();
 			// convert it
-			temperature = _node->celsiusToFahrenheit(temperature);
+			temperature = nodeManager.celsiusToFahrenheit(temperature);
 			// store the value
 			((ChildFloat*)child)->setValue(temperature);
 		}

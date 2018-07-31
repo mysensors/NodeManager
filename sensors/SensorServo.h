@@ -31,10 +31,10 @@ protected:
 	int _value;
 	
 public:
-	SensorServo(NodeManager& node_manager, int pin, int child_id = -255): Sensor(node_manager, pin) {
+	SensorServo(int pin, int child_id = -255): Sensor(pin) {
 		_name = "SERVO";
 		children.allocateBlocks(1);
-		new ChildInt(this, _node->getAvailableChildId(child_id), S_DIMMER, V_PERCENTAGE ,_name);
+		new ChildInt(this,nodeManager.getAvailableChildId(child_id), S_DIMMER, V_PERCENTAGE ,_name);
 	};
 	
 	// set the servo to the given percentage

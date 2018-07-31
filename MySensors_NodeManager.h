@@ -80,11 +80,20 @@ Include NodeManager core code
 
 // NodeManager class
 #include "NodeManager/NodeManager.cpp"
+// create the global variable nodeManager that can be called from within the sketch
+extern NodeManager nodeManager;
+NodeManager nodeManager;
 // Sensor class
 #include "NodeManager/Sensor.cpp"
 // Child class
 #include "NodeManager/Child.cpp"
 // Timer class
 #include "NodeManager/Timer.cpp"
+
+#if NODEMANAGER_OTA_CONFIGURATION == ON
+// include SensorConfiguration if needed
+#include <sensors/SensorConfiguration.h>
+SensorConfiguration configuration;
+#endif
 
 #endif

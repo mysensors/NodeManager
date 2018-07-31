@@ -34,7 +34,7 @@ protected:
 	uint8_t _i2caddress = 0x38;
 	int _column = 0;
 public:
-	DisplayHD44780(NodeManager& node_manager, int child_id = -255): Display(node_manager, child_id) {
+	DisplayHD44780(int child_id = -255): Display(child_id) {
 		_name = "HD44780";
 		children.get(1)->setDescription(_name);
 	};

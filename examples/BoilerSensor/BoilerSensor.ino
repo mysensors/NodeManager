@@ -55,8 +55,8 @@ and send a command back if needed.
 
 #define NODEMANAGER_SLEEP ON
 
+// import NodeManager library (a nodeManager object will be then made available)
 #include <MySensors_NodeManager.h>
-NodeManager node;
 
 /***********************************
 * Add your sensors
@@ -64,11 +64,11 @@ NodeManager node;
 
 // Add a battery sensor
 #include <sensors/SensorBattery.h>
-SensorBattery battery(node);
+SensorBattery battery;
 
 // Add a latching relay sensor attached to pin 6 (off) and 7 (on)
 #include <sensors/SensorLatchingRelay2Pins.h>
-SensorLatchingRelay2Pins latching2pins(node,6,7);
+SensorLatchingRelay2Pins latching2pins(6,7);
 
 /***********************************
 * Main Sketch
@@ -82,38 +82,39 @@ void before() {
 */
 
 	// set sleep interval to 5 minutes. Since smart sleep is enabled, the sensor will check in with the controller and pick up any outstanding command, if any
-	node.setSleepMinutes(5);
+	nodeManager.setSleepMinutes(5);
 
 	// set battery minimum and maximum voltage so to calculate an accurate percentage
 	battery.setMinVoltage(1.8);
 	battery.setMaxVoltage(3.2);
 
-	node.before();
+	// call NodeManager before routine
+	nodeManager.before();
 }
 
 // presentation
 void presentation() {
 	// call NodeManager presentation routine
-	node.presentation();
+	nodeManager.presentation();
 }
 
 // setup
 void setup() {
 	// call NodeManager setup routine
-	node.setup();
+	nodeManager.setup();
 }
 
 // loop
 void loop() {
 	// call NodeManager loop routine
-	node.loop();
+	nodeManager.loop();
 }
 
 #if NODEMANAGER_RECEIVE == ON
 // receive
 void receive(const MyMessage &message) {
 	// call NodeManager receive routine
-	node.receive(message);
+	nodeManager.receive(message);
 }
 #endif
 
@@ -121,6 +122,6 @@ void receive(const MyMessage &message) {
 // receiveTime
 void receiveTime(unsigned long ts) {
 	// call NodeManager receiveTime routine
-	node.receiveTime(ts);
+	nodeManager.receiveTime(ts);
 }
 #endif

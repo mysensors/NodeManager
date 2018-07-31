@@ -27,7 +27,7 @@ class NodeManager;
 
 class Timer {
 public:
-	Timer(NodeManager* node_manager);
+	Timer();
 	void setMode(timer_mode mode);
 	timer_mode getMode();
 	void setValue(int value);
@@ -41,7 +41,6 @@ public:
 	// return elapsed time in seconds
 	long getElapsed();
 private:
-	NodeManager* _node;
 	timer_mode _mode = NOT_CONFIGURED;
 	int _value = 0;
 	bool _is_running = false;

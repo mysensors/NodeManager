@@ -35,7 +35,7 @@ protected:
 	bool _first_round = true;
 	
 public:
-	SensorBosch(NodeManager& node_manager, int child_id = -255): Sensor(node_manager) {
+	SensorBosch(int child_id = -255): Sensor(-1) {
 		_name = "BOSCH";
 		// initialize the forecast samples array
 		_forecast_samples = new float[_forecast_samples_count];

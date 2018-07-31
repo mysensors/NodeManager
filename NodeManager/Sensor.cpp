@@ -26,14 +26,13 @@ Sensor: provide functionalities common to all the sensors
 // constructor
 Sensor::Sensor() {  
 }
-Sensor::Sensor(NodeManager& node_manager, int pin) {
-	_node = &node_manager;
+Sensor::Sensor(int pin) {
 	_pin = pin;
 	// initialize the timers
-	_report_timer = new Timer(_node);
-	_measure_timer = new Timer(_node);
+	_report_timer = new Timer();
+	_measure_timer = new Timer();
 	// register the sensor with the node
-	_node->registerSensor(this);
+	nodeManager.registerSensor(this);
 }
 
 // return the name of the sensor
@@ -132,7 +131,7 @@ void Sensor::presentation() {
 	for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
 		Child* child = *itr;
 		debug(PSTR(LOG_PRESENTATION "%s(%d) p=%d t=%d\n"),child->getDescription(),child->getChildId(),child->getPresentation(),child->getType());
-		present(child->getChildId(), child->getPresentation(), child->getDescription(), _node->getAck());
+		present(child->getChildId(), child->getPresentation(), child->getDescription(), nodeManager.getAck());
 	}
 
 }
@@ -142,7 +141,7 @@ void Sensor::setup() {
 	// configure default reporting interval if not already set by the user
 	if (_report_timer->getMode() == NOT_CONFIGURED) {
 		_report_timer->setMode(TIME_INTERVAL);
-		_report_timer->setValue(_node->getReportIntervalSeconds());
+		_report_timer->setValue(nodeManager.getReportIntervalSeconds());
 	}
 	// if the user has not set any custom measurement timer, measure and reporting timer will be the same
 	if (_measure_timer->getMode() == NOT_CONFIGURED) {
@@ -157,7 +156,7 @@ void Sensor::setup() {
 #if NODEMANAGER_INTERRUPTS == ON
 	// for interrupt based sensors, register a callback for the interrupt
 	_interrupt_pin = _pin;
-	_node->setInterrupt(_pin,_interrupt_mode,_initial_value);
+	nodeManager.setInterrupt(_pin,_interrupt_mode,_initial_value);
 #endif
 #if NODEMANAGER_HOOKING == ON
 	// if a hook function is defined, call it
@@ -189,7 +188,7 @@ void Sensor::loop(MyMessage* message) {
 				// we'be been called from loop()
 				else onLoop(child);
 				// wait between samples
-				if (_samples_interval > 0) _node->sleepOrWait(_samples_interval);
+				if (_samples_interval > 0) nodeManager.sleepOrWait(_samples_interval);
 			}
 		}
 #if NODEMANAGER_HOOKING == ON
@@ -226,11 +225,11 @@ void Sensor::loop(MyMessage* message) {
 // receive and handle an interrupt
 bool Sensor::interrupt() {
 	// ignore the interrupt if the value is not matching the one expected
-	if (_interrupt_strict && ((_interrupt_mode == RISING && _node->getLastInterruptValue() != HIGH ) || (_interrupt_mode == FALLING && _node->getLastInterruptValue() != LOW))) return false;
+	if (_interrupt_strict && ((_interrupt_mode == RISING && nodeManager.getLastInterruptValue() != HIGH ) || (_interrupt_mode == FALLING && nodeManager.getLastInterruptValue() != LOW))) return false;
 	// call the sensor's implementation of onInterrupt()
 	onInterrupt();
 	// wait after interrupt if needed
-	if (_wait_after_interrupt > 0) _node->sleepOrWait(_wait_after_interrupt);
+	if (_wait_after_interrupt > 0) nodeManager.sleepOrWait(_wait_after_interrupt);
 #if NODEMANAGER_HOOKING == ON
 	// if a hook function is defined, call it
 	if (_interrupt_hook != 0) _interrupt_hook(this); 

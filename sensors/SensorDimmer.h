@@ -41,11 +41,11 @@ protected:
 	int _reverse = false;
 	
 public:
-	SensorDimmer(NodeManager& node_manager, int pin, int child_id = -255): Sensor(node_manager, pin) {
+	SensorDimmer(int pin, int child_id = -255): Sensor(pin) {
 		_name = "DIMMER";
 		children.allocateBlocks(2);
-		new ChildInt(this,_node->getAvailableChildId(child_id),S_DIMMER,V_STATUS,_name);
-		new ChildInt(this,_node->getAvailableChildId(child_id),S_DIMMER,V_PERCENTAGE,_name);
+		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_DIMMER,V_STATUS,_name);
+		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_DIMMER,V_PERCENTAGE,_name);
 	};
 
 	// [101] set the effect to use for a smooth transition, can be one of SensorDimmer::EASE_LINEAR, SensorDimmer::EASE_INSINE, SensorDimmer::EASE_OUTSINE, SensorDimmer::EASE_INOUTSINE (default: EASE_LINEAR)

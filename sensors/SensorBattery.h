@@ -36,7 +36,7 @@ protected:
 	float _battery_adj_factor = 1.0;
 	
 public:
-	SensorBattery(NodeManager& node_manager, int child_id = BATTERY_CHILD_ID): Sensor(node_manager) {
+	SensorBattery(int child_id = BATTERY_CHILD_ID): Sensor(-1) {
 		_name = "BATTERY";
 		children.allocateBlocks(1);
 		new ChildFloat(this,child_id,S_MULTIMETER,V_VOLTAGE,_name);
@@ -91,7 +91,7 @@ public:
 	void onLoop(Child* child) {
 		// measure the board vcc
 		float volt = 0;
-		if (_battery_internal_vcc || _battery_pin == -1) volt = _node->getVcc();
+		if (_battery_internal_vcc || _battery_pin == -1) volt = nodeManager.getVcc();
 		else volt = analogRead(_battery_pin) * _battery_volts_per_bit;
 		volt = volt * _battery_adj_factor;
 		((ChildFloat*)child)->setValue(volt);

@@ -27,7 +27,7 @@ SensorRelay
 
 class SensorRelay: public SensorDigitalOutput {
 public:
-	SensorRelay(NodeManager& node_manager, int pin, int child_id = -255): SensorDigitalOutput(node_manager, pin, child_id) {
+	SensorRelay(int pin, int child_id = -255): SensorDigitalOutput(pin, child_id) {
 		_name = "RELAY";
 		children.get(1)->setPresentation(S_BINARY);
 		children.get(1)->setType(V_STATUS);

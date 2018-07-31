@@ -27,7 +27,7 @@ SensorConfiguration: allow remote configuration of the board and any configured 
 
 class SensorConfiguration: public Sensor {
 public:
-	SensorConfiguration(NodeManager& node_manager, int child_id = CONFIGURATION_CHILD_ID): Sensor(node_manager) {
+	SensorConfiguration(int child_id = CONFIGURATION_CHILD_ID): Sensor(-1) {
 		_name = "CONFIG";
 		children.allocateBlocks(1);
 		new ChildInt(this,child_id,S_CUSTOM,V_CUSTOM,_name);
@@ -44,52 +44,52 @@ public:
 		// if the message is for the node itself
 		if (child_id == 0) {
 			switch(function) {
-			case 1: _node->hello(); break;
+			case 1: nodeManager.hello(); break;
 #if NODEMANAGER_SLEEP == ON
-			case 3: _node->setSleepSeconds(request.getValueInt()); break;
-			case 4: _node->setSleepMinutes(request.getValueInt()); break;
-			case 5: _node->setSleepHours(request.getValueInt()); break;
-			case 29: _node->setSleepDays(request.getValueInt()); break;
-			case 20: _node->setSleepBetweenSend(request.getValueInt()); break;
-			case 9: _node->wakeup(); break;
+			case 3: nodeManager.setSleepSeconds(request.getValueInt()); break;
+			case 4: nodeManager.setSleepMinutes(request.getValueInt()); break;
+			case 5: nodeManager.setSleepHours(request.getValueInt()); break;
+			case 29: nodeManager.setSleepDays(request.getValueInt()); break;
+			case 20: nodeManager.setSleepBetweenSend(request.getValueInt()); break;
+			case 9: nodeManager.wakeup(); break;
 #endif
 #ifdef CHIP_AVR
-			case 6: _node->reboot(); return;
+			case 6: nodeManager.reboot(); return;
 #endif
 #if NODEMANAGER_EEPROM == ON
-			case 7: _node->clearEeprom(); break;
-			case 27: _node->saveToMemory(0,request.getValueInt()); break;
-			case 40: _node->setSaveSleepSettings(request.getValueInt()); break;
+			case 7: nodeManager.clearEeprom(); break;
+			case 27: nodeManager.saveToMemory(0,request.getValueInt()); break;
+			case 40: nodeManager.setSaveSleepSettings(request.getValueInt()); break;
 #endif
-			case 8: _node->sendMessage(children.get(1)->getChildId(),V_CUSTOM,VERSION); return;
-			case 10: _node->setRetries(request.getValueInt()); break;
+			case 8: nodeManager.sendMessage(children.get(1)->getChildId(),V_CUSTOM,VERSION); return;
+			case 10: nodeManager.setRetries(request.getValueInt()); break;
 #if NODEMANAGER_INTERRUPTS == ON
-			case 19: _node->setSleepInterruptPin(request.getValueInt()); break;
-			case 28: _node->setInterruptDebounce(request.getValueInt()); break;
+			case 19: nodeManager.setSleepInterruptPin(request.getValueInt()); break;
+			case 28: nodeManager.setInterruptDebounce(request.getValueInt()); break;
 #endif
-			case 21: _node->setAck(request.getValueInt()); break;
-			case 22: _node->setIsMetric(request.getValueInt()); break;
+			case 21: nodeManager.setAck(request.getValueInt()); break;
+			case 22: nodeManager.setIsMetric(request.getValueInt()); break;
 #if NODEMANAGER_POWER_MANAGER == ON
-			case 24: _node->powerOn(); break;
-			case 25: _node->powerOff(); break;
+			case 24: nodeManager.powerOn(); break;
+			case 25: nodeManager.powerOff(); break;
 #endif
-			case 30: _node->setSleepOrWait(request.getValueInt()); break;
-			case 31: _node->setRebootPin(request.getValueInt()); break;
-			case 32: _node->setADCOff(); break;
-			case 36: _node->setReportIntervalSeconds(request.getValueInt()); break;
-			case 37: _node->setReportIntervalMinutes(request.getValueInt()); break;
-			case 38: _node->setReportIntervalHours(request.getValueInt()); break;
-			case 39: _node->setReportIntervalDays(request.getValueInt()); break;
+			case 30: nodeManager.setSleepOrWait(request.getValueInt()); break;
+			case 31: nodeManager.setRebootPin(request.getValueInt()); break;
+			case 32: nodeManager.setADCOff(); break;
+			case 36: nodeManager.setReportIntervalSeconds(request.getValueInt()); break;
+			case 37: nodeManager.setReportIntervalMinutes(request.getValueInt()); break;
+			case 38: nodeManager.setReportIntervalHours(request.getValueInt()); break;
+			case 39: nodeManager.setReportIntervalDays(request.getValueInt()); break;
 #if NODEMANAGER_TIME == ON
-			case 41: _node->syncTime(); break;
-			case 33: _node->setTimezone(request.getValueInt()); break;
-			case 42: _node->sendMessage(children.get(1)->getChildId(),V_CUSTOM,(int)_node->getTime()); return;
+			case 41: nodeManager.syncTime(); break;
+			case 33: nodeManager.setTimezone(request.getValueInt()); break;
+			case 42: nodeManager.sendMessage(children.get(1)->getChildId(),V_CUSTOM,(int)nodeManager.getTime()); return;
 #endif
 			default: return; 
 			}
 		} else {
 			// the request is for a sensor, retrieve the sensor the child is belonging to
-			Sensor* sensor = _node->getSensorWithChild(child_id);
+			Sensor* sensor = nodeManager.getSensorWithChild(child_id);
 			if (sensor == nullptr) return;
 			// if the message is for a function common to all the sensors
 			if (request.getFunction() < 100) {
@@ -121,7 +121,7 @@ public:
 			}
 		}
 		// reply echoing back the request
-		_node->sendMessage(children.get(1)->getChildId(),V_CUSTOM,function);
+		nodeManager.sendMessage(children.get(1)->getChildId(),V_CUSTOM,function);
 	};
 };
 #endif

@@ -54,8 +54,8 @@ duration of a sleep cycle, etc.
 #define NODEMANAGER_SLEEP ON
 #define NODEMANAGER_OTA_CONFIGURATION ON
 
+// import NodeManager library (a nodeManager object will be then made available)
 #include <MySensors_NodeManager.h>
-NodeManager node;
 
 /***********************************
 * Add your sensors
@@ -63,15 +63,15 @@ NodeManager node;
 
 // Add a battery sensor
 #include <sensors/SensorBattery.h>
-SensorBattery battery(node);
+SensorBattery battery;
 
 // Add a LDR sensor
 #include <sensors/SensorLDR.h>
-SensorLDR ldr(node,A1);
+SensorLDR ldr(A1);
 
 // Add a thermistor sensor
 #include <sensors/SensorThermistor.h>
-SensorThermistor thermistor(node,A0);
+SensorThermistor thermistor(A0);
 
 /***********************************
 * Main Sketch
@@ -85,36 +85,37 @@ void before() {
 */
 
 	// set reporting interval for all the sensors to 10 minutes
-	node.setReportIntervalMinutes(10);
+	nodeManager.setReportIntervalMinutes(10);
 	// set sleep interval to 10 minutes
-	node.setSleepMinutes(10);
+	nodeManager.setSleepMinutes(10);
 
-	node.before();
+	// call NodeManager before routine
+	nodeManager.before();
 }
 
 // presentation
 void presentation() {
 	// call NodeManager presentation routine
-	node.presentation();
+	nodeManager.presentation();
 }
 
 // setup
 void setup() {
 	// call NodeManager setup routine
-	node.setup();
+	nodeManager.setup();
 }
 
 // loop
 void loop() {
 	// call NodeManager loop routine
-	node.loop();
+	nodeManager.loop();
 }
 
 #if NODEMANAGER_RECEIVE == ON
 // receive
 void receive(const MyMessage &message) {
 	// call NodeManager receive routine
-	node.receive(message);
+	nodeManager.receive(message);
 }
 #endif
 
@@ -122,6 +123,6 @@ void receive(const MyMessage &message) {
 // receiveTime
 void receiveTime(unsigned long ts) {
 	// call NodeManager receiveTime routine
-	node.receiveTime(ts);
+	nodeManager.receiveTime(ts);
 }
 #endif

@@ -31,10 +31,10 @@ protected:
 	VL53L0X *_lox;
 	
 public:
-	SensorVL53L0X(NodeManager& node_manager, int xshut_pin, int child_id = -255): Sensor(node_manager, xshut_pin) {
+	SensorVL53L0X(int xshut_pin, int child_id = -255): Sensor(xshut_pin) {
 		_name = "VL53L0X";
 		children.allocateBlocks(1);
-		new ChildInt(this, _node->getAvailableChildId(child_id), S_DISTANCE, V_DISTANCE,_name);
+		new ChildInt(this,nodeManager.getAvailableChildId(child_id), S_DISTANCE, V_DISTANCE,_name);
 	};
 
 	// define what to do during setup

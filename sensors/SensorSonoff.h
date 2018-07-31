@@ -39,10 +39,10 @@ protected:
 	int _led_off = 1;
 	
 public:
-	SensorSonoff(NodeManager& node_manager, int child_id = -255): Sensor(node_manager) {
+	SensorSonoff(int child_id = -255): Sensor(-1) {
 		_name = "SONOFF";
 		children.allocateBlocks(1);
-		new ChildInt(this,_node->getAvailableChildId(child_id),S_BINARY,V_STATUS,_name);
+		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_BINARY,V_STATUS,_name);
 	};
 
 	// [101] set the button's pin (default: 0)

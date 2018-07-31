@@ -32,11 +32,11 @@ protected:
 	int _sensor_type;
 	
 public:
-	SensorMLX90614(NodeManager& node_manager, int child_id = -255): Sensor(node_manager) {
+	SensorMLX90614(int child_id = -255): Sensor(-1) {
 		_name = "MLX90614";
 		children.allocateBlocks(2);
-		new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-		new ChildFloat(this,_node->getAvailableChildId(child_id+1),S_TEMP,V_TEMP,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id+1),S_TEMP,V_TEMP,_name);
 	};
 
 	// define what to do during setup
@@ -53,7 +53,7 @@ public:
 		if (children.get(1) == child) temperature = _mlx->readAmbientTempC();
 		else temperature = _mlx->readObjectTempC();
 		// convert it
-		temperature = _node->celsiusToFahrenheit(temperature);
+		temperature = nodeManager.celsiusToFahrenheit(temperature);
 		((ChildFloat*)child)->setValue(temperature);
 	};
 };

@@ -38,7 +38,7 @@ Child::Child(Sensor* sensor, int child_id, int presentation, int type, const cha
 	_sensor->registerChild(this);
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	// initialize the timer for forcing updates to the gateway after a given timeframe
-	_force_update_timer = new Timer(_sensor->_node);
+	_force_update_timer = new Timer();
 #endif
 }
 
@@ -142,7 +142,7 @@ void ChildInt::sendValue(bool force) {
 	_last_value = _value;
 #endif
 	// send the value to the gateway
-	_sensor->_node->sendMessage(_child_id,_type,_value);
+	nodeManager.sendMessage(_child_id,_type,_value);
 	reset();
 }
 
@@ -209,7 +209,7 @@ void ChildFloat::sendValue(bool force) {
 	_last_value = _value;
 #endif
 	// send the value to the gateway
-	_sensor->_node->sendMessage(_child_id,_type,_value,_float_precision);
+	nodeManager.sendMessage(_child_id,_type,_value,_float_precision);
 }
 
 // Print the child's value (variable type depending on the child class) to the given output
@@ -276,7 +276,7 @@ void ChildDouble::sendValue(bool force) {
 	_last_value = _value;
 #endif
 	// send the value to the gateway
-	_sensor->_node->sendMessage(_child_id,_type,_value,_float_precision);
+	nodeManager.sendMessage(_child_id,_type,_value,_float_precision);
 }
 
 // Print the child's value (variable type depending on the child class) to the given output
@@ -326,7 +326,7 @@ void ChildString::sendValue(bool force) {
 	_last_value = _value;
 #endif
 	// send the value to the gateway
-	_sensor->_node->sendMessage(_child_id,_type,_value);
+	nodeManager.sendMessage(_child_id,_type,_value);
 }
 
 // Print the child's value (variable type depending on the child class) to the given output

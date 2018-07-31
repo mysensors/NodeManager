@@ -35,13 +35,13 @@ protected:
 	bool _slp = true;
 	
 public:
-	SensorSDS011(NodeManager& node_manager, int rxpin, int txpin, int child_id = -255): Sensor(node_manager, rxpin){
+	SensorSDS011(int rxpin, int txpin, int child_id = -255): Sensor(rxpin){
 		_name = "SDS011";
 		_rx_pin = rxpin;
 		_tx_pin = txpin;
 		children.allocateBlocks(2);
-		new ChildFloat(this, _node->getAvailableChildId(child_id), S_AIR_QUALITY, V_LEVEL, _name);
-		new ChildFloat(this, _node->getAvailableChildId(child_id+1), S_AIR_QUALITY, V_LEVEL, _name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id), S_AIR_QUALITY, V_LEVEL, _name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id+1), S_AIR_QUALITY, V_LEVEL, _name);
 	};
 
 	// Sleep sensor during measurment aka stop fan.

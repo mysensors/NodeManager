@@ -31,10 +31,10 @@ protected:
 	Adafruit_MCP9808* _mcp;
 	
 public:
-	SensorMCP9808(NodeManager& node_manager, int child_id = -255): Sensor(node_manager) {
+	SensorMCP9808(int child_id = -255): Sensor(-1) {
 		_name = "MCP9808";
 		children.allocateBlocks(1);
-		new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
 	};
 
 	// define what to do during setup
@@ -46,7 +46,7 @@ public:
 	void onLoop(Child* child) {
 		float temperature = _mcp->readTempC();
 		// convert it
-		temperature = _node->celsiusToFahrenheit(temperature);
+		temperature = nodeManager.celsiusToFahrenheit(temperature);
 		// store the value
 		((ChildFloat*)child)->setValue(temperature);
 	};

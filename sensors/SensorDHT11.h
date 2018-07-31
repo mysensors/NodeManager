@@ -27,7 +27,7 @@ SensorDHT11
 
 class SensorDHT11: public SensorDHT {
 public:
-	SensorDHT11(NodeManager& node_manager, int pin, int child_id = -255): SensorDHT(node_manager, pin, child_id) {
+	SensorDHT11(int pin, int child_id = -255): SensorDHT(pin, child_id) {
 		_name = "DHT11";
 		_dht_type = DHT::DHT11;
 		children.get(1)->setDescription(_name);

@@ -32,10 +32,10 @@ protected:
 	float _offset = 0;
 	
 public:
-	SensorThermistor(NodeManager& node_manager, int pin, int child_id = -255): Sensor(node_manager, pin) {
+	SensorThermistor(int pin, int child_id = -255): Sensor(pin) {
 		_name = "THERMISTOR";
 		children.allocateBlocks(1);
-		new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
 	};
 
 	// [101] resistance at 25 degrees C (default: 10000)
@@ -79,7 +79,7 @@ public:
 		temperature += 1.0 / (_nominal_temperature + 273.15); // + (1/To)
 		temperature = 1.0 / temperature;                 // Invert
 		temperature -= 273.15;                         // convert to C
-		temperature = _node->celsiusToFahrenheit(temperature);
+		temperature = nodeManager.celsiusToFahrenheit(temperature);
 		// store the value
 		((ChildFloat*)child)->setValue(temperature);
 	};

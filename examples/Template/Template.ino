@@ -99,7 +99,7 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 //#define MY_DISABLE_RAM_ROUTING_TABLE_FEATURE
 //#define MY_SIGNAL_REPORT_ENABLED
 
-// Optimizations when running on 2032 Coin Cell. Also set node.setSleepBetweenSend(500) and run the board at 1Mhz
+// Optimizations when running on 2032 Coin Cell. Also set nodeManager.setSleepBetweenSend(500) and run the board at 1Mhz
 //#define MY_TRANSPORT_UPLINK_CHECK_DISABLED
 //#define MY_TRANSPORT_WAIT_READY_MS  5000
 //#define MY_SLEEP_TRANSPORT_RECONNECT_TIMEOUT_MS 2000
@@ -172,8 +172,8 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 #define NODEMANAGER_OTA_CONFIGURATION OFF
 #define NODEMANAGER_SERIAL_INPUT OFF
 
+// import NodeManager library (a nodeManager object will be then made available)
 #include <MySensors_NodeManager.h>
-NodeManager node;
 
 /***********************************
  * Add your sensors
@@ -182,166 +182,166 @@ NodeManager node;
 //PowerManager power(5,6);
  
 //#include <sensors/SensorBattery.h>
-//SensorBattery battery(node);
+//SensorBattery battery;
 
 //#include <sensors/SensorConfiguration.h>
-//SensorConfiguration configuration(node);
+//SensorConfiguration configuration;
 
 //#include <sensors/SensorSignal.h>
-//SensorSignal signal(node);
+//SensorSignal signal;
 
 //#include <sensors/SensorAnalogInput.h>
-//SensorAnalogInput analog(node,A0);
+//SensorAnalogInput analog(A0);
 
 //#include <sensors/SensorLDR.h>
-//SensorLDR ldr(node,A0);
+//SensorLDR ldr(A0);
 
 //#include <sensors/SensorRain.h>
-//SensorRain rain(node,A0);
+//SensorRain rain(A0);
 
 //#include <sensors/SensorSoilMoisture.h>
-//SensorSoilMoisture soil(node,A0);
+//SensorSoilMoisture soil(A0);
 
 //#include <sensors/SensorThermistor.h>
-//SensorThermistor thermistor(node,A0);
+//SensorThermistor thermistor(A0);
 
 //#include <sensors/SensorML8511.h>
-//SensorML8511 ml8511(node,A0);
+//SensorML8511 ml8511(A0);
 
 //#include <sensors/SensorACS712.h>
-//SensorACS712 acs712(node,A0);
+//SensorACS712 acs712(A0);
 
 //#include <sensors/SensorDigitalInput.h>
-//SensorDigitalInput digitalIn(node,6);
+//SensorDigitalInput digitalIn(6);
 
 //#include <sensors/SensorDigitalOutput.h>
-//SensorDigitalOutput digitalOut(node,6);
+//SensorDigitalOutput digitalOut(6);
 
 //#include <sensors/SensorRelay.h>
-//SensorRelay relay(node,6);
+//SensorRelay relay(6);
 
 //#include <sensors/SensorLatchingRelay1Pin.h>
-//SensorLatchingRelay1Pin latching1pin(node,6);
+//SensorLatchingRelay1Pin latching1pin(6);
 
 //#include <sensors/SensorLatchingRelay2Pins.h>
-//SensorLatchingRelay2Pins latching2pins(node,6,7);
+//SensorLatchingRelay2Pins latching2pins(6,7);
 
 //#include <sensors/SensorDHT11.h>
-//SensorDHT11 dht11(node,6);
+//SensorDHT11 dht11(6);
 
 //#include <sensors/SensorDHT22.h>
-//SensorDHT22 dht22(node,6);
+//SensorDHT22 dht22(6);
 
 //#include <sensors/SensorSHT21.h>
-//SensorSHT21 sht21(node);
+//SensorSHT21 sht21;
 
 //#include <sensors/SensorHTU21D.h>
-//SensorHTU21D htu21(node);
+//SensorHTU21D htu21;
 
 //#include <sensors/SensorInterrupt.h>
-//SensorInterrupt interrupt(node,3);
+//SensorInterrupt interrupt(3);
 
 //#include <sensors/SensorDoor.h>
-//SensorDoor door(node,3);
+//SensorDoor door(3);
 
 //#include <sensors/SensorMotion.h>
-//SensorMotion motion(node,3);
+//SensorMotion motion(3);
 
 //#include <sensors/SensorDs18b20.h>
-//SensorDs18b20 ds18b20(node,6);
+//SensorDs18b20 ds18b20(6);
 
 //#include <sensors/SensorBH1750.h>
-//SensorBH1750 bh1750(node);
+//SensorBH1750 bh1750;
 
 //#include <sensors/SensorMLX90614.h>
-//SensorMLX90614 mlx90614(node);
+//SensorMLX90614 mlx90614;
 
 //#include <sensors/SensorBME280.h>
-//SensorBME280 bme280(node);
+//SensorBME280 bme280;
 
 //#include <sensors/SensorBMP085.h>
-//SensorBMP085 bmp085(node);
+//SensorBMP085 bmp085;
 
 //#include <sensors/SensorBMP180.h>
-//SensorBMP180 bmp180(node);
+//SensorBMP180 bmp180;
 
 //#include <sensors/SensorBMP280.h>
-//SensorBMP280 bmp280(node);
+//SensorBMP280 bmp280;
 
 //#include <sensors/SensorSonoff.h>
-//SensorSonoff sonoff(node);
+//SensorSonoff sonoff;
 
 //#include <sensors/SensorHCSR04.h>
-//SensorHCSR04 hcsr04(node,6,7);
+//SensorHCSR04 hcsr04(6,7);
 
 //#include <sensors/SensorMCP9808.h>
-//SensorMCP9808 mcp9808(node);
+//SensorMCP9808 mcp9808;
 
 //#include <sensors/SensorMQ.h>
-//SensorMQ mq(node,A0);
+//SensorMQ mq(A0);
 
 //#include <sensors/SensorMHZ19.h>
-//SensorMHZ19 mhz19(node,6,7);
+//SensorMHZ19 mhz19(6,7);
 
 //#include <sensors/SensorAM2320.h>
-//SensorAM2320 am2320(node);
+//SensorAM2320 am2320;
 
 //#include <sensors/SensorTSL2561.h>
-//SensorTSL2561 tsl2561(node);
+//SensorTSL2561 tsl2561;
 
 //#include <sensors/SensorPT100.h>
-//SensorPT100 pt100(node,6);
+//SensorPT100 pt100(6);
 
 //#include <sensors/SensorDimmer.h>
-//SensorDimmer dimmer(node,3);
+//SensorDimmer dimmer(3);
 
 //#include <sensors/SensorRainGauge.h>
-//SensorRainGauge rainGauge(node,3);
+//SensorRainGauge rainGauge(3);
 
 //#include <sensors/SensorPowerMeter.h>
-//SensorPowerMeter powerMeter(node,3);
+//SensorPowerMeter powerMeter(3);
 
 //#include <sensors/SensorWaterMeter.h>
-//SensorWaterMeter waterMeter(node,3);
+//SensorWaterMeter waterMeter(3);
 
 //#include <sensors/SensorPlantowerPMS.h>
-//SensorPlantowerPMS pms(node,6,7);
+//SensorPlantowerPMS pms(6,7);
 
 //#include <sensors/SensorVL53L0X.h>
-//SensorVL53L0X vl53l0x(node,3);
+//SensorVL53L0X vl53l0x(3);
 
 //#include <sensors/DisplaySSD1306.h>
-//DisplaySSD1306 ssd1306(node);
+//DisplaySSD1306 ssd1306;
 
 //#include <sensors/SensorSHT31.h>
-//SensorSHT31 sht31(node);
+//SensorSHT31 sht31;
 
 //#include <sensors/SensorSI7021.h>
-//SensorSI7021 si7021(node);
+//SensorSI7021 si7021;
 
 //#include <sensors/SensorChirp.h>
-//SensorChirp chirp(node);
+//SensorChirp chirp;
 
 //#include <sensors/DisplayHD44780.h>
-//DisplayHD44780 hd44780(node);
+//DisplayHD44780 hd44780;
 
 //#include <sensors/SensorTTP.h>
-//SensorTTP ttp(node);
+//SensorTTP ttp;
 
 //#include <sensors/SensorServo.h>
-//SensorServo servo(node,6);
+//SensorServo servo(6);
 
 //#include <sensors/SensorAPDS9960.h>
-//SensorAPDS9960 apds9960(node,3);
+//SensorAPDS9960 apds9960(3);
 
 //#include <sensors/SensorNeopixel.h>
-//SensorNeopixel neopixel(node,6);
+//SensorNeopixel neopixel(6);
 
 //#include <sensors/SensorSDS011.h>
-//SensorSDS011 sds011(node,6,7);
+//SensorSDS011 sds011(6,7);
 
 //#include <sensors/SensorFPM10A.h>
-//SensorFPM10A fpm10a(node,4,5);
+//SensorFPM10A fpm10a(4,5);
 
 /***********************************
  * Main Sketch
@@ -353,14 +353,15 @@ void before() {
   /***********************************
    * Configure your sensors
    */
+   
   // report measures of every attached sensors every 10 seconds
-  //node.setReportIntervalSeconds(10);
+  //nodeManager.setReportIntervalSeconds(10);
   // report measures of every attached sensors every 10 minutes
-  //node.setReportIntervalMinutes(10);
+  //nodeManager.setReportIntervalMinutes(10);
   // set the node to sleep in 30 seconds cycles
-  //node.setSleepSeconds(30);
+  //nodeManager.setSleepSeconds(30);
   // set the node to sleep in 5 minutes cycles
-  //node.setSleepMinutes(5);
+  //nodeManager.setSleepMinutes(5);
   // report battery level every 10 minutes
   //battery.setReportIntervalMinutes(10);
   // set an offset to -1 to a thermistor sensor
@@ -370,34 +371,35 @@ void before() {
   // report only when the analog value is above 40%
   //analog.children.get(1)->setMinThreshold(40);
   // power all the nodes through dedicated pins
-  //node.setPowerManager(power);
+  //nodeManager.setPowerManager(power);
 
-  node.before();
+  // call NodeManager before routine
+  nodeManager.before();
 }
 
 // presentation
 void presentation() {
   // call NodeManager presentation routine
-  node.presentation();
+  nodeManager.presentation();
 }
 
 // setup
 void setup() {
   // call NodeManager setup routine
-  node.setup();
+  nodeManager.setup();
 }
 
 // loop
 void loop() {
   // call NodeManager loop routine
-  node.loop();
+  nodeManager.loop();
 }
 
 #if NODEMANAGER_RECEIVE == ON
 // receive
 void receive(const MyMessage &message) {
   // call NodeManager receive routine
-  node.receive(message);
+  nodeManager.receive(message);
 }
 #endif
 
@@ -405,6 +407,6 @@ void receive(const MyMessage &message) {
 // receiveTime
 void receiveTime(unsigned long ts) {
   // call NodeManager receiveTime routine
-  node.receiveTime(ts);
+  nodeManager.receiveTime(ts);
 }
 #endif

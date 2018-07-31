@@ -34,12 +34,12 @@ protected:
 	NewPing* _sonar;
 	
 public:
-	SensorHCSR04(NodeManager& node_manager, int echo_pin, int trigger_pin, int child_id = -255): Sensor(node_manager) {
+	SensorHCSR04(int echo_pin, int trigger_pin, int child_id = -255): Sensor(-1) {
 		_name = "HCSR04";
 		_echo_pin = echo_pin;
 		_trigger_pin = trigger_pin;
 		children.allocateBlocks(1);
-		new ChildInt(this,_node->getAvailableChildId(child_id),S_DISTANCE,V_DISTANCE,_name);
+		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_DISTANCE,V_DISTANCE,_name);
 	};
 
 	// [103] Maximum distance we want to ping for (in centimeters) (default: 300)
@@ -59,7 +59,7 @@ public:
 
 	// define what to do during loop
 	void onLoop(Child* child) {
-		int distance = _node->getIsMetric() ? _sonar->ping_cm() : _sonar->ping_in();
+		int distance = nodeManager.getIsMetric() ? _sonar->ping_cm() : _sonar->ping_in();
 		if (! _report_if_invalid && distance == 0) return;
 		((ChildInt*)child)->setValue(distance);
 	};

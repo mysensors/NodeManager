@@ -47,8 +47,8 @@ motion is detected and report a V_TRIPPED message back.
 #define NODEMANAGER_INTERRUPTS ON
 #define NODEMANAGER_SLEEP ON
 
+// import NodeManager library (a nodeManager object will be then made available)
 #include <MySensors_NodeManager.h>
-NodeManager node;
 
 /***********************************
 * Add your sensors
@@ -56,7 +56,7 @@ NodeManager node;
 
 // Add a motion sensor attached to pin 3
 #include <sensors/SensorMotion.h>
-SensorMotion motion(node,3);
+SensorMotion motion(3);
 
 /***********************************
 * Main Sketch
@@ -70,34 +70,35 @@ void before() {
 */
 
 	// set sleep interval to 60 minutes. When the motion sensor triggers, the node will wake up and send the V_TRIPPED message regardles of this configuration
-	node.setSleepMinutes(60);
+	nodeManager.setSleepMinutes(60);
 
-	node.before();
+	// call NodeManager before routine
+	nodeManager.before();
 }
 
 // presentation
 void presentation() {
 	// call NodeManager presentation routine
-	node.presentation();
+	nodeManager.presentation();
 }
 
 // setup
 void setup() {
 	// call NodeManager setup routine
-	node.setup();
+	nodeManager.setup();
 }
 
 // loop
 void loop() {
 	// call NodeManager loop routine
-	node.loop();
+	nodeManager.loop();
 }
 
 #if NODEMANAGER_RECEIVE == ON
 // receive
 void receive(const MyMessage &message) {
 	// call NodeManager receive routine
-	node.receive(message);
+	nodeManager.receive(message);
 }
 #endif
 
@@ -105,6 +106,6 @@ void receive(const MyMessage &message) {
 // receiveTime
 void receiveTime(unsigned long ts) {
 	// call NodeManager receiveTime routine
-	node.receiveTime(ts);
+	nodeManager.receiveTime(ts);
 }
 #endif

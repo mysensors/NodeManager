@@ -32,10 +32,10 @@ protected:
 	int _range_max = 1024;
 	
 public:
-	SensorAnalogInput(NodeManager& node_manager, int pin, int child_id = -255): Sensor(node_manager, pin) {
+	SensorAnalogInput(int pin, int child_id = -255): Sensor(pin) {
 		_name = "ANALOG_I";
 		children.allocateBlocks(1);
-		new ChildInt(this,_node->getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
+		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
 	};
 
 	// [101] the analog reference to use (default: not set, can be either INTERNAL or DEFAULT)

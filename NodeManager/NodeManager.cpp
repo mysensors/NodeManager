@@ -161,11 +161,6 @@ void NodeManager::before() {
 	// restore the sleep settings saved in the eeprom
 	if (_save_sleep_settings) _loadSleepSettings();
 #endif
-#if NODEMANAGER_OTA_CONFIGURATION == ON
-	// initialize SensorConfiguration
-	SensorConfiguration* configuration = new SensorConfiguration(*this);
-	configuration->setReportTimerMode(IMMEDIATELY);
-#endif
 	debug(PSTR(LOG_BEFORE "INIT\n"));
 }
 

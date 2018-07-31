@@ -31,11 +31,11 @@ protected:
 	Weather* _si7021;
 	
 public:
-	SensorSI7021(NodeManager& node_manager, int child_id = -255): Sensor(node_manager) {
+	SensorSI7021(int child_id = -255): Sensor(-1) {
 		_name = "SI7021";
 		children.allocateBlocks(2);
-		new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-		new ChildFloat(this,_node->getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
 	};
 	
 	// define what to do during setup
@@ -51,7 +51,7 @@ public:
 			// read the temperature
 			float temperature = _si7021->getTemp();
 			// convert it
-			temperature = _node->celsiusToFahrenheit(temperature);
+			temperature = nodeManager.celsiusToFahrenheit(temperature);
 			// store the value
 			((ChildFloat*)child)->setValue(temperature);
 		}

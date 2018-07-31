@@ -33,7 +33,7 @@ Sensor: provide functionalities common to all the sensors
 class Sensor {
 public:
 	Sensor();
-	Sensor(NodeManager& node_manager, int pin = -1);
+	Sensor(int pin = -1);
 	// return the name of the sensor
 	const char* getName();
 	// [1] where the sensor is attached to (default: not set)
@@ -64,8 +64,6 @@ public:
 	Child* getChild(int child_id);
 	// register a child
 	void registerChild(Child* child);
-	// reference to the NodeManager object
-	NodeManager* _node;
 #if NODEMANAGER_INTERRUPTS == ON
 	// return the pin the interrupt is attached to
 	int getInterruptPin();

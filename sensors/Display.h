@@ -28,11 +28,11 @@ protected:
 	const char* _caption = "";
 	
 public:
-	Display(NodeManager& node_manager, int child_id = -255) {
+	Display(int child_id = -255): Sensor(-1) {
 		_name = "";
 		// We don't need any sensors, but we need a child, otherwise the loop will never be executed
 		children.allocateBlocks(1);
-		new ChildString(this, _node->getAvailableChildId(child_id), S_INFO, V_TEXT,_name);
+		new ChildString(this,nodeManager.getAvailableChildId(child_id), S_INFO, V_TEXT,_name);
 		// prevent reporting to the gateway at each display update
 		setReportTimerMode(DO_NOT_REPORT);
 	};
@@ -62,7 +62,7 @@ public:
 		// print caption
 		printCaption(_caption);
 		// cycle through all the sensors and children
-		for (List<Sensor*>::iterator itr = _node->sensors.begin(); itr != _node->sensors.end(); ++itr) {
+		for (List<Sensor*>::iterator itr = nodeManager.sensors.begin(); itr != nodeManager.sensors.end(); ++itr) {
 			Sensor* sensor = *itr;
 			// skip this display sensor
 			if (sensor == this) continue;
@@ -78,7 +78,7 @@ public:
 				printChild(ch);
 				// print type
 				if (ch->getType() == V_TEMP) {
-					if (_node->getIsMetric()) print("C");
+					if (nodeManager.getIsMetric()) print("C");
 					else print("F");
 				}
 				else if (ch->getType() == V_HUM || ch->getType() == V_PERCENTAGE) print("%");

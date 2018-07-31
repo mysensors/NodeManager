@@ -35,12 +35,12 @@ protected:
 	bool _chirp_lightreversed = true;
 	
 public:
-	SensorChirp(NodeManager& node_manager, int child_id = -255): Sensor(node_manager) {
+	SensorChirp(int child_id = -255): Sensor(-1) {
 		_name = "CHIRP";
 		children.allocateBlocks(3);
-		new ChildFloat(this,_node->getAvailableChildId(child_id),S_HUM,V_HUM,_name);
-		new ChildFloat(this,_node->getAvailableChildId(child_id+1),S_TEMP,V_TEMP,_name);
-		new ChildFloat(this,_node->getAvailableChildId(child_id+2),S_LIGHT_LEVEL,V_LIGHT_LEVEL,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_HUM,V_HUM,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id+1),S_TEMP,V_TEMP,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id+2),S_LIGHT_LEVEL,V_LIGHT_LEVEL,_name);
 	};
 	
 	// [101] set the soil moisture offset (default: 0)
@@ -77,7 +77,7 @@ public:
 			// read the temperature
 			float temperature = _chirp->getTemperature()/(float)10;
 			// convert it
-			temperature = _node->celsiusToFahrenheit(temperature);
+			temperature = nodeManager.celsiusToFahrenheit(temperature);
 			// store the value
 			((ChildFloat*)child)->setValue(temperature);
 		}

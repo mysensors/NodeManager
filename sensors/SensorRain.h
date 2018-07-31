@@ -27,7 +27,7 @@ SensorRain
 
 class SensorRain: public SensorAnalogInput {
 public:
-	SensorRain(NodeManager& node_manager, int pin, int child_id = -255): SensorAnalogInput(node_manager, pin, child_id) {
+	SensorRain(int pin, int child_id = -255): SensorAnalogInput(pin, child_id) {
 		_name = "RAIN";
 		children.get(1)->setPresentation(S_RAIN);
 		children.get(1)->setType(V_RAINRATE);

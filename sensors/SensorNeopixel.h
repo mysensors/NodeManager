@@ -39,10 +39,10 @@ protected:
 	int _num_pixels = 16;
 	
 public:
-	SensorNeopixel(NodeManager& node_manager, int pin, int child_id = -255): Sensor(node_manager, pin) {
+	SensorNeopixel(int pin, int child_id = -255): Sensor(pin) {
 		_name = "NEOPIXEL";
 		children.allocateBlocks(1);
-		new ChildString(this, _node->getAvailableChildId(child_id), S_COLOR_SENSOR, V_RGB ,_name);
+		new ChildString(this,nodeManager.getAvailableChildId(child_id), S_COLOR_SENSOR, V_RGB ,_name);
 	};
 	
 	// set how many NeoPixels are attached

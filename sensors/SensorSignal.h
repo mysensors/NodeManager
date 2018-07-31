@@ -31,7 +31,7 @@ protected:
 	int _signal_command = SR_RX_RSSI;
 	
 public:
-	SensorSignal(NodeManager& nodeManager, int child_id = SIGNAL_CHILD_ID) {
+	SensorSignal(int child_id = SIGNAL_CHILD_ID): Sensor(-1) {
 		_name = "SIGNAL";
 		children.allocateBlocks(1);
 		new ChildInt(this,child_id,S_SOUND,V_LEVEL,_name);

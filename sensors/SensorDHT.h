@@ -33,12 +33,12 @@ protected:
 	float _offset = 0;
 	
 public:
-	SensorDHT(NodeManager& node_manager, int pin, int child_id = -255): Sensor(node_manager, pin) {
+	SensorDHT(int pin, int child_id = -255): Sensor(pin) {
 		_name = "DHT";
 		_dht_type = DHT::DHT11;
 		children.allocateBlocks(2);
-		new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-		new ChildFloat(this,_node->getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
 	};
 
 	// define what to do during setup
@@ -51,13 +51,13 @@ public:
 	
 	// define what to do during setup
 	void onLoop(Child* child) {
-		_node->sleepOrWait(_dht->getMinimumSamplingPeriod());
+		nodeManager.sleepOrWait(_dht->getMinimumSamplingPeriod());
 		_dht->readSensor(true);
 		// temperature sensor
 		if (child->getType() == V_TEMP) {
 			// read the temperature
 			float temperature = _dht->getTemperature();
-			if (! _node->getIsMetric()) temperature = _dht->toFahrenheit(temperature);
+			if (!nodeManager.getIsMetric()) temperature = _dht->toFahrenheit(temperature);
 			// store the value
 			((ChildFloat*)child)->setValue(temperature);
 		}

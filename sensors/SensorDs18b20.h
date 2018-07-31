@@ -32,7 +32,7 @@ protected:
 	DallasTemperature* _sensors;
 
 public:
-	SensorDs18b20(NodeManager& node_manager, int pin, int child_id = -255): Sensor(node_manager, pin) {
+	SensorDs18b20(int pin, int child_id = -255): Sensor(pin) {
 		_name = "DS18B20";
 		// initialize the library
 		OneWire* oneWire = new OneWire(_pin);
@@ -41,7 +41,7 @@ public:
 		_sensors->begin();
 		// register a new child for each sensor on the bus
 		for(int i = 0; i < _sensors->getDeviceCount(); i++) {
-			new ChildFloat(this,_node->getAvailableChildId(child_id+i),S_TEMP,V_TEMP,_getAddress(i));
+			new ChildFloat(this,nodeManager.getAvailableChildId(child_id+i),S_TEMP,V_TEMP,_getAddress(i));
 		}
 	};
 
@@ -62,7 +62,7 @@ public:
 	void onSetup() {
 		for (int i = 1; i <= children.size(); i++) {
 			children.get(i);
-			_node->sendMessage(children.get(i)->getChildId(),V_ID,_getAddress(i-1));
+			nodeManager.sendMessage(children.get(i)->getChildId(),V_ID,_getAddress(i-1));
 		}
 	};
 
@@ -86,7 +86,7 @@ public:
 		float temperature = _sensors->getTempCByIndex(index);
 		if (temperature == -127.00 || temperature == 85.00) return;
 		// convert it
-		temperature = _node->celsiusToFahrenheit(temperature);
+		temperature = nodeManager.celsiusToFahrenheit(temperature);
 		// store the value
 		((ChildFloat*)child)->setValue(temperature);
 	};

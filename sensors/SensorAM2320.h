@@ -31,11 +31,11 @@ protected:
 	AM2320* _th;
 	
 public:
-	SensorAM2320(NodeManager& node_manager, int child_id = -255): Sensor(node_manager) {
+	SensorAM2320(int child_id = -255): Sensor(-1) {
 		_name = "AM2320";
 		children.allocateBlocks(2);
-		new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-		new ChildFloat(this,_node->getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
 	};
 
 	// define what to do during setup

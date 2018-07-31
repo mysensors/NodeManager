@@ -27,10 +27,10 @@
 
 class SensorWaterMeter: public SensorPulseMeter {
 public:
-	SensorWaterMeter(NodeManager& node_manager, int pin, int child_id = -255): SensorPulseMeter(node_manager, pin, child_id) {
+	SensorWaterMeter(int pin, int child_id = -255): SensorPulseMeter(pin, child_id) {
 		_name = "WATER";
 		children.allocateBlocks(1);
-		new ChildDouble(this,_node->getAvailableChildId(child_id),S_WATER,V_VOLUME,_name);
+		new ChildDouble(this,nodeManager.getAvailableChildId(child_id),S_WATER,V_VOLUME,_name);
 		setPulseFactor(1000);
 		setPinInitialValue(LOW);
 		setInterruptMode(RISING);

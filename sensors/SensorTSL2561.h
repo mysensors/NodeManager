@@ -48,10 +48,10 @@ public:
 	const static int INFRARED = 2;
 	const static int FULL = 3;
 	
-	SensorTSL2561(NodeManager& node_manager, int child_id = -255): Sensor(node_manager) {
+	SensorTSL2561(int child_id = -255): Sensor(-1) {
 		_name = "TSL2561";
 		children.allocateBlocks(1);
-		new ChildInt(this,_node->getAvailableChildId(child_id),S_LIGHT_LEVEL,V_LEVEL,_name);
+		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_LIGHT_LEVEL,V_LEVEL,_name);
 	};
 
 	// [101] set the gain, possible values are SensorTSL2561::GAIN_0X (0), SensorTSL2561::GAIN_16X (1) (default 16x)

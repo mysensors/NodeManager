@@ -23,8 +23,7 @@ Timer: helper class to keep track of the elapsed time
 
 #include "Timer.h"
 
-Timer::Timer(NodeManager* node_manager) {
-	_node = node_manager;
+Timer::Timer() {
 }
 
 void Timer::setMode(timer_mode mode) {
@@ -109,10 +108,10 @@ long Timer::getElapsed() {
 	// system time is not available
 #if NODEMANAGER_SLEEP == ON
 	// millis() is not reliable while sleeping so calculate how long a sleep cycle would last in seconds and update the elapsed time
-	if (_node->isSleepingNode()) elapsed += _node->getSleepSeconds();
+	if (nodeManager.isSleepingNode()) elapsed += nodeManager.getSleepSeconds();
 #endif
 	// use millis() to calculate the elapsed time in seconds
-	if (! _node->isSleepingNode()) elapsed = (long)((millis() - _last)/1000);
+	if (! nodeManager.isSleepingNode()) elapsed = (long)((millis() - _last)/1000);
 #endif
 	return elapsed;
 }

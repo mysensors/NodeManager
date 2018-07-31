@@ -25,10 +25,10 @@
 
 class SensorML8511: public Sensor {
 public:
-	SensorML8511(NodeManager& node_manager, int pin, int child_id = -255): Sensor(node_manager, pin) {
+	SensorML8511(int pin, int child_id = -255): Sensor(pin) {
 		_name = "ML8511";
 		children.allocateBlocks(1);
-		new ChildFloat(this,_node->getAvailableChildId(child_id),S_UV,V_UV,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_UV,V_UV,_name);
 	};
 
 	// define what to do during setup
@@ -41,7 +41,7 @@ public:
 	void onLoop(Child* child) {
 		// read the voltage 
 		int uvLevel = analogRead(_pin);
-		int refLevel = _node->getVcc()*1024/3.3;
+		int refLevel = nodeManager.getVcc()*1024/3.3;
 		//Use the 3.3V power pin as a reference to get a very accurate output value from sensor
 		float outputVoltage = 3.3 / refLevel * uvLevel;
 		//Convert the voltage to a UV intensity level

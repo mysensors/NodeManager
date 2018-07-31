@@ -30,7 +30,7 @@
 */
 class SensorMotion: public SensorInterrupt {
 public:
-	SensorMotion(NodeManager& node_manager, int pin, int child_id = -255): SensorInterrupt(node_manager, pin, child_id) {
+	SensorMotion(int pin, int child_id = -255): SensorInterrupt(pin, child_id) {
 		_name = "MOTION";
 		children.get(1)->setPresentation(S_MOTION);
 		children.get(1)->setType(V_TRIPPED);

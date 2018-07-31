@@ -34,13 +34,13 @@ protected:
 
 public:
 	// contructor, takes at least a NodeManager object. Calls its superclass
-	SensorExample(NodeManager& node_manager, int child_id = -255): Sensor(node_manager, child_id) {
+	SensorExample(int child_id = -255): Sensor(child_id) {
 		// set the sensor name. Useful when reviewing the logs and used as description of the child 
 		_name = "EXAMPLE";
 		// allocate a fixed number of blocks for the list containing the children
 		children.allocateBlocks(1);
 		// create one or multiple child. See Child class for the supported formats.
-		new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
 	};
 
 	// implement any function the user can call from the main sketch for configuring the sensor

@@ -24,7 +24,7 @@ NodeManager will take care of importing the required library, presenting the sen
 
 * Download the package or clone the git repository from https://github.com/mysensors/NodeManager
 * Install NodeManager as an additional Arduino library (https://www.arduino.cc/en/Guide/Libraries)
-* Open and customize one of the examples provided or open the Template sketch which includes all the sensors commented out
+* Open and customize one of the examples provided with the IDE or open the Template sketch which includes all the built-in sensors commented out
 * Add your sensors, configure them and upload the sketch to your arduino board
 
 ### Installing the dependencies
@@ -34,7 +34,7 @@ You need to install the library ONLY if you are planning to enable to use the se
 
 ### Upgrade
 
-* Make a backup copy of the library, download the latest version of NodeManager and install the new library
+* Make a backup copy of the library, remove it, download the latest version of NodeManager and install the new library
 * Review the release notes in case there is any manual change required to the main sketch
 
 Please be aware when upgrading to v1.8 from an older version this procedure is not supported and the code should be migrated manually.
@@ -74,6 +74,8 @@ NODEMANAGER_SD                  | OFF     | allow reading from and writing to SD
 NODEMANAGER_HOOKING             | OFF     | allow custom code to be hooked in the out of the box sensors                                     | -
 NODEMANAGER_OTA_CONFIGURATION   | OFF     | allow over-the-air configuration of the sensors                                                  | -
 NODEMANAGER_SERIAL_INPUT        | OFF     | read from the serial port at the end of each loop cycle expecting a serial protocol command      | -
+
+Once the NodeManager library header file is included, a global instance of the NodeManager class called `nodeManager` is made available and can be used all along the sketch.
 
 ### Add your sensors
 
@@ -143,8 +145,7 @@ SensorSDS011             | 2     | SDS011 air quality sensor, return concentrati
 SensorFPM10A             | 1     | FPM10A fingerprint sensor                                                                         | https://github.com/adafruit/Adafruit-Fingerprint-Sensor-Library
 
 
-Every sensor's class requires `node` as an argument so to automatically register against NodeManager.
-Those sensors requiring a pin to operate would take it as a second argument in the constructor. 
+Those sensors requiring a pin to operate would take it as an argument in the constructor. 
 NodeManager automatically creates all the child_ids, assigning an incremental counter. If you need to set your own child_id, pass it as the last argument to the constructor
 
 Examples:
@@ -152,15 +153,15 @@ Examples:
 ~~~c
 // Add a thermistor sensor attached to pin A0
 #include <sensors/SensorThermistor.h>
-SensorThermistor thermistor(node,A0);
+SensorThermistor thermistor(A0);
 
 // Add a LDR sensor attached to pin A0 and assing child_id 5
 #include <sensors/SensorLDR.h>
-SensorLDR ldr(node,A1,5);
+SensorLDR ldr(A1,5);
 
 // Add a temperature/humidity sensor SHT21 sensor. No pin required since using i2c
 #include <sensors/SensorSHT21.h>
-SensorSHT21 sht21(node);
+SensorSHT21 sht21;
 ~~~
 
 The sensor will be then registered automatically with NodeManager which will take care of it all along its lifecycle. 
@@ -174,9 +175,9 @@ Examples:
 
 ~~~c
 // report measures of every attached sensors every 10 minutes
-node.setReportIntervalMinutes(10);
+nodeManager.setReportIntervalMinutes(10);
 // set the node to sleep in 5 minutes cycles
-node.setSleepMinutes(5);
+nodeManager.setSleepMinutes(5);
 // report battery level every 10 minutes
 battery.setReportIntervalMinutes(10);
 // set an offset to -1 to a thermistor sensor
@@ -184,7 +185,7 @@ thermistor.setOffset(-1);
 // Change the id of a the first child of a sht21 sensor
 sht21.children.get(1)->child_id = 5;
 // power all the nodes through dedicated pins
-node.setPowerManager(power);
+nodeManager.setPowerManager(power);
 ~~~
 
 If not instructed differently, the node will stay awake and all the sensors will report every 10 minutes, battery level and signal level will be automatically reported every 60 minutes (if the corresponding sensors have been added). 
@@ -358,7 +359,7 @@ You can interact with each class provided by NodeManager through a set of API fu
 
 The following methods are available for all the sensors:
 ~~~c
-	Sensor(NodeManager& node_manager, int pin = -1);
+	Sensor(int pin = -1);
 	// return the name of the sensor
 	const char* getName();
 	// [1] where the sensor is attached to (default: not set)
@@ -955,9 +956,9 @@ When contributing with a new sensor follows the same guidelines presented above 
 ## Compatibility
 
 This version of NodeManager has been tested and is compatibile with the following MySensors library:
-* v2.1.1
-* v2.2.0-beta
+* v2.3.0
 * v2.2.0
+* v2.1.1
 
 ## Release Notes
 

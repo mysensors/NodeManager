@@ -39,12 +39,12 @@ protected:
 	bool _fingerprint_is_valid = false;
 	
 public:
-	SensorFPM10A(NodeManager& node_manager, int rxpin, int txpin, int child_id = -255): Sensor(node_manager, rxpin){
+	SensorFPM10A(int rxpin, int txpin, int child_id = -255): Sensor(rxpin) {
 		_name = "FPM10A";
 		_rx_pin = rxpin;
 		_tx_pin = txpin;
 		children.allocateBlocks(1);
-		new ChildInt(this, _node->getAvailableChildId(child_id), S_CUSTOM, V_CUSTOM, _name);
+		new ChildInt(this,nodeManager.getAvailableChildId(child_id), S_CUSTOM, V_CUSTOM, _name);
 	};
 	
 	// set the baud rate of the serial port for connecting to the sensor (default: 57600)

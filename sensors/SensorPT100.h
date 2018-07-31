@@ -31,10 +31,10 @@ protected:
 	float _voltageRef = 3.3;
 	
 public:
-	SensorPT100(NodeManager& node_manager, int pin, int child_id = -255): Sensor(node_manager, pin) {
+	SensorPT100(int pin, int child_id = -255): Sensor(pin) {
 	_name = "PT100";
 	children.allocateBlocks(1);
-	new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+	new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
 };
 
 	// [101] set the voltageRef used to compare with analog measures

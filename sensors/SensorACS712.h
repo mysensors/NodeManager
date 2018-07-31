@@ -29,10 +29,10 @@ protected:
 	int _mv_per_amp = 185;
 	
 public:
-	SensorACS712(NodeManager& node_manager, int pin, int child_id = -255): Sensor(node_manager, pin) {
+	SensorACS712(int pin, int child_id = -255): Sensor(pin) {
 		_name = "ACS712";
 		children.allocateBlocks(1);
-		new ChildFloat(this,_node->getAvailableChildId(child_id),S_MULTIMETER,V_CURRENT,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_MULTIMETER,V_CURRENT,_name);
 	};
 
 	// [101] set how many mV are equivalent to 1 Amp. The value depends on the module (100 for 20A Module, 66 for 30A Module) (default: 185);

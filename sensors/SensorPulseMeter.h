@@ -29,7 +29,7 @@ protected:
 	float _pulse_factor;
 	
 public:
-	SensorPulseMeter(NodeManager& node_manager, int pin, int child_id = -255): Sensor(node_manager, pin) {
+	SensorPulseMeter(int pin, int child_id = -255): Sensor(pin) {
 		_name = "PULSE";
 		setPinInitialValue(HIGH);
 		setInterruptMode(FALLING);
@@ -43,7 +43,7 @@ public:
 	// what to do during loop
 	void onLoop(Child* child) {
 		// do not report anything if called by an interrupt
-		if (_node->getLastInterruptPin() == _interrupt_pin) return;
+		if (nodeManager.getLastInterruptPin() == _interrupt_pin) return;
 		// time to report the accumulated value so far
 		_reportTotal(child);
 		// reset the counter

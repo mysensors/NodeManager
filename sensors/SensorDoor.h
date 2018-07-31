@@ -27,7 +27,7 @@
 
 class SensorDoor: public SensorInterrupt {
 public:
-	SensorDoor(NodeManager& node_manager, int pin, int child_id = -255): SensorInterrupt(node_manager, pin, child_id) {
+	SensorDoor(int pin, int child_id = -255): SensorInterrupt(pin, child_id) {
 		_name = "DOOR";
 		children.get(1)->setPresentation(S_DOOR);
 		children.get(1)->setType(V_TRIPPED);

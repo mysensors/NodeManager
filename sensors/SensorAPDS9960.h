@@ -31,10 +31,10 @@ protected:
 	SparkFun_APDS9960* _apds;
 	
 public:
-	SensorAPDS9960(NodeManager& node_manager, int pin, int child_id = -255): Sensor(node_manager, pin) {
+	SensorAPDS9960(int pin, int child_id = -255): Sensor(pin) {
 		_name = "APDS9960";
 		children.allocateBlocks(1);
-		new ChildString(this,_node->getAvailableChildId(child_id),S_INFO,V_TEXT,_name);
+		new ChildString(this,nodeManager.getAvailableChildId(child_id),S_INFO,V_TEXT,_name);
 		setPinInitialValue(HIGH);
 		setInterruptMode(FALLING);
 	};

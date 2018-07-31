@@ -33,12 +33,12 @@ protected:
 	Adafruit_BMP085* _bm;
 	
 public:
-	SensorBMP085(NodeManager& node_manager, int child_id = -255): SensorBosch(node_manager, child_id) {
+	SensorBMP085(int child_id = -255): SensorBosch(child_id) {
 		_name = "BMP085";
 		children.allocateBlocks(3);
-		new ChildFloat(this,_node->getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-		new ChildFloat(this,_node->getAvailableChildId(child_id+1),S_BARO,V_PRESSURE,_name);
-		new ChildString(this,_node->getAvailableChildId(child_id+2),S_BARO,V_FORECAST,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+		new ChildFloat(this,nodeManager.getAvailableChildId(child_id+1),S_BARO,V_PRESSURE,_name);
+		new ChildString(this,nodeManager.getAvailableChildId(child_id+2),S_BARO,V_FORECAST,_name);
 	};
 
 	// define what to do during setup
@@ -54,7 +54,7 @@ public:
 			// read the temperature
 			float temperature = _bm->readTemperature();
 			// convert it
-			temperature = _node->celsiusToFahrenheit(temperature);
+			temperature = nodeManager.celsiusToFahrenheit(temperature);
 			// store the value
 			((ChildFloat*)child)->setValue(temperature);
 		}

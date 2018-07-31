@@ -27,7 +27,7 @@ SensorSoilMoisture
 
 class SensorSoilMoisture: public SensorAnalogInput {
 public:
-	SensorSoilMoisture(NodeManager& node_manager, int pin, int child_id = -255): SensorAnalogInput(node_manager, pin, child_id) {
+	SensorSoilMoisture(int pin, int child_id = -255): SensorAnalogInput(pin, child_id) {
 		_name = "SOIL";
 		children.get(1)->setPresentation(S_MOISTURE);
 		children.get(1)->setType(V_LEVEL);

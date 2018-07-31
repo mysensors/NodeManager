@@ -35,10 +35,10 @@ protected:
 	int _passcode_length = 4;
 	
 public:
-	SensorTTP(NodeManager& node_manager, int child_id = -255): Sensor(node_manager) {
+	SensorTTP(int child_id = -255): Sensor(-1) {
 		_name = "TTP";
 		children.allocateBlocks(1);
-		new ChildInt(this,_node->getAvailableChildId(child_id),S_INFO,V_TEXT,_name);
+		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_INFO,V_TEXT,_name);
 		setPinInitialValue(LOW);
 		setInterruptMode(RISING);
 	};

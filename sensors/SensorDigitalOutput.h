@@ -31,13 +31,13 @@ protected:
 	int _wait_after_set = 0;
 	int _pulse_width = 0;
 	bool _invert_value_to_write = false;
-	Timer* _safeguard_timer = new Timer(_node);
+	Timer* _safeguard_timer = new Timer();
 	
 public:
-	SensorDigitalOutput(NodeManager& node_manager, int pin, int child_id = -255): Sensor(node_manager, pin) {
+	SensorDigitalOutput(int pin, int child_id = -255): Sensor(pin) {
 		_name = "DIGITAL_O";
 		children.allocateBlocks(1);
-		new ChildInt(this,_node->getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
+		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
 	};
 	
 	// [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
@@ -94,7 +94,7 @@ public:
 		_status = requested_status;
 		((ChildInt*)children.get(1))->setValue(_status);
 		// wait if needed for relays drawing a lot of current
-		if (_wait_after_set > 0) _node->sleepOrWait(_wait_after_set);
+		if (_wait_after_set > 0)nodeManager.sleepOrWait(_wait_after_set);
 	};
 
 	// toggle the status
@@ -173,7 +173,7 @@ protected:
 		digitalWrite(pin, value);
 		// if pulse is set wait for the given timeframe before restoring the value to the original value
 		if (_pulse_width > 0) {
-			_node->sleepOrWait(_pulse_width);
+			nodeManager.sleepOrWait(_pulse_width);
 			digitalWrite(pin, ! value);
 		}
 	};
