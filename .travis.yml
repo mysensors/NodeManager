@@ -182,7 +182,7 @@ jobs:
       script: 
        - arduino --install-library "Sodaq_SHT2x"
        - sed -r -i 's/\/\/(SensorHTU21D .+)/\1/' $SKETCH
-       - sed -r -i 's/\/\/(##include <sensors\/SensorHTU21D.h>)/\1/' $SKETCH
+       - sed -r -i 's/\/\/(#include <sensors\/SensorHTU21D.h>)/\1/' $SKETCH
        - eval $OTA_CONFIGURATION
        - eval $COMPILE
     - name: "SensorInterrupt"

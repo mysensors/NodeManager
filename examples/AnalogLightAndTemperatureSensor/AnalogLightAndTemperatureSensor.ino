@@ -56,7 +56,7 @@ Even if the sensor is sleeping most of the time, it can be potentially woke up b
 #define NODEMANAGER_RTC OFF
 #define NODEMANAGER_SD OFF
 #define NODEMANAGER_HOOKING OFF
-#define NODEMANAGER_OTA_CONFIGURATION OFF
+#define NODEMANAGER_OTA_CONFIGURATION ON
 
 #include <MySensors_NodeManager.h>
 NodeManager node;
