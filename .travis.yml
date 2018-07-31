@@ -10,7 +10,7 @@ env:
     # arduino IDE version to install
     - ARDUINO_VERSION=1.8.5
     # MySensors library version to install
-    - MYSENSORS_VERSION=2.2.0
+    - MYSENSORS_VERSION=2.3.0
     # the path of the template sketch that will be used for testing all the sensors
     - SKETCH="$PWD/examples/Template/Template.ino"
     # command to run to enable OTA configuration in the sketch
@@ -25,7 +25,9 @@ before_install:
   # download and cache the arduino IDE if not already available
   - if [ -d $DEPS/arduino-$ARDUINO_VERSION ]; then echo "Found Arduino IDE"; else wget https://downloads.arduino.cc/arduino-$ARDUINO_VERSION-linux64.tar.xz && tar xf arduino-$ARDUINO_VERSION-linux64.tar.xz && mv arduino-$ARDUINO_VERSION $DEPS ;fi
   # download and cache the MySensors library if not already available
-  - if [ -d $DEPS/MySensors-$MYSENSORS_VERSION ]; then echo "Found MySensors Library"; else wget https://github.com/mysensors/MySensors/archive/$MYSENSORS_VERSION.tar.gz && tar xf $MYSENSORS_VERSION.tar.gz && mv MySensors-$MYSENSORS_VERSION $DEPS ;fi
+  - if [ -d $DEPS/MySensors-2.3.0 ]; then echo "Found MySensors Library 2.3.0"; else wget https://github.com/mysensors/MySensors/archive/2.3.0.tar.gz && tar xf 2.3.0.tar.gz && mv MySensors-2.3.0 $DEPS ;fi
+  - if [ -d $DEPS/MySensors-2.2.0 ]; then echo "Found MySensors Library 2.2.0"; else wget https://github.com/mysensors/MySensors/archive/2.2.0.tar.gz && tar xf 2.2.0.tar.gz && mv MySensors-2.2.0 $DEPS ;fi
+  - if [ -d $DEPS/MySensors-2.1.1 ]; then echo "Found MySensors Library 2.1.1"; else wget https://github.com/mysensors/MySensors/archive/2.1.1.tar.gz && tar xf 2.1.1.tar.gz && mv MySensors-2.1.1 $DEPS ;fi
 install:
   # install the Arduino IDE
   - sudo cp -r $DEPS/arduino-$ARDUINO_VERSION /usr/local/share/arduino
@@ -49,13 +51,23 @@ jobs:
        - sed -r -i 's/\/\/(#define MY_IS_RFM69HW)/\1/' $SKETCH
        - sed -r -i 's/\/\/(#define MY_RFM69_NEW_DRIVER)/\1/' $SKETCH
        - eval $COMPILE
-    - name: "AnalogLightAndTemperatureSensor Example"
+    - name: "MySensors v2.2.0"
+      script: 
+       - sudo rm -rf /usr/local/share/arduino/libraries/MySensors-$MYSENSORS_VERSION
+       - sudo cp -r $DEPS/MySensors-2.2.0 /usr/local/share/arduino/libraries
+       - eval $COMPILE
+    - name: "MySensors v2.1.1"
+      script: 
+       - sudo rm -rf /usr/local/share/arduino/libraries/MySensors-$MYSENSORS_VERSION
+       - sudo cp -r $DEPS/MySensors-2.2.0 /usr/local/share/arduino/libraries
+       - eval $COMPILE
+    - name: "Example AnalogLightAndTemperatureSensor"
       script: 
        - arduino --verify --board arduino:avr:mini:cpu=atmega328 examples/AnalogLightAndTemperatureSensor/AnalogLightAndTemperatureSensor.ino
-    - name: "BoilerSensor Example"
+    - name: "Example BoilerSensor"
       script: 
        - arduino --verify --board arduino:avr:mini:cpu=atmega328 examples/BoilerSensor/BoilerSensor.ino
-    - name: "MotionSensor Example"
+    - name: "Example MotionSensor"
       script: 
        - arduino --verify --board arduino:avr:mini:cpu=atmega328 examples/MotionSensor/MotionSensor.ino
     - name: "Gateway Serial"
