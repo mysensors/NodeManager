@@ -72,7 +72,7 @@ NODEMANAGER_TIME                | OFF     | allow keeping the current system tim
 NODEMANAGER_RTC                 | OFF     | allow keeping the current system time in sync with an attached RTC device                        | https://github.com/JChristensen/DS3232RTC
 NODEMANAGER_SD                  | OFF     | allow reading from and writing to SD cards                                                       | -
 NODEMANAGER_HOOKING             | OFF     | allow custom code to be hooked in the out of the box sensors                                     | -
-NODEMANAGER_OTA_CONFIGURATION   | OFF     | allow over-the-air configuration of the sensors through SensorConfiguration                      | -
+NODEMANAGER_OTA_CONFIGURATION   | OFF     | allow over-the-air configuration of the sensors                                                  | -
 NODEMANAGER_SERIAL_INPUT        | OFF     | read from the serial port at the end of each loop cycle expecting a serial protocol command      | -
 
 ### Add your sensors
@@ -90,7 +90,6 @@ Sensor/Class Name        |#Child | Description                                  
 -------------------------|-------|---------------------------------------------------------------------------------------------------|----------------------------------------------------------
 SensorBattery            | 1     | Built-in sensor for automatic battery reporting                                                   | - 
 SensorSignal             | 1     | Built-in sensor for automatic signal level reporting                                              | -
-SensorConfiguration      | 1     | Built-in sensor for OTA remote configuration of any registered sensor                             | -
 SensorAnalogInput        | 1     | Generic analog sensor, return a pin's analog value or its percentage                              | -
 SensorLDR                | 1     | LDR sensor, return the light level of an attached light resistor in percentage                    | -
 SensorRain               | 1     | Rain sensor, return the percentage of rain from an attached analog sensor                         | -
@@ -822,7 +821,7 @@ Each sensor class may expose additional methods.
 
 ### OTA Configuration
 
-When `NODEMANAGER_OTA_CONFIGURATION` is set to ON and `SensorConfiguration` is added to NodeManager, the API presented above can be also called remotely. SensorConfiguration exposes by default child id 200 that can be used to interact with the service by sending `V_CUSTOM` type of messages and commands within the payload. For each `REQ` message, the node will respond with a `SET` message if successful. 
+When `NODEMANAGER_OTA_CONFIGURATION` is set to ON the API presented above can be also called remotely through `SensorConfiguration`, which is automatically added to NodeManager. SensorConfiguration exposes by default child id 200 that can be used to interact with the service by sending `V_CUSTOM` type of messages and commands within the payload. For each `REQ` message, the node will respond with a `SET` message if successful. 
 
 Almost all the functions made available through the API can be called remotely. To do so, the payload must be in the format `<child_id>,<function_id>[,<value_to_set>]` where `child_id` is the recipient child id you want to communicate with (the node has child id 0), `function_id` is the number between square brackets you can find in the API documentation and, if the function takes and argument, this can be passed along in `value_to_set`. 
 For example, to change the sleep time to e.g. 10 minutes:

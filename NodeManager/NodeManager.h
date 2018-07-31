@@ -211,4 +211,9 @@ private:
 #endif
 };
 
+// include SensorCOnfiguration if needed
+#if NODEMANAGER_OTA_CONFIGURATION == ON
+#include <sensors/SensorConfiguration.h>
+#endif
+
 #endif

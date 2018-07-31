@@ -14,7 +14,7 @@ env:
     # the path of the template sketch that will be used for testing all the sensors
     - SKETCH="$PWD/examples/Template/Template.ino"
     # command to run to enable OTA configuration in the sketch
-    - OTA_CONFIGURATION="sed -i 's/\/\/SensorConfiguration configuration(node);/SensorConfiguration configuration(node);/g' $SKETCH && sed -r -i 's/\/\/(#include <sensors\/SensorConfiguration\.h>)/\1/g' $SKETCH && sed -i 's/#define NODEMANAGER_OTA_CONFIGURATION OFF/#define NODEMANAGER_OTA_CONFIGURATION ON/g' $SKETCH && echo 'Enabled SensorConfiguration'"
+    - OTA_CONFIGURATION="sed -i 's/#define NODEMANAGER_OTA_CONFIGURATION OFF/#define NODEMANAGER_OTA_CONFIGURATION ON/g' $SKETCH && echo 'Enabled OTA configuration'"
     # command to run to compile the sketch
     - COMPILE="cat $SKETCH; arduino --verify --board arduino:avr:mini:cpu=atmega328 $SKETCH"
 before_install:

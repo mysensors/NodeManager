@@ -20,7 +20,10 @@
 /**************************
 Motion Sensor
 
-The following sketch can be used to report back to the controller when a motion sensor attached to the board's pin 3 triggers. In this example, the board will be put to sleep just after startup and will report a heartbeat every hour. NodeManager will take care of configuring an interrupt associated to the provided pin so automatically wake up when a motion is detected and report a V_TRIPPED message back.
+The following sketch can be used to report back to the controller when a motion sensor attached to the board's pin 3 
+triggers. In this example, the board will be put to sleep just after startup and will report a heartbeat every hour. 
+NodeManager will take care of configuring an interrupt associated to the provided pin so automatically wake up when a 
+motion is detected and report a V_TRIPPED message back.
 */
 
 

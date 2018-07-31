@@ -20,11 +20,17 @@
 /**************************
 Analog Light and Temperature Sensor
 
-The following sketch can be used to report the temperature and the light level based on a thermistor and LDR sensors attached to two analog pins of the arduino board (A1 and A2). Both the thermistor and the LDR are connected to ground on one side and to vcc via a resistor on the other so to measure the voltage drop across each of them through the analog pins.
-
-The sensor will be put to sleep after startup and will report both the measures every 10 minutes. NodeManager will take care of presenting the sensors, managing the sleep cycle, reporting the battery level every hour and report the measures in the appropriate format. 
-
-Even if the sensor is sleeping most of the time, it can be potentially woke up by sending a V_CUSTOM message to NodeManager service child id (200 by default) just after having reported its heartbeat. At this point the node will report awake and the user can interact with it by e.g. sending REQ messages to its child IDs, changing the duration of a sleep cycle, etc.
+The following sketch can be used to report the temperature and the light level based on a thermistor and LDR sensors 
+attached to two analog pins of the arduino board (A1 and A2). Both the thermistor and the LDR are connected to ground 
+on one side and to vcc via a resistor on the other so to measure the voltage drop across each of them through the 
+analog pins.
+The sensor will be put to sleep after startup and will report both the measures every 10 minutes. NodeManager 
+will take care of presenting the sensors, managing the sleep cycle, reporting the battery level every hour and 
+report the measures in the appropriate format. 
+Even if the sensor is sleeping most of the time, it can be potentially woke up by sending a V_CUSTOM message 
+to NodeManager service child id (200 by default) just after having reported its heartbeat. At this point the node 
+will report awake and the user can interact with it by e.g. sending REQ messages to its child IDs, changing the 
+duration of a sleep cycle, etc.
 */
 
 
@@ -58,10 +64,6 @@ NodeManager node;
 // Add a battery sensor
 #include <sensors/SensorBattery.h>
 SensorBattery battery(node);
-
-// Add the OTA configuration sensor
-#include <sensors/SensorConfiguration.h>
-SensorConfiguration configuration(node);
 
 // Add a LDR sensor
 #include <sensors/SensorLDR.h>

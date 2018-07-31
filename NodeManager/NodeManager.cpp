@@ -23,7 +23,7 @@ NodeManager
 
 #include "NodeManager.h"
 
-// initialize the node manager
+// initialize node manager
 NodeManager::NodeManager(int sensor_count) {
 	// setup the message container
 	_message = MyMessage();
@@ -163,6 +163,10 @@ void NodeManager::before() {
 #if NODEMANAGER_EEPROM == ON
 	// restore the sleep settings saved in the eeprom
 	if (_save_sleep_settings) _loadSleepSettings();
+#endif
+#if NODEMANAGER_OTA_CONFIGURATION == ON
+	// initialize SensorConfiguration
+	SensorConfiguration configuration(*this);
 #endif
 	debug(PSTR(LOG_BEFORE "INIT\n"));
 }
