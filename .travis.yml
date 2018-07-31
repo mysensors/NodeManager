@@ -66,6 +66,7 @@ jobs:
       script: 
        - arduino --install-library "DS3232RTC,Time"
        - sed -r -i 's/(#define NODEMANAGER_.+) OFF/\1 ON/g' $SKETCH
+       - sed -i 's/#define NODEMANAGER_OTA_CONFIGURATION ON/#define NODEMANAGER_OTA_CONFIGURATION OFF/g' $SKETCH
        - eval $COMPILE
     - name: "Features OFF"
       script: 
