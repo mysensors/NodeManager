@@ -945,12 +945,12 @@ If there are changes introduced to the development branch that conflicts with an
 
 ### Contributing with a new sensor
 
-When contributing with a new sensor follows the same guidelines presented above. 
-On top of them, ensure the following:
-* The class definition is in a header file named `SensorNAME_OF_THE_SENSOR.h` under the `sensors` directory
-* The implementation is inline with the class. See `SensorExample.h` or other sensors for more commented examples and details
-* You have added an additional job in the Travis CI configuration file `.travis.yml`
-* You have added the sensor's specs in "Add your sensors" and in "Built-in sensors API" of the README.md file
+When contributing with a new sensor follows the same guidelines presented above and proceed with the following steps:
+* Define your class is in a header file named `SensorNAME_OF_THE_SENSOR.h` under the `sensors` directory
+* Implement your sensor inline with the class. See `SensorExample.h` or other sensors for more commented examples and details
+* Add an additional job in the Travis CI configuration file `.travis.yml`
+* Add the sensor's specs in "Add your sensors" and in "Built-in sensors API" of the README.md file
+* Add the name of the class of your sensor in the keywords.txt file
 
 ## Compatibility
 
