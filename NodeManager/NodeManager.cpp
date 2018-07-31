@@ -200,9 +200,13 @@ void NodeManager::setup() {
 	// retrieve and store isMetric from the controller
 	if (_get_controller_config) _is_metric = getControllerConfig().isMetric;
 	debug(PSTR(LOG_SETUP "ID=%d M=%d\n"),getNodeId(),_is_metric);
+#if NODEMANAGER_RTC == ON
+	// sync the time with the RTC
+	setSyncProvider(RTC.get);
+#endif	
 #if NODEMANAGER_TIME == ON
 	// sync the time with the controller
-	syncTime();
+	if (_sync_time_on_setup) syncTime();
 #endif
 #if NODEMANAGER_SD == ON
 	// initialize connection to the SD card
@@ -229,8 +233,8 @@ void NodeManager::setup() {
 // run the main function for all the register sensors
 void NodeManager::loop() {
 #if NODEMANAGER_TIME == ON
-	// if the time was last updated more than 60 minutes ago, update it
-	if (_time_is_valid && (now() - _time_last_sync) > 60*60) syncTime();
+	// if the time was last updated more than the given number of minutes ago, update it
+	if (_time_is_valid && _sync_time_after_interval > 0 && (now() - _time_last_sync) > (long)_sync_time_after_interval*60) syncTime();
 #endif
 	// turn on the pin powering all the sensors
 #if NODEMANAGER_POWER_MANAGER == ON
@@ -611,6 +615,21 @@ void NodeManager::loop() {
 	void NodeManager::setTimezone(int value) {
 		_timezone = value;
 	}
+	
+	// request the current time to the controller during setup()
+	void NodeManager::setSyncTimeOnSetup(bool value) {
+		_sync_time_on_setup = value;
+	}
+	
+	// request the current time to the controller just after a sleep cycle
+	void NodeManager::setSyncTimeAfterSleep(bool value) {
+		_sync_time_after_sleep = value;
+	}
+	
+	// request the current time to the controller after the configured number of minutes
+	void NodeManager::setSyncTimeAfterInterval(int value) {
+		_sync_time_after_interval = value;
+	}
 #endif
 
 #if NODEMANAGER_SLEEP == ON
@@ -658,7 +677,7 @@ void NodeManager::loop() {
 		setSyncProvider(RTC.get);
 #else
 		// sync the time with the controller
-		syncTime();
+		if (_sync_time_after_sleep) syncTime();
 #endif
 		// calculate the remainder time to sleep if woken up by an interrupt
 		if (interrupt > -1) {

@@ -318,6 +318,12 @@ You can interact with each class provided by NodeManager through a set of API fu
 	long getTime();
 	// [43] set the hour offset for when syncronizing the time (default: 0)
 	void setTimezone(int value);
+	// request the current time to the controller during setup(). Time with a RTC if configured is always synchronized (default: true)
+	void setSyncTimeOnSetup(bool value);
+	// request the current time to the controller just after a sleep cycle. Time with a RTC if configured is always synchronized (default: true)
+	void setSyncTimeAfterSleep(bool value);
+	// request the current time to the controller after the configured number of minutes (default: 0)
+	void setSyncTimeAfterInterval(int value);
 	// receiveTime() callback
 	void receiveTime(unsigned long ts);
 #endif
