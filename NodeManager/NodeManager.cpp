@@ -30,7 +30,7 @@ NodeManager::NodeManager(int sensor_count) {
 	// allocate block for all the sensors if sensor_count is provided
 	if (sensor_count > 0) sensors.allocateBlocks(sensor_count);
 	// setup serial port baud rate
-	Serial.begin(MY_BAUD_RATE);
+	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
 	// print out the version
 	debug(PSTR(LOG_INIT "VER=" VERSION "\n"));
 	// print out sketch name
@@ -255,6 +255,18 @@ void NodeManager::loop() {
 		// turn off the pin powering all the sensors
 #if NODEMANAGER_POWER_MANAGER == ON
 		powerOff();
+#endif
+#if NODEMANAGER_SERIAL_INPUT == ON
+	// read a string from the serial input. Timeout is 1000 millis and can be customized with Serial.setTimeout()
+	debug_verbose(PSTR(LOG_LOOP "INPUT...\n"));
+	String input = MY_SERIALDEVICE.readString();
+	if (input.length() != 0) {
+		debug_verbose(PSTR(LOG_LOOP "INPUT v=%s\n"),const_cast<char*>(input.c_str()));
+		// parse the message
+		_message.clear();
+		bool ok = protocolParse(_message,const_cast<char*>(input.c_str()));
+		if (ok) receive(_message);
+	}
 #endif
 #if NODEMANAGER_SLEEP == ON
 		// continue/start sleeping as requested

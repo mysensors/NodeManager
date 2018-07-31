@@ -139,6 +139,9 @@ Default configuration settings
 #ifndef NODEMANAGER_OTA_CONFIGURATION
 #define NODEMANAGER_OTA_CONFIGURATION OFF
 #endif
+#ifndef NODEMANAGER_SERIAL_INPUT
+#define NODEMANAGER_SERIAL_INPUT OFF
+#endif
 
 // define debug output macro and log prefix
 #if NODEMANAGER_DEBUG == ON

@@ -41,18 +41,8 @@ The following sketch can be used to report back to the controller when a motion 
 * NodeManager configuration
 */
 
-#define NODEMANAGER_DEBUG ON
-#define NODEMANAGER_POWER_MANAGER OFF
 #define NODEMANAGER_INTERRUPTS ON
-#define NODEMANAGER_CONDITIONAL_REPORT OFF
-#define NODEMANAGER_EEPROM OFF
 #define NODEMANAGER_SLEEP ON
-#define NODEMANAGER_RECEIVE ON
-#define NODEMANAGER_TIME OFF
-#define NODEMANAGER_RTC OFF
-#define NODEMANAGER_SD OFF
-#define NODEMANAGER_HOOKING OFF
-#define NODEMANAGER_OTA_CONFIGURATION OFF
 
 #include <MySensors_NodeManager.h>
 NodeManager node;

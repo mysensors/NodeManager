@@ -57,6 +57,9 @@ Include required third-party libraries
 #if NODEMANAGER_SD == ON
 #include <SD.h>
 #endif
+#if NODEMANAGER_SERIAL_INPUT == ON
+#include "core/MyProtocolMySensors.cpp"
+#endif
 
 /***********************************
 Include NodeManager core code

@@ -61,6 +61,7 @@ A list of the supported capabilities and the required dependencies is presented 
 Capability                      | Default | Description                                                                                      | Dependencies
 --------------------------------|---------|--------------------------------------------------------------------------------------------------|----------------------------------------------------------
 NODEMANAGER_DEBUG               | ON      | NodeManager's debug output on serial console                                                     | - 
+NODEMANAGER_DEBUG_VERBOSE       | OFF     | increase NodeManager's debug output on the serial console                                        | -
 NODEMANAGER_POWER_MANAGER       | OFF     | allow powering on your sensors only while the node is awake                                      | - 
 NODEMANAGER_INTERRUPTS          | ON      | allow managing interrupt-based sensors like a PIR or a door sensor                               | - 
 NODEMANAGER_CONDITIONAL_REPORT  | OFF     | allow reporting a measure only when different from the previous or above/below a given threshold | - 
@@ -72,6 +73,7 @@ NODEMANAGER_RTC                 | OFF     | allow keeping the current system tim
 NODEMANAGER_SD                  | OFF     | allow reading from and writing to SD cards                                                       | -
 NODEMANAGER_HOOKING             | OFF     | allow custom code to be hooked in the out of the box sensors                                     | -
 NODEMANAGER_OTA_CONFIGURATION   | OFF     | allow over-the-air configuration of the sensors through SensorConfiguration                      | -
+NODEMANAGER_SERIAL_INPUT        | OFF     | read from the serial port at the end of each loop cycle expecting a serial protocol command      | -
 
 ### Add your sensors
 
