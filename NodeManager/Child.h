@@ -44,10 +44,10 @@ public:
 	// set sensor description
 	void setDescription(const char* value);
 	const char* getDescription();
-	// configure the behavior of the child when setValue() is called multiple times. It can be NONE (ignore the previous calls but the last one),  AVG (averages the values), SUM (sum up the values) (default: AVG)
+	// configure the behavior of the child when setValue() is called multiple times. It can be NONE (ignore the previous values but the last one),  AVG (averages the values), SUM (sum up the values) (default: AVG)
 	void setValueProcessing(child_processing value);
 	// send the current value to the gateway
-	virtual void sendValue(bool force);
+	virtual void sendValue(bool force = 0);
 	// print the current value on a LCD display
 	virtual void print(Print& device);
 	// reset all the counters
@@ -84,7 +84,7 @@ public:
 	ChildInt(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
 	void setValue(int value);
 	int getValue();
-	void sendValue(bool force);
+	void sendValue(bool force = 0);
 	void print(Print& device);
 	void reset();
 private:
@@ -100,7 +100,7 @@ public:
 	ChildFloat(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
 	void setValue(float value);
 	float getValue();
-	void sendValue(bool force);
+	void sendValue(bool force = 0);
 	void print(Print& device);
 	void reset();
 private:
@@ -116,7 +116,7 @@ public:
 	ChildDouble(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
 	void setValue(double value);
 	double getValue();
-	void sendValue(bool force);
+	void sendValue(bool force = 0);
 	void print(Print& device);
 	void reset();
 private:
@@ -132,7 +132,7 @@ public:
 	ChildString(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
 	void setValue(const char* value);
 	const char* getValue();
-	void sendValue(bool force);
+	void sendValue(bool force = 0);
 	void print(Print& device);
 	void reset();
 private:

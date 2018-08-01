@@ -25,7 +25,6 @@
 
 class SensorPulseMeter: public Sensor {
 protected:
-	long _count = 0;
 	float _pulse_factor;
 	
 public:
@@ -39,39 +38,21 @@ public:
 #if NODEMANAGER_TIME == ON
 		// report at the beginning of the hour the accumulated value of the previous hour
 		setReportTimerMode(EVERY_HOUR);
+#else
+		// report every 60 minutes, assuming we are not running on batteries
+		setReportIntervalMinutes(60);
 #endif
 	};
-
+	
 	// [102] set how many pulses for each unit (e.g. 1000 pulses for 1 kwh of power, 9 pulses for 1 mm of rain, etc.)
 	void setPulseFactor(float value) {
 		_pulse_factor = value;
 	};
 
-	// what to do during loop
-	void onLoop(Child* child) {
-		// do not report anything if called by an interrupt
-		if (nodeManager.getLastInterruptPin() == _interrupt_pin) return;
-		// time to report the accumulated value so far
-		_reportTotal(child);
-		// reset the counter
-		_count = 0;
-	};
-
-	// what to do as the main task when receiving a message
-	void onReceive(MyMessage* message) {
-		Child* child = getChild(message->sensor);
-		if (child == nullptr) return;
-		if (message->getCommand() == C_REQ && message->type == child->getType()) {
-			// report the total of the last period
-			_reportTotal(child);
-		}
-	};
-
-	// what to do when receiving an interrupt
-	void onInterrupt() {
-		// increase the counter
-		_count++;
-		debug(PSTR(LOG_SENSOR "%s:INT++"),_name);
+	// what to do during setup
+	void onSetup() {
+		// sum up the values of consecutive setValue() calls
+		children.get()->setValueProcessing(SUM);
 	};
 
 #if NODEMANAGER_OTA_CONFIGURATION == ON
@@ -83,11 +64,5 @@ public:
 		}
 	};
 #endif
-
-protected:
-	// return the total based on the pulses counted
-	virtual void _reportTotal(Child* child) {
-		((ChildFloat*)child)->setValue(_count / _pulse_factor);
-	};
 };
 #endif

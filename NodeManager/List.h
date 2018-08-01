@@ -47,7 +47,7 @@ public:
 		--_endPosition;
 		_DeAllocOneBlock(false);
 	}
-	T get(int position) {
+	T get(int position = 1) {
 		position = position -1;
 		if (position > _endPosition) position = _endPosition;
 		return _internalArray[position];

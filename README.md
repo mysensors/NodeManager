@@ -465,6 +465,8 @@ The following methods are available for all the child:
 	// set sensor description
 	void setDescription(const char* value);
 	const char* getDescription();
+	// configure the behavior of the child when setValue() is called multiple times. It can be NONE (ignore the previous values but the last one),  AVG (averages the values), SUM (sum up the values) (default: AVG)
+	void setValueProcessing(child_processing value);
 	// send the current value to the gateway
 	virtual void sendValue(bool force);
 	// print the current value on a LCD display

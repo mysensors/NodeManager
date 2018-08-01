@@ -34,10 +34,20 @@ public:
 		setPulseFactor(1000);
 	};
 	
-protected:
-	// return the total based on the pulses counted
-	void _reportTotal(Child* child) {
-		((ChildDouble*)child)->setValue(_count / _pulse_factor);
+	// what to do when receiving an interrupt
+	void onInterrupt() {
+		// increment the accumulated value
+		((ChildDouble*)children.get())->setValue(1 / _pulse_factor);
+	};
+	
+	// what to do as the main task when receiving a message
+	void onReceive(MyMessage* message) {
+		Child* child = getChild(message->sensor);
+		if (child == nullptr) return;
+		if (message->getCommand() == C_REQ && message->type == child->getType()) {
+			// send the accumulated value so far
+			((ChildDouble*)children.get())->sendValue();
+		}
 	};
 };
 #endif

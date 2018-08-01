@@ -33,5 +33,21 @@ public:
 		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_RAIN,V_RAIN,_name);
 		setPulseFactor(9.09);
 	};
+	
+	// what to do when receiving an interrupt
+	void onInterrupt() {
+		// increment the accumulated value
+		((ChildFloat*)children.get())->setValue(1 / _pulse_factor);
+	};
+	
+	// what to do as the main task when receiving a message
+	void onReceive(MyMessage* message) {
+		Child* child = getChild(message->sensor);
+		if (child == nullptr) return;
+		if (message->getCommand() == C_REQ && message->type == child->getType()) {
+			// send the accumulated value so far
+			((ChildFloat*)children.get())->sendValue();
+		}
+	};
 };
 #endif
