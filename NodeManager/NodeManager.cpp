@@ -189,6 +189,10 @@ void NodeManager::presentation() {
 
 // setup NodeManager
 void NodeManager::setup() {
+#if NODEMANAGER_POWER_MANAGER == ON
+	// turn the sensor on
+	powerOn();
+#endif
 	// retrieve and store isMetric from the controller
 	if (_get_controller_config) _is_metric = getControllerConfig().isMetric;
 	debug(PSTR(LOG_SETUP "ID=%d M=%d\n"),getNodeId(),_is_metric);
@@ -219,6 +223,10 @@ void NodeManager::setup() {
 #if NODEMANAGER_INTERRUPTS == ON
 	// setup the interrupt pins
 	_setupInterrupts();
+#endif
+#if NODEMANAGER_POWER_MANAGER == ON
+	// turn the sensor off
+	powerOff();
 #endif
 }
 

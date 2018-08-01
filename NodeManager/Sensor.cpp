@@ -138,6 +138,10 @@ void Sensor::presentation() {
 
 // call the sensor-specific implementation of setup
 void Sensor::setup() {
+#if NODEMANAGER_POWER_MANAGER == ON
+	// turn the sensor on
+	powerOn();
+#endif
 	// configure default reporting interval if not already set by the user
 	if (_report_timer->getMode() == NOT_CONFIGURED) {
 		_report_timer->setMode(TIME_INTERVAL);
@@ -161,6 +165,10 @@ void Sensor::setup() {
 #if NODEMANAGER_HOOKING == ON
 	// if a hook function is defined, call it
 	if (_setup_hook != 0) _setup_hook(this); 
+#endif
+#if NODEMANAGER_POWER_MANAGER == ON
+	// turn the sensor off
+	powerOff();
 #endif
 }
 
