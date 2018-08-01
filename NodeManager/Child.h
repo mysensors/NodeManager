@@ -26,6 +26,18 @@ Child: data structure for representing a Child of a Sensor
 class Sensor;
 #include "Timer.h"
 
+// how many slots to leave for the user before starting using them for Child
+#define EEPROM_CHILD_OFFSET	10
+// define the number of slots of the EEPROM needed to store a Child's value
+#define EEPROM_CHILD_SIZE 6
+// define the relative positions of each information
+#define EEPROM_CHILD_CHECKSUM 0
+#define EEPROM_CHILD_SIGN 1
+#define EEPROM_CHILD_INT_1 2
+#define EEPROM_CHILD_INT_2 3
+#define EEPROM_CHILD_DEC_1 4
+#define EEPROM_CHILD_DEC_2 5
+
 class Child {
 public:
 	Child();
@@ -62,6 +74,15 @@ public:
 	// do not report values if too close to the previous one (default: 0)
 	void setValueDelta(float value);
 #endif
+#if NODEMANAGER_EEPROM == ON
+	// persist the child's value in EEPROM. The value will be saved at each update and loaded at boot time (default: false)
+	void setPersistValue(bool value);
+	bool getPersistValue();
+	// load old value from EEPROM
+	virtual void loadValue();
+	// load current value to EEPROM
+	virtual void saveValue();
+#endif
 protected:
 	int _samples = 0;
 	Sensor* _sensor;
@@ -77,6 +98,16 @@ protected:
 	float _max_threshold = FLT_MAX;
 	float _value_delta = 0;
 #endif
+#if NODEMANAGER_EEPROM == ON
+	bool _persist_value = false;
+	int _eeprom_address;
+	bool _saveValueInt(int value);
+	bool _saveValueFloat(float value);
+	bool _saveValueDouble(double value);
+	int _loadValueInt();
+	float _loadValueFloat();
+	double _loadValueDouble();
+#endif
 };
 
 class ChildInt: public Child {
@@ -87,12 +118,16 @@ public:
 	void sendValue(bool force = 0);
 	void print(Print& device);
 	void reset();
+#if NODEMANAGER_EEPROM == ON
+	void loadValue();
+	void saveValue();
+#endif
 private:
 	int _value;
+	int _total = 0;
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	int _last_value = -256;
 #endif
-	int _total = 0;
 };
 
 class ChildFloat: public Child {
@@ -103,12 +138,16 @@ public:
 	void sendValue(bool force = 0);
 	void print(Print& device);
 	void reset();
+#if NODEMANAGER_EEPROM == ON
+	void loadValue();
+	void saveValue();
+#endif
 private:
 	float _value;
+	float _total = 0;
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	float _last_value = -256;
 #endif
-	float _total = 0;
 };
 
 class ChildDouble: public Child {
@@ -119,12 +158,16 @@ public:
 	void sendValue(bool force = 0);
 	void print(Print& device);
 	void reset();
+#if NODEMANAGER_EEPROM == ON
+	void loadValue();
+	void saveValue();
+#endif
 private:
 	double _value;
+	double _total = 0;
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	double _last_value = -256;
 #endif
-	double _total = 0;
 };
 
 class ChildString: public Child {

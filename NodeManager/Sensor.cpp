@@ -133,7 +133,6 @@ void Sensor::presentation() {
 		debug(PSTR(LOG_PRESENTATION "%s(%d) p=%d t=%d\n"),child->getDescription(),child->getChildId(),child->getPresentation(),child->getType());
 		present(child->getChildId(), child->getPresentation(), child->getDescription(), nodeManager.getAck());
 	}
-
 }
 
 // call the sensor-specific implementation of setup
@@ -161,6 +160,13 @@ void Sensor::setup() {
 	// for interrupt based sensors, register a callback for the interrupt
 	_interrupt_pin = _pin;
 	nodeManager.setInterrupt(_pin,_interrupt_mode,_initial_value);
+#endif
+#if NODEMANAGER_EEPROM == ON
+	// if there is any child which is supposed to persist its value in EEPROM, load the last saved value
+	for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
+		Child* child = *itr;
+		if (child->getPersistValue()) child->loadValue();
+	}
 #endif
 #if NODEMANAGER_HOOKING == ON
 	// if a hook function is defined, call it

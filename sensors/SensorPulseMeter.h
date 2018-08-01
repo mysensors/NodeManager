@@ -53,6 +53,10 @@ public:
 	void onSetup() {
 		// sum up the values of consecutive setValue() calls
 		children.get()->setValueProcessing(SUM);
+#if NODEMANAGER_EEPROM == ON
+		// keep track of the value in EEPROM so to restore it upon a reboot
+		children.get()->setPersistValue(true);
+#endif
 	};
 
 #if NODEMANAGER_OTA_CONFIGURATION == ON

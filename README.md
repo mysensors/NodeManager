@@ -468,7 +468,7 @@ The following methods are available for all the child:
 	// configure the behavior of the child when setValue() is called multiple times. It can be NONE (ignore the previous values but the last one),  AVG (averages the values), SUM (sum up the values) (default: AVG)
 	void setValueProcessing(child_processing value);
 	// send the current value to the gateway
-	virtual void sendValue(bool force);
+	virtual void sendValue(bool force = 0);
 	// print the current value on a LCD display
 	virtual void print(Print& device);
 	// reset all the counters
@@ -482,6 +482,15 @@ The following methods are available for all the child:
 	void setMaxThreshold(float value);
 	// do not report values if too close to the previous one (default: 0)
 	void setValueDelta(float value);
+#endif
+#if NODEMANAGER_EEPROM == ON
+	// persist the child's value in EEPROM. The value will be saved at each update and loaded at boot time (default: false)
+	void setPersistValue(bool value);
+	bool getPersistValue();
+	// load old value from EEPROM
+	virtual void loadValue();
+	// load current value to EEPROM
+	virtual void saveValue();
 #endif
 ~~~
 

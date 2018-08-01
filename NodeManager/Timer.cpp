@@ -43,8 +43,6 @@ int Timer::getValue() {
 
 // start the timer
 void Timer::start() {
-	// reset the timer
-	_last = 0;
 	_is_running = true;
 #if NODEMANAGER_TIME == ON
 	// save the current timestamp (which is sync'ed when sleeping or not sleeping)

@@ -40,6 +40,10 @@ Child::Child(Sensor* sensor, int child_id, int presentation, int type, const cha
 	// initialize the timer for forcing updates to the gateway after a given timeframe
 	_force_update_timer = new Timer();
 #endif
+#if NODEMANAGER_EEPROM == ON
+	// define the EEPROM starting address for this child
+	_eeprom_address = EEPROM_CHILD_OFFSET+_child_id*EEPROM_CHILD_SIZE;
+#endif
 }
 
 // setter/getter
@@ -73,6 +77,9 @@ const char* Child::getDescription() {
 void Child::setValueProcessing(child_processing value) {
 	_value_processing = value;
 }
+void Child::sendValue(bool force) { }
+void Child::print(Print& device) { }
+void Child::reset() { }
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 void Child::setForceUpdateTimerValue(int value) {
 	_force_update_timer->setMode(TIME_INTERVAL);
@@ -88,16 +95,75 @@ void Child::setValueDelta(float value) {
 	_value_delta = value;
 }
 #endif
+#if NODEMANAGER_EEPROM == ON
+void Child::setPersistValue(bool value) {
+	_persist_value = value;
+}
+bool Child::getPersistValue() {
+	return _persist_value;
+}
 
-// set a value, implemented by the subclasses
-void Child::sendValue(bool force) {
+// virtual functions implemented by the subclasses
+void Child::loadValue() { }
+void Child::saveValue() { }
+
+// save an integer number to EEPROM
+bool Child::_saveValueInt(int value) {
+	// number is too large to be saved or we run out of EEPROM slots
+	if (value >= 10000 || ((_eeprom_address+EEPROM_CHILD_SIZE) > 255) ) return false;
+	// save the checksum
+	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_CHECKSUM,0);
+	// encode the sign (e.g. 0 if > 0, 1 otherwise)
+	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_SIGN, 0 ? value >=0 : 1);
+	// encode and save the value (e.g. 7240 -> int_1 = 72, int_2 = 40)
+	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_INT_1,(int)(value/100)%100);
+	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_INT_2,(value)%100);
+	return true;
 }
-// Print the child's value (variable type depending on the child class) to the given output
-void Child::print(Print& device) {
+
+// save an float number to EEPROM
+bool Child::_saveValueFloat(float value) {
+	if (!_saveValueInt((int)value)) return false;
+	// encode and save the value (e.g. 7240.12 -> dec_1 = 12)
+	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_DEC_1,(int)(value*100)%100);
+	return true;
 }
-// reset the counters
-void Child::reset() {
+
+// save a double number to EEPROM
+bool Child::_saveValueDouble(double value) {
+	if (!_saveValueFloat(float(value))) return false;
+	// encode and save the value (e.g. 7240.1244 -> dec_2 = 44)
+	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_DEC_1,(int)(value*10000)%100);
+	return true;
 }
+
+// return an integer number stored in EEPROM
+int Child::_loadValueInt() {
+	// ensure we are not going to read beyond the available EEPROM slots
+	if (((_eeprom_address+EEPROM_CHILD_SIZE) > 255) ) return 255;
+	// ensure the checksum is valid
+	if (nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_CHECKSUM) != 0) return 255;
+	// return the decoded integer
+	int value = nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_INT_1)*100 + nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_INT_2);
+	return nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_SIGN) == 0 ? value : value * -1;
+}
+
+// return a float number stored in EEPROM
+float Child::_loadValueFloat() {
+	int value = _loadValueInt();
+	if (value == 255) return 255;
+	// return the decoded float
+	return (float)value + (float)(nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_DEC_1)/100);
+}
+
+// return a double number stored in EEPROM
+double Child::_loadValueDouble() {
+	float value = _loadValueFloat();
+	if (value == 255) return 255;
+	// return the decoded double
+	return (double)value + (double)(nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_DEC_2)/10000);
+}
+#endif
 
 /*
 ChildInt class
@@ -118,6 +184,10 @@ void ChildInt::setValue(int value) {
 	if (_value_processing == NONE) _value = value;
 	// print out a debug message
 	debug(PSTR(LOG_LOOP "%s(%d):SET t=%d v=%d\n"),_description,_child_id,_type,_value);
+#if NODEMANAGER_EEPROM
+	// if the value is supposed to be persisted in EEPROM, save it
+	if (_persist_value) saveValue();
+#endif
 }
 
 // return the value
@@ -162,6 +232,19 @@ void ChildInt::reset() {
 	_samples = 0;
 }
 
+#if NODEMANAGER_EEPROM == ON
+// save the value to memory
+void ChildInt::saveValue() {
+	_saveValueInt(_value);
+}
+
+// load the value from memory
+void ChildInt::loadValue() { 
+	int value = _loadValueInt();
+	if (value != 255) setValue(value);
+}
+#endif
+
 /*
 ChildFloat class
 */
@@ -187,6 +270,10 @@ void ChildFloat::setValue(float value) {
 	}
 	// print out a debug message
 	debug(PSTR(LOG_LOOP "%s(%d):SET t=%d v=%d.%02d\n"),_description,_child_id,_type,(int)_value, (int)(_value*100)%100);
+#if NODEMANAGER_EEPROM
+	// if the value is supposed to be persisted in EEPROM, save it
+	if (_persist_value) saveValue();
+#endif
 }
 
 // return the value
@@ -230,6 +317,19 @@ void ChildFloat::reset() {
 	_samples = 0;
 }
 
+#if NODEMANAGER_EEPROM == ON
+// save the value to memory
+void ChildFloat::saveValue() {
+	_saveValueFloat(_value);
+}
+
+// load the value from memory
+void ChildFloat::loadValue() { 
+	float value = _loadValueFloat();
+	if (value != 255) setValue(value);
+}
+#endif
+
 
 /*
 ChildDouble class
@@ -256,6 +356,10 @@ void ChildDouble::setValue(double value) {
 	}
 	// print out a debug message
 	debug(PSTR(LOG_LOOP "%s(%d):SET t=%d v=%d.%04d\n"),_description,_child_id,_type,(int)_value, (int)(_value*10000)%10000);
+#if NODEMANAGER_EEPROM
+	// if the value is supposed to be persisted in EEPROM, save it
+	if (_persist_value) saveValue();
+#endif
 }
 
 // return the value
@@ -299,6 +403,18 @@ void ChildDouble::reset() {
 	_samples = 0;
 }
 
+#if NODEMANAGER_EEPROM == ON
+// save the value to memory
+void ChildDouble::saveValue() {
+	_saveValueDouble(_value);
+}
+
+// load the value from memory
+void ChildDouble::loadValue() { 
+	double value = _loadValueDouble();
+	if (value != 255) setValue(value);
+}
+#endif
 
 /*
 ChildString class

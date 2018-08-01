@@ -100,8 +100,7 @@ Chip type
 #define EEPROM_SLEEP_1 5
 #define EEPROM_SLEEP_2 6
 #define EEPROM_SLEEP_3 7
-#define EEPROM_USER_START 100
-
+#define EEPROM_USER_START 20
 
 /***********************************
 Default configuration settings
