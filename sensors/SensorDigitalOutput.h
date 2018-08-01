@@ -115,12 +115,18 @@ public:
 		if (_pin_off > 0) pinMode(_pin_off, OUTPUT);
 		// report immediately
 		setReportTimerMode(IMMEDIATELY);
+#if NODEMANAGER_EEPROM == OFF
 		// turn the relay off by default
 		setStatus(OFF);
+#endif
 	};
 
 	// what to do during loop
 	void onLoop(Child* child) {
+#if NODEMANAGER_EEPROM == ON
+		// if this is the first time running loop and a value has been restored from EEPROM, turn the output according the last value
+		if (_first_run) setStatus((ChildInt*)children.get().getValue());
+#endif
 		// if the time is over, turn the output off
 		if (_safeguard_timer->isOver()) {
 			setStatus(OFF);

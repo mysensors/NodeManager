@@ -184,7 +184,7 @@ void ChildInt::setValue(int value) {
 	if (_value_processing == NONE) _value = value;
 	// print out a debug message
 	debug(PSTR(LOG_LOOP "%s(%d):SET t=%d v=%d\n"),_description,_child_id,_type,_value);
-#if NODEMANAGER_EEPROM
+#if NODEMANAGER_EEPROM == ON
 	// if the value is supposed to be persisted in EEPROM, save it
 	if (_persist_value) saveValue();
 #endif
@@ -270,7 +270,7 @@ void ChildFloat::setValue(float value) {
 	}
 	// print out a debug message
 	debug(PSTR(LOG_LOOP "%s(%d):SET t=%d v=%d.%02d\n"),_description,_child_id,_type,(int)_value, (int)(_value*100)%100);
-#if NODEMANAGER_EEPROM
+#if NODEMANAGER_EEPROM == ON
 	// if the value is supposed to be persisted in EEPROM, save it
 	if (_persist_value) saveValue();
 #endif
@@ -356,7 +356,7 @@ void ChildDouble::setValue(double value) {
 	}
 	// print out a debug message
 	debug(PSTR(LOG_LOOP "%s(%d):SET t=%d v=%d.%04d\n"),_description,_child_id,_type,(int)_value, (int)(_value*10000)%10000);
-#if NODEMANAGER_EEPROM
+#if NODEMANAGER_EEPROM == ON
 	// if the value is supposed to be persisted in EEPROM, save it
 	if (_persist_value) saveValue();
 #endif
