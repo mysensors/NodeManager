@@ -31,8 +31,15 @@ protected:
 public:
 	SensorPulseMeter(int pin, int child_id = -255): Sensor(pin) {
 		_name = "PULSE";
+		// enable pullup and capture interrupt on the falling edge
 		setPinInitialValue(HIGH);
 		setInterruptMode(FALLING);
+		// since the change in the value can be very short, this ensure we don't miss any interrupt
+		setInterruptStrict(false);
+#if NODEMANAGER_TIME == ON
+		// report at the beginning of the hour the accumulated value of the previous hour
+		setReportTimerMode(EVERY_HOUR);
+#endif
 	};
 
 	// [102] set how many pulses for each unit (e.g. 1000 pulses for 1 kwh of power, 9 pulses for 1 mm of rain, etc.)
@@ -55,7 +62,7 @@ public:
 		Child* child = getChild(message->sensor);
 		if (child == nullptr) return;
 		if (message->getCommand() == C_REQ && message->type == child->getType()) {
-			// report the total the last period
+			// report the total of the last period
 			_reportTotal(child);
 		}
 	};

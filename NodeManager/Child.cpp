@@ -70,6 +70,9 @@ void Child::setDescription(const char* value) {
 const char* Child::getDescription() {
 	return _description;
 }
+void Child::setValueProcessing(child_processing value) {
+	_value_processing = value;
+}
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 void Child::setForceUpdateTimerValue(int value) {
 	_force_update_timer->setMode(TIME_INTERVAL);
@@ -109,8 +112,10 @@ void ChildInt::setValue(int value) {
 	if (isnan(value)) return;
 	_total = _total + value;
 	_samples++;
-	// averages the values
-	_value = (int) (_total / _samples);
+	// process the value
+	if (_value_processing == AVG) _value = (int) (_total / _samples);
+	if (_value_processing == SUM) _value = _total;
+	if (_value_processing == NONE) _value = value;
 	// print out a debug message
 	debug(PSTR(LOG_LOOP "%s(%d):SET t=%d v=%d\n"),_description,_child_id,_type,_value);
 }
@@ -171,8 +176,10 @@ void ChildFloat::setValue(float value) {
 	if (isnan(value)) return;
 	_total = _total + value;
 	_samples++;
-	// averages the values
-	_value = _total / _samples;
+	// process the value
+	if (_value_processing == AVG) _value = (_total / _samples);
+	if (_value_processing == SUM) _value = _total;
+	if (_value_processing == NONE) _value = value;
 	// round the value if float precision has been customized
 	if (_float_precision != 2) {
 		if (_float_precision == 0) _value = (int) _value;
@@ -238,8 +245,10 @@ void ChildDouble::setValue(double value) {
 	if (isnan(value)) return;
 	_total = _total + value;
 	_samples++;
-	// averages the values
-	_value = _total / _samples;
+	// process the value
+	if (_value_processing == AVG) _value = (_total / _samples);
+	if (_value_processing == SUM) _value = _total;
+	if (_value_processing == NONE) _value = value;
 	// round the value if float precision has been customized
 	if (_float_precision != 4) {
 		if (_float_precision == 0) _value = (int) _value;

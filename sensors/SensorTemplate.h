@@ -58,7 +58,7 @@ public:
 		// if there are multiple children, identify which one the loop function has to be executed for
 		if (child->getType() == V_TEMP) {
 			float temperature = 30;
-			temperature += _temperature_offset;
+			temperature = _temperatureOffset(temperature);
 			// store the value into the child object. NodeManager will take care of sending it back to the gateway
 			((ChildFloat*)child)->setValue(temperature);
 		}
@@ -84,5 +84,11 @@ public:
 		}
 	};
 #endif
+
+protected:
+	// add here private functions (private variables have to be decleared above). As per naming convention they should start with "_"
+	float _temperatureOffset(float value) {
+		return value + _temperature_offset;
+	};
 };
 #endif

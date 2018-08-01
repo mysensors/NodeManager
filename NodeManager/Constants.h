@@ -36,7 +36,7 @@ enum status {
 	SLEEP	
 };
 
-//define Timer type
+//define Timer mode
 enum timer_mode {
 	NOT_CONFIGURED,
 	TIME_INTERVAL,
@@ -50,7 +50,14 @@ enum timer_mode {
 	AT_HOUR,
 	AT_DAY
 #endif
-} ;
+};
+
+// define Child 
+enum child_processing {
+	NONE,
+	AVG,
+	SUM
+};
 
 /***********************************
 Chip type

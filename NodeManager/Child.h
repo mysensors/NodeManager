@@ -44,6 +44,8 @@ public:
 	// set sensor description
 	void setDescription(const char* value);
 	const char* getDescription();
+	// configure the behavior of the child when setValue() is called multiple times. It can be NONE (ignore the previous calls but the last one),  AVG (averages the values), SUM (sum up the values) (default: AVG)
+	void setValueProcessing(child_processing value);
 	// send the current value to the gateway
 	virtual void sendValue(bool force);
 	// print the current value on a LCD display
@@ -68,6 +70,7 @@ protected:
 	int _type = V_CUSTOM;
 	int _float_precision;
 	const char* _description = "";
+	child_processing _value_processing = AVG;
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	Timer* _force_update_timer;
 	float _min_threshold = FLT_MIN;

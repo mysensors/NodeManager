@@ -228,52 +228,52 @@ void NodeManager::loop() {
 	// if the time was last updated more than the given number of minutes ago, update it
 	if (_time_is_valid && _sync_time_after_interval > 0 && (now() - _time_last_sync) > (long)_sync_time_after_interval*60) syncTime();
 #endif
-	// turn on the pin powering all the sensors
 #if NODEMANAGER_POWER_MANAGER == ON
+	// turn on the pin powering all the sensors
 	powerOn();
 #endif
 	// run loop for all the registered sensors
 	for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
 		Sensor* sensor = *itr;
+		// clear the MyMessage so will be ready to be used for the sensor
+		_message.clear();
 #if NODEMANAGER_INTERRUPTS == ON
+		// if there was an interrupt for this sensor, call ONLY this sensor's functions
 		if (_last_interrupt_pin != -1 && sensor->getInterruptPin() == _last_interrupt_pin) {
-			// if there was an interrupt for this sensor, call the sensor's interrupt()
-			_message.clear();
-			// call the sensor loop, provided the interrupt has been "accepted" by interrupt()
+			// call the sensor interrupt() and then loop(), provided the interrupt has been "accepted" by interrupt()
 			if (sensor->interrupt()) sensor->loop(nullptr);
 			// reset the last interrupt pin
 			_last_interrupt_pin = -1;
 		}
 		else if (_last_interrupt_pin == -1) {
-#else
-			if (true) {
 #endif
-				// if just at the end of a cycle, call the sensor's loop() 
-				_message.clear();
-				sensor->loop(nullptr);
-			}
+			// if just at the end of a cycle, call all the sensor's loop() 
+			sensor->loop(nullptr);
+#if NODEMANAGER_INTERRUPTS == ON
 		}
-		// turn off the pin powering all the sensors
-#if NODEMANAGER_POWER_MANAGER == ON
-		powerOff();
-#endif
-#if NODEMANAGER_SERIAL_INPUT == ON
-		// read a string from the serial input. Timeout is 1000 millis and can be customized with Serial.setTimeout()
-		debug_verbose(PSTR(LOG_LOOP "INPUT...\n"));
-		String input = MY_SERIALDEVICE.readString();
-		if (input.length() != 0) {
-			debug_verbose(PSTR(LOG_LOOP "INPUT v=%s\n"),const_cast<char*>(input.c_str()));
-			// parse the message
-			_message.clear();
-			bool ok = protocolParse(_message,const_cast<char*>(input.c_str()));
-			if (ok) receive(_message);
-		}
-#endif
-#if NODEMANAGER_SLEEP == ON
-		// continue/start sleeping as requested
-		if (isSleepingNode()) _sleep();
 #endif
 	}
+#if NODEMANAGER_POWER_MANAGER == ON
+	// turn off the pin powering all the sensors
+	powerOff();
+#endif
+#if NODEMANAGER_SERIAL_INPUT == ON
+	// read a string from the serial input. Timeout is 1000 millis and can be customized with Serial.setTimeout()
+	debug_verbose(PSTR(LOG_LOOP "INPUT...\n"));
+	String input = MY_SERIALDEVICE.readString();
+	if (input.length() != 0) {
+		debug_verbose(PSTR(LOG_LOOP "INPUT v=%s\n"),const_cast<char*>(input.c_str()));
+		// parse the message
+		_message.clear();
+		bool ok = protocolParse(_message,const_cast<char*>(input.c_str()));
+		if (ok) receive(_message);
+	}
+#endif
+#if NODEMANAGER_SLEEP == ON
+	// continue/start sleeping as requested
+	if (isSleepingNode()) _sleep();
+#endif
+}
 
 #if NODEMANAGER_RECEIVE == ON
 	// dispacth inbound messages

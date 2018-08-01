@@ -56,8 +56,7 @@ public:
 	void onSetup() {
 		// report immediately
 		setReportTimerMode(IMMEDIATELY);
-	}
-	;
+	};
 
 	// what to do as the main task when receiving a message
 	void onReceive(MyMessage* message) {

@@ -32,8 +32,6 @@ public:
 		children.allocateBlocks(1);
 		new ChildDouble(this,nodeManager.getAvailableChildId(child_id),S_POWER,V_KWH,_name);
 		setPulseFactor(1000);
-		setPinInitialValue(LOW);
-		setInterruptMode(RISING);
 	};
 	
 protected:
