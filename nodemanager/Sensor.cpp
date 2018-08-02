@@ -154,8 +154,10 @@ void Sensor::setup() {
 	_measure_timer->start();
 #if NODEMANAGER_INTERRUPTS == ON
 	// for interrupt based sensors, register a callback for the interrupt
-	_interrupt_pin = _pin;
-	nodeManager.setInterrupt(_pin,_interrupt_mode,_initial_value);
+	if (_interrupt_mode != MODE_NOT_DEFINED) {
+		_interrupt_pin = _pin;
+		nodeManager.setInterrupt(_pin,_interrupt_mode,_initial_value);
+	}
 #endif
 #if NODEMANAGER_EEPROM == ON
 	// if there is any child which is supposed to persist its value in EEPROM, load the last saved value

@@ -23,7 +23,7 @@
 #include <Arduino.h>
 
 // include NodeManager's constants
-#include "NodeManager/Constants.h"
+#include "nodemanager/Constants.h"
 
 /***********************************
 Include required third-party libraries
@@ -66,29 +66,29 @@ Include NodeManager core code
 */
 
 // List class
-#include "NodeManager/List.h"
+#include "nodemanager/List.h"
 
 // PowerManager class
 #if NODEMANAGER_POWER_MANAGER == ON
-#include "NodeManager/PowerManager.cpp"
+#include "nodemanager/PowerManager.cpp"
 #endif
 
 // ConfigurationRequest class for OTA configuration
 #if NODEMANAGER_OTA_CONFIGURATION == ON
-#include "NodeManager/ConfigurationRequest.cpp"
+#include "nodemanager/ConfigurationRequest.cpp"
 #endif
 
 // NodeManager class
-#include "NodeManager/NodeManager.cpp"
+#include "nodemanager/NodeManager.cpp"
 // create the global variable nodeManager that can be called from within the sketch
 extern NodeManager nodeManager;
 NodeManager nodeManager;
 // Sensor class
-#include "NodeManager/Sensor.cpp"
+#include "nodemanager/Sensor.cpp"
 // Child class
-#include "NodeManager/Child.cpp"
+#include "nodemanager/Child.cpp"
 // Timer class
-#include "NodeManager/Timer.cpp"
+#include "nodemanager/Timer.cpp"
 
 #if NODEMANAGER_OTA_CONFIGURATION == ON
 // include SensorConfiguration if needed

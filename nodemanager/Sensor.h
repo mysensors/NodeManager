@@ -127,7 +127,7 @@ protected:
 	bool _evaluateTimer(Timer* timer);
 #if NODEMANAGER_INTERRUPTS == ON
 	int _interrupt_pin = -1;
-	int _interrupt_mode = -1;
+	int _interrupt_mode = MODE_NOT_DEFINED;
 	int _wait_after_interrupt = 0;
 	int _initial_value = -1;
 	bool _interrupt_strict = true;
