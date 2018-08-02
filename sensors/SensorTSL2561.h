@@ -113,13 +113,13 @@ public:
 		// request the light level
 		switch (_tsl_spectrum) {
 		case SensorTSL2561::VISIBLE:
-			child->setValue(_tsl->getLuminosity(TSL2561_VISIBLE));
+			child->setValue((int)_tsl->getLuminosity(TSL2561_VISIBLE));
 			break; 
 		case SensorTSL2561::FULLSPECTRUM:
-			child->setValue(_tsl->getLuminosity(TSL2561_FULLSPECTRUM));
+			child->setValue((int)_tsl->getLuminosity(TSL2561_FULLSPECTRUM));
 			break; 
 		case SensorTSL2561::INFRARED:
-			child->setValue(_tsl->getLuminosity(TSL2561_INFRARED));
+			child->setValue((int)_tsl->getLuminosity(TSL2561_INFRARED));
 			break; 
 		case SensorTSL2561::FULL:
 			// request the full light level
@@ -127,7 +127,7 @@ public:
 			uint16_t ir, full;
 			ir = lum >> 16;
 			full = lum & 0xFFFF;
-			child->setValue(_tsl->calculateLux(full, ir));
+			child->setValue((int)_tsl->calculateLux(full, ir));
 			break; 
 		}
 	};
