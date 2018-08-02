@@ -124,6 +124,7 @@ protected:
 	bool _first_run = true;
 	Timer* _report_timer;
 	Timer* _measure_timer;
+	bool _evaluateTimer(Timer* timer);
 #if NODEMANAGER_INTERRUPTS == ON
 	int _interrupt_pin = -1;
 	int _interrupt_mode = -1;

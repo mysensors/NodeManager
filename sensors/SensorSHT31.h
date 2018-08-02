@@ -48,7 +48,7 @@ public:
 	// define what to do during loop
 	void onLoop(Child* child) {
 		// temperature sensor
-		if child->getType() == V_TEMP) {
+		if (child->getType() == V_TEMP) {
 			// read the temperature
 			float temperature = _sht31->readTemperature();
 			// convert it

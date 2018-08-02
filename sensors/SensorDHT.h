@@ -54,7 +54,7 @@ public:
 		nodeManager.sleepOrWait(_dht->getMinimumSamplingPeriod());
 		_dht->readSensor(true);
 		// temperature sensor
-		if child->getType() == V_TEMP) {
+		if (child->getType() == V_TEMP) {
 			// read the temperature
 			float temperature = _dht->getTemperature();
 			if (!nodeManager.getIsMetric()) temperature = _dht->toFahrenheit(temperature);

@@ -29,8 +29,10 @@ class SensorPowerMeter: public SensorPulseMeter {
 public:
 	SensorPowerMeter(int pin, int child_id = -255): SensorPulseMeter(pin, child_id) {
 		_name = "POWER";
-		children.allocateBlocks(1);
-		new Child(this,DOUBLE,nodeManager.getAvailableChildId(child_id),S_POWER,V_KWH,_name);
+		children.get()->setFormat(DOUBLE);
+		children.get()->setPresentation(S_POWER);
+		children.get()->setType(V_KWH);
+		children.get()->setDescription(_name);
 		setPulseFactor(1000);
 	};
 	

@@ -44,7 +44,7 @@ public:
 	// what to do during loop
 	void onLoop(Child* child) {
 		// temperature sensor
-		if child->getType() == V_TEMP) {
+		if (child->getType() == V_TEMP) {
 			// read the temperature
 			float temperature = SHT2x.GetTemperature();
 			// convert it

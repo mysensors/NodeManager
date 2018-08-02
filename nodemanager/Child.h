@@ -31,7 +31,7 @@ class Sensor;
 // define the number of slots of the EEPROM needed to store a Child's value
 #define EEPROM_CHILD_SIZE 6
 // define the relative positions of each information
-#define EEPROM_CHILD_CHECKSUM 0
+#define EEPROM_CHILD_TYPE 0
 #define EEPROM_CHILD_SIGN 1
 #define EEPROM_CHILD_INT_1 2
 #define EEPROM_CHILD_INT_2 3
@@ -45,6 +45,9 @@ public:
 	// set child id used to communicate with the gateway/controller
 	void setChildId(int value);
 	int getChildId();
+	// set sensor format
+	void setFormat(value_format value);
+	value_format getFormat();
 	// set sensor presentation (default: S_CUSTOM)
 	void setPresentation(int value);
 	int getPresentation();
@@ -58,6 +61,8 @@ public:
 	const char* getDescription();
 	// configure the behavior of the child when setValue() is called multiple times. It can be NONE (ignore the previous values but the last one),  AVG (averages the values), SUM (sum up the values) (default: AVG)
 	void setValueProcessing(child_processing value);
+	// send the value to the gateway even if there have been no samples collected (default: false)
+	void setSendWithoutValue(bool value);
 	// set the value of the child
 	void setValue(int value);
 	void setValue(float value);
@@ -111,6 +116,7 @@ protected:
 	double _value = 0;
 	const char* _value_string = "";
 	double _total = 0;
+	bool _send_without_value = false;
 	void _setValueNumber(double value);
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	double _last_value = 0;

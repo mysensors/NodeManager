@@ -85,45 +85,41 @@ void Sensor::setInterruptStrict(bool value) {
 void Sensor::setReportTimerMode(timer_mode value) {
 	_report_timer->setMode(value);
 }
-
-// After how many seconds the sensor will report back its measure
 void Sensor::setReportTimerValue(int value) {
 	_report_timer->setValue(value);
 }
-
 void Sensor::setMeasureTimerMode(timer_mode value) {
 	_measure_timer->setMode(value);
 }
-
 void Sensor::setMeasureTimerValue(int value) {
 	_measure_timer->setValue(value);
 }
-
-// After how many seconds the sensor will report back its measure
 void Sensor::setReportIntervalSeconds(int value) {
 	_report_timer->setMode(TIME_INTERVAL);
 	_report_timer->setValue(value);
 }
-
-// After how many minutes the sensor will report back its measure 
 void Sensor::setReportIntervalMinutes(int value) {
 	setReportIntervalSeconds(value*60);
 }
-
-// After how many hours the sensor will report back its measure 
 void Sensor::setReportIntervalHours(int value) {
 	setReportIntervalSeconds(value*60*60);
 }
-
-// After how many days the sensor will report back its measure 
 void Sensor::setReportIntervalDays(int value) {
 	setReportIntervalSeconds(value*60*60*24);
 }
 
-
 // register a child
 void Sensor::registerChild(Child* child) {
 	children.push(child);
+}
+
+// return the requested child 
+Child* Sensor::getChild(int child_id) {
+	for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
+		Child* child = *itr;
+		if (child->getChildId() == child_id) return child;
+	}
+	return nullptr;
 }
 
 // present the sensor to the gateway and controller
@@ -180,8 +176,8 @@ void Sensor::setup() {
 
 // call the sensor-specific implementation of loop
 void Sensor::loop(MyMessage* message) {
-	// run the sensor's loop() function if the timer is over OR it is the first run OR we've been called from receive()
-	if (_measure_timer->isOver() || _first_run || message != nullptr) {
+	// run the sensor's loop() function if the timer is over OR we've been called from receive()
+	if (_evaluateTimer(_measure_timer) || message != nullptr) {
 #if NODEMANAGER_POWER_MANAGER == ON
 		// turn the sensor on
 		powerOn();
@@ -216,8 +212,8 @@ void Sensor::loop(MyMessage* message) {
 		// restart the timer if over
 		if (_measure_timer->isOver()) _measure_timer->start();
 	}
-	// send the latest measure back to the network if the timer is over OR it is the first run OR we've been called from receive()
-	if (_report_timer->isOver() || _first_run || message != nullptr) {
+	// send the latest measure back to the network if the timer is over OR we've been called from receive()
+	if (_evaluateTimer(_report_timer) || message != nullptr) {
 		// iterates over all the children
 		for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
 			Child* child = *itr;
@@ -225,8 +221,6 @@ void Sensor::loop(MyMessage* message) {
 			if (message != nullptr && message->sensor != child->getChildId()) continue;
 			// send the value back to the controller
 			child->sendValue(message != nullptr);
-			// reset the counters
-			child->reset();
 		}
 		// restart the timer if over
 		if (_report_timer->isOver()) _report_timer->start();
@@ -264,20 +258,12 @@ void Sensor::receive(MyMessage* message) {
 }
 #endif
 
-// return the requested child 
-Child* Sensor::getChild(int child_id) {
-	for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
-		Child* child = *itr;
-		if (child->getChildId() == child_id) return child;
-	}
-	return nullptr;
-}
-
 #if NODEMANAGER_POWER_MANAGER == ON
 void Sensor::setPowerManager(PowerManager& powerManager) {
 	_powerManager = &powerManager;
 }
 #endif
+
 #if NODEMANAGER_HOOKING == ON
 void Sensor::setSetupHook(void (*function)(Sensor* sensor)) {
 	_setup_hook = function;
@@ -311,3 +297,23 @@ void Sensor::onInterrupt(){}
 #if NODEMANAGER_OTA_CONFIGURATION == ON
 void Sensor::onOTAConfiguration(ConfigurationRequest* request) {}
 #endif
+
+// evaluate the timer and return true if can be considered over
+bool Sensor::_evaluateTimer(Timer* timer) {
+	// timer is over
+	if (timer->isOver()) return true;
+	if (_first_run) {
+#if NODEMANAGER_TIME == ON || NODEMANAGER_RTC == ON
+		// if it is the first run but we need to expect a specific time, return false
+		if (timer->getMode() == EVERY_MINUTE || 
+			timer->getMode() == EVERY_HOUR || 
+			timer->getMode() == EVERY_DAY || 
+			timer->getMode() == AT_MINUTE || 
+			timer->getMode() == AT_HOUR ||
+			timer->getMode() == AT_DAY) return false;
+#endif
+		// this is the first run, always return tru
+		return true;
+	}
+	return false;
+}

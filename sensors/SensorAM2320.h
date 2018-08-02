@@ -49,7 +49,7 @@ public:
 		int status = _th->Read();
 		if (status != 0) return;
 		// temperature sensor
-		if child->getType() == V_TEMP) {
+		if (child->getType() == V_TEMP) {
 			float temperature = _th->t;
 			// store the value
 			child->setValue(temperature);

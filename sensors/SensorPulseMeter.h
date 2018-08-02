@@ -30,6 +30,8 @@ protected:
 public:
 	SensorPulseMeter(int pin, int child_id = -255): Sensor(pin) {
 		_name = "PULSE";
+		children.allocateBlocks(1);
+		new Child(this,DOUBLE,nodeManager.getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
 		// enable pullup and capture interrupt on the falling edge
 		setPinInitialValue(HIGH);
 		setInterruptMode(FALLING);
@@ -53,6 +55,8 @@ public:
 	void onSetup() {
 		// sum up the values of consecutive setValue() calls
 		children.get()->setValueProcessing(SUM);
+		// send the value even if no interrupt has happened at the end of the reporting interval
+		children.get()->setSendWithoutValue(true);
 #if NODEMANAGER_EEPROM == ON
 		// keep track of the value in EEPROM so to restore it upon a reboot
 		children.get()->setPersistValue(true);

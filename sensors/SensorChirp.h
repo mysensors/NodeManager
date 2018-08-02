@@ -73,7 +73,7 @@ public:
 	void onLoop(Child* child) {
 		while (_chirp->isBusy()) wait(50);
 		// temperature sensor
-		if child->getType() == V_TEMP) {
+		if (child->getType() == V_TEMP) {
 			// read the temperature
 			float temperature = _chirp->getTemperature()/(float)10;
 			// convert it

@@ -111,15 +111,15 @@ public:
 		// heandle a SET command
 		if (message->getCommand() == C_SET && message->type == child->getType()) {
 			// if changing the status
-			if child->getType() == V_STATUS) setStatus(message->getInt());
+			if (child->getType() == V_STATUS) setStatus(message->getInt());
 			// if changing the percentage of the dimmer
-			if child->getType() == V_PERCENTAGE) setPercentage(message->getInt());
+			if (child->getType() == V_PERCENTAGE) setPercentage(message->getInt());
 		}
 		// handle REQ command
 		if (message->getCommand() == C_REQ && message->type == child->getType()) {
 			// return the current status
-			if child->getType() == V_STATUS) child->setValue(_status);
-			if child->getType() == V_PERCENTAGE) child->setValue(_percentage);
+			if (child->getType() == V_STATUS) child->setValue(_status);
+			if (child->getType() == V_PERCENTAGE) child->setValue(_percentage);
 		}
 	};
 	

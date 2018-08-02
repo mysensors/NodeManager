@@ -29,14 +29,11 @@ Child::Child() {
 // constructor
 Child::Child(Sensor* sensor, value_format format, int child_id, int presentation, int type, const char* description) {
 	_sensor = sensor;
-	_format = format;
+	setFormat(format);
 	_child_id = child_id;
 	_presentation = presentation;
 	_type = type;
 	_description = description;
-	// set default float precision
-	if (_format == FLOAT) _float_precision = 2;
-	if (_format == DOUBLE) _float_precision = 4;
 	// register the child with the sensor
 	_sensor->registerChild(this);
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
@@ -55,6 +52,15 @@ void Child::setChildId(int value) {
 }
 int Child::getChildId() {
 	return _child_id;
+}
+void Child::setFormat(value_format value) {
+	_format = value;
+	// set default float precision
+	if (_format == FLOAT) _float_precision = 2;
+	if (_format == DOUBLE) _float_precision = 4;
+}
+value_format Child::getFormat() {
+	return _format;
 }
 void Child::setPresentation(int value) {
 	_presentation = value;
@@ -79,6 +85,9 @@ const char* Child::getDescription() {
 }
 void Child::setValueProcessing(child_processing value) {
 	_value_processing = value;
+}
+void Child::setSendWithoutValue(bool value) {
+	_send_without_value = value;
 }
 
 // set the value to the child
@@ -130,7 +139,8 @@ const char* Child::getValueString(){
 
 // send the value back to the controller
 void Child::sendValue(bool force) {
-	if (_samples == 0) return;
+	// do not send if no samples have been collected, unless instructed otherwise
+	if (! _send_without_value && _samples == 0) return;
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	if (! force) {
 		// if the value is a number
@@ -185,6 +195,10 @@ void Child::reset() {
 		_total = 0;
 		_samples = 0;
 		_value = 0;
+#if NODEMANAGER_EEPROM == ON
+		// if the value is supposed to be persisted in EEPROM, save it
+		if (_persist_value) saveValue();
+#endif
 	} else _value_string = "";
 }
 
@@ -233,8 +247,8 @@ void Child::saveValue() {
 	// number is too large to be saved or we run out of EEPROM slots
 	if (_value >= 10000 || ((_eeprom_address+EEPROM_CHILD_SIZE) > 255) ) return;
 	debug(PSTR(LOG_EEPROM "%s(%d):SAVE\n"),_description,_child_id);
-	// save the checksum
-	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_CHECKSUM,0);
+	// save the type
+	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_TYPE,_type);
 	// encode the sign (e.g. 0 if > 0, 1 otherwise)
 	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_SIGN, _value >= 0 ? 0 : 1);
 	// encode and save the integer value (e.g. 7240 -> int_1 = 72, int_2 = 40)
@@ -251,8 +265,8 @@ void Child::loadValue() {
 	if (_format == STRING) return;
 	// ensure we are not going to read beyond the available EEPROM slots
 	if (((_eeprom_address+EEPROM_CHILD_SIZE) > 255) ) return;
-	// ensure the checksum is valid
-	if (nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_CHECKSUM) != 0) return;
+	// ensure the type is valid
+	if (nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_TYPE) != _type) return;
 	debug(PSTR(LOG_EEPROM "%s(%d):LOAD\n"),_description,_child_id);
 	// decode the integer part
 	double value = 0;

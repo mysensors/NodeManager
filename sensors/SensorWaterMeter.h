@@ -29,8 +29,10 @@ class SensorWaterMeter: public SensorPulseMeter {
 public:
 	SensorWaterMeter(int pin, int child_id = -255): SensorPulseMeter(pin, child_id) {
 		_name = "WATER";
-		children.allocateBlocks(1);
-		new Child(this,DOUBLE,nodeManager.getAvailableChildId(child_id),S_WATER,V_VOLUME,_name);
+		children.get()->setFormat(DOUBLE);
+		children.get()->setPresentation(S_WATER);
+		children.get()->setType(V_VOLUME);
+		children.get()->setDescription(_name);
 		setPulseFactor(1000);
 	};
 	

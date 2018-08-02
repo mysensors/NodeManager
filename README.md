@@ -454,6 +454,9 @@ The following methods are available for all the child:
 	// set child id used to communicate with the gateway/controller
 	void setChildId(int value);
 	int getChildId();
+	// set sensor format
+	void setFormat(value_format value);
+	value_format getFormat();
 	// set sensor presentation (default: S_CUSTOM)
 	void setPresentation(int value);
 	int getPresentation();
@@ -467,6 +470,8 @@ The following methods are available for all the child:
 	const char* getDescription();
 	// configure the behavior of the child when setValue() is called multiple times. It can be NONE (ignore the previous values but the last one),  AVG (averages the values), SUM (sum up the values) (default: AVG)
 	void setValueProcessing(child_processing value);
+	// send the value to the gateway even if there have been no samples collected (default: false)
+	void setSendWithoutValue(bool value);
 	// set the value of the child
 	void setValue(int value);
 	void setValue(float value);
@@ -492,6 +497,11 @@ The following methods are available for all the child:
 	void setMaxThreshold(float value);
 	// do not report values if too close to the previous one (default: 0)
 	void setValueDelta(float value);
+	// get the last value of the child
+	int getLastValueInt();
+	float getLastValueFloat();
+	double getLastValueDouble();
+	const char* getLastValueString();
 #endif
 #if NODEMANAGER_EEPROM == ON
 	// persist the child's value in EEPROM. The value will be saved at each update and loaded at boot time (default: false)

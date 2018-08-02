@@ -56,7 +56,7 @@ public:
 	// optionally define what the sensor should do during loop
 	void onLoop(Child* child) {
 		// if there are multiple children, identify which one the loop function has to be executed for
-		if child->getType() == V_TEMP) {
+		if (child->getType() == V_TEMP) {
 			float temperature = 30;
 			temperature = _temperatureOffset(temperature);
 			// store the value into the child object. NodeManager will take care of sending it back to the gateway
