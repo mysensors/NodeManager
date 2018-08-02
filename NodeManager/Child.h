@@ -41,7 +41,7 @@ class Sensor;
 class Child {
 public:
 	Child();
-	Child(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
+	Child(Sensor* sensor, value_format format, int child_id, int presentation, int type, const char* description = "");
 	// set child id used to communicate with the gateway/controller
 	void setChildId(int value);
 	int getChildId();
@@ -58,12 +58,22 @@ public:
 	const char* getDescription();
 	// configure the behavior of the child when setValue() is called multiple times. It can be NONE (ignore the previous values but the last one),  AVG (averages the values), SUM (sum up the values) (default: AVG)
 	void setValueProcessing(child_processing value);
+	// set the value of the child
+	void setValue(int value);
+	void setValue(float value);
+	void setValue(double value);
+	void setValue(const char* value);
+	// get the value of the child
+	int getValueInt();
+	float getValueFloat();
+	double getValueDouble();
+	const char* getValueString();
 	// send the current value to the gateway
-	virtual void sendValue(bool force = 0);
+	void sendValue(bool force = 0);
 	// print the current value on a LCD display
-	virtual void print(Print& device);
+	void print(Print& device);
 	// reset all the counters
-	virtual void reset();
+	void reset();
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	// force to send an update after the configured number of minutes
 	void setForceUpdateTimerValue(int value);
@@ -79,20 +89,27 @@ public:
 	void setPersistValue(bool value);
 	bool getPersistValue();
 	// load old value from EEPROM
-	virtual void loadValue();
+	void loadValue();
 	// load current value to EEPROM
-	virtual void saveValue();
+	void saveValue();
 #endif
 protected:
 	Sensor* _sensor;
+	value_format _format;
 	int _child_id;
 	int _presentation = S_CUSTOM;
 	int _type = V_CUSTOM;
-	int _float_precision;
 	const char* _description = "";
 	int _samples = 0;
+	int _float_precision;
 	child_processing _value_processing = AVG;
+	double _value = 0;
+	const char* _value_string = "";
+	double _total = 0;
+	void _setValueNumber(double value);
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
+	double _last_value = 0;
+	const char* _last_value_string = "";
 	Timer* _force_update_timer;
 	float _min_threshold = FLT_MIN;
 	float _max_threshold = FLT_MAX;
@@ -101,92 +118,8 @@ protected:
 #if NODEMANAGER_EEPROM == ON
 	bool _persist_value = false;
 	int _eeprom_address;
-	bool _saveValueInt(int value);
-	bool _saveValueFloat(float value);
-	bool _saveValueDouble(double value);
-	int _loadValueInt();
-	float _loadValueFloat();
-	double _loadValueDouble();
 #endif
 };
 
-class ChildInt: public Child {
-public:
-	ChildInt(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
-	void setValue(int value);
-	int getValue();
-	void sendValue(bool force = 0);
-	void print(Print& device);
-	void reset();
-#if NODEMANAGER_EEPROM == ON
-	void loadValue();
-	void saveValue();
-#endif
-private:
-	int _value;
-	int _total = 0;
-#if NODEMANAGER_CONDITIONAL_REPORT == ON
-	int _last_value = -256;
-#endif
-};
-
-class ChildFloat: public Child {
-public:
-	ChildFloat(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
-	void setValue(float value);
-	float getValue();
-	void sendValue(bool force = 0);
-	void print(Print& device);
-	void reset();
-#if NODEMANAGER_EEPROM == ON
-	void loadValue();
-	void saveValue();
-#endif
-private:
-	float _value = 0;
-	float _total = 0;
-#if NODEMANAGER_CONDITIONAL_REPORT == ON
-	float _last_value = 0;
-#endif
-};
-
-class ChildDouble: public Child {
-public:
-	ChildDouble(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
-	void setValue(double value);
-	double getValue();
-	void sendValue(bool force = 0);
-	void print(Print& device);
-	void reset();
-#if NODEMANAGER_EEPROM == ON
-	void loadValue();
-	void saveValue();
-#endif
-private:
-	double _value;
-	double _total = 0;
-#if NODEMANAGER_CONDITIONAL_REPORT == ON
-	double _last_value = -256;
-#endif
-};
-
-class ChildString: public Child {
-public:
-	ChildString(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
-	void setValue(const char* value);
-	const char* getValue();
-	void sendValue(bool force = 0);
-	void print(Print& device);
-	void reset();
-#if NODEMANAGER_EEPROM == ON
-	void loadValue();
-	void saveValue();
-#endif
-private:
-	const char* _value = "";
-#if NODEMANAGER_CONDITIONAL_REPORT == ON
-	const char* _last_value = "";
-#endif
-};
 
 #endif

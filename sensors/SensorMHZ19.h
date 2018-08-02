@@ -37,7 +37,7 @@ public:
 		_rx_pin = rxpin;
 		_tx_pin = txpin;
 		children.allocateBlocks(1);
-		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_AIR_QUALITY,V_LEVEL,_name);
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_AIR_QUALITY,V_LEVEL,_name);
 	};
 
 	// define what to do during setup
@@ -54,7 +54,7 @@ public:
 		// Read the ppm value
 		int co2ppm = _readCO2(); 
 		// store the value
-		((ChildInt*)child)->setValue(co2ppm);
+		child->setValue(co2ppm);
 	};
 
 protected:

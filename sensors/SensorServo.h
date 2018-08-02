@@ -34,7 +34,7 @@ public:
 	SensorServo(int pin, int child_id = -255): Sensor(pin) {
 		_name = "SERVO";
 		children.allocateBlocks(1);
-		new ChildInt(this,nodeManager.getAvailableChildId(child_id), S_DIMMER, V_PERCENTAGE ,_name);
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id), S_DIMMER, V_PERCENTAGE ,_name);
 	};
 	
 	// set the servo to the given percentage
@@ -45,7 +45,7 @@ public:
 		// set the value so to send it back
 		Child* child = children.get(1);
 		if (child == nullptr) return;
-		((ChildInt*)child)->setValue(_value);
+		child->setValue(_value);
 	};
 	
 	// define what to do during setup
@@ -60,7 +60,7 @@ public:
 		Child* child = getChild(message->sensor);
 		if (child == nullptr) return;
 		if (message->getCommand() == C_SET) setPercentage(message->getInt());
-		if (message->getCommand() == C_REQ) ((ChildInt*)child)->setValue(_value);
+		if (message->getCommand() == C_REQ) child->setValue(_value);
 	};
 };
 #endif

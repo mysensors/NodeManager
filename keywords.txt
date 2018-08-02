@@ -20,10 +20,6 @@ NODEMANAGER_SERIAL_INPUT	LITERAL1
 NodeManager	KEYWORD1
 Sensor	KEYWORD1
 Child	KEYWORD1
-ChildInt	KEYWORD1
-ChildFloat	KEYWORD1
-ChildDouble	KEYWORD1
-ChildString	KEYWORD1
 ConfigurationRequest	KEYWORD1
 List	KEYWORD1
 PowerManager	KEYWORD1
@@ -56,6 +52,8 @@ getTime	KEYWORD2
 getType	KEYWORD2
 getValue	KEYWORD2
 getValueFloat	KEYWORD2
+getValueDouble	KEYWORD2
+getValueString	KEYWORD2
 getValueInt	KEYWORD2
 getVcc	KEYWORD2
 hello	KEYWORD2
@@ -142,6 +140,10 @@ start	KEYWORD2
 stop	KEYWORD2
 syncTime	KEYWORD2
 wakeup	KEYWORD2
+setPersistValue	KEYWORD2
+getPersistValue	KEYWORD2
+loadValue	KEYWORD2
+loadValue	KEYWORD2
 
 # NodeManager sensors
 

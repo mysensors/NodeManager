@@ -35,7 +35,7 @@ public:
 	SensorThermistor(int pin, int child_id = -255): Sensor(pin) {
 		_name = "THERMISTOR";
 		children.allocateBlocks(1);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
 	};
 
 	// [101] resistance at 25 degrees C (default: 10000)
@@ -81,7 +81,7 @@ public:
 		temperature -= 273.15;                         // convert to C
 		temperature = nodeManager.celsiusToFahrenheit(temperature);
 		// store the value
-		((ChildFloat*)child)->setValue(temperature);
+		child->setValue(temperature);
 	};
 
 #if NODEMANAGER_OTA_CONFIGURATION == ON

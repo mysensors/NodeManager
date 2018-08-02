@@ -29,9 +29,9 @@ class SensorLDR: public SensorAnalogInput {
 public:
 	SensorLDR(int pin, int child_id = -255): SensorAnalogInput(pin, child_id) {
 		_name = "LDR";
-		children.get(1)->setPresentation(S_LIGHT_LEVEL);
-		children.get(1)->setType(V_LIGHT_LEVEL);
-		children.get(1)->setDescription(_name);
+		children.get()->setPresentation(S_LIGHT_LEVEL);
+		children.get()->setType(V_LIGHT_LEVEL);
+		children.get()->setDescription(_name);
 	};
 	
 	// define what to do during setup

@@ -29,9 +29,9 @@ class SensorDoor: public SensorInterrupt {
 public:
 	SensorDoor(int pin, int child_id = -255): SensorInterrupt(pin, child_id) {
 		_name = "DOOR";
-		children.get(1)->setPresentation(S_DOOR);
-		children.get(1)->setType(V_TRIPPED);
-		children.get(1)->setDescription(_name);
+		children.get()->setPresentation(S_DOOR);
+		children.get()->setType(V_TRIPPED);
+		children.get()->setDescription(_name);
 	};
 };
 #endif

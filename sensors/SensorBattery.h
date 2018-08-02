@@ -39,7 +39,7 @@ public:
 	SensorBattery(int child_id = BATTERY_CHILD_ID): Sensor(-1) {
 		_name = "BATTERY";
 		children.allocateBlocks(1);
-		new ChildFloat(this,child_id,S_MULTIMETER,V_VOLTAGE,_name);
+		new Child(this,FLOAT,child_id,S_MULTIMETER,V_VOLTAGE,_name);
 		// report battery level every 60 minutes by default
 		setReportIntervalMinutes(60);
 	};
@@ -94,7 +94,7 @@ public:
 		if (_battery_internal_vcc || _battery_pin == -1) volt = nodeManager.getVcc();
 		else volt = analogRead(_battery_pin) * _battery_volts_per_bit;
 		volt = volt * _battery_adj_factor;
-		((ChildFloat*)child)->setValue(volt);
+		child->setValue(volt);
 		// calculate the percentage
 		int percentage = ((volt - _battery_min) / (_battery_max - _battery_min)) * 100;
 		if (percentage > 100) percentage = 100;

@@ -42,7 +42,7 @@ public:
 	SensorSonoff(int child_id = -255): Sensor(-1) {
 		_name = "SONOFF";
 		children.allocateBlocks(1);
-		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_BINARY,V_STATUS,_name);
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_BINARY,V_STATUS,_name);
 	};
 
 	// [101] set the button's pin (default: 0)
@@ -99,7 +99,7 @@ public:
 		}
 		if (message->getCommand() == C_REQ) {
 			// return the current state
-			((ChildInt*)child)->setValue(_state);
+			child->setValue(_state);
 		}
 	};
 	
@@ -135,7 +135,7 @@ protected:
 		digitalWrite(_relay_pin, _state? _relay_on: _relay_off);
 		// Change LED state
 		digitalWrite(_led_pin, _state? _led_on: _led_off);
-		((ChildInt*)child)->setValue(_state);
+		child->setValue(_state);
 	};
 };
 #endif

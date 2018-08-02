@@ -40,8 +40,8 @@ public:
 		_rx_pin = rxpin;
 		_tx_pin = txpin;
 		children.allocateBlocks(2);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id), S_AIR_QUALITY, V_LEVEL, _name);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id+1), S_AIR_QUALITY, V_LEVEL, _name);
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id), S_AIR_QUALITY, V_LEVEL, _name);
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id+1), S_AIR_QUALITY, V_LEVEL, _name);
 	};
 
 	// Sleep sensor during measurment aka stop fan.
@@ -68,10 +68,10 @@ public:
 			error = _sds->read(&_p25,&_p10);
 			// Stop fan to keep it clean
 			if (_slp) _sds->sleep();
-			((ChildFloat*)child)->setValue(_p10);
+			child->setValue(_p10);
 		}
 		if (children.get(2) == child){
-			((ChildFloat*)child)->setValue(_p25);
+			child->setValue(_p25);
 		}
 	};
 };

@@ -39,7 +39,7 @@ public:
 		_echo_pin = echo_pin;
 		_trigger_pin = trigger_pin;
 		children.allocateBlocks(1);
-		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_DISTANCE,V_DISTANCE,_name);
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_DISTANCE,V_DISTANCE,_name);
 	};
 
 	// [103] Maximum distance we want to ping for (in centimeters) (default: 300)
@@ -61,7 +61,7 @@ public:
 	void onLoop(Child* child) {
 		int distance = nodeManager.getIsMetric() ? _sonar->ping_cm() : _sonar->ping_in();
 		if (! _report_if_invalid && distance == 0) return;
-		((ChildInt*)child)->setValue(distance);
+		child->setValue(distance);
 	};
 	
 #if NODEMANAGER_OTA_CONFIGURATION == ON

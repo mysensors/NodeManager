@@ -37,7 +37,7 @@ public:
 	SensorDigitalOutput(int pin, int child_id = -255): Sensor(pin) {
 		_name = "DIGITAL_O";
 		children.allocateBlocks(1);
-		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
 	};
 	
 	// [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
@@ -92,7 +92,7 @@ public:
 		_switchOutput(requested_status);
 		// store the new status so it will be sent to the controller
 		_status = requested_status;
-		((ChildInt*)children.get(1))->setValue(_status);
+		children.get()->setValue(_status);
 		// wait if needed for relays drawing a lot of current
 		if (_wait_after_set > 0)nodeManager.sleepOrWait(_wait_after_set);
 	};
@@ -128,7 +128,7 @@ public:
 	void onLoop(Child* child) {
 #if NODEMANAGER_EEPROM == ON
 		// if this is the first time running loop and a value has been restored from EEPROM, turn the output according the last value
-		if (_first_run) setStatus((ChildInt*)children.get().getValue());
+		if (_first_run) setStatus(children.get()->getValueInt());
 #endif
 		// if the time is over, turn the output off
 		if (_safeguard_timer->isOver()) {
@@ -148,7 +148,7 @@ public:
 		}
 		if (message->getCommand() == C_REQ && ! _legacy_mode) {
 			// just return the current status
-			((ChildInt*)child)->setValue(_status);
+			child->setValue(_status);
 		}
 	};
 	

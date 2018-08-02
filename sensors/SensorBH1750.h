@@ -35,7 +35,7 @@ public:
 	SensorBH1750(int child_id = -255): Sensor(-1) {
 		_name = "BH1750";
 		children.allocateBlocks(1);
-		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_LIGHT_LEVEL,V_LEVEL,_name);
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_LIGHT_LEVEL,V_LEVEL,_name);
 	};
 
 	// [101] set sensor reading mode, e.g. BH1750_ONE_TIME_HIGH_RES_MODE
@@ -53,7 +53,7 @@ public:
 	void onLoop(Child* child) {
 		// request the light level
 		int value = _lightSensor->readLightLevel();
-		((ChildInt*)child)->setValue(value);
+		child->setValue(value);
 	};
 	
 #if NODEMANAGER_OTA_CONFIGURATION == ON

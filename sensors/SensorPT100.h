@@ -32,30 +32,30 @@ protected:
 	
 public:
 	SensorPT100(int pin, int child_id = -255): Sensor(pin) {
-	_name = "PT100";
-	children.allocateBlocks(1);
-	new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-};
+		_name = "PT100";
+		children.allocateBlocks(1);
+		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+	};
 
 	// [101] set the voltageRef used to compare with analog measures
 	void setVoltageRef(float value) {
-	_voltageRef = value;
-};
+		_voltageRef = value;
+	};
 
 	// define what to do during setup
 	void onSetup() {
-	_PT100 = new DFRobotHighTemperature(_voltageRef); 
-	// set the pin as input
-	pinMode(_pin, INPUT);
-};
+		_PT100 = new DFRobotHighTemperature(_voltageRef); 
+		// set the pin as input
+		pinMode(_pin, INPUT);
+	};
 
-// define what to do during loop
+	// define what to do during loop
 	void onLoop(Child* child) {
-	// read the PT100 sensor
-	int temperature = _PT100->readTemperature(_pin);  
-	// store the value
-	((ChildFloat*)child)->setValue(temperature);
-};
+		// read the PT100 sensor
+		int temperature = _PT100->readTemperature(_pin);  
+		// store the value
+		child->setValue(temperature);
+	};
 
 #if NODEMANAGER_OTA_CONFIGURATION == ON
 	// define what to do when receiving an OTA configuration request

@@ -28,7 +28,7 @@ public:
 	SensorML8511(int pin, int child_id = -255): Sensor(pin) {
 		_name = "ML8511";
 		children.allocateBlocks(1);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_UV,V_UV,_name);
+		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_UV,V_UV,_name);
 	};
 
 	// define what to do during setup
@@ -47,7 +47,7 @@ public:
 		//Convert the voltage to a UV intensity level
 		float uvIntensity = _mapfloat(outputVoltage, 0.99, 2.8, 0.0, 15.0); 
 		// store the value
-		((ChildFloat*)child)->setValue(uvIntensity);
+		child->setValue(uvIntensity);
 	};
 	
 protected:

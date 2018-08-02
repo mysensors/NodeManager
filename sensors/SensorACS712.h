@@ -32,7 +32,7 @@ public:
 	SensorACS712(int pin, int child_id = -255): Sensor(pin) {
 		_name = "ACS712";
 		children.allocateBlocks(1);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_MULTIMETER,V_CURRENT,_name);
+		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_MULTIMETER,V_CURRENT,_name);
 	};
 
 	// [101] set how many mV are equivalent to 1 Amp. The value depends on the module (100 for 20A Module, 66 for 30A Module) (default: 185);
@@ -57,7 +57,7 @@ public:
 		double voltage = (value / 1024.0) * 5000; 
 		// convert voltage in amps
 		float value_float = ((voltage - _ACS_offset) / _mv_per_amp);
-		((ChildFloat*)child)->setValue(value_float);
+		child->setValue(value_float);
 	};
 };
 #endif

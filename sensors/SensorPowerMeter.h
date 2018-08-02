@@ -30,14 +30,14 @@ public:
 	SensorPowerMeter(int pin, int child_id = -255): SensorPulseMeter(pin, child_id) {
 		_name = "POWER";
 		children.allocateBlocks(1);
-		new ChildDouble(this,nodeManager.getAvailableChildId(child_id),S_POWER,V_KWH,_name);
+		new Child(this,DOUBLE,nodeManager.getAvailableChildId(child_id),S_POWER,V_KWH,_name);
 		setPulseFactor(1000);
 	};
 	
 	// what to do when receiving an interrupt
 	void onInterrupt() {
 		// increment the accumulated value
-		((ChildDouble*)children.get())->setValue(1 / _pulse_factor);
+		children.get()->setValue(1 / _pulse_factor);
 	};
 	
 	// what to do as the main task when receiving a message
@@ -46,7 +46,7 @@ public:
 		if (child == nullptr) return;
 		if (message->getCommand() == C_REQ && message->type == child->getType()) {
 			// send the accumulated value so far
-			((ChildDouble*)children.get())->sendValue();
+			children.get()->sendValue();
 		}
 	};
 };

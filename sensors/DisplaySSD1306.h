@@ -41,7 +41,7 @@ protected:
 public:
 	DisplaySSD1306(int child_id = -255): Display(child_id) {
 		_name = "SSD1306";
-		children.get(1)->setDescription(_name);
+		children.get()->setDescription(_name);
 	};
 
 	// set device

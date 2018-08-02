@@ -44,7 +44,7 @@ public:
 	SensorMQ(int pin, int child_id = -255): Sensor(pin) {
 		_name = "MQ";
 		children.allocateBlocks(1);
-		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_AIR_QUALITY,V_LEVEL,_name);
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_AIR_QUALITY,V_LEVEL,_name);
 	};
 
 	// [102] set the load resistance on the board, in ohms (default: 1000);
@@ -135,7 +135,7 @@ public:
 		// if warmup is configured, do not send the value back if within the warmup period
 		if (_warmup_minutes > 0 && millis() < _warmup_minutes*60*1000) return;
 		// store the value
-		((ChildInt*)child)->setValue(ppm);
+		child->setValue(ppm);
 	};
 	
 #if NODEMANAGER_OTA_CONFIGURATION == ON

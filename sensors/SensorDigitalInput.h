@@ -27,7 +27,7 @@ public:
 	SensorDigitalInput(int pin, int child_id = -255): Sensor(pin) {
 		_name = "DIGITAL_I";
 		children.allocateBlocks(1);
-		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
 	};
 
 	// define what to do during setup
@@ -41,7 +41,7 @@ public:
 		// read the value
 		int value = digitalRead(_pin);
 		// store the value
-		((ChildInt*)child)->setValue(value);
+		child->setValue(value);
 	};
 };
 #endif

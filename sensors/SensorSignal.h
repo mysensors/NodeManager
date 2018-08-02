@@ -34,7 +34,7 @@ public:
 	SensorSignal(int child_id = SIGNAL_CHILD_ID): Sensor(-1) {
 		_name = "SIGNAL";
 		children.allocateBlocks(1);
-		new ChildInt(this,child_id,S_SOUND,V_LEVEL,_name);
+		new Child(this,INT,child_id,S_SOUND,V_LEVEL,_name);
 		// report signal level every 60 minutes by default
 		setReportIntervalMinutes(60);
 	};
@@ -47,7 +47,7 @@ public:
 	// define what to do during loop
 	void onLoop(Child* child) {
 		int16_t value = transportGetSignalReport((signalReport_t)_signal_command);
-		((ChildInt*)child)->setValue(value);
+		child->setValue(value);
 	};
 	
 #if NODEMANAGER_OTA_CONFIGURATION == ON

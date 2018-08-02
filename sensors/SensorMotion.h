@@ -32,9 +32,9 @@ class SensorMotion: public SensorInterrupt {
 public:
 	SensorMotion(int pin, int child_id = -255): SensorInterrupt(pin, child_id) {
 		_name = "MOTION";
-		children.get(1)->setPresentation(S_MOTION);
-		children.get(1)->setType(V_TRIPPED);
-		children.get(1)->setDescription(_name);
+		children.get()->setPresentation(S_MOTION);
+		children.get()->setType(V_TRIPPED);
+		children.get()->setDescription(_name);
 		// trigger only when rising a HIGH value from the sensor
 		setPinInitialValue(LOW);
 		setInterruptMode(RISING);

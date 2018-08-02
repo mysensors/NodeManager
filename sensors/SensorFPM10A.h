@@ -44,7 +44,7 @@ public:
 		_rx_pin = rxpin;
 		_tx_pin = txpin;
 		children.allocateBlocks(1);
-		new ChildInt(this,nodeManager.getAvailableChildId(child_id), S_CUSTOM, V_CUSTOM, _name);
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id), S_CUSTOM, V_CUSTOM, _name);
 	};
 	
 	// set the baud rate of the serial port for connecting to the sensor (default: 57600)
@@ -98,7 +98,7 @@ public:
 			if (finger > 0) {
 				_fingerprint_is_valid = true;
 				// fingerprint match found, send the template ID back
-				((ChildInt*)child)->setValue(finger);
+				child->setValue(finger);
 				// leave the loop so we can report back
 				break;
 			}

@@ -30,7 +30,7 @@ public:
 	SensorConfiguration(int child_id = CONFIGURATION_CHILD_ID): Sensor(-1) {
 		_name = "CONFIG";
 		children.allocateBlocks(1);
-		new ChildInt(this,child_id,S_CUSTOM,V_CUSTOM,_name);
+		new Child(this,INT,child_id,S_CUSTOM,V_CUSTOM,_name);
 	};
 
 	// what to do as the main task when receiving a message

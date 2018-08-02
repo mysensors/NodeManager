@@ -51,7 +51,7 @@ public:
 	SensorTSL2561(int child_id = -255): Sensor(-1) {
 		_name = "TSL2561";
 		children.allocateBlocks(1);
-		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_LIGHT_LEVEL,V_LEVEL,_name);
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_LIGHT_LEVEL,V_LEVEL,_name);
 	};
 
 	// [101] set the gain, possible values are SensorTSL2561::GAIN_0X (0), SensorTSL2561::GAIN_16X (1) (default 16x)
@@ -113,13 +113,13 @@ public:
 		// request the light level
 		switch (_tsl_spectrum) {
 		case SensorTSL2561::VISIBLE:
-			((ChildInt*)child)->setValue(_tsl->getLuminosity(TSL2561_VISIBLE));
+			child->setValue(_tsl->getLuminosity(TSL2561_VISIBLE));
 			break; 
 		case SensorTSL2561::FULLSPECTRUM:
-			((ChildInt*)child)->setValue(_tsl->getLuminosity(TSL2561_FULLSPECTRUM));
+			child->setValue(_tsl->getLuminosity(TSL2561_FULLSPECTRUM));
 			break; 
 		case SensorTSL2561::INFRARED:
-			((ChildInt*)child)->setValue(_tsl->getLuminosity(TSL2561_INFRARED));
+			child->setValue(_tsl->getLuminosity(TSL2561_INFRARED));
 			break; 
 		case SensorTSL2561::FULL:
 			// request the full light level
@@ -127,7 +127,7 @@ public:
 			uint16_t ir, full;
 			ir = lum >> 16;
 			full = lum & 0xFFFF;
-			((ChildInt*)child)->setValue(_tsl->calculateLux(full, ir));
+			child->setValue(_tsl->calculateLux(full, ir));
 			break; 
 		}
 	};

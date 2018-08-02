@@ -52,11 +52,19 @@ enum timer_mode {
 #endif
 };
 
-// define Child 
+// define Child processing
 enum child_processing {
 	NONE,
 	AVG,
 	SUM
+};
+
+// define value types
+enum value_format {
+	INT,
+	FLOAT,
+	DOUBLE,
+	STRING
 };
 
 /***********************************

@@ -44,8 +44,8 @@ public:
 	SensorDimmer(int pin, int child_id = -255): Sensor(pin) {
 		_name = "DIMMER";
 		children.allocateBlocks(2);
-		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_DIMMER,V_STATUS,_name);
-		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_DIMMER,V_PERCENTAGE,_name);
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_DIMMER,V_STATUS,_name);
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_DIMMER,V_PERCENTAGE,_name);
 	};
 
 	// [101] set the effect to use for a smooth transition, can be one of SensorDimmer::EASE_LINEAR, SensorDimmer::EASE_INSINE, SensorDimmer::EASE_OUTSINE, SensorDimmer::EASE_INOUTSINE (default: EASE_LINEAR)
@@ -80,7 +80,7 @@ public:
 		else return;
 		// send the status back
 		_status = value;
-		((ChildInt*)child)->setValue(_status);
+		child->setValue(_status);
 	};
 
 	// set the percentage of the dimmer
@@ -94,7 +94,7 @@ public:
 		// fade to it
 		_fadeTo(child,percentage);
 		_percentage = percentage;
-		((ChildInt*)child)->setValue(_percentage);
+		child->setValue(_percentage);
 	};
 
 	// define what to do during setup
@@ -111,15 +111,15 @@ public:
 		// heandle a SET command
 		if (message->getCommand() == C_SET && message->type == child->getType()) {
 			// if changing the status
-			if (child->getType() == V_STATUS) setStatus(message->getInt());
+			if child->getType() == V_STATUS) setStatus(message->getInt());
 			// if changing the percentage of the dimmer
-			if (child->getType() == V_PERCENTAGE) setPercentage(message->getInt());
+			if child->getType() == V_PERCENTAGE) setPercentage(message->getInt());
 		}
 		// handle REQ command
 		if (message->getCommand() == C_REQ && message->type == child->getType()) {
 			// return the current status
-			if (child->getType() == V_STATUS) ((ChildInt*)child)->setValue(_status);
-			if (child->getType() == V_PERCENTAGE) ((ChildInt*)child)->setValue(_percentage);
+			if child->getType() == V_STATUS) child->setValue(_status);
+			if child->getType() == V_PERCENTAGE) child->setValue(_percentage);
 		}
 	};
 	

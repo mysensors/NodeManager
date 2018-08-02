@@ -450,7 +450,7 @@ The following methods are available for all the sensors:
 
 The following methods are available for all the child:
 ~~~c
-	Child(Sensor* sensor, int child_id, int presentation, int type, const char* description = "");
+	Child(Sensor* sensor, value_format format, int child_id, int presentation, int type, const char* description = "");
 	// set child id used to communicate with the gateway/controller
 	void setChildId(int value);
 	int getChildId();
@@ -467,12 +467,22 @@ The following methods are available for all the child:
 	const char* getDescription();
 	// configure the behavior of the child when setValue() is called multiple times. It can be NONE (ignore the previous values but the last one),  AVG (averages the values), SUM (sum up the values) (default: AVG)
 	void setValueProcessing(child_processing value);
+	// set the value of the child
+	void setValue(int value);
+	void setValue(float value);
+	void setValue(double value);
+	void setValue(const char* value);
+	// get the value of the child
+	int getValueInt();
+	float getValueFloat();
+	double getValueDouble();
+	const char* getValueString();
 	// send the current value to the gateway
-	virtual void sendValue(bool force = 0);
+	void sendValue(bool force = 0);
 	// print the current value on a LCD display
-	virtual void print(Print& device);
+	void print(Print& device);
 	// reset all the counters
-	virtual void reset();
+	void reset();
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	// force to send an update after the configured number of minutes
 	void setForceUpdateTimerValue(int value);
@@ -488,9 +498,9 @@ The following methods are available for all the child:
 	void setPersistValue(bool value);
 	bool getPersistValue();
 	// load old value from EEPROM
-	virtual void loadValue();
+	void loadValue();
 	// load current value to EEPROM
-	virtual void saveValue();
+	void saveValue();
 #endif
 ~~~
 

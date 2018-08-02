@@ -37,8 +37,8 @@ public:
 		_name = "DHT";
 		_dht_type = DHT::DHT11;
 		children.allocateBlocks(2);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
+		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
 	};
 
 	// define what to do during setup
@@ -54,19 +54,19 @@ public:
 		nodeManager.sleepOrWait(_dht->getMinimumSamplingPeriod());
 		_dht->readSensor(true);
 		// temperature sensor
-		if (child->getType() == V_TEMP) {
+		if child->getType() == V_TEMP) {
 			// read the temperature
 			float temperature = _dht->getTemperature();
 			if (!nodeManager.getIsMetric()) temperature = _dht->toFahrenheit(temperature);
 			// store the value
-			((ChildFloat*)child)->setValue(temperature);
+			child->setValue(temperature);
 		}
 		// humidity sensor
-		else if (child->getType() == V_HUM) {
+		else if child->getType() == V_HUM) {
 			// read humidity
 			float humidity = _dht->getHumidity();
 			// store the value
-			((ChildFloat*)child)->setValue(humidity);
+			child->setValue(humidity);
 		}
 	};
 };

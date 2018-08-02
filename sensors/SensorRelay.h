@@ -29,9 +29,9 @@ class SensorRelay: public SensorDigitalOutput {
 public:
 	SensorRelay(int pin, int child_id = -255): SensorDigitalOutput(pin, child_id) {
 		_name = "RELAY";
-		children.get(1)->setPresentation(S_BINARY);
-		children.get(1)->setType(V_STATUS);
-		children.get(1)->setDescription(_name);
+		children.get()->setPresentation(S_BINARY);
+		children.get()->setType(V_STATUS);
+		children.get()->setDescription(_name);
 	};
 };
 #endif

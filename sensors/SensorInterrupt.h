@@ -36,7 +36,7 @@ public:
 	SensorInterrupt(int pin, int child_id = -255): Sensor(pin) {
 		_name = "INTERRUPT";
 		children.allocateBlocks(1);
-		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
 		setPinInitialValue(HIGH);
 		setInterruptMode(CHANGE);
 	};
@@ -64,7 +64,7 @@ public:
 		if (child == nullptr) return;
 		if (message->getCommand() == C_REQ && message->type == V_STATUS) {
 			// return current status
-			((ChildInt*)child)->setValue(digitalRead(_pin));
+			child->setValue(digitalRead(_pin));
 		}
 	};
 
@@ -85,7 +85,7 @@ public:
 		// report only when there are at least _threshold triggers
 		if (_counter < _threshold) return;
 #endif
-		((ChildInt*)child)->setValue(value);
+		child->setValue(value);
 	};
 
 #if NODEMANAGER_OTA_CONFIGURATION == ON

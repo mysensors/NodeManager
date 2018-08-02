@@ -38,9 +38,9 @@ public:
 	SensorChirp(int child_id = -255): Sensor(-1) {
 		_name = "CHIRP";
 		children.allocateBlocks(3);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_HUM,V_HUM,_name);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id+1),S_TEMP,V_TEMP,_name);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id+2),S_LIGHT_LEVEL,V_LIGHT_LEVEL,_name);
+		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_HUM,V_HUM,_name);
+		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id+1),S_TEMP,V_TEMP,_name);
+		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id+2),S_LIGHT_LEVEL,V_LIGHT_LEVEL,_name);
 	};
 	
 	// [101] set the soil moisture offset (default: 0)
@@ -73,16 +73,16 @@ public:
 	void onLoop(Child* child) {
 		while (_chirp->isBusy()) wait(50);
 		// temperature sensor
-		if (child->getType() == V_TEMP) {
+		if child->getType() == V_TEMP) {
 			// read the temperature
 			float temperature = _chirp->getTemperature()/(float)10;
 			// convert it
 			temperature = nodeManager.celsiusToFahrenheit(temperature);
 			// store the value
-			((ChildFloat*)child)->setValue(temperature);
+			child->setValue(temperature);
 		}
 		// Humidity Sensor
-		else if (child->getType() == V_HUM) {
+		else if child->getType() == V_HUM) {
 			// request the SoilMoisturelevel
 			float capacitance = _chirp->getCapacitance();
 			float cap_offsetfree = capacitance - _chirp_moistureoffset;
@@ -94,14 +94,14 @@ public:
 				capacitance = (float)tmp_cap;
 			}    
 			// store the value
-			((ChildFloat*)child)->setValue(capacitance);
+			child->setValue(capacitance);
 		}
-		else if (child->getType() == V_LIGHT_LEVEL) {
+		else if child->getType() == V_LIGHT_LEVEL) {
 			// read light
 			float light = _chirp->getLight(true);
 			if ( _chirp_lightreversed ) light = 65535 - light;
 			// store the value
-			((ChildFloat*)child)->setValue(light);
+			child->setValue(light);
 		}
 	};
 	

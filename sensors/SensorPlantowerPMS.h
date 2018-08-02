@@ -44,9 +44,9 @@ public:
 		_tx_pin = txpin;
 		children.allocateBlocks(3);
 		// register the child
-		new ChildInt(this,nodeManager.getAvailableChildId(child_id), S_DUST, V_LEVEL, "PM1.0");
-		new ChildInt(this,nodeManager.getAvailableChildId(child_id+1), S_DUST, V_LEVEL, "PM2.5");
-		new ChildInt(this,nodeManager.getAvailableChildId(child_id+2), S_DUST, V_LEVEL, "PM10.0");
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id), S_DUST, V_LEVEL, "PM1.0");
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id+1), S_DUST, V_LEVEL, "PM2.5");
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id+2), S_DUST, V_LEVEL, "PM10.0");
 	};
 
 	// define what to do during setup
@@ -86,7 +86,7 @@ public:
 			return;
 		}
 		// store the value
-		((ChildInt*)child)->setValue(val);
+		child->setValue(val);
 	};
 };
 #endif

@@ -34,8 +34,8 @@ public:
 	SensorAM2320(int child_id = -255): Sensor(-1) {
 		_name = "AM2320";
 		children.allocateBlocks(2);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
+		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
 	};
 
 	// define what to do during setup
@@ -49,17 +49,17 @@ public:
 		int status = _th->Read();
 		if (status != 0) return;
 		// temperature sensor
-		if (child->getType() == V_TEMP) {
+		if child->getType() == V_TEMP) {
 			float temperature = _th->t;
 			// store the value
-			((ChildFloat*)child)->setValue(temperature);
+			child->setValue(temperature);
 		}
 		// Humidity Sensor
-		else if (child->getType() == V_HUM) {
+		else if child->getType() == V_HUM) {
 			// read humidity
 			float humidity = _th->h;
 			// store the value
-			((ChildFloat*)child)->setValue(humidity);
+			child->setValue(humidity);
 		}
 	};
 };

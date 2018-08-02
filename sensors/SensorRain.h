@@ -29,9 +29,9 @@ class SensorRain: public SensorAnalogInput {
 public:
 	SensorRain(int pin, int child_id = -255): SensorAnalogInput(pin, child_id) {
 		_name = "RAIN";
-		children.get(1)->setPresentation(S_RAIN);
-		children.get(1)->setType(V_RAINRATE);
-		children.get(1)->setDescription(_name);
+		children.get()->setPresentation(S_RAIN);
+		children.get()->setType(V_RAINRATE);
+		children.get()->setDescription(_name);
 	};	
 
 	// define what to do during setup

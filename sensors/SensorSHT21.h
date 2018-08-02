@@ -31,8 +31,8 @@ public:
 	SensorSHT21(int child_id = -255): Sensor(-1) {
 		_name = "SHT21";
 		children.allocateBlocks(2);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
+		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
 	};
 	
 	// what to do during setup
@@ -44,20 +44,20 @@ public:
 	// what to do during loop
 	void onLoop(Child* child) {
 		// temperature sensor
-		if (child->getType() == V_TEMP) {
+		if child->getType() == V_TEMP) {
 			// read the temperature
 			float temperature = SHT2x.GetTemperature();
 			// convert it
 			temperature = nodeManager.celsiusToFahrenheit(temperature);
 			// store the value
-			((ChildFloat*)child)->setValue(temperature);
+			child->setValue(temperature);
 		}
 		// Humidity Sensor
-		else if (child->getType() == V_HUM) {
+		else if child->getType() == V_HUM) {
 			// read humidity
 			float humidity = SHT2x.GetHumidity();
 			// store the value
-			((ChildFloat*)child)->setValue(humidity);
+			child->setValue(humidity);
 		}
 	};
 };

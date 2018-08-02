@@ -30,14 +30,14 @@ public:
 	SensorRainGauge(int pin, int child_id = -255): SensorPulseMeter(pin, child_id) {
 		_name = "RAIN_GAUGE";
 		children.allocateBlocks(1);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_RAIN,V_RAIN,_name);
+		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_RAIN,V_RAIN,_name);
 		setPulseFactor(9.09);
 	};
 	
 	// what to do when receiving an interrupt
 	void onInterrupt() {
 		// increment the accumulated value
-		((ChildFloat*)children.get())->setValue(1 / _pulse_factor);
+		children.get()->setValue(1 / _pulse_factor);
 	};
 	
 	// what to do as the main task when receiving a message
@@ -46,7 +46,7 @@ public:
 		if (child == nullptr) return;
 		if (message->getCommand() == C_REQ && message->type == child->getType()) {
 			// send the accumulated value so far
-			((ChildFloat*)children.get())->sendValue();
+			children.get()->sendValue();
 		}
 	};
 };

@@ -36,9 +36,9 @@ public:
 	SensorBMP085(int child_id = -255): SensorBosch(child_id) {
 		_name = "BMP085";
 		children.allocateBlocks(3);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id+1),S_BARO,V_PRESSURE,_name);
-		new ChildString(this,nodeManager.getAvailableChildId(child_id+2),S_BARO,V_FORECAST,_name);
+		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id+1),S_BARO,V_PRESSURE,_name);
+		new Child(this,STRING,nodeManager.getAvailableChildId(child_id+2),S_BARO,V_FORECAST,_name);
 	};
 
 	// define what to do during setup
@@ -50,25 +50,25 @@ public:
 	// define what to do during loop
 	void onLoop(Child* child) {
 		// temperature sensor
-		if (child->getType() == V_TEMP) {
+		if child->getType() == V_TEMP) {
 			// read the temperature
 			float temperature = _bm->readTemperature();
 			// convert it
 			temperature = nodeManager.celsiusToFahrenheit(temperature);
 			// store the value
-			((ChildFloat*)child)->setValue(temperature);
+			child->setValue(temperature);
 		}
 		// Pressure Sensor
-		else if (child->getType() == V_PRESSURE) {
+		else if child->getType() == V_PRESSURE) {
 			// read pressure
 			float pressure = _bm->readPressure() / 100.0F;
 			// store the value
-			((ChildFloat*)child)->setValue(pressure);
+			child->setValue(pressure);
 		}
 		// Forecast Sensor
-		else if (child->getType() == V_FORECAST) {
+		else if child->getType() == V_FORECAST) {
 			float pressure = _bm->readPressure() / 100.0F;
-			((ChildString*)child)->setValue(_forecast(pressure));
+			child->setValue(_forecast(pressure));
 		}
 	};
 };

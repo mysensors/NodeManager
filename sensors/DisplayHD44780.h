@@ -36,7 +36,7 @@ protected:
 public:
 	DisplayHD44780(int child_id = -255): Display(child_id) {
 		_name = "HD44780";
-		children.get(1)->setDescription(_name);
+		children.get()->setDescription(_name);
 	};
 
 	// set i2c address (default: 0x38)

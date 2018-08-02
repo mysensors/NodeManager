@@ -42,7 +42,7 @@ public:
 	SensorNeopixel(int pin, int child_id = -255): Sensor(pin) {
 		_name = "NEOPIXEL";
 		children.allocateBlocks(1);
-		new ChildString(this,nodeManager.getAvailableChildId(child_id), S_COLOR_SENSOR, V_RGB ,_name);
+		new Child(this,STRING,nodeManager.getAvailableChildId(child_id), S_COLOR_SENSOR, V_RGB ,_name);
 	};
 	
 	// set how many NeoPixels are attached
@@ -98,7 +98,7 @@ public:
 		}
 		_pixels->show();
 		//send value back
-		((ChildString*)child)->setValue(string);
+		child->setValue(string);
 	};
 	
 	// define what to do during setup

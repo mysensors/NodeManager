@@ -35,8 +35,8 @@ public:
 	SensorMLX90614(int child_id = -255): Sensor(-1) {
 		_name = "MLX90614";
 		children.allocateBlocks(2);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-		new ChildFloat(this,nodeManager.getAvailableChildId(child_id+1),S_TEMP,V_TEMP,_name);
+		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
+		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id+1),S_TEMP,V_TEMP,_name);
 	};
 
 	// define what to do during setup
@@ -54,7 +54,7 @@ public:
 		else temperature = _mlx->readObjectTempC();
 		// convert it
 		temperature = nodeManager.celsiusToFahrenheit(temperature);
-		((ChildFloat*)child)->setValue(temperature);
+		child->setValue(temperature);
 	};
 };
 #endif

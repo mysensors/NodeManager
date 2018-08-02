@@ -41,7 +41,7 @@ public:
 		_sensors->begin();
 		// register a new child for each sensor on the bus
 		for(int i = 0; i < _sensors->getDeviceCount(); i++) {
-			new ChildFloat(this,nodeManager.getAvailableChildId(child_id+i),S_TEMP,V_TEMP,_getAddress(i));
+			new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id+i),S_TEMP,V_TEMP,_getAddress(i));
 		}
 	};
 
@@ -88,7 +88,7 @@ public:
 		// convert it
 		temperature = nodeManager.celsiusToFahrenheit(temperature);
 		// store the value
-		((ChildFloat*)child)->setValue(temperature);
+		child->setValue(temperature);
 	};
 	
 #if NODEMANAGER_OTA_CONFIGURATION == ON

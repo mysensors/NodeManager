@@ -38,7 +38,7 @@ public:
 	SensorTTP(int child_id = -255): Sensor(-1) {
 		_name = "TTP";
 		children.allocateBlocks(1);
-		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_INFO,V_TEXT,_name);
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_INFO,V_TEXT,_name);
 		setPinInitialValue(LOW);
 		setInterruptMode(RISING);
 	};
@@ -99,7 +99,7 @@ public:
 				passcode += (int) _passcode.get(i);
 			}
 			// store it in the child so it will be sent back 
-			((ChildInt*)child)->setValue(passcode);
+			child->setValue(passcode);
 			// clear the passcode array
 			_passcode.clear();
 		}

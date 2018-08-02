@@ -34,7 +34,7 @@ public:
 	SensorAPDS9960(int pin, int child_id = -255): Sensor(pin) {
 		_name = "APDS9960";
 		children.allocateBlocks(1);
-		new ChildString(this,nodeManager.getAvailableChildId(child_id),S_INFO,V_TEXT,_name);
+		new Child(this,STRING,nodeManager.getAvailableChildId(child_id),S_INFO,V_TEXT,_name);
 		setPinInitialValue(HIGH);
 		setInterruptMode(FALLING);
 	};
@@ -53,7 +53,6 @@ public:
 	// what to do on interrupt
 	void onInterrupt() {
 		const char* gesture = "";
-		Child* child = children.get(1);
 		if ( _apds->isGestureAvailable() ) {
 			switch ( _apds->readGesture() ) {
 			case DIR_UP: gesture = "UP"; break;
@@ -65,7 +64,7 @@ public:
 			default: gesture = "NONE"; break;
 			}
 			// store it in the child so it will be sent back 
-			((ChildString*)child)->setValue(gesture);
+			children.get()->setValue(gesture);
 		}
 	};
 };

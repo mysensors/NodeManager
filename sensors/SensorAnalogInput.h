@@ -35,7 +35,7 @@ public:
 	SensorAnalogInput(int pin, int child_id = -255): Sensor(pin) {
 		_name = "ANALOG_I";
 		children.allocateBlocks(1);
-		new ChildInt(this,nodeManager.getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
 	};
 
 	// [101] the analog reference to use (default: not set, can be either INTERNAL or DEFAULT)
@@ -76,7 +76,7 @@ public:
 		int percentage = 0;
 		if (_output_percentage) percentage = _getPercentage(adc);
 		// store the result
-		((ChildInt*)child)->setValue(_output_percentage ? percentage : adc);
+		child->setValue(_output_percentage ? percentage : adc);
 	};
 
 #if NODEMANAGER_OTA_CONFIGURATION == ON
