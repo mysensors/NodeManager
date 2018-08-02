@@ -84,13 +84,13 @@ public:
 	virtual void saveValue();
 #endif
 protected:
-	int _samples = 0;
 	Sensor* _sensor;
 	int _child_id;
 	int _presentation = S_CUSTOM;
 	int _type = V_CUSTOM;
 	int _float_precision;
 	const char* _description = "";
+	int _samples = 0;
 	child_processing _value_processing = AVG;
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	Timer* _force_update_timer;
@@ -143,10 +143,10 @@ public:
 	void saveValue();
 #endif
 private:
-	float _value;
+	float _value = 0;
 	float _total = 0;
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
-	float _last_value = -256;
+	float _last_value = 0;
 #endif
 };
 
@@ -178,6 +178,10 @@ public:
 	void sendValue(bool force = 0);
 	void print(Print& device);
 	void reset();
+#if NODEMANAGER_EEPROM == ON
+	void loadValue();
+	void saveValue();
+#endif
 private:
 	const char* _value = "";
 #if NODEMANAGER_CONDITIONAL_REPORT == ON

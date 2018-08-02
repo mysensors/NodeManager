@@ -115,7 +115,10 @@ public:
 		if (_pin_off > 0) pinMode(_pin_off, OUTPUT);
 		// report immediately
 		setReportTimerMode(IMMEDIATELY);
-#if NODEMANAGER_EEPROM == OFF
+#if NODEMANAGER_EEPROM == ON
+		// keep track of the value in EEPROM so to restore it upon a reboot
+		children.get()->setPersistValue(true);
+#else
 		// turn the relay off by default
 		setStatus(OFF);
 #endif

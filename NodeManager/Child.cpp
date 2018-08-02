@@ -103,9 +103,15 @@ bool Child::getPersistValue() {
 	return _persist_value;
 }
 
-// virtual functions implemented by the subclasses
-void Child::loadValue() { }
-void Child::saveValue() { }
+// load value from EEPROM - subclass needs to implement
+void Child::loadValue() { 
+	debug(PSTR(LOG_EEPROM "%s(%d):LOAD\n"),_description,_child_id);
+}
+
+// save value to EEPROM - subclass needs to implement
+void Child::saveValue() {
+	debug(PSTR(LOG_EEPROM "%s(%d):SAVE\n"),_description,_child_id);
+}
 
 // save an integer number to EEPROM
 bool Child::_saveValueInt(int value) {
@@ -114,7 +120,7 @@ bool Child::_saveValueInt(int value) {
 	// save the checksum
 	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_CHECKSUM,0);
 	// encode the sign (e.g. 0 if > 0, 1 otherwise)
-	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_SIGN, 0 ? value >=0 : 1);
+	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_SIGN, value >= 0 ? 0 : 1);
 	// encode and save the value (e.g. 7240 -> int_1 = 72, int_2 = 40)
 	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_INT_1,(int)(value/100)%100);
 	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_INT_2,(value)%100);
@@ -153,7 +159,7 @@ float Child::_loadValueFloat() {
 	int value = _loadValueInt();
 	if (value == 255) return 255;
 	// return the decoded float
-	return (float)value + (float)(nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_DEC_1)/100);
+	return (float)value + (float)nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_DEC_1)/100;
 }
 
 // return a double number stored in EEPROM
@@ -161,7 +167,7 @@ double Child::_loadValueDouble() {
 	float value = _loadValueFloat();
 	if (value == 255) return 255;
 	// return the decoded double
-	return (double)value + (double)(nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_DEC_2)/10000);
+	return (double)value + (double)nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_DEC_2)/10000;
 }
 #endif
 
@@ -235,13 +241,17 @@ void ChildInt::reset() {
 #if NODEMANAGER_EEPROM == ON
 // save the value to memory
 void ChildInt::saveValue() {
+	Child::saveValue();
 	_saveValueInt(_value);
 }
 
 // load the value from memory
 void ChildInt::loadValue() { 
 	int value = _loadValueInt();
-	if (value != 255) setValue(value);
+	if (value != 255) {
+		Child::loadValue();
+		setValue(value);
+	}
 }
 #endif
 
@@ -320,13 +330,17 @@ void ChildFloat::reset() {
 #if NODEMANAGER_EEPROM == ON
 // save the value to memory
 void ChildFloat::saveValue() {
+	Child::saveValue();
 	_saveValueFloat(_value);
 }
 
 // load the value from memory
 void ChildFloat::loadValue() { 
 	float value = _loadValueFloat();
-	if (value != 255) setValue(value);
+	if (value != 255) {
+		Child::loadValue();
+		setValue(value);
+	}
 }
 #endif
 
@@ -406,13 +420,17 @@ void ChildDouble::reset() {
 #if NODEMANAGER_EEPROM == ON
 // save the value to memory
 void ChildDouble::saveValue() {
+	Child::saveValue();
 	_saveValueDouble(_value);
 }
 
 // load the value from memory
 void ChildDouble::loadValue() { 
 	double value = _loadValueDouble();
-	if (value != 255) setValue(value);
+	if (value != 255) {
+		Child::loadValue();
+		setValue(value);
+	}
 }
 #endif
 
@@ -463,3 +481,13 @@ void ChildString::print(Print& device) {
 void ChildString::reset() {
 	_value = "";
 }
+
+#if NODEMANAGER_EEPROM == ON
+// save the value to memory
+void ChildString::saveValue() {
+}
+
+// load the value from memory
+void ChildString::loadValue() { 
+}
+#endif

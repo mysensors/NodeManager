@@ -358,12 +358,15 @@ void NodeManager::loop() {
 
 	// return the value stored at the requested index from the EEPROM
 	int NodeManager::loadFromMemory(int index) {
-		return loadState(index+EEPROM_USER_START);
+		int value = loadState(index+EEPROM_USER_START);
+		debug_verbose(PSTR(LOG_EEPROM "LOAD i=%d v=%d\n"),index,value);
+		return value;
 	}
 
 	// save the given index of the EEPROM the provided value
 	void NodeManager::saveToMemory(int index, int value) {
 		saveState(index+EEPROM_USER_START, value);
+		debug_verbose(PSTR(LOG_EEPROM "SAVE i=%d v=%d\n"),index,value);
 	}
 #endif
 
