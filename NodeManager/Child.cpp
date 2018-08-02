@@ -151,9 +151,9 @@ void Child::sendValue(bool force) {
 		// if the value is a string
 		else {
 			// if a delta is configured, do not report if the string is the same as the previous one
-			if (_value_delta > 0 && strcmp(_value, _last_value) == 0) {
+			if (_value_delta > 0 && strcmp(_value_string, _last_value_string) == 0) {
 				// keep track of the previous value
-				_last_value = _value;
+				_last_value_string = _value_string;
 				return;
 			}
 		}
@@ -184,6 +184,7 @@ void Child::reset() {
 	if (_format != STRING) {
 		_total = 0;
 		_samples = 0;
+		_value = 0;
 	} else _value_string = "";
 }
 
@@ -201,6 +202,20 @@ void Child::setMaxThreshold(float value) {
 }
 void Child::setValueDelta(float value) {
 	_value_delta = value;
+}
+
+// return the last value of the child in the requested format
+int Child::getLastValueInt() {
+	return (int)_last_value;
+}
+float Child::getLastValueFloat() {
+	return (float)_last_value;
+}
+double Child::getLastValueDouble(){
+	return _last_value;
+}
+const char* Child::getLastValueString(){
+	return _last_value_string;
 }
 #endif
 #if NODEMANAGER_EEPROM == ON

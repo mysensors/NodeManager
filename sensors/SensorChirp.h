@@ -82,7 +82,7 @@ public:
 			child->setValue(temperature);
 		}
 		// Humidity Sensor
-		else if child->getType() == V_HUM) {
+		else if (child->getType() == V_HUM) {
 			// request the SoilMoisturelevel
 			float capacitance = _chirp->getCapacitance();
 			float cap_offsetfree = capacitance - _chirp_moistureoffset;
@@ -96,7 +96,7 @@ public:
 			// store the value
 			child->setValue(capacitance);
 		}
-		else if child->getType() == V_LIGHT_LEVEL) {
+		else if (child->getType() == V_LIGHT_LEVEL) {
 			// read light
 			float light = _chirp->getLight(true);
 			if ( _chirp_lightreversed ) light = 65535 - light;

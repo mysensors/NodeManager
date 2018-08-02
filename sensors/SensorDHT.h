@@ -62,7 +62,7 @@ public:
 			child->setValue(temperature);
 		}
 		// humidity sensor
-		else if child->getType() == V_HUM) {
+		else if (child->getType() == V_HUM) {
 			// read humidity
 			float humidity = _dht->getHumidity();
 			// store the value

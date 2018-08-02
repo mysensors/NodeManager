@@ -62,21 +62,21 @@ public:
 			child->setValue(temperature);
 		}
 		// Humidity Sensor
-		else if child->getType() == V_HUM) {
+		else if (child->getType() == V_HUM) {
 			// read humidity
 			float humidity = _bm->readHumidity();
 			// store the value
 			child->setValue(humidity);
 		}
 		// Pressure Sensor
-		else if child->getType() == V_PRESSURE) {
+		else if (child->getType() == V_PRESSURE) {
 			// read pressure
 			float pressure = _bm->readPressure() / 100.0F;
 			// store the value
 			child->setValue(pressure);
 		}
 		// Forecast Sensor
-		else if child->getType() == V_FORECAST) {
+		else if (child->getType() == V_FORECAST) {
 			float pressure = _bm->readPressure() / 100.0F;
 			child->setValue(_forecast(pressure));
 		}

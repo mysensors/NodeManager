@@ -83,6 +83,11 @@ public:
 	void setMaxThreshold(float value);
 	// do not report values if too close to the previous one (default: 0)
 	void setValueDelta(float value);
+	// get the last value of the child
+	int getLastValueInt();
+	float getLastValueFloat();
+	double getLastValueDouble();
+	const char* getLastValueString();
 #endif
 #if NODEMANAGER_EEPROM == ON
 	// persist the child's value in EEPROM. The value will be saved at each update and loaded at boot time (default: false)
