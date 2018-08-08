@@ -33,7 +33,7 @@ Documentation available on: https://github.com/mysensors/NodeManager
 NodeManager provides built-in implementation of a number of sensors through ad-hoc 
 classes. 
 
-To use a buil-in sensor:
+To use a built-in sensor:
 * Install the required library if any
 * Enable the corresponding module (uncomment it) in the main sketch
 * Declare the sensor (uncomment it) in the main sketch
