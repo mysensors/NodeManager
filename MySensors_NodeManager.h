@@ -79,7 +79,7 @@ Include NodeManager core code
 #endif
 
 // NodeManager class
-#include "nodemanager/NodeManager.cpp"
+#include "nodemanager/Node.cpp"
 // create the global variable nodeManager that can be called from within the sketch
 extern NodeManager nodeManager;
 NodeManager nodeManager;

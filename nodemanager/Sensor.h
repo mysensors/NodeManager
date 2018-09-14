@@ -23,7 +23,7 @@
 Sensor: provide functionalities common to all the sensors
 */
 
-#include "NodeManager.h"
+#include "Node.h"
 #include "Timer.h"
 #include "Child.h"
 #if NODEMANAGER_POWER_MANAGER == ON
