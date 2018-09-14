@@ -149,6 +149,11 @@ void NodeManager::registerSensor(Sensor* sensor) {
 	sensors.push(sensor);
 }
 
+// register a timer
+void NodeManager::registerTimer(Timer* timer) {
+	_timers.push(timer);
+}
+
 // setup NodeManager
 void NodeManager::before() {
 	// setup the reboot pin if needed
@@ -240,6 +245,11 @@ void NodeManager::loop() {
 	// turn on the pin powering all the sensors
 	powerOn();
 #endif
+	// update all the registered timers
+	for (List<Timer*>::iterator itr = _timers.begin(); itr != _timers.end(); ++itr) {
+		Timer* timer = *itr;
+		timer->update();
+	}
 	// run loop for all the registered sensors
 	for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
 		Sensor* sensor = *itr;

@@ -36,10 +36,6 @@ Child::Child(Sensor* sensor, value_format format, int child_id, int presentation
 	_description = description;
 	// register the child with the sensor
 	_sensor->registerChild(this);
-#if NODEMANAGER_CONDITIONAL_REPORT == ON
-	// initialize the timer for forcing updates to the gateway after a given timeframe
-	_force_update_timer = new Timer();
-#endif
 #if NODEMANAGER_EEPROM == ON
 	// define the EEPROM starting address for this child
 	_eeprom_address = EEPROM_CHILD_OFFSET+_child_id*EEPROM_CHILD_SIZE;

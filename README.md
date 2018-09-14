@@ -265,6 +265,8 @@ You can interact with each class provided by NodeManager through a set of API fu
 	void sendMessage(int child_id, int type, const char* value);
 	// register a sensor
 	void registerSensor(Sensor* sensor);
+	// register a timer
+	void registerTimer(Timer* timer);
 	// return the next-available child id
 	int getAvailableChildId(int child_id = -255);
 	// list containing all the registered sensors

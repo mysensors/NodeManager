@@ -24,6 +24,7 @@ Timer: helper class to keep track of the elapsed time
 #include "Timer.h"
 
 Timer::Timer() {
+	nodeManager.registerTimer(this);
 }
 
 void Timer::setMode(timer_mode mode) {
@@ -41,9 +42,10 @@ int Timer::getValue() {
 	return _value;
 }
 
-// start the timer
+// start/restart the timer
 void Timer::start() {
 	_is_running = true;
+	_elapsed = 0;
 #if NODEMANAGER_TIME == ON
 	// save the current timestamp (which is sync'ed when sleeping or not sleeping)
 	if (_mode == TIME_INTERVAL) _last = now();
@@ -62,12 +64,29 @@ void Timer::stop() {
 	_is_running = false;
 }
 
+// update the timer and keep track of the elapsed time in _elapsed
+void Timer::update() {
+	// calculate the elapsed time
+#if NODEMANAGER_TIME == ON
+	// system time is available so use now() to calculated the elapsed time
+	_elapsed = (long)(now() - _last);
+#else
+	// system time is not available
+#if NODEMANAGER_SLEEP == ON
+	// millis() is not reliable while sleeping so calculate how long a sleep cycle would last in seconds and update the elapsed time
+	if (nodeManager.isSleepingNode()) _elapsed += nodeManager.getSleepSeconds();
+#endif
+	// use millis() to calculate the elapsed time in seconds
+	if (! nodeManager.isSleepingNode()) _elapsed = (long)((millis() - _last)/1000);
+#endif
+}
+
 // return true if the time is over
 bool Timer::isOver() {
 	if (_mode == DO_NOT_REPORT || _mode == NOT_CONFIGURED) return false;
 	if (_mode == IMMEDIATELY) return true;
+	if (! _is_running) return false;
 	if (_mode == TIME_INTERVAL) {
-		if (! _is_running) return false;
 		long elapsed = getElapsed();
 		// check if time has elapsed or millis has started over
 		if (elapsed >= _value || elapsed < 0) return true;
@@ -97,19 +116,5 @@ bool Timer::isOver() {
 
 // return elapsed seconds so far
 long Timer::getElapsed() {
-	// calculate the elapsed time
-	long elapsed = 0;
-#if NODEMANAGER_TIME == ON
-	// system time is available so use now() to calculated the elapsed time
-	elapsed = (long)(now() - _last);
-#else
-	// system time is not available
-#if NODEMANAGER_SLEEP == ON
-	// millis() is not reliable while sleeping so calculate how long a sleep cycle would last in seconds and update the elapsed time
-	if (nodeManager.isSleepingNode()) elapsed += nodeManager.getSleepSeconds();
-#endif
-	// use millis() to calculate the elapsed time in seconds
-	if (! nodeManager.isSleepingNode()) elapsed = (long)((millis() - _last)/1000);
-#endif
-	return elapsed;
+	return _elapsed;
 }

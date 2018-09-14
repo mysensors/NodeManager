@@ -73,6 +73,8 @@ public:
 	void sendMessage(int child_id, int type, const char* value);
 	// register a sensor
 	void registerSensor(Sensor* sensor);
+	// register a timer
+	void registerTimer(Timer* timer);
 	// return the next-available child id
 	int getAvailableChildId(int child_id = -255);
 	// list containing all the registered sensors
@@ -177,6 +179,7 @@ private:
 	int _report_interval_seconds = 10*60;
 	int _reboot_pin = -1;
 	void _present(int child_id, int type);
+	List<Timer*> _timers;
 #if NODEMANAGER_INTERRUPTS == ON
 	int _interrupt_1_mode = MODE_NOT_DEFINED;
 	int _interrupt_2_mode = MODE_NOT_DEFINED;

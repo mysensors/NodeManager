@@ -36,6 +36,8 @@ public:
 	void start();
 	// stop the timer
 	void stop();
+	// update the timer so to keep track of the exact elapsed timeframe
+	void update();
 	// return true if the time is over
 	bool isOver();
 	// return elapsed time in seconds
@@ -43,6 +45,7 @@ public:
 private:
 	timer_mode _mode = NOT_CONFIGURED;
 	int _value = 0;
+	long _elapsed = 0;
 	bool _is_running = false;
 	long _last = 0;
 #if NODEMANAGER_TIME == ON

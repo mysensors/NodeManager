@@ -121,7 +121,7 @@ protected:
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	double _last_value = 0;
 	const char* _last_value_string = "";
-	Timer* _force_update_timer;
+	Timer* _force_update_timer = new Timer();
 	float _min_threshold = FLT_MIN;
 	float _max_threshold = FLT_MAX;
 	float _value_delta = 0;
