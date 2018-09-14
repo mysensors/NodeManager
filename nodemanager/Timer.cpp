@@ -93,8 +93,8 @@ bool Timer::isOver() {
 		return false;
 	}
 #if NODEMANAGER_TIME == ON
-	// if the minute/hour/day has changed, the timer is over
-	if (_mode == EVERY_HOUR && hour() != _last) return true;
+	// if the minute/hour/day has changed, the timer is over (_last is set by start())
+	if (_mode == EVERY_MINUTE && minute() != _last) return true;
 	if (_mode == EVERY_HOUR && hour() != _last) return true;
 	if (_mode == EVERY_DAY && day() != _last) return true;
 	// if we are in the requested minute/hour/day and not already reported, timer is over
