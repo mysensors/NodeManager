@@ -54,6 +54,8 @@ public:
 
 	// define what to do during setup
 	void onSetup() {
+		// do not average the value
+		children.get()->setValueProcessing(NONE);
 		// report immediately
 		setReportTimerMode(IMMEDIATELY);
 	};

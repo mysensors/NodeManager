@@ -66,6 +66,8 @@ public:
 
 	// define what to do during setup
 	void onSetup() {
+		// do not average the value
+		children.get()->setValueProcessing(NONE);
 		// setup passcode array  
 		_passcode.allocateBlocks(_passcode_length);
 		// initialize pins

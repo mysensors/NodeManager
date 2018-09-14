@@ -99,6 +99,8 @@ public:
 
 	// define what to do during setup
 	void onSetup() {
+		// do not average the value
+		children.get()->setValueProcessing(NONE);
 		pinMode(_pin, OUTPUT);
 		// report immediately
 		setReportTimerMode(IMMEDIATELY);

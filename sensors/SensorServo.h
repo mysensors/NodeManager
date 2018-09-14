@@ -50,6 +50,8 @@ public:
 	
 	// define what to do during setup
 	void onSetup() {
+		// do not average the value
+		children.get()->setValueProcessing(NONE);
 		_servo.attach(_pin);
 		// report immediately
 		setReportTimerMode(IMMEDIATELY);

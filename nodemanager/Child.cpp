@@ -107,14 +107,17 @@ void Child::setValue(const char* value) {
 // store a new value and update the total
 void Child::_setValueNumber(double value) {
 	if (isnan(value)) return;
-	_total = _total + value;
-	_samples++;
+	if (_value_processing != NONE) {
+		// keep track of the # of samples and total
+		_total = _total + value;
+		_samples++;
+	}
 	// process the value
 	if (_value_processing == AVG) _value = _total / _samples;
 	if (_value_processing == SUM) _value = _total;
 	if (_value_processing == NONE) _value = value;
 	// print out a debug message
-	if (_format == INT) debug(PSTR(LOG_LOOP "%s(%d):SET t=%d v=%d\n"),_description,_child_id,_type,_value);
+	if (_format == INT) debug(PSTR(LOG_LOOP "%s(%d):SET t=%d v=%d\n"),_description,_child_id,_type,(int)_value);
 	if (_format == FLOAT) debug(PSTR(LOG_LOOP "%s(%d):SET t=%d v=%d.%02d\n"),_description,_child_id,_type,(int)_value, (int)(_value*100)%100);
 	if (_format == DOUBLE) debug(PSTR(LOG_LOOP "%s(%d):SET t=%d v=%d.%04d\n"),_description,_child_id,_type,(int)_value, (int)(_value*10000)%10000);
 #if NODEMANAGER_EEPROM == ON
@@ -192,13 +195,16 @@ void Child::print(Print& device) {
 // reset the counters
 void Child::reset() { 
 	if (_format != STRING) {
-		_total = 0;
-		_samples = 0;
-		_value = 0;
+		if (_value_processing != NONE) {
+			// reset the counters
+			_total = 0;
+			_samples = 0;
+			_value = 0;
 #if NODEMANAGER_EEPROM == ON
-		// if the value is supposed to be persisted in EEPROM, save it
-		if (_persist_value) saveValue();
+			// if the value is supposed to be persisted in EEPROM, save it
+			if (_persist_value) saveValue();
 #endif
+		}
 	} else _value_string = "";
 }
 

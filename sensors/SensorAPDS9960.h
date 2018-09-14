@@ -41,6 +41,8 @@ public:
 
 	// define what to do during setup
 	void onSetup() {
+		// do not average the value
+		children.get()->setValueProcessing(NONE);
 		_apds = new SparkFun_APDS9960();
 		pinMode(_pin, INPUT);
 		// report immediately

@@ -109,6 +109,8 @@ public:
 
 	// what to do during setup
 	void onSetup() {
+		// do not average the value
+		children.get()->setValueProcessing(NONE);
 		// setup the pin
 		pinMode(_pin, OUTPUT);
 		// setup the off pin if needed
@@ -119,7 +121,7 @@ public:
 		// keep track of the value in EEPROM so to restore it upon a reboot
 		children.get()->setPersistValue(true);
 #else
-		// turn the relay off by default
+		// turn the output off by default
 		setStatus(OFF);
 #endif
 	};

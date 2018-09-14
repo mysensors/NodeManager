@@ -70,6 +70,8 @@ public:
 
 	// define what to do during setup
 	void onSetup() {
+		// do not average the value
+		children.get()->setValueProcessing(NONE);
 		// setup software serial
 		_serial = new SoftwareSerial(_rx_pin,_tx_pin);
 		// setup fingerprint sensor
