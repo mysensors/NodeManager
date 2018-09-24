@@ -85,14 +85,14 @@ public:
 	Sensor* getSensorWithChild(int child_id);
 #if NODEMANAGER_SLEEP == ON
 	// [3] set the duration (in seconds) of a sleep cycle
-	void setSleepSeconds(int value);
-	long getSleepSeconds();
+	void setSleepSeconds(unsigned long value);
+	unsigned long getSleepSeconds();
 	// [4] set the duration (in minutes) of a sleep cycle
-	void setSleepMinutes(int value);
+	void setSleepMinutes(unsigned long value);
 	// [5] set the duration (in hours) of a sleep cycle
-	void setSleepHours(int value);
+	void setSleepHours(unsigned long value);
 	// [29] set the duration (in days) of a sleep cycle
-	void setSleepDays(int value);
+	void setSleepDays(unsigned long value);
 	// [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
 	void setSleepBetweenSend(int value);
 	// [9] wake up the board
@@ -171,7 +171,7 @@ private:
 	int _retries = 1;
 	MyMessage _message;
 	void _sendMessage(int child_id, int type);
-	long _sleep_time = 0;
+	unsigned long _sleep_time = 0;
 	bool _sleep_or_wait = true;
 	int _sleep_interrupt_pin = -1;
 	int _sleep_between_send = 0;

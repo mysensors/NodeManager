@@ -51,7 +51,7 @@ void NodeManager::setRetries(int value) {
 	_retries = value;
 }
 #if NODEMANAGER_SLEEP == ON
-void NodeManager::setSleepSeconds(int value) {
+void NodeManager::setSleepSeconds(unsigned long value) {
 	// set the status to AWAKE if the time provided is 0, SLEEP otherwise
 	if (value == 0) _status = AWAKE;
 	else _status = SLEEP;
@@ -62,16 +62,16 @@ void NodeManager::setSleepSeconds(int value) {
 	if (_save_sleep_settings) _saveSleepSettings();
 #endif
 }
-void NodeManager::setSleepMinutes(int value) {
+void NodeManager::setSleepMinutes(unsigned long value) {
 	setSleepSeconds(value*60);
 }
-void NodeManager::setSleepHours(int value) {
+void NodeManager::setSleepHours(unsigned long value) {
 	setSleepMinutes(value*60);
 }
-void NodeManager::setSleepDays(int value) {
+void NodeManager::setSleepDays(unsigned long value) {
 	setSleepHours(value*24);
 }
-long NodeManager::getSleepSeconds() {
+unsigned long NodeManager::getSleepSeconds() {
 	return _sleep_time;
 }
 void NodeManager::setSleepBetweenSend(int value) {

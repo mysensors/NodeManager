@@ -34,29 +34,28 @@ timer_mode Timer::getMode() {
 	return _mode;
 }
 
-void Timer::setValue(int value) {
+void Timer::setValue(unsigned long value) {
 	_value = value;
 }
 
-int Timer::getValue() {
+unsigned long Timer::getValue() {
 	return _value;
 }
 
 // start/restart the timer
 void Timer::start() {
-	_is_running = true;
-	_elapsed = 0;
 #if NODEMANAGER_TIME == ON
-	// save the current timestamp (which is sync'ed when sleeping or not sleeping)
-	if (_mode == TIME_INTERVAL) _last = now();
-	// keep track of the current minute/hour/day
-	if (_mode == EVERY_MINUTE) _last = minute();
-	if (_mode == EVERY_HOUR) _last = hour();
-	if (_mode == EVERY_DAY) _last = day();
+	// target will be the current unix timestamp plus the requested
+	if (_mode == TIME_INTERVAL) _target = now() + _value;
+	// target will be the next minute/hour/day
+	if (_mode == EVERY_MINUTE) _target = minute();
+	if (_mode == EVERY_HOUR) _target = hour();
+	if (_mode == EVERY_DAY) _target = day();
 #else
-	// keep track of millis() for calculating the difference
-	_last = millis();
+	// target will be current millis() plus the requested value (in milliseconds)
+	_target = millis() + _value * 1000UL;
 #endif
+	_is_running = true;
 }
 
 // stop the timer
@@ -64,39 +63,32 @@ void Timer::stop() {
 	_is_running = false;
 }
 
-// update the timer and keep track of the elapsed time in _elapsed
+// update the timer and keep track of the elapsed time
 void Timer::update() {
-	// calculate the elapsed time
-#if NODEMANAGER_TIME == ON
-	// system time is available so use now() to calculated the elapsed time
-	_elapsed = (long)(now() - _last);
-#else
-	// system time is not available
-#if NODEMANAGER_SLEEP == ON
-	// millis() is not reliable while sleeping so calculate how long a sleep cycle would last in seconds and update the elapsed time
-	if (nodeManager.isSleepingNode()) _elapsed += nodeManager.getSleepSeconds();
-#endif
-	// use millis() to calculate the elapsed time in seconds
-	if (! nodeManager.isSleepingNode()) _elapsed = (long)((millis() - _last)/1000);
+#if NODEMANAGER_TIME == OFF && NODEMANAGER_SLEEP == ON
+	// if a sleeping node and time is not reliable take out from target the time slept in the previous cycle
+	if (_mode == TIME_INTERVAL && nodeManager.isSleepingNode()) _target -= nodeManager.getSleepSeconds()*1000UL;
 #endif
 }
 
 // return true if the time is over
 bool Timer::isOver() {
+	// time is never over if not configured or instructed to never report
 	if (_mode == DO_NOT_REPORT || _mode == NOT_CONFIGURED) return false;
+	// timer is always over when reporting immediately
 	if (_mode == IMMEDIATELY) return true;
+	// timer is never over if not running
 	if (! _is_running) return false;
+#if NODEMANAGER_TIME == ON
 	if (_mode == TIME_INTERVAL) {
-		long elapsed = getElapsed();
-		// check if time has elapsed or millis has started over
-		if (elapsed >= _value || elapsed < 0) return true;
+		// check if the current unix timestamp is greater than the target
+		if (now() >= _target) return true;
 		return false;
 	}
-#if NODEMANAGER_TIME == ON
-	// if the minute/hour/day has changed, the timer is over (_last is set by start())
-	if (_mode == EVERY_MINUTE && minute() != _last) return true;
-	if (_mode == EVERY_HOUR && hour() != _last) return true;
-	if (_mode == EVERY_DAY && day() != _last) return true;
+	// if the minute/hour/day has changed, the timer is over
+	if (_mode == EVERY_MINUTE && minute() != _target) return true;
+	if (_mode == EVERY_HOUR && hour() != _target) return true;
+	if (_mode == EVERY_DAY && day() != _target) return true;
 	// if we are in the requested minute/hour/day and not already reported, timer is over
 	if (_mode == AT_MINUTE && minute() >= _value && ! _already_reported) {
 		_already_reported = true;
@@ -110,11 +102,12 @@ bool Timer::isOver() {
 		_already_reported = true;
 		return true;
 	}
+#else
+	if (_mode == TIME_INTERVAL) {
+		// check if the current millis() is greater than the target
+		if (millis() >= _target) return true;
+		return false;
+	}
 #endif
 	return false;
-}
-
-// return elapsed seconds so far
-long Timer::getElapsed() {
-	return _elapsed;
 }

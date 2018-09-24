@@ -30,8 +30,8 @@ public:
 	Timer();
 	void setMode(timer_mode mode);
 	timer_mode getMode();
-	void setValue(int value);
-	int getValue();
+	void setValue(unsigned long value);
+	unsigned long getValue();
 	// start the timer
 	void start();
 	// stop the timer
@@ -40,14 +40,11 @@ public:
 	void update();
 	// return true if the time is over
 	bool isOver();
-	// return elapsed time in seconds
-	long getElapsed();
 private:
 	timer_mode _mode = NOT_CONFIGURED;
-	int _value = 0;
-	long _elapsed = 0;
+	unsigned long _value = 0;
+	unsigned long _target = 0;
 	bool _is_running = false;
-	long _last = 0;
 #if NODEMANAGER_TIME == ON
 	bool _already_reported = false;
 #endif
