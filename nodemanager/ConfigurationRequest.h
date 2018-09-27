@@ -25,22 +25,32 @@ ConfigurationRequest: data structure for OTA configuration requests
 
 class ConfigurationRequest {
 public:
-	ConfigurationRequest(int child_id, const char* string);
+	ConfigurationRequest(uint8_t child_id, const char* string);
 	// return the child id the message has been requested to
-	int getRecipientChildId();
+	uint8_t getRecipientChildId();
 	// return the child id the request is for
-	int getChildId();
+	uint8_t getChildId();
 	// return the parsed function
-	int getFunction();
+	uint8_t getFunction();
 	// return the value as an int
 	int getValueInt();
+	// return the value as an unsigned int
+	unsigned int getValueUnsignedInt();
+	// return the value as an long
+	int getValueLong();
+	// return the value as an unsigned long
+	unsigned long getValueUnsignedLong();
 	// return the value as a float
 	float getValueFloat();
+    // return the value as a string
+    char* getValueString();
 private:
-	int _function = -1;
-	int _child_id = -1;
-	int _recipient_child_id = -1;
+	uint8_t _function = 0;
+	uint8_t _child_id = 255;
+	uint8_t _recipient_child_id = 255;
 	float _value;
+	// Size of buffer to prevent overrun 
+    char _string_data[MAX_PAYLOAD+1];
 };
 
 #endif

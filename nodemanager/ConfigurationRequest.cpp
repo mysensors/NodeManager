@@ -24,30 +24,32 @@ ConfigurationRequest: data structure for OTA configuration requests
 #include "ConfigurationRequest.h"
 
 // contructor, tokenize a configuration request in the format "child_id,function,value"
-ConfigurationRequest::ConfigurationRequest(int recipient_child_id, const char* string) {
+ConfigurationRequest::ConfigurationRequest(uint8_t recipient_child_id, const char* string) {
 	_recipient_child_id = recipient_child_id;
 	char* ptr;
 	// tokenize the string and get child id
 	_child_id = atoi(strtok_r(const_cast<char*>(string), ",", &ptr));
 	// tokenize the string and get function id
 	_function = atoi(strtok_r(NULL, ",", &ptr));
+	// copy user data to local area
+	strcpy(_string_data, ptr);
 	// tokenize the string and get the value
 	_value = atof(strtok_r(NULL, ",", &ptr));
-	debug(PSTR(LOG_OTA "REQ f=%d v=%d\n"),_function,_value);
+	debug(PSTR(LOG_OTA "REQ f=%du v=s%\n"),_function,_string_data);
 }
 
 // return the child id
-int ConfigurationRequest::getRecipientChildId() {
+uint8_t ConfigurationRequest::getRecipientChildId() {
 	return _recipient_child_id;
 }
 
 // return the child id
-int ConfigurationRequest::getChildId() {
+uint8_t ConfigurationRequest::getChildId() {
 	return _child_id;
 }
 
 // return the parsed function
-int ConfigurationRequest::getFunction() {
+uint8_t ConfigurationRequest::getFunction() {
 	return _function;
 }
 
@@ -57,7 +59,30 @@ int ConfigurationRequest::getValueInt() {
 
 }
 
+// return the value as an unsigned int
+unsigned int ConfigurationRequest::getValueUnsignedInt() {
+	return (unsigned int)_value;
+
+}
+
+// return the value as an long
+int ConfigurationRequest::getValueLong() {
+	return (long)_value;
+
+}
+
+// return the value as an unsigned long
+unsigned long ConfigurationRequest::getValueUnsignedLong() {
+	return (unsigned long)_value;
+
+}
+
 // return the value as a float
 float ConfigurationRequest::getValueFloat() {
 	return _value;
+}
+
+// return the value as a string
+char* ConfigurationRequest::getValueString() {
+  return _string_data;
 }
