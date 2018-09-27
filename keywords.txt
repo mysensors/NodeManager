@@ -149,6 +149,7 @@ getLastValueFloat	KEYWORD2
 getLastValueDouble	KEYWORD2
 getLastValueString	KEYWORD2
 setSendWithoutValue	KEYWORD2
+registerTimer	KEYWORD2
 
 # NodeManager sensors
 

@@ -27,7 +27,7 @@ Child::Child() {
 }
 
 // constructor
-Child::Child(Sensor* sensor, value_format format, int child_id, int presentation, int type, const char* description) {
+Child::Child(Sensor* sensor, value_format format, uint8_t child_id, uint8_t presentation, uint8_t type, const char* description) {
 	_sensor = sensor;
 	setFormat(format);
 	_child_id = child_id;
@@ -43,10 +43,10 @@ Child::Child(Sensor* sensor, value_format format, int child_id, int presentation
 }
 
 // setter/getter
-void Child::setChildId(int value) {
+void Child::setChildId(uint8_t value) {
 	_child_id = value;
 }
-int Child::getChildId() {
+uint8_t Child::getChildId() {
 	return _child_id;
 }
 void Child::setFormat(value_format value) {
@@ -58,19 +58,19 @@ void Child::setFormat(value_format value) {
 value_format Child::getFormat() {
 	return _format;
 }
-void Child::setPresentation(int value) {
+void Child::setPresentation(uint8_t value) {
 	_presentation = value;
 }
-int Child::getPresentation() {
+uint8_t Child::getPresentation() {
 	return _presentation;
 }
-void Child::setType(int value) {
+void Child::setType(uint8_t value) {
 	_type = value;
 }
-int Child::getType() {
+uint8_t Child::getType() {
 	return _type;
 }
-void Child::setFloatPrecision(int value) {
+void Child::setFloatPrecision(uint8_t value) {
 	_float_precision = value;
 }
 void Child::setDescription(const char* value) {
@@ -206,7 +206,7 @@ void Child::reset() {
 
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 // setter/getter
-void Child::setForceUpdateTimerValue(int value) {
+void Child::setForceUpdateTimerValue(unsigned long value) {
 	_force_update_timer->setMode(TIME_INTERVAL);
 	_force_update_timer->setValue(value*60);
 }

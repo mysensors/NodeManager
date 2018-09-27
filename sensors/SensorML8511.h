@@ -25,7 +25,7 @@
 
 class SensorML8511: public Sensor {
 public:
-	SensorML8511(int pin, int child_id = -255): Sensor(pin) {
+	SensorML8511(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
 		_name = "ML8511";
 		children.allocateBlocks(1);
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_UV,V_UV,_name);

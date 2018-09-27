@@ -35,7 +35,7 @@ protected:
 	Adafruit_BME280* _bm;
 	
 public:
-	SensorBME280(int child_id = -255): SensorBosch(child_id) {
+	SensorBME280(uint8_t child_id = 255): SensorBosch(child_id) {
 		_name = "BME280";
 		children.allocateBlocks(4);
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);

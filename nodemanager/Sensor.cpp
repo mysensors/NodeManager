@@ -26,7 +26,7 @@ Sensor: provide functionalities common to all the sensors
 // constructor
 Sensor::Sensor() {  
 }
-Sensor::Sensor(int pin) {
+Sensor::Sensor(int8_t pin) {
 	_pin = pin;
 	// initialize the timers
 	_report_timer = new Timer();
@@ -41,17 +41,17 @@ const char* Sensor::getName() {
 }
 
 // setter/getter
-void Sensor::setPin(int value) {
+void Sensor::setPin(int8_t value) {
 	_pin = value;
 }
-void Sensor::setSamples(int value) {
+void Sensor::setSamples(unsigned int value) {
 	_samples = value;
 }
-void Sensor::setSamplesInterval(int value) {
+void Sensor::setSamplesInterval(unsigned long value) {
 	_samples_interval = value;
 }
 #if NODEMANAGER_POWER_MANAGER == ON
-void Sensor::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
+void Sensor::setPowerPins(int8_t ground_pin, int8_t vcc_pin, unsigned long wait_time) {
 	if (_powerManager == nullptr) return;
 	_powerManager->setPowerPins(ground_pin, vcc_pin, wait_time);
 }
@@ -65,16 +65,16 @@ void Sensor::powerOff() {
 }
 #endif
 #if NODEMANAGER_INTERRUPTS == ON
-int Sensor::getInterruptPin() {
+int8_t Sensor::getInterruptPin() {
 	return _interrupt_pin;
 }
-void Sensor::setInterruptMode(int value) {
+void Sensor::setInterruptMode(uint8_t value) {
 	_interrupt_mode = value;
 }
-void Sensor::setWaitAfterInterrupt(int value) {
+void Sensor::setWaitAfterInterrupt(unsigned long value) {
 	_wait_after_interrupt = value;
 }
-void Sensor::setPinInitialValue(int value) {
+void Sensor::setPinInitialValue(int8_t value) {
 	_initial_value = value;
 }
 void Sensor::setInterruptStrict(bool value) {
@@ -85,27 +85,27 @@ void Sensor::setInterruptStrict(bool value) {
 void Sensor::setReportTimerMode(timer_mode value) {
 	_report_timer->setMode(value);
 }
-void Sensor::setReportTimerValue(int value) {
+void Sensor::setReportTimerValue(unsigned long value) {
 	_report_timer->setValue(value);
 }
 void Sensor::setMeasureTimerMode(timer_mode value) {
 	_measure_timer->setMode(value);
 }
-void Sensor::setMeasureTimerValue(int value) {
+void Sensor::setMeasureTimerValue(unsigned long value) {
 	_measure_timer->setValue(value);
 }
-void Sensor::setReportIntervalSeconds(int value) {
+void Sensor::setReportIntervalSeconds(unsigned long value) {
 	_report_timer->setMode(TIME_INTERVAL);
 	_report_timer->setValue(value);
 }
-void Sensor::setReportIntervalMinutes(int value) {
-	setReportIntervalSeconds(value*60);
+void Sensor::setReportIntervalMinutes(unsigned long value) {
+	setReportIntervalSeconds(value*60UL);
 }
-void Sensor::setReportIntervalHours(int value) {
-	setReportIntervalSeconds(value*60*60);
+void Sensor::setReportIntervalHours(unsigned int value) {
+	setReportIntervalSeconds(value*3600UL);
 }
-void Sensor::setReportIntervalDays(int value) {
-	setReportIntervalSeconds(value*60*60*24);
+void Sensor::setReportIntervalDays(uint8_t value) {
+	setReportIntervalSeconds(value*86400UL);
 }
 
 // register a child
@@ -114,7 +114,7 @@ void Sensor::registerChild(Child* child) {
 }
 
 // return the requested child 
-Child* Sensor::getChild(int child_id) {
+Child* Sensor::getChild(uint8_t child_id) {
 	for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
 		Child* child = *itr;
 		if (child->getChildId() == child_id) return child;
@@ -194,7 +194,7 @@ void Sensor::loop(MyMessage* message) {
 			// if a specific child is requested from receive(), skip all the others
 			if (message != nullptr && message->sensor != child->getChildId()) continue;
 			// collect multiple samples if needed
-			for (int i = 0; i < _samples; i++) {
+			for (unsigned int i = 0; i < _samples; i++) {
 				// we've been called from receive(), pass the message along
 				if (message != nullptr) onReceive(message);
 				// we'be been called from loop()

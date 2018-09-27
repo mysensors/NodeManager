@@ -220,9 +220,9 @@ You can interact with each class provided by NodeManager through a set of API fu
 
 ~~~c
 	// instantiate a NodeManager object. An optional fixed number of sensors can be passed as an argument
-	NodeManager(int sensorcount = 0);
+	NodeManager(uint8_t sensorcount = 0);
 	// [10] send the same message multiple times (default: 1)
-	void setRetries(int value);
+	void setRetries(uint8_t value);
 	// [21] set this to true if you want destination node to send ack back to this node (default: false)
 	void setAck(bool value);
 	bool getAck();
@@ -242,51 +242,55 @@ You can interact with each class provided by NodeManager through a set of API fu
 	// return vcc in V
 	float getVcc();
     // [36] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. On sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
-    void setReportIntervalSeconds(int value);
-	int getReportIntervalSeconds();
+    void setReportIntervalSeconds(unsigned long value);
+	unsigned long getReportIntervalSeconds();
     // [37] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. On sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
-    void setReportIntervalMinutes(int value);
+    void setReportIntervalMinutes(unsigned long value);
     // [38] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. On sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
-    void setReportIntervalHours(int value);
+    void setReportIntervalHours(unsigned int value);
     // [39] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. On sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
-    void setReportIntervalDays(int value);
+    void setReportIntervalDays(uint8_t value);
 	// [30] if set and when the board is battery powered, sleep() is always called instead of wait() (default: true)
 	void setSleepOrWait(bool value);
 	// sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 
-	void sleepOrWait(long value);
+	void sleepOrWait(unsigned long value);
 	// [31] set which pin is connected to RST of the board to reboot the board when requested. If not set the software reboot is used instead (default: -1)
-	void setRebootPin(int value);
+	void setRebootPin(int8_t value);
 	// [32] turn the ADC off so to save 0.2 mA
 	void setADCOff();
 	// send a message by providing the source child, type of the message and value
-	void sendMessage(int child_id, int type, int value);
-	void sendMessage(int child_id, int type, float value, int precision);
-	void sendMessage(int child_id, int type, double value, int precision);
-	void sendMessage(int child_id, int type, const char* value);
+	void sendMessage(uint8_t child_id, uint8_t type, int value);
+	void sendMessage(uint8_t child_id, uint8_t type, float value, uint8_t precision);
+	void sendMessage(uint8_t child_id, uint8_t type, double value, uint8_t precision);
+	void sendMessage(uint8_t child_id, uint8_t type, const char* value);
 	// register a sensor
 	void registerSensor(Sensor* sensor);
+#if NODEMANAGER_SLEEP == ON
 	// register a timer
 	void registerTimer(Timer* timer);
+#endif
 	// return the next-available child id
-	int getAvailableChildId(int child_id = -255);
+	uint8_t getAvailableChildId(uint8_t child_id = 255);
 	// list containing all the registered sensors
 	List<Sensor*> sensors;
 	// return the Child object of the given child_id
-	Child* getChild(int child_id);
+	Child* getChild(uint8_t child_id);
 	// return the sensor object of the given child_id
-	Sensor* getSensorWithChild(int child_id);
+	Sensor* getSensorWithChild(uint8_t child_id);
+	// sleep between send()
+	void sleepBetweenSend();
 #if NODEMANAGER_SLEEP == ON
 	// [3] set the duration (in seconds) of a sleep cycle
-	void setSleepSeconds(int value);
-	long getSleepSeconds();
+	void setSleepSeconds(unsigned long value);
+	unsigned long getSleepSeconds();
 	// [4] set the duration (in minutes) of a sleep cycle
-	void setSleepMinutes(int value);
+	void setSleepMinutes(unsigned long value);
 	// [5] set the duration (in hours) of a sleep cycle
-	void setSleepHours(int value);
+	void setSleepHours(unsigned int value);
 	// [29] set the duration (in days) of a sleep cycle
-	void setSleepDays(int value);
+	void setSleepDays(uint8_t value);
 	// [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
-	void setSleepBetweenSend(int value);
+	void setSleepBetweenSend(unsigned int value);
 	// [9] wake up the board
 	void wakeup();
 	// use smart sleep for sleeping boards (default: true)
@@ -294,21 +298,21 @@ You can interact with each class provided by NodeManager through a set of API fu
 #endif
 #if NODEMANAGER_INTERRUPTS == ON
 	// [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
-	void setSleepInterruptPin(int value);
+	void setSleepInterruptPin(int8_t value);
 	// configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
-	void setInterrupt(int pin, int mode, int initial = -1);
+	void setInterrupt(int8_t pin, uint8_t mode, int8_t initial = -1);
 	// [28] ignore two consecutive interrupts if happening within this timeframe in milliseconds (default: 100)
-	void setInterruptDebounce(long value);
+	void setInterruptDebounce(unsigned long value);
 	// return the pin from which the last interrupt came
-	int getLastInterruptPin();
+	int8_t getLastInterruptPin();
 	// return the value of the pin from which the last interrupt came
-	int getLastInterruptValue();
+	int8_t getLastInterruptValue();
 #endif
 #if NODEMANAGER_POWER_MANAGER == ON
 	// configure a PowerManager common to all the sensors
 	void setPowerManager(PowerManager& powerManager);
 	// to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-	void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
+	void setPowerPins(int8_t ground_pin, int8_t vcc_pin, unsigned long wait_time = 50);
 	// [24] manually turn the power on
 	void powerOn();
 	// [25] manually turn the power off
@@ -328,15 +332,15 @@ You can interact with each class provided by NodeManager through a set of API fu
 	// [41] synchronize the local time with the controller
 	void syncTime();
 	// [42] returns the current system time
-	long getTime();
+	unsigned long getTime();
 	// [43] set the hour offset for when syncronizing the time (default: 0)
-	void setTimezone(int value);
+	void setTimezone(int8_t value);
 	// request the current time to the controller during setup(). Time with a RTC if configured is always synchronized (default: true)
 	void setSyncTimeOnSetup(bool value);
 	// request the current time to the controller just after a sleep cycle. Time with a RTC if configured is always synchronized (default: true)
 	void setSyncTimeAfterSleep(bool value);
 	// request the current time to the controller after the configured number of minutes (default: 0)
-	void setSyncTimeAfterInterval(int value);
+	void setSyncTimeAfterInterval(unsigned long value);
 	// receiveTime() callback
 	void receiveTime(unsigned long ts);
 #endif
@@ -354,55 +358,52 @@ You can interact with each class provided by NodeManager through a set of API fu
 	void loop();
 #if NODEMANAGER_RECEIVE == ON
 	void receive(const MyMessage & msg);
-#endif
 ~~~
 
 ### Sensor API
 
 The following methods are available for all the sensors:
 ~~~c
-	Sensor(int pin = -1);
+	Sensor(int8_t pin = -1);
 	// return the name of the sensor
 	const char* getName();
 	// [1] where the sensor is attached to (default: not set)
-	void setPin(int value);
+	void setPin(int8_t value);
 	// [5] For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)
-	void setSamples(int value);
+	void setSamples(unsigned int value);
 	// [6] If more then one sample has to be taken, set the interval in milliseconds between measurements (default: 0)
-	void setSamplesInterval(int value);
+	void setSamplesInterval(unsigned long value);
     // [17] After how many seconds the sensor will report back its measure (default: 10 minutes)
-    void setReportIntervalSeconds(int value);
+    void setReportIntervalSeconds(unsigned long value);
     // [16] After how many minutes the sensor will report back its measure (default: 10 minutes)
-    void setReportIntervalMinutes(int value);
+    void setReportIntervalMinutes(unsigned long value);
     // [19] After how many hours the sensor will report back its measure (default: 10 minutes)
-    void setReportIntervalHours(int value);
+    void setReportIntervalHours(unsigned int value);
     // [20] After how many days the sensor will report back its measure (default: 10 minutes)
-    void setReportIntervalDays(int value);
+    void setReportIntervalDays(uint8_t value);
 	// [24] Set the way the timer used for reporting to the gateway should operate. It can be either TIME_INTERVAL (e.g. report every X seconds with the amount of time set with setReportTimerValue()), IMMEDIATELY (e.g. report at every cycle, useful for sensors like actuators which should report as soon as the value has changed), DO_NOT_REPORT (e.g. never report, useful for when there is no need to report, like a Display) and when NODEMANAGER_TIME is ON, EVERY_MINUTE/EVERY_HOUR/EVERY_DAY (e.g. to report the value set in the previous timeframe, useful for sensors reporting an accumulated value linked to a timeframe at regular intervals), AT_MINUTE/AT_HOUR/AT_DAY (e.g. report at a given minute/hour/day, useful if the measure is expected at a specified time, set with setReportTimerValue())
 	void setReportTimerMode(timer_mode value);
 	// [25] Set the value for the reporting timer's mode which has been set with setReportTimerMode()
-	void setReportTimerValue(int value);
+	void setReportTimerValue(unsigned long value);
 	// [26] Set the way the timer used for taking measures should operate. Takes the same parameters as setReportTimerMode(). If not set explicitly, will be set as the reporting timer
 	void setMeasureTimerMode(timer_mode value);
 	// [27] Set the value for the reporting timer's mode which has been set with setReportTimerMode() If not set explicitely, will be set with the same value as the reporting timer
-	void setMeasureTimerValue(int value);
+	void setMeasureTimerValue(unsigned long value);
 	// list of configured child
 	List<Child*> children;
 	// return the child object based on the provided child_id
-	Child* getChild(int child_id);
+	Child* getChild(uint8_t child_id);
 	// register a child
 	void registerChild(Child* child);
-	// reference to the NodeManager object
-	NodeManager* _node;
 #if NODEMANAGER_INTERRUPTS == ON
 	// return the pin the interrupt is attached to
-	int getInterruptPin();
+	int8_t getInterruptPin();
 	// set initial value of the configured pin. Can be used for internal pull up
-	void setPinInitialValue(int value);
+	void setPinInitialValue(int8_t value);
 	// for interrupt-based sensor, set the interrupt mode. Can be CHANGE, RISING, FALLING (default: CHANGE)
-	void setInterruptMode(int value);
+	void setInterruptMode(uint8_t value);
 	// [22] for interrupt-based sensor, milliseconds to wait/sleep after the interrupt before reporting (default: 0)
-	void setWaitAfterInterrupt(int value);
+	void setWaitAfterInterrupt(unsigned long value);
 	// [23] for interrupt-based sensor, the value of the pin is checked and the interrupt ignored if RISING and not HIGH or FALLING and not LOW (default: true)
 	void setInterruptStrict(bool value);
 #endif
@@ -410,7 +411,7 @@ The following methods are available for all the sensors:
 	// set a previously configured PowerManager to the sensor so to powering it up with custom pins
 	void setPowerManager(PowerManager& powerManager);
 	// to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-	void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
+	void setPowerPins(int8_t ground_pin, int8_t vcc_pin, unsigned long wait_time = 50);
 	// [13] manually turn the power on
 	void powerOn();
 	// [14] manually turn the power off
@@ -452,21 +453,21 @@ The following methods are available for all the sensors:
 
 The following methods are available for all the child:
 ~~~c
-	Child(Sensor* sensor, value_format format, int child_id, int presentation, int type, const char* description = "");
+	Child(Sensor* sensor, value_format format, uint8_t child_id, uint8_t presentation, uint8_t type, const char* description = "");
 	// set child id used to communicate with the gateway/controller
-	void setChildId(int value);
-	int getChildId();
+	void setChildId(uint8_t value);
+	uint8_t getChildId();
 	// set sensor format
 	void setFormat(value_format value);
 	value_format getFormat();
 	// set sensor presentation (default: S_CUSTOM)
-	void setPresentation(int value);
-	int getPresentation();
+	void setPresentation(uint8_t value);
+	uint8_t getPresentation();
 	// set sensor type (default: V_CUSTOM)
-	void setType(int value);
-	int getType();
+	void setType(uint8_t value);
+	uint8_t getType();
 	// set how many decimal digits to use (default: 2 for ChildFloat, 4 for ChildDouble)
-	void setFloatPrecision(int value);
+	void setFloatPrecision(uint8_t value);
 	// set sensor description
 	void setDescription(const char* value);
 	const char* getDescription();
@@ -492,7 +493,7 @@ The following methods are available for all the child:
 	void reset();
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	// force to send an update after the configured number of minutes
-	void setForceUpdateTimerValue(int value);
+	void setForceUpdateTimerValue(unsigned long value);
 	// never report values below this threshold (default: FLT_MIN)
 	void setMinThreshold(float value);
 	// never report values above this threshold (default: FLT_MAX)
@@ -522,18 +523,18 @@ Each sensor class may expose additional methods.
 
 * SensorBattery
 ~~~c
-    // [102] the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
-    void setMinVoltage(float value);
-    // [103] the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
-    void setMaxVoltage(float value);
-    // [104] if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
-    void setBatteryInternalVcc(bool value);
-    // [105] if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
-    void setBatteryPin(int value);
-    // [106] if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
-    void setBatteryVoltsPerBit(float value);
-    // [107] set battery voltage calibration factor applied (multiplied) to the battery voltage read from hardware, default 1.0 (no adjustment)
-    void SensorBattery::setBatteryCalibrationFactor(float value);
+	// [102] the expected vcc when the batter is fully discharged, used to calculate the percentage (default: 2.7)
+	void setMinVoltage(float value);
+	// [103] the expected vcc when the batter is fully charged, used to calculate the percentage (default: 3.3)
+	void setMaxVoltage(float value);
+	// [104] if true, the battery level will be evaluated by measuring the internal vcc without the need to connect any pin, if false the voltage divider methon will be used (default: true)
+	void setBatteryInternalVcc(bool value);
+	// [105] if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
+	void setBatteryPin(int8_t value);
+	// [106] if setBatteryInternalVcc() is set to false, the volts per bit ratio used to calculate the battery voltage (default: 0.003363075)
+	void setBatteryVoltsPerBit(float value);
+	// [107] change battery voltage calibration factor
+	void setBatteryCalibrationFactor(float value);
 ~~~
 
 * SensorSignal
@@ -572,10 +573,16 @@ Each sensor class may expose additional methods.
 
 * SensorACS712
 ~~~c
-    // [101] set how many mV are equivalent to 1 Amp. The value depends on the module (100 for 20A Module, 66 for 30A Module) (default: 185);
-    void setmVPerAmp(int value);
-    // [102] set ACS offset (default: 2500);
-    void setOffset(int value);
+	// [101] set how many mV are equivalent to 1 Amp. The value depends on the module (185 for 5A Module, 100 for 20A Module, 66 for 30A Module) (default: 185);
+	void setmVPerAmp(int value);
+	// [102] set ACS offset (default: 2500);
+	void setOffset(int value);
+	// [103] set AC Measurement mode
+	void setACMode(bool value);
+	// [104] set AC noise
+	void setACNoise(int value);
+	// [105] Adjust AC noise
+	void computeACNoise();
 ~~~
 
 * SensorDigitalOutput / SensorRelay / SensorLatchingRelay1Pin / SensorLatchingRelay2Pins
@@ -593,7 +600,7 @@ Each sensor class may expose additional methods.
     // [109] Invert the value to write. E.g. if ON is received, write LOW (default: false) 
     void setInvertValueToWrite(bool value);
     // [110] for a 2-pins latching relay, set the pin which turns the relay off (default: -1)
-    void setPinOff(int value);
+    void setPinOff(int8_t value);
     // manually switch the output to the provided status (ON or OFF)
     void setStatus(int value);
     // toggle the status
@@ -637,11 +644,11 @@ Each sensor class may expose additional methods.
 *  SensorSonoff
 ~~~c
     // [101] set the button's pin (default: 0)
-    void setButtonPin(int value);
+    void setButtonPin(int8_t value);
     // [102] set the relay's pin (default: 12)
-    void setRelayPin(int value);
+    void setRelayPin(int8_t value);
     // [103] set the led's pin (default: 13)
-    void setLedPin(int value);
+    void setLedPin(int8_t value);
 ~~~
 
 * SensorHCSR04
@@ -807,13 +814,13 @@ Each sensor class may expose additional methods.
     // set the passcode length. Passcode will be sent to the controller only after this number of digits have been pressed (default: 4)
     void setPasscodeLength(int value);
     // set the clock pin (default: 6)
-    void setClockPin(int value);
+    void setClockPin(int8_t value);
     // set the SDO pin (default: 5)
-    void setSdoPin(int value);
+    void setSdoPin(int8_t value);
     // set the DV pin (default: 3)
-    void setDvPin(int value);
+    void setDvPin(int8_t value);
     // set the RST pin (default: 4)
-    void setRstPin(int value);
+    void setRstPin(int8_t value);
 ~~~
 
 * SensorServo
@@ -855,7 +862,7 @@ Almost all the functions made available through the API can be called remotely. 
 For example, to change the sleep time to e.g. 10 minutes:
 ~~~c
     // [4] set the duration (in minutes) of a sleep cycle
-    void setSleepMinutes(int value);
+	void setSleepMinutes(unsigned long value);
 ~~~
 `<node_id>;<configuration_child_id>;<req>;0;<V_CUSTOM>;<child_id>,<function_id>,<value>`
 `100;200;2;0;48;0,4,10`
@@ -870,7 +877,7 @@ To wake up a node previously configured as sleeping, send the following as the n
 if you want to collect and average 10 samples for the sensor on child_id 1:
 ~~~c
     // [5] For some sensors, the measurement can be queried multiple times and an average is returned (default: 1)
-    void setSamples(int value);
+    void setSamples(unsigned int value);
 ~~~
 `100;200;2;0;48;1,5,10`
 

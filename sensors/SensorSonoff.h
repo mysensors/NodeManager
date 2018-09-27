@@ -28,9 +28,9 @@ SensorSonoff
 class SensorSonoff: public Sensor {
 protected:
 	Bounce _debouncer = Bounce();
-	int _button_pin = 0;
-	int _relay_pin = 12;
-	int _led_pin = 13;
+	int8_t _button_pin = 0;
+	int8_t _relay_pin = 12;
+	int8_t _led_pin = 13;
 	int _old_value = 0;
 	bool _state = false;
 	int _relay_on = 1;
@@ -39,22 +39,22 @@ protected:
 	int _led_off = 1;
 	
 public:
-	SensorSonoff(int child_id = -255): Sensor(-1) {
+	SensorSonoff(uint8_t child_id = 255): Sensor(-1) {
 		_name = "SONOFF";
 		children.allocateBlocks(1);
 		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_BINARY,V_STATUS,_name);
 	};
 
 	// [101] set the button's pin (default: 0)
-	void setButtonPin(int value) {
+	void setButtonPin(int8_t value) {
 		_button_pin = value;
 	};
 	// [102] set the relay's pin (default: 12)
-	void setRelayPin(int value) {
+	void setRelayPin(int8_t value) {
 		_relay_pin = value;
 	};
 	// [103] set the led's pin (default: 13)
-	void setLedPin(int value) {
+	void setLedPin(int8_t value) {
 		_led_pin = value;
 	};
 

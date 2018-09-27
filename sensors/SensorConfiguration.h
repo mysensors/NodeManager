@@ -27,7 +27,7 @@ SensorConfiguration: allow remote configuration of the board and any configured 
 
 class SensorConfiguration: public Sensor {
 public:
-	SensorConfiguration(int child_id = CONFIGURATION_CHILD_ID): Sensor(-1) {
+	SensorConfiguration(uint8_t child_id = CONFIGURATION_CHILD_ID): Sensor(-1) {
 		_name = "CONFIG";
 		children.allocateBlocks(1);
 		new Child(this,INT,child_id,S_CUSTOM,V_CUSTOM,_name);

@@ -158,8 +158,6 @@ Default configuration settings
 #endif
 
 // define debug output macro and log prefix
-#if NODEMANAGER_DEBUG == ON
-#define debug(x,...)		hwDebugPrint(x, ##__VA_ARGS__)
 #define LOG_PREFIX 			"NM:"
 #define LOG_INIT			LOG_PREFIX "INIT:"
 #define LOG_BEFORE			LOG_PREFIX "BFR:"
@@ -173,6 +171,9 @@ Default configuration settings
 #define LOG_EEPROM			LOG_PREFIX "EEPR:"
 #define LOG_OTA				LOG_PREFIX "OTA:"
 #define LOG_SENSOR			LOG_PREFIX "SENS:"
+
+#if NODEMANAGER_DEBUG == ON
+#define debug(x,...)		hwDebugPrint(x, ##__VA_ARGS__)
 #else
 #define debug(x,...)
 #endif

@@ -27,7 +27,7 @@ SensorRain
 
 class SensorRain: public SensorAnalogInput {
 public:
-	SensorRain(int pin, int child_id = -255): SensorAnalogInput(pin, child_id) {
+	SensorRain(int8_t pin, uint8_t child_id = 255): SensorAnalogInput(pin, child_id) {
 		_name = "RAIN";
 		children.get()->setPresentation(S_RAIN);
 		children.get()->setType(V_RAINRATE);

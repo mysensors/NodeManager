@@ -27,7 +27,7 @@
 
 class SensorWaterMeter: public SensorPulseMeter {
 public:
-	SensorWaterMeter(int pin, int child_id = -255): SensorPulseMeter(pin, child_id) {
+	SensorWaterMeter(int8_t pin, uint8_t child_id = 255): SensorPulseMeter(pin, child_id) {
 		_name = "WATER";
 		children.get()->setFormat(DOUBLE);
 		children.get()->setPresentation(S_WATER);

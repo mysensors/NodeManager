@@ -25,7 +25,7 @@ SensorDigitalOutput: control a digital output of the configured pin
 class SensorDigitalOutput: public Sensor {
 protected:
 	int _status = OFF;
-	int _pin_off = -1;
+	int8_t _pin_off = -1;
 	bool _legacy_mode = false;
 	bool _input_is_elapsed = false;
 	int _wait_after_set = 0;
@@ -34,7 +34,7 @@ protected:
 	Timer* _safeguard_timer = new Timer();
 	
 public:
-	SensorDigitalOutput(int pin, int child_id = -255): Sensor(pin) {
+	SensorDigitalOutput(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
 		_name = "DIGITAL_O";
 		children.allocateBlocks(1);
 		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
@@ -66,7 +66,7 @@ public:
 		_invert_value_to_write = value;
 	};
 	// [110] for a 2-pins latching relay, set the pin which turns the relay off (default: -1)
-	void setPinOff(int value) {
+	void setPinOff(int8_t value) {
 		_pin_off = value;
 	};
 

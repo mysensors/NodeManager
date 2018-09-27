@@ -24,7 +24,7 @@ SensorDigitalInput: read the digital input of the configured pin
 */
 class SensorDigitalInput: public Sensor {
 public:
-	SensorDigitalInput(int pin, int child_id = -255): Sensor(pin) {
+	SensorDigitalInput(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
 		_name = "DIGITAL_I";
 		children.allocateBlocks(1);
 		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);

@@ -27,7 +27,7 @@ SensorLDR: return the percentage of light from a Light dependent resistor
 
 class SensorLDR: public SensorAnalogInput {
 public:
-	SensorLDR(int pin, int child_id = -255): SensorAnalogInput(pin, child_id) {
+	SensorLDR(int8_t pin, uint8_t child_id = 255): SensorAnalogInput(pin, child_id) {
 		_name = "LDR";
 		children.get()->setPresentation(S_LIGHT_LEVEL);
 		children.get()->setType(V_LIGHT_LEVEL);

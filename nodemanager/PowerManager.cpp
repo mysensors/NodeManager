@@ -23,12 +23,12 @@ PowerManager: helper class to power sensors on-demand through the board's pins
 
 #include "PowerManager.h"
 
-PowerManager::PowerManager(int ground_pin, int vcc_pin, int wait_time) {
+PowerManager::PowerManager(int8_t ground_pin, int8_t vcc_pin, unsigned long wait_time) {
 	setPowerPins(ground_pin, vcc_pin, wait_time);
 }
 
 // set the vcc and ground pin the sensor is connected to
-void PowerManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
+void PowerManager::setPowerPins(int8_t ground_pin, int8_t vcc_pin, unsigned long wait_time) {
 	_ground_pin = ground_pin;
 	_vcc_pin = vcc_pin;
 	if (_ground_pin > 0) {

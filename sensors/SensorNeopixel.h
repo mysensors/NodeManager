@@ -39,7 +39,7 @@ protected:
 	int _num_pixels = 16;
 	
 public:
-	SensorNeopixel(int pin, int child_id = -255): Sensor(pin) {
+	SensorNeopixel(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
 		_name = "NEOPIXEL";
 		children.allocateBlocks(1);
 		new Child(this,STRING,nodeManager.getAvailableChildId(child_id), S_COLOR_SENSOR, V_RGB ,_name);

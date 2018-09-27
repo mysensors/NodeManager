@@ -27,7 +27,7 @@ SensorSoilMoisture
 
 class SensorSoilMoisture: public SensorAnalogInput {
 public:
-	SensorSoilMoisture(int pin, int child_id = -255): SensorAnalogInput(pin, child_id) {
+	SensorSoilMoisture(int8_t pin, uint8_t child_id = 255): SensorAnalogInput(pin, child_id) {
 		_name = "SOIL";
 		children.get()->setPresentation(S_MOISTURE);
 		children.get()->setType(V_LEVEL);

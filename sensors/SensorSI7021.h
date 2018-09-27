@@ -31,7 +31,7 @@ protected:
 	Weather* _si7021;
 	
 public:
-	SensorSI7021(int child_id = -255): Sensor(-1) {
+	SensorSI7021(uint8_t child_id = 255): Sensor(-1) {
 		_name = "SI7021";
 		children.allocateBlocks(2);
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);

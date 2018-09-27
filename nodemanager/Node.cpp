@@ -24,7 +24,7 @@ NodeManager: provide the most common functionalities a user would need when leve
 #include "Node.h"
 
 // initialize node manager
-NodeManager::NodeManager(int sensor_count) {
+NodeManager::NodeManager(uint8_t sensor_count) {
 	// setup the message container
 	_message = MyMessage();
 	// allocate block for all the sensors if sensor_count is provided
@@ -40,14 +40,14 @@ NodeManager::NodeManager(int sensor_count) {
 }
 
 #if NODEMANAGER_INTERRUPTS == ON
-int NodeManager::_last_interrupt_pin = -1;
-int NodeManager::_last_interrupt_value = LOW;
+int8_t NodeManager::_last_interrupt_pin = -1;
+int8_t NodeManager::_last_interrupt_value = LOW;
 long unsigned NodeManager::_last_interrupt_millis = millis();
 long unsigned NodeManager::_interrupt_debounce = 0;
 #endif
 
 // setter/getter
-void NodeManager::setRetries(int value) {
+void NodeManager::setRetries(uint8_t value) {
 	_retries = value;
 }
 #if NODEMANAGER_SLEEP == ON
@@ -65,24 +65,24 @@ void NodeManager::setSleepSeconds(unsigned long value) {
 void NodeManager::setSleepMinutes(unsigned long value) {
 	setSleepSeconds(value*60);
 }
-void NodeManager::setSleepHours(unsigned long value) {
+void NodeManager::setSleepHours(unsigned int value) {
 	setSleepMinutes(value*60);
 }
-void NodeManager::setSleepDays(unsigned long value) {
+void NodeManager::setSleepDays(uint8_t value) {
 	setSleepHours(value*24);
 }
 unsigned long NodeManager::getSleepSeconds() {
 	return _sleep_time;
 }
-void NodeManager::setSleepBetweenSend(int value) {
+void NodeManager::setSleepBetweenSend(unsigned int value) {
 	_sleep_between_send = value;
 }
 #endif
 #if NODEMANAGER_INTERRUPTS == ON
-void NodeManager::setSleepInterruptPin(int value) {
+void NodeManager::setSleepInterruptPin(int8_t value) {
 	_sleep_interrupt_pin = value;
 }
-void NodeManager::setInterrupt(int pin, int mode, int initial) {
+void NodeManager::setInterrupt(int8_t pin, uint8_t mode, int8_t initial) {
 	if (pin == INTERRUPT_PIN_1) {
 		_interrupt_1_mode = mode;
 		_interrupt_1_initial = initial;
@@ -92,12 +92,12 @@ void NodeManager::setInterrupt(int pin, int mode, int initial) {
 		_interrupt_2_initial = initial;
 	}
 }
-void NodeManager::setInterruptDebounce(long value) {
+void NodeManager::setInterruptDebounce(unsigned long value) {
 	_interrupt_debounce = value;
 }
 #endif
 #if NODEMANAGER_POWER_MANAGER == ON
-void NodeManager::setPowerPins(int ground_pin, int vcc_pin, int wait_time) {
+void NodeManager::setPowerPins(int8_t ground_pin, int8_t vcc_pin, unsigned long wait_time) {
 	if (_powerManager == nullptr) return;
 	_powerManager->setPowerPins(ground_pin, vcc_pin, wait_time);
 }
@@ -154,6 +154,7 @@ void NodeManager::registerTimer(Timer* timer) {
 	_timers.push(timer);
 }
 
+
 // setup NodeManager
 void NodeManager::before() {
 	// setup the reboot pin if needed
@@ -173,22 +174,22 @@ void NodeManager::before() {
 void NodeManager::presentation() {
 	debug(PSTR(LOG_BEFORE "OK\n"));
 	// Send the sketch version information to the gateway and Controller
-	_sleepBetweenSend();
+	sleepBetweenSend();
 #ifdef SKETCH_NAME
 	sendSketchInfo(SKETCH_NAME,SKETCH_VERSION);
 #endif
-	_sleepBetweenSend();
+	sleepBetweenSend();
 	// present each sensor
 	for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
 		Sensor* sensor = *itr;
 		// call each sensor's presentation()
 		sensor->presentation();
-		_sleepBetweenSend();
+		sleepBetweenSend();
 	}
 	// wait a bit before leaving this function
-	_sleepBetweenSend();
-	_sleepBetweenSend();
-	_sleepBetweenSend();
+	sleepBetweenSend();
+	sleepBetweenSend();
+	sleepBetweenSend();
 }
 
 
@@ -239,12 +240,13 @@ void NodeManager::setup() {
 void NodeManager::loop() {
 #if NODEMANAGER_TIME == ON
 	// if the time was last updated more than the given number of minutes ago, update it
-	if (_time_is_valid && _sync_time_after_interval > 0 && (now() - _time_last_sync) > (long)_sync_time_after_interval*60) syncTime();
+	if (_time_is_valid && _sync_time_after_interval > 0 && (now() - _time_last_sync) > (unsigned long)_sync_time_after_interval*60) syncTime();
 #endif
 #if NODEMANAGER_POWER_MANAGER == ON
 	// turn on the pin powering all the sensors
 	powerOn();
 #endif
+	
 	// update all the registered timers
 	for (List<Timer*>::iterator itr = _timers.begin(); itr != _timers.end(); ++itr) {
 		Timer* timer = *itr;
@@ -319,7 +321,7 @@ void NodeManager::loop() {
 	void NodeManager::receiveTime(unsigned long ts) {
 		// apply time adjustment for the configured timezone
 		ts = ts + (long)_timezone*60*60;
-		debug(PSTR(LOG_TIME "OK ts=%d\n"),ts);
+		debug(PSTR(LOG_TIME "OK ts=%lu\n"),ts);
 		// time is now valid
 		_time_is_valid = true;
 #if NODEMANAGER_RTC == ON
@@ -421,37 +423,37 @@ void NodeManager::loop() {
 
 #if NODEMANAGER_INTERRUPTS == ON
 	// return the pin from which the last interrupt came
-	int NodeManager::getLastInterruptPin() {
+	int8_t NodeManager::getLastInterruptPin() {
 		return _last_interrupt_pin;
 	}
 
 	// return the value of the pin from which the last interrupt came
-	int NodeManager::getLastInterruptValue() {
+	int8_t NodeManager::getLastInterruptValue() {
 		return _last_interrupt_value;
 	}
 #endif
 
 	// set the default interval in seconds all the sensors will report their measures
-	void NodeManager::setReportIntervalSeconds(int value) {
+	void NodeManager::setReportIntervalSeconds(unsigned long value) {
 		_report_interval_seconds = value;
 	}
-	int NodeManager::getReportIntervalSeconds() {
+	unsigned long NodeManager::getReportIntervalSeconds() {
 		return _report_interval_seconds;
 	}
 	
 	// set the default interval in minutes all the sensors will report their measures
-	void NodeManager::setReportIntervalMinutes(int value) {
-		_report_interval_seconds = value*60;
+	void NodeManager::setReportIntervalMinutes(unsigned long value) {
+		_report_interval_seconds = value*60UL;
 	}
 
 	// set the default interval in hours all the sensors will report their measures
-	void NodeManager::setReportIntervalHours(int value) {
-		_report_interval_seconds = value*60*60;
+	void NodeManager::setReportIntervalHours(unsigned int value) {
+		_report_interval_seconds = (unsigned long)value*60UL *60UL;
 	}
 
 	// set the default interval in days all the sensors will report their measures
-	void NodeManager::setReportIntervalDays(int value) {
-		_report_interval_seconds = value*60*60*24;
+	void NodeManager::setReportIntervalDays(uint8_t value) {
+		_report_interval_seconds = (unsigned long)value*60UL *60UL *24UL;
 	}
 
 	// if set and when the board is battery powered, sleep() is always called instead of wait()
@@ -460,7 +462,7 @@ void NodeManager::loop() {
 	}
 
 	// set which pin is connected to RST of the board to reboot the board when requested. If not set the software reboot is used instead (default: -1)
-	void NodeManager::setRebootPin(int value) {
+	void NodeManager::setRebootPin(int8_t value) {
 		_reboot_pin = value;
 	}
 
@@ -475,15 +477,16 @@ void NodeManager::loop() {
 	}
 
 	// sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 
-	void NodeManager::sleepOrWait(long value) {
+	void NodeManager::sleepOrWait(unsigned long value) {
 		// if the node is sleeping, sleep-or-wait is enabled and we need to sleep for a decent amount of time, call sleep() otherwise wait()
 		if (isSleepingNode() && _sleep_or_wait && value > 200) sleep(value);
 		else wait(value);
 	}
 
 	// return the next available child_id
-	int NodeManager::getAvailableChildId(int child_id) {
-		if (child_id > -1) return child_id;
+	uint8_t NodeManager::getAvailableChildId(uint8_t child_id) {
+		// Childs 0 and 255 not allowed
+		if ( (child_id != 0) && (child_id != 255) ) return child_id;
 		for (int i = 1; i < 255; i++) {
 			Child* child = getChild(i);
 			if (child == nullptr) return i;
@@ -534,7 +537,7 @@ void NodeManager::loop() {
 	}
 	
 	// keep track of the last interrupt pin and value
-	void NodeManager::_saveInterrupt(int pin) {
+	void NodeManager::_saveInterrupt(int8_t pin) {
 		// ingore the interrupt if triggering too close to the previous one
 		if (_interrupt_debounce > 0 &&  (millis() - _last_interrupt_millis < _interrupt_debounce) && pin == _last_interrupt_pin && millis() > _last_interrupt_millis) return;
 		// save pin and value
@@ -545,40 +548,40 @@ void NodeManager::loop() {
 #endif
 
 	// send a message by providing the source child, type of the message and value
-	void NodeManager::sendMessage(int child_id, int type, int value) {
+	void NodeManager::sendMessage(uint8_t child_id, uint8_t type, int value) {
 		_message.clear();
 		_message.set(value);
 		_sendMessage(child_id,type);
 	}
-	void NodeManager::sendMessage(int child_id, int type, float value, int precision) {
+	void NodeManager::sendMessage(uint8_t child_id, uint8_t type, float value, uint8_t precision) {
 		_message.clear();
 		_message.set(value,precision);
 		_sendMessage(child_id,type);
 	}
-	void NodeManager::sendMessage(int child_id, int type, double value, int precision) {
+	void NodeManager::sendMessage(uint8_t child_id, uint8_t type, double value, uint8_t precision) {
 		_message.clear();
 		_message.set(value,precision);
 		_sendMessage(child_id,type);
 	}
-	void NodeManager::sendMessage(int child_id, int type, const char* value) {
+	void NodeManager::sendMessage(uint8_t child_id, uint8_t type, const char* value) {
 		_message.clear();
 		_message.set(value);
 		_sendMessage(child_id,type);
 	}
 
 	// send a message to the network
-	void NodeManager::_sendMessage(int child_id, int type) {
+	void NodeManager::_sendMessage(uint8_t child_id, uint8_t type) {
 		// prepare the message
 		_message.setSensor(child_id);
 		_message.setType(type);
 		// send the message, multiple times if requested
 		for (int i = 0; i < _retries; i++) {
 			if (mGetPayloadType(_message) == P_INT16) debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%d\n"),_message.sensor,_message.type,_message.getInt());
-			if (mGetPayloadType(_message) == P_FLOAT32) debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%d.%02d\n"),_message.sensor,_message.type,(int)_message.getFloat(), (int)(_message.getFloat()*100)%100);
+			if (mGetPayloadType(_message) == P_FLOAT32) debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%d.%02d\n"),_message.sensor,_message.type,(unsigned int)_message.getFloat(), (unsigned int)(_message.getFloat()*100)%100);
 			if (mGetPayloadType(_message) == P_STRING) debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%s\n"),_message.sensor,_message.type,_message.getString());
 			send(_message, _ack);
 			// if configured, sleep beetween each send
-			_sleepBetweenSend();
+			sleepBetweenSend();
 		}
 	}
 
@@ -589,14 +592,14 @@ void NodeManager::loop() {
 #endif
 
 	// return the requested child 
-	Child* NodeManager::getChild(int child_id) {
+	Child* NodeManager::getChild(uint8_t child_id) {
 		Sensor* sensor = getSensorWithChild(child_id);
 		if (sensor == nullptr) return nullptr;
 		return sensor->getChild(child_id);
 	}
 
 	// return the sensor with the requested child 
-	Sensor* NodeManager::getSensorWithChild(int child_id) {
+	Sensor* NodeManager::getSensorWithChild(uint8_t child_id) {
 		for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
 			Sensor* sensor = *itr;
 			Child* child = sensor->getChild(child_id);
@@ -609,7 +612,7 @@ void NodeManager::loop() {
 	// sync the time with the controller
 	void NodeManager::syncTime() {
 		_time_is_valid = false;
-		int retries = 10;
+		int8_t retries = 10;
 		// ask the controller for the time up to 10 times until received
 		while ( ! _time_is_valid && retries >= 0) {
 			debug(PSTR(LOG_TIME "REQ\n"));
@@ -620,12 +623,12 @@ void NodeManager::loop() {
 	}
 
 	// returns the current system time
-	long NodeManager::getTime() {
+	unsigned long NodeManager::getTime() {
 		return now();
 	}
 	
 	// set the hour offset for when syncronizing the time
-	void NodeManager::setTimezone(int value) {
+	void NodeManager::setTimezone(int8_t value) {
 		_timezone = value;
 	}
 	
@@ -640,7 +643,7 @@ void NodeManager::loop() {
 	}
 	
 	// request the current time to the controller after the configured number of minutes
-	void NodeManager::setSyncTimeAfterInterval(int value) {
+	void NodeManager::setSyncTimeAfterInterval(unsigned long value) {
 		_sync_time_after_interval = value;
 	}
 #endif
@@ -648,7 +651,7 @@ void NodeManager::loop() {
 #if NODEMANAGER_SLEEP == ON
 	// wrapper of smart sleep
 	void NodeManager::_sleep() {
-		long sleep_time = _sleep_time;
+		unsigned long sleep_time = _sleep_time;
 #if NODEMANAGER_TIME == ON
 		// if there is time still to sleep, sleep for that timeframe only
 		if (_remainder_sleep_time > 0) sleep_time = _remainder_sleep_time;
@@ -684,7 +687,7 @@ void NodeManager::loop() {
 		debug(PSTR(LOG_SLEEP "AWAKE\n"));
 #if NODEMANAGER_TIME == ON
 		// keep track of the old time so to calculate the amount of time slept
-		long old_time = now();
+		unsigned long old_time = now();
 #if NODEMANAGER_RTC == ON
 		// sync the time with the RTC
 		setSyncProvider(RTC.get);
@@ -737,7 +740,8 @@ void NodeManager::loop() {
 	}
 #endif
 
-	// sleep between send()
-	void NodeManager::_sleepBetweenSend() {
-		if (_sleep_between_send > 0) sleep(_sleep_between_send);
-	}
+// sleep between send()
+void NodeManager::sleepBetweenSend() {
+	// if we sleep here ack management will not work
+	if (_sleep_between_send > 0) wait(_sleep_between_send);
+}

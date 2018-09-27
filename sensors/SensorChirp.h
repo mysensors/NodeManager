@@ -35,7 +35,7 @@ protected:
 	bool _chirp_lightreversed = true;
 	
 public:
-	SensorChirp(int child_id = -255): Sensor(-1) {
+	SensorChirp(uint8_t child_id = 255): Sensor(-1) {
 		_name = "CHIRP";
 		children.allocateBlocks(3);
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_HUM,V_HUM,_name);

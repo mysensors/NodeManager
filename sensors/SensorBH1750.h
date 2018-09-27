@@ -32,7 +32,7 @@ protected:
 	BH1750* _lightSensor;
 	
 public:
-	SensorBH1750(int child_id = -255): Sensor(-1) {
+	SensorBH1750(uint8_t child_id = 255): Sensor(-1) {
 		_name = "BH1750";
 		children.allocateBlocks(1);
 		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_LIGHT_LEVEL,V_LEVEL,_name);

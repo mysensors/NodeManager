@@ -31,7 +31,7 @@ protected:
 	float _voltageRef = 3.3;
 	
 public:
-	SensorPT100(int pin, int child_id = -255): Sensor(pin) {
+	SensorPT100(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
 		_name = "PT100";
 		children.allocateBlocks(1);
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);

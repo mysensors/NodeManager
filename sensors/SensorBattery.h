@@ -31,12 +31,12 @@ protected:
 	float _battery_min = 2.6;
 	float _battery_max = 3.3;
 	bool _battery_internal_vcc = true;
-	int _battery_pin = -1;
+	int8_t _battery_pin = -1;
 	float _battery_volts_per_bit = 0.003363075;
 	float _battery_adj_factor = 1.0;
 	
 public:
-	SensorBattery(int child_id = BATTERY_CHILD_ID): Sensor(-1) {
+	SensorBattery(uint8_t child_id = BATTERY_CHILD_ID): Sensor(-1) {
 		_name = "BATTERY";
 		children.allocateBlocks(1);
 		new Child(this,FLOAT,child_id,S_MULTIMETER,V_VOLTAGE,_name);
@@ -60,7 +60,7 @@ public:
 	};
 	
 	// [105] if setBatteryInternalVcc() is set to false, the analog pin to which the battery's vcc is attached (https://www.mysensors.org/build/battery) (default: -1)
-	void setBatteryPin(int value) {
+	void setBatteryPin(int8_t value) {
 		_battery_pin = value;
 	};
 	
@@ -101,6 +101,7 @@ public:
 		if (percentage < 0) percentage = 0;
 		// report battery level percentage
 		sendBatteryLevel(percentage);
+		nodeManager.sleepBetweenSend();
 	};
 
 #if NODEMANAGER_OTA_CONFIGURATION == ON

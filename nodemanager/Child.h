@@ -41,21 +41,21 @@ class Sensor;
 class Child {
 public:
 	Child();
-	Child(Sensor* sensor, value_format format, int child_id, int presentation, int type, const char* description = "");
+	Child(Sensor* sensor, value_format format, uint8_t child_id, uint8_t presentation, uint8_t type, const char* description = "");
 	// set child id used to communicate with the gateway/controller
-	void setChildId(int value);
-	int getChildId();
+	void setChildId(uint8_t value);
+	uint8_t getChildId();
 	// set sensor format
 	void setFormat(value_format value);
 	value_format getFormat();
 	// set sensor presentation (default: S_CUSTOM)
-	void setPresentation(int value);
-	int getPresentation();
+	void setPresentation(uint8_t value);
+	uint8_t getPresentation();
 	// set sensor type (default: V_CUSTOM)
-	void setType(int value);
-	int getType();
+	void setType(uint8_t value);
+	uint8_t getType();
 	// set how many decimal digits to use (default: 2 for ChildFloat, 4 for ChildDouble)
-	void setFloatPrecision(int value);
+	void setFloatPrecision(uint8_t value);
 	// set sensor description
 	void setDescription(const char* value);
 	const char* getDescription();
@@ -81,7 +81,7 @@ public:
 	void reset();
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	// force to send an update after the configured number of minutes
-	void setForceUpdateTimerValue(int value);
+	void setForceUpdateTimerValue(unsigned long value);
 	// never report values below this threshold (default: FLT_MIN)
 	void setMinThreshold(float value);
 	// never report values above this threshold (default: FLT_MAX)
@@ -106,12 +106,12 @@ public:
 protected:
 	Sensor* _sensor;
 	value_format _format;
-	int _child_id;
-	int _presentation = S_CUSTOM;
-	int _type = V_CUSTOM;
+	uint8_t _child_id;
+	uint8_t _presentation = S_CUSTOM;
+	uint8_t _type = V_CUSTOM;
 	const char* _description = "";
-	int _samples = 0;
-	int _float_precision;
+	unsigned int _samples = 0;
+	uint8_t _float_precision;
 	child_processing _value_processing = AVG;
 	double _value = 0;
 	const char* _value_string = "";

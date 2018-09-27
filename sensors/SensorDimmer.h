@@ -41,7 +41,7 @@ protected:
 	int _reverse = false;
 	
 public:
-	SensorDimmer(int pin, int child_id = -255): Sensor(pin) {
+	SensorDimmer(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
 		_name = "DIMMER";
 		children.allocateBlocks(2);
 		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_DIMMER,V_STATUS,_name);

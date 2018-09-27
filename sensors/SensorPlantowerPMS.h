@@ -30,15 +30,15 @@ class SensorPlantowerPMS: public Sensor {
 protected:
 	int _readSensorValues();
 	SoftwareSerial* _ser;
-	int _tx_pin = 4;
-	int _rx_pin = 3;
+	int8_t _tx_pin = 4;
+	int8_t _rx_pin = 3;
 	PMS *_pms;
 	PMS::DATA _data;
 	bool _valuesRead = false;
 	bool _valuesReadError = false;
 	
 public:
-	SensorPlantowerPMS(int rxpin, int txpin, int child_id = -255): Sensor(rxpin) {
+	SensorPlantowerPMS(int8_t rxpin, int8_t txpin, uint8_t child_id = 255): Sensor(rxpin) {
 		_name = "PMS";
 		_rx_pin = rxpin;
 		_tx_pin = txpin;

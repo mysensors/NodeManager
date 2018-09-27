@@ -28,7 +28,7 @@ protected:
 	const char* _caption = "";
 	
 public:
-	Display(int child_id = -255): Sensor(-1) {
+	Display(uint8_t child_id = 255): Sensor(-1) {
 		_name = "";
 		// We don't need any sensors, but we need a child, otherwise the loop will never be executed
 		children.allocateBlocks(1);

@@ -33,7 +33,7 @@ protected:
 	float _offset = 0;
 	
 public:
-	SensorDHT(int pin, int child_id = -255): Sensor(pin) {
+	SensorDHT(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
 		_name = "DHT";
 		_dht_type = DHT::DHT11;
 		children.allocateBlocks(2);

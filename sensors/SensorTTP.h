@@ -25,17 +25,17 @@ SensorTTP: TTP226/TTP229 Touch control sensor
 
 class SensorTTP: public Sensor {
 protected:
-	int _clock_pin = 6;
-	int _sdo_pin = 5;
-	int _dv_pin = 3;
-	int _rst_pin = 4;
+	int8_t _clock_pin = 6;
+	int8_t _sdo_pin = 5;
+	int8_t _dv_pin = 3;
+	int8_t _rst_pin = 4;
 	int key = 0;
 	int ziro = 0;
 	List<int> _passcode;
 	int _passcode_length = 4;
 	
 public:
-	SensorTTP(int child_id = -255): Sensor(-1) {
+	SensorTTP(uint8_t child_id = 255): Sensor(-1) {
 		_name = "TTP";
 		children.allocateBlocks(1);
 		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_INFO,V_TEXT,_name);
@@ -48,19 +48,19 @@ public:
 		_passcode_length = value;
 	};
 	// set the clock pin (default: 6)
-	void setClockPin(int value) {
+	void setClockPin(int8_t value) {
 		_clock_pin = value;
 	};
 	// set the SDO pin (default: 5)
-	void setSdoPin(int value) {
+	void setSdoPin(int8_t value) {
 		_sdo_pin = value;
 	};
 	// set the DV pin (default: 3)
-	void setDvPin(int value) {
+	void setDvPin(int8_t value) {
 		_dv_pin = value;
 	};
 	// set the RST pin (default: 4)
-	void setRstPin(int value) {
+	void setRstPin(int8_t value) {
 		_rst_pin = value;
 	};
 

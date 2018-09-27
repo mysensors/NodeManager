@@ -32,7 +32,7 @@ protected:
 	float _offset = 0;
 	
 public:
-	SensorThermistor(int pin, int child_id = -255): Sensor(pin) {
+	SensorThermistor(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
 		_name = "THERMISTOR";
 		children.allocateBlocks(1);
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);

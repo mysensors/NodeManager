@@ -28,9 +28,9 @@ NodeManager: provide the most common functionalities a user would need when leve
 class NodeManager {
 public:
 	// instantiate a NodeManager object. An optional fixed number of sensors can be passed as an argument
-	NodeManager(int sensorcount = 0);
+	NodeManager(uint8_t sensorcount = 0);
 	// [10] send the same message multiple times (default: 1)
-	void setRetries(int value);
+	void setRetries(uint8_t value);
 	// [21] set this to true if you want destination node to send ack back to this node (default: false)
 	void setAck(bool value);
 	bool getAck();
@@ -50,39 +50,41 @@ public:
 	// return vcc in V
 	float getVcc();
     // [36] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. On sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
-    void setReportIntervalSeconds(int value);
-	int getReportIntervalSeconds();
+    void setReportIntervalSeconds(unsigned long value);
+	unsigned long getReportIntervalSeconds();
     // [37] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. On sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
-    void setReportIntervalMinutes(int value);
+    void setReportIntervalMinutes(unsigned long value);
     // [38] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. On sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
-    void setReportIntervalHours(int value);
+    void setReportIntervalHours(unsigned int value);
     // [39] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. On sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
-    void setReportIntervalDays(int value);
+    void setReportIntervalDays(uint8_t value);
 	// [30] if set and when the board is battery powered, sleep() is always called instead of wait() (default: true)
 	void setSleepOrWait(bool value);
 	// sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 
-	void sleepOrWait(long value);
+	void sleepOrWait(unsigned long value);
 	// [31] set which pin is connected to RST of the board to reboot the board when requested. If not set the software reboot is used instead (default: -1)
-	void setRebootPin(int value);
+	void setRebootPin(int8_t value);
 	// [32] turn the ADC off so to save 0.2 mA
 	void setADCOff();
 	// send a message by providing the source child, type of the message and value
-	void sendMessage(int child_id, int type, int value);
-	void sendMessage(int child_id, int type, float value, int precision);
-	void sendMessage(int child_id, int type, double value, int precision);
-	void sendMessage(int child_id, int type, const char* value);
+	void sendMessage(uint8_t child_id, uint8_t type, int value);
+	void sendMessage(uint8_t child_id, uint8_t type, float value, uint8_t precision);
+	void sendMessage(uint8_t child_id, uint8_t type, double value, uint8_t precision);
+	void sendMessage(uint8_t child_id, uint8_t type, const char* value);
 	// register a sensor
 	void registerSensor(Sensor* sensor);
 	// register a timer
 	void registerTimer(Timer* timer);
 	// return the next-available child id
-	int getAvailableChildId(int child_id = -255);
+	uint8_t getAvailableChildId(uint8_t child_id = 255);
 	// list containing all the registered sensors
 	List<Sensor*> sensors;
 	// return the Child object of the given child_id
-	Child* getChild(int child_id);
+	Child* getChild(uint8_t child_id);
 	// return the sensor object of the given child_id
-	Sensor* getSensorWithChild(int child_id);
+	Sensor* getSensorWithChild(uint8_t child_id);
+	// sleep between send()
+	void sleepBetweenSend();
 #if NODEMANAGER_SLEEP == ON
 	// [3] set the duration (in seconds) of a sleep cycle
 	void setSleepSeconds(unsigned long value);
@@ -90,11 +92,11 @@ public:
 	// [4] set the duration (in minutes) of a sleep cycle
 	void setSleepMinutes(unsigned long value);
 	// [5] set the duration (in hours) of a sleep cycle
-	void setSleepHours(unsigned long value);
+	void setSleepHours(unsigned int value);
 	// [29] set the duration (in days) of a sleep cycle
-	void setSleepDays(unsigned long value);
+	void setSleepDays(uint8_t value);
 	// [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
-	void setSleepBetweenSend(int value);
+	void setSleepBetweenSend(unsigned int value);
 	// [9] wake up the board
 	void wakeup();
 	// use smart sleep for sleeping boards (default: true)
@@ -102,21 +104,21 @@ public:
 #endif
 #if NODEMANAGER_INTERRUPTS == ON
 	// [19] if enabled, when waking up from the interrupt, the board stops sleeping. Disable it when attaching e.g. a motion sensor (default: true)
-	void setSleepInterruptPin(int value);
+	void setSleepInterruptPin(int8_t value);
 	// configure the interrupt pin and mode. Mode can be CHANGE, RISING, FALLING (default: MODE_NOT_DEFINED)
-	void setInterrupt(int pin, int mode, int initial = -1);
+	void setInterrupt(int8_t pin, uint8_t mode, int8_t initial = -1);
 	// [28] ignore two consecutive interrupts if happening within this timeframe in milliseconds (default: 100)
-	void setInterruptDebounce(long value);
+	void setInterruptDebounce(unsigned long value);
 	// return the pin from which the last interrupt came
-	int getLastInterruptPin();
+	int8_t getLastInterruptPin();
 	// return the value of the pin from which the last interrupt came
-	int getLastInterruptValue();
+	int8_t getLastInterruptValue();
 #endif
 #if NODEMANAGER_POWER_MANAGER == ON
 	// configure a PowerManager common to all the sensors
 	void setPowerManager(PowerManager& powerManager);
 	// to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-	void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
+	void setPowerPins(int8_t ground_pin, int8_t vcc_pin, unsigned long wait_time = 50);
 	// [24] manually turn the power on
 	void powerOn();
 	// [25] manually turn the power off
@@ -136,15 +138,15 @@ public:
 	// [41] synchronize the local time with the controller
 	void syncTime();
 	// [42] returns the current system time
-	long getTime();
+	unsigned long getTime();
 	// [43] set the hour offset for when syncronizing the time (default: 0)
-	void setTimezone(int value);
+	void setTimezone(int8_t value);
 	// request the current time to the controller during setup(). Time with a RTC if configured is always synchronized (default: true)
 	void setSyncTimeOnSetup(bool value);
 	// request the current time to the controller just after a sleep cycle. Time with a RTC if configured is always synchronized (default: true)
 	void setSyncTimeAfterSleep(bool value);
 	// request the current time to the controller after the configured number of minutes (default: 0)
-	void setSyncTimeAfterInterval(int value);
+	void setSyncTimeAfterInterval(unsigned long value);
 	// receiveTime() callback
 	void receiveTime(unsigned long ts);
 #endif
@@ -165,34 +167,33 @@ public:
 #endif
 private:
 	bool _get_controller_config = true;
-	int _is_metric = 1;
+	uint8_t _is_metric = 1;
 	status _status = AWAKE;
 	bool _ack = false;
-	int _retries = 1;
+	uint8_t _retries = 1;
 	MyMessage _message;
-	void _sendMessage(int child_id, int type);
+	void _sendMessage(uint8_t child_id, uint8_t type);
 	unsigned long _sleep_time = 0;
 	bool _sleep_or_wait = true;
-	int _sleep_interrupt_pin = -1;
-	int _sleep_between_send = 0;
-	void _sleepBetweenSend();
-	int _report_interval_seconds = 10*60;
-	int _reboot_pin = -1;
-	void _present(int child_id, int type);
+	uint8_t _sleep_interrupt_pin = -1;
+	unsigned int _sleep_between_send = 0;
+	unsigned long _report_interval_seconds = 10*60;
+	uint8_t _reboot_pin = -1;
+	void _present(uint8_t child_id, uint8_t type);
 	List<Timer*> _timers;
 #if NODEMANAGER_INTERRUPTS == ON
-	int _interrupt_1_mode = MODE_NOT_DEFINED;
-	int _interrupt_2_mode = MODE_NOT_DEFINED;
-	int _interrupt_1_initial = -1;
-	int _interrupt_2_initial = -1;
-	static int _last_interrupt_pin;
-	static int _last_interrupt_value;
+	uint8_t _interrupt_1_mode = MODE_NOT_DEFINED;
+	uint8_t _interrupt_2_mode = MODE_NOT_DEFINED;
+	int8_t _interrupt_1_initial = -1;
+	int8_t _interrupt_2_initial = -1;
+	static int8_t _last_interrupt_pin;
+	static int8_t _last_interrupt_value;
 	static long unsigned _interrupt_debounce;
 	static long unsigned _last_interrupt_millis;
 	void _setupInterrupts();
 	static void _onInterrupt_1();
 	static void _onInterrupt_2();
-	static void _saveInterrupt(int pin);
+	static void _saveInterrupt(int8_t pin);
 #endif
 #if NODEMANAGER_SLEEP == ON
 	void _sleep();
@@ -209,11 +210,11 @@ private:
 #if NODEMANAGER_TIME == ON
 	bool _time_is_valid = false;
 	long _remainder_sleep_time = -1;
-	long _time_last_sync;
-	int _timezone = 0;
+	unsigned long _time_last_sync;
+	int8_t _timezone = 0;
 	bool _sync_time_on_setup = true;
 	bool _sync_time_after_sleep = true;
-	unsigned int _sync_time_after_interval = 0;
+	unsigned long _sync_time_after_interval = 0;
 #endif
 };
 

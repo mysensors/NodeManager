@@ -33,7 +33,7 @@ protected:
 	Adafruit_BMP085* _bm;
 	
 public:
-	SensorBMP085(int child_id = -255): SensorBosch(child_id) {
+	SensorBMP085(uint8_t child_id = 255): SensorBosch(child_id) {
 		_name = "BMP085";
 		children.allocateBlocks(3);
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);

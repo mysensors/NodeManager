@@ -39,7 +39,7 @@ protected:
 	uint8_t _contrast = -1;
 	
 public:
-	DisplaySSD1306(int child_id = -255): Display(child_id) {
+	DisplaySSD1306(uint8_t child_id = 255): Display(child_id) {
 		_name = "SSD1306";
 		children.get()->setDescription(_name);
 	};

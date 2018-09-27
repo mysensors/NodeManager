@@ -27,7 +27,7 @@ SensorLatchingRelay2Pins
 
 class SensorLatchingRelay2Pins: public SensorRelay {
 public:
-	SensorLatchingRelay2Pins(int pin_off, int pin_on, int child_id = -255): SensorRelay(pin_on, child_id) {
+	SensorLatchingRelay2Pins(int8_t pin_off, int8_t pin_on, uint8_t child_id = 255): SensorRelay(pin_on, child_id) {
 		_name = "LATCHING2PINS";
 		children.get()->setDescription(_name);
 		// set pulse duration

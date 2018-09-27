@@ -32,7 +32,7 @@ protected:
 	int _sensor_type;
 	
 public:
-	SensorMLX90614(int child_id = -255): Sensor(-1) {
+	SensorMLX90614(uint8_t child_id = 255): Sensor(-1) {
 		_name = "MLX90614";
 		children.allocateBlocks(2);
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);

@@ -31,7 +31,7 @@ protected:
 	AM2320* _th;
 	
 public:
-	SensorAM2320(int child_id = -255): Sensor(-1) {
+	SensorAM2320(uint8_t child_id = 255): Sensor(-1) {
 		_name = "AM2320";
 		children.allocateBlocks(2);
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);

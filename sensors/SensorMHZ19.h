@@ -28,11 +28,11 @@ SensorMHZ19
 class SensorMHZ19: public Sensor {
 protected:
 	SoftwareSerial* _ser;
-	int _tx_pin = 6;
-	int _rx_pin = 7;
+	int8_t _tx_pin = 6;
+	int8_t _rx_pin = 7;
 	
 public:
-	SensorMHZ19(int rxpin, int txpin, int child_id = -255): Sensor(rxpin) {
+	SensorMHZ19(int8_t rxpin, int8_t txpin, uint8_t child_id = 255): Sensor(rxpin) {
 		_name = "MHZ19";
 		_rx_pin = rxpin;
 		_tx_pin = txpin;

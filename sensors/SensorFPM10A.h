@@ -30,8 +30,8 @@ class SensorFPM10A: public Sensor {
 protected:
 	Adafruit_Fingerprint* _finger;
 	SoftwareSerial* _serial;
-	int _rx_pin;
-	int _tx_pin;
+	int8_t _rx_pin;
+	int8_t _tx_pin;
 	int _wait_finger_for_seconds = 0;
 	uint32_t _baud_rate = 57600;
 	uint32_t _password = 0;
@@ -39,7 +39,7 @@ protected:
 	bool _fingerprint_is_valid = false;
 	
 public:
-	SensorFPM10A(int rxpin, int txpin, int child_id = -255): Sensor(rxpin) {
+	SensorFPM10A(int8_t rxpin, int8_t txpin, uint8_t child_id = 255): Sensor(rxpin) {
 		_name = "FPM10A";
 		_rx_pin = rxpin;
 		_tx_pin = txpin;

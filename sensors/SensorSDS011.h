@@ -30,12 +30,12 @@ protected:
 	SDS011* _sds;
 	float _p10 = 0.;
 	float _p25 = 0.;
-	int _rx_pin = 6;
-	int _tx_pin = 7;
+	int8_t _rx_pin = 6;
+	int8_t _tx_pin = 7;
 	bool _slp = true;
 	
 public:
-	SensorSDS011(int rxpin, int txpin, int child_id = -255): Sensor(rxpin){
+	SensorSDS011(int8_t rxpin, int8_t txpin, uint8_t child_id = 255): Sensor(rxpin){
 		_name = "SDS011";
 		_rx_pin = rxpin;
 		_tx_pin = txpin;

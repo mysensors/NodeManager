@@ -27,7 +27,7 @@
 
 class SensorRainGauge: public SensorPulseMeter {
 public:
-	SensorRainGauge(int pin, int child_id = -255): SensorPulseMeter(pin, child_id) {
+	SensorRainGauge(int8_t pin, uint8_t child_id = 255): SensorPulseMeter(pin, child_id) {
 		_name = "RAIN_GAUGE";
 		children.get()->setFormat(FLOAT);
 		children.get()->setPresentation(S_RAIN);

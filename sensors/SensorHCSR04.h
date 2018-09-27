@@ -27,14 +27,14 @@ SensorHCSR04
 
 class SensorHCSR04: public Sensor {
 protected:
-	int _trigger_pin;
-	int _echo_pin;
+	int8_t _trigger_pin;
+	int8_t _echo_pin;
 	bool _report_if_invalid = true;
 	int _max_distance = 300;
 	NewPing* _sonar;
 	
 public:
-	SensorHCSR04(int echo_pin, int trigger_pin, int child_id = -255): Sensor(-1) {
+	SensorHCSR04(int8_t echo_pin, int8_t trigger_pin, uint8_t child_id = 255): Sensor(-1) {
 		_name = "HCSR04";
 		_echo_pin = echo_pin;
 		_trigger_pin = trigger_pin;

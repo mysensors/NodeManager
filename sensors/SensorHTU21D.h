@@ -27,7 +27,7 @@ SensorHTU21D: temperature and humidity sensor
 
 class SensorHTU21D: public SensorSHT21 {
 public:
-	SensorHTU21D(int child_id = -255): SensorSHT21(child_id) {
+	SensorHTU21D(uint8_t child_id = 255): SensorSHT21(child_id) {
 		_name = "HTU21";
 		children.get(1)->setDescription(_name);
 		children.get(2)->setDescription(_name);

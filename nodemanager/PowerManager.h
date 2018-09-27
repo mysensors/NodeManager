@@ -25,18 +25,18 @@ PowerManager: helper class to power sensors on-demand through the board's pins
 
 class PowerManager {
 public:
-	PowerManager(int ground_pin, int vcc_pin, int wait_time = 50);
+	PowerManager(int8_t ground_pin, int8_t vcc_pin, unsigned long wait_time = 50);
 	// to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-	void setPowerPins(int ground_pin, int vcc_pin, int wait_time = 50);
+	void setPowerPins(int8_t ground_pin, int8_t vcc_pin, unsigned long wait_time = 50);
 	// if enabled the pins will be automatically powered on while awake and off during sleeping
 	// turns the power pins on
 	void powerOn();
 	// turns the power pins on
 	void powerOff();
 private:
-	int _vcc_pin = -1;
-	int _ground_pin = -1;
-	long _wait = 0;
+	int8_t _vcc_pin = -1;
+	int8_t _ground_pin = -1;
+	unsigned long _wait = 0;
 };
 
 #endif
