@@ -192,13 +192,13 @@ void Child::reset() {
 		if (_value_processing != NONE) {
 			// reset the counters
 			_total = 0;
-			_samples = 0;
 			_value = 0;
 #if NODEMANAGER_EEPROM == ON
 			// if the value is supposed to be persisted in EEPROM, save it
 			if (_persist_value) saveValue();
 #endif
 		}
+		_samples = 0;
 	} else _value_string = "";
 }
 

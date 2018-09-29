@@ -105,7 +105,7 @@ bool Timer::isOver() {
 #else
 	if (_mode == TIME_INTERVAL) {
 		// check if the current millis() is greater than the target
-		if (millis() >= _target) return true;
+		if (millis() > _target) return true;
 		return false;
 	}
 #endif

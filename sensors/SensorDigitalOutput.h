@@ -94,7 +94,7 @@ public:
 		_status = requested_status;
 		children.get()->setValue(_status);
 		// wait if needed for relays drawing a lot of current
-		if (_wait_after_set > 0)nodeManager.sleepOrWait(_wait_after_set);
+		if (_wait_after_set > 0) nodeManager.sleepOrWait(_wait_after_set);
 	};
 
 	// toggle the status
