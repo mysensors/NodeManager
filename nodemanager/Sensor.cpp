@@ -197,7 +197,7 @@ void Sensor::loop(MyMessage* message) {
 			for (unsigned int i = 0; i < _samples; i++) {
 				// we've been called from receive(), pass the message along
 				if (message != nullptr) onReceive(message);
-				// we'be been called from loop()
+				// we've been called from loop()
 				else onLoop(child);
 				// wait between samples
 				if (_samples_interval > 0) nodeManager.sleepOrWait(_samples_interval);

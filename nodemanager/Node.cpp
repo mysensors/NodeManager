@@ -246,7 +246,6 @@ void NodeManager::loop() {
 	// turn on the pin powering all the sensors
 	powerOn();
 #endif
-	
 	// update all the registered timers
 	for (List<Timer*>::iterator itr = _timers.begin(); itr != _timers.end(); ++itr) {
 		Timer* timer = *itr;
@@ -580,7 +579,7 @@ void NodeManager::loop() {
 			if (mGetPayloadType(_message) == P_FLOAT32) debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%d.%02d\n"),_message.sensor,_message.type,(unsigned int)_message.getFloat(), (unsigned int)(_message.getFloat()*100)%100);
 			if (mGetPayloadType(_message) == P_STRING) debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%s\n"),_message.sensor,_message.type,_message.getString());
 			send(_message, _ack);
-			// if configured, sleep beetween each send
+			// if configured, sleep between each send
 			sleepBetweenSend();
 		}
 	}

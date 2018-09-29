@@ -103,11 +103,9 @@ void Child::setValue(const char* value) {
 // store a new value and update the total
 void Child::_setValueNumber(double value) {
 	if (isnan(value)) return;
-	if (_value_processing != NONE) {
-		// keep track of the # of samples and total
-		_total = _total + value;
-		_samples++;
-	}
+	if (_value_processing != NONE) _total = _total + value;
+	// keep track of the samples
+	_samples++;
 	// process the value
 	if (_value_processing == AVG) _value = _total / _samples;
 	if (_value_processing == SUM) _value = _total;
