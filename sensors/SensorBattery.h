@@ -91,7 +91,7 @@ public:
 	void onLoop(Child* child) {
 		// measure the board vcc
 		float volt = 0;
-		if (_battery_internal_vcc || _battery_pin == -1) volt = nodeManager.getVcc();
+		if (_battery_internal_vcc || _battery_pin == -1) volt = (float)hwCPUVoltage()/1000;
 		else volt = analogRead(_battery_pin) * _battery_volts_per_bit;
 		volt = volt * _battery_adj_factor;
 		child->setValue(volt);

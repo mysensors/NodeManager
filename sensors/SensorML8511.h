@@ -41,7 +41,7 @@ public:
 	void onLoop(Child* child) {
 		// read the voltage 
 		int uvLevel = analogRead(_pin);
-		int refLevel = nodeManager.getVcc()*1024/3.3;
+		int refLevel = (float)hwCPUVoltage()/1000*1024/3.3;
 		//Use the 3.3V power pin as a reference to get a very accurate output value from sensor
 		float outputVoltage = 3.3 / refLevel * uvLevel;
 		//Convert the voltage to a UV intensity level

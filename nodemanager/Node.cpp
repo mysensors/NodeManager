@@ -234,6 +234,8 @@ void NodeManager::setup() {
 	// turn the sensor off
 	powerOff();
 #endif
+	// print out information regarding CPU voltage, frequency and free memory
+	debug(PSTR(LOG_SETUP "HW V=%d F=%d M=%d\n"),hwCPUVoltage(),hwCPUFrequency()/10,hwFreeMem());
 }
 
 // run the main function for all the register sensors
@@ -394,31 +396,6 @@ void NodeManager::loop() {
 	}
 
 #endif
-
-	// return vcc in V
-	float NodeManager::getVcc() {
-#ifdef CHIP_AVR
-		// Measure Vcc against 1.1V Vref
-		#if defined(CHIP_MEGA)
-		ADMUX = (_BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
-		#elif defined (CHIP_TINYX4)
-		ADMUX = (_BV(MUX5) | _BV(MUX0));
-		#elif defined (CHIP_TINYX5)
-		ADMUX = (_BV(MUX3) | _BV(MUX2));
-		#else
-		ADMUX = (_BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1));
-		#endif
-		// Vref settle
-		wait(70);
-		// Do conversion
-		ADCSRA |= _BV(ADSC);
-		while (bit_is_set(ADCSRA, ADSC)) {};
-		// return Vcc in mV
-		return (float)((1125300UL) / ADC) / 1000;
-#else
-		return (float)0;
-#endif
-	}
 
 #if NODEMANAGER_INTERRUPTS == ON
 	// return the pin from which the last interrupt came
