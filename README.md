@@ -239,8 +239,6 @@ You can interact with each class provided by NodeManager through a set of API fu
 	void hello();
 	// [6] reboot the board
 	void reboot();
-	// return vcc in V
-	float getVcc();
     // [36] set the default interval in minutes all the sensors will report their measures. If the same function is called on a specific sensor, this will not change the previously set value. On sleeping sensors, the elapsed time can be evaluated only upon wake up (default: 10 minutes)
     void setReportIntervalSeconds(unsigned long value);
 	unsigned long getReportIntervalSeconds();
