@@ -449,3 +449,9 @@ jobs:
        - sed -r -i 's/\/\/(#include <sensors\/SensorFPM10A.h>)/\1/' $SKETCH
        - eval $OTA_CONFIGURATION
        - eval $COMPILE
+    - name: "SensorPH"
+      script: 
+       - sed -r -i 's/\/\/(SensorPH .+)/\1/' $SKETCH
+       - sed -r -i 's/\/\/(#include <sensors\/SensorPH.h>)/\1/' $SKETCH
+       - eval $OTA_CONFIGURATION
+       - eval $COMPILE
