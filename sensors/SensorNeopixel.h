@@ -37,17 +37,26 @@ protected:
 	Adafruit_NeoPixel* _pixels;
 #endif
 	int _num_pixels = 16;
+	int _default_brightness = 255;
 	
 public:
 	SensorNeopixel(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
 		_name = "NEOPIXEL";
 		children.allocateBlocks(1);
+		// child for controlling the color
 		new Child(this,STRING,nodeManager.getAvailableChildId(child_id), S_COLOR_SENSOR, V_RGB ,_name);
+		// child for controlling the brightness
+		new Child(this,INT,nodeManager.getAvailableChildId(child_id+1),S_LIGHT_LEVEL,V_LEVEL,_name);
 	};
 	
 	// set how many NeoPixels are attached
 	void setNumPixels(int value) {
 		_num_pixels = value;
+	};
+	
+	// set default brightness
+	void setDefaultBrightness(int value) {
+		_default_brightness = value;
 	};
 	
 	// format expeted is "<pixel_number>,<RGB color in a packed 32 bit format>"
@@ -101,6 +110,16 @@ public:
 		child->setValue(string);
 	};
 	
+	//int format:
+	//0-255                brighntess for all LEDs
+	void setBrightness(int value) {
+		Child* child = children.get(2);
+		_pixels->setBrightness(value);
+		_pixels->show();
+		//send value back
+		child->setValue(value);
+	};
+	
 	// define what to do during setup
 	void onSetup() {
 #if defined(CHIP_STM32)
@@ -110,6 +129,7 @@ public:
 #endif
 		_pixels->begin();
 		_pixels->show();
+		_pixels->setBrightness(_default_brightness);
 	};
 
 	// what to do as the main task when receiving a message
@@ -117,9 +137,15 @@ public:
 		Child* child = getChild(message->sensor);
 		if (child == nullptr) return;
 		if (message->getCommand() == C_SET && message->type == child->getType()) {
+			if (message->type == V_LEVEL) {
+				int value = (int)message->getInt();
+				setBrightness(value);
+			}
+		} 
+		else {
 			char* string = (char*)message->getString();
 			setColor(string);
 		}
-	};
+    };
 };
 #endif

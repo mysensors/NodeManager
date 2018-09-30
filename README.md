@@ -831,11 +831,15 @@ Each sensor class may expose additional methods.
 ~~~c
     // set how many NeoPixels are attached
     void setNumPixels(int value);
+	// set default brightness
+	void setDefaultBrightness(int value) {
     // format expected is:
     //<pixel_number from>-<pixel_number to>,<RGB color in a packed 24 bit format>
     //<pixel_number>,<RGB color in a packed 24 bit format>
     //<RGB color in a packed 24 bit format>
     void setColor(char* string);
+	// brightness for all LEDs
+	void setBrightness(int value)
 ~~~
 
 * SensorFPM10A
