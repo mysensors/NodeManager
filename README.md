@@ -647,6 +647,12 @@ Each sensor class may expose additional methods.
     void setForecastSamplesCount(int value);
 ~~~
 
+*  SensorBME280
+~~~c
+	// set custom sampling to the sensor
+	void setSampling(Adafruit_BME280::sensor_mode mode, Adafruit_BME280::sensor_sampling tempSampling, Adafruit_BME280::sensor_sampling pressSampling, Adafruit_BME280::sensor_sampling humSampling, Adafruit_BME280::sensor_filter filter, Adafruit_BME280::standby_duration duration);
+~~~
+
 *  SensorSonoff
 ~~~c
     // [101] set the button's pin (default: 0)

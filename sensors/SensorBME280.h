@@ -43,6 +43,11 @@ public:
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id+2),S_BARO,V_PRESSURE,_name);
 		new Child(this,STRING,nodeManager.getAvailableChildId(child_id+3),S_BARO,V_FORECAST,_name);
 	};
+	
+	// set custom sampling to the sensor
+	void setSampling(Adafruit_BME280::sensor_mode mode, Adafruit_BME280::sensor_sampling tempSampling, Adafruit_BME280::sensor_sampling pressSampling, Adafruit_BME280::sensor_sampling humSampling, Adafruit_BME280::sensor_filter filter, Adafruit_BME280::standby_duration duration) {
+		_bm->setSampling(mode,tempSampling,pressSampling,humSampling,filter,duration);
+	}
 
 	// define what to do during setup
 	void onSetup() {
