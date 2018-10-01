@@ -23,11 +23,18 @@
 SensorDigitalInput: read the digital input of the configured pin
 */
 class SensorDigitalInput: public Sensor {
+protected:
+	bool _invert_value_to_report = false;
 public:
 	SensorDigitalInput(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
 		_name = "DIGITAL_I";
 		children.allocateBlocks(1);
 		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);
+	};
+	
+	// Invert the value to report. E.g. report 1 if value is LOW, report 0 if HIGH (default: false) 
+	void setInvertValueToReport(bool value) {
+		_invert_value_to_report = value;
 	};
 
 	// define what to do during setup
@@ -40,6 +47,8 @@ public:
 	void onLoop(Child* child) {
 		// read the value
 		int value = digitalRead(_pin);
+		// invert the value if needed
+		if (_invert_value_to_report) value = !value;
 		// store the value
 		child->setValue(value);
 	};
