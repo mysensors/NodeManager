@@ -583,6 +583,14 @@ Each sensor class may expose additional methods.
 	void computeACNoise();
 ~~~
 
+* SensorDigitalInput
+~~~c
+	// Invert the value to report. E.g. report 1 if value is LOW, report 0 if HIGH (default: false) 
+	void setInvertValueToReport(bool value);
+	// Set optional internal pull up/down
+	void setInitialValue(int value);
+~~~	
+
 * SensorDigitalOutput / SensorRelay / SensorLatchingRelay1Pin / SensorLatchingRelay2Pins
 ~~~c
     // [104] when legacy mode is enabled expect a REQ message to trigger, otherwise the default SET (default: false)
