@@ -25,6 +25,7 @@ SensorDigitalInput: read the digital input of the configured pin
 class SensorDigitalInput: public Sensor {
 protected:
 	bool _invert_value_to_report = false;
+	int _initial_value = -1;
 public:
 	SensorDigitalInput(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
 		_name = "DIGITAL_I";
@@ -36,11 +37,18 @@ public:
 	void setInvertValueToReport(bool value) {
 		_invert_value_to_report = value;
 	};
+	
+	// Set optional internal pull up/down
+	void setInitialValue(int value) {
+		_initial_value = value;
+	};
 
 	// define what to do during setup
 	void onSetup() {
 		// set the pin for input
 		pinMode(_pin, INPUT);
+		// set internal pull up/down
+		if (_initial_value > -1) digitalWrite(_pin,_initial_value);
 	};
 
 	// define what to do during loop
