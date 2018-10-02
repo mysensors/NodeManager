@@ -32,11 +32,8 @@ public:
 		children.get()->setPresentation(S_LIGHT_LEVEL);
 		children.get()->setType(V_LIGHT_LEVEL);
 		children.get()->setDescription(_name);
-	};
-	
-	// define what to do during setup
-	void onSetup() {
 		setReverse(true);
 	};
+	
 };
 #endif

@@ -32,15 +32,11 @@ public:
 		children.get()->setPresentation(S_MOISTURE);
 		children.get()->setType(V_LEVEL);
 		children.get()->setDescription(_name);
-	};
-
-	// define what to do during setup
-	void onSetup() {
-		setReverse(true);
-		setReference(DEFAULT);
-		setOutputPercentage(true);
 		setReverse(true);
 		setRangeMin(100);
+		setOutputPercentage(true);
+		setReference(DEFAULT);
 	};
+
 };
 #endif
