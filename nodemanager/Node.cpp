@@ -721,3 +721,23 @@ void NodeManager::sleepBetweenSend() {
 	// if we sleep here ack management will not work
 	if (_sleep_between_send > 0) wait(_sleep_between_send);
 }
+
+// set the analog reference 
+void NodeManager::setAnalogReference(uint8_t value, uint8_t pin) {
+#ifdef CHIP_AVR
+	// nothing to do
+	if (value == _analog_reference) return;
+	// change the analog reference
+	analogReference(value);
+	// wait a bit 
+	wait(200);
+	// perform some reading before actually reading the value
+	if (pin > -1) {
+		for (int i = 0; i < 5; i++) {
+			analogRead(pin);
+			wait(50);
+		}
+	}
+#endif
+}
+

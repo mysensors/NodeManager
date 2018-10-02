@@ -83,6 +83,8 @@ public:
 	Sensor* getSensorWithChild(uint8_t child_id);
 	// sleep between send()
 	void sleepBetweenSend();
+	// set the analog reference to the given value and optionally perform some fake reading on the given pin
+	void setAnalogReference(uint8_t value, uint8_t pin = -1);
 #if NODEMANAGER_SLEEP == ON
 	// [3] set the duration (in seconds) of a sleep cycle
 	void setSleepSeconds(unsigned long value);
@@ -179,6 +181,7 @@ private:
 	uint8_t _reboot_pin = -1;
 	void _present(uint8_t child_id, uint8_t type);
 	List<Timer*> _timers;
+	uint8_t _analog_reference = DEFAULT;
 #if NODEMANAGER_INTERRUPTS == ON
 	uint8_t _interrupt_1_mode = MODE_NOT_DEFINED;
 	uint8_t _interrupt_2_mode = MODE_NOT_DEFINED;

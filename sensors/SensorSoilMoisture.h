@@ -35,7 +35,6 @@ public:
 		setReverse(true);
 		setRangeMin(100);
 		setOutputPercentage(true);
-		setReference(DEFAULT);
 	};
 
 };

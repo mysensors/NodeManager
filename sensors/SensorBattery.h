@@ -74,25 +74,21 @@ public:
 		_battery_adj_factor = value;
 	};
 	
-	// define what to do during setup
-	void onSetup() {
-#ifdef CHIP_AVR
-		// when measuring the battery from a pin, analog reference must be internal
-		if (! _battery_internal_vcc && _battery_pin > -1)
-#ifdef CHIP_MEGA
-		analogReference(INTERNAL1V1);
-#else
-		analogReference(INTERNAL);
-#endif
-#endif
-	};
-	
 	// define what to do during loop
 	void onLoop(Child* child) {
-		// measure the board vcc
+		// measure the battery
 		float volt = 0;
 		if (_battery_internal_vcc || _battery_pin == -1) volt = (float)hwCPUVoltage()/1000;
-		else volt = analogRead(_battery_pin) * _battery_volts_per_bit;
+		else {
+			// when measuring the battery from a pin, analog reference must be internal
+#ifdef CHIP_AVR
+			nodeManager.setAnalogReference(INTERNAL);
+#endif
+#ifdef CHIP_MEGA
+			nodeManager.setAnalogReference(INTERNAL1V1);
+#endif
+			volt = analogRead(_battery_pin) * _battery_volts_per_bit;
+		}
 		volt = volt * _battery_adj_factor;
 		child->setValue(volt);
 		// calculate the percentage

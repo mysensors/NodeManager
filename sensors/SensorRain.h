@@ -32,7 +32,6 @@ public:
 		children.get()->setPresentation(S_RAIN);
 		children.get()->setType(V_RAINRATE);
 		children.get()->setDescription(_name);
-		setReference(DEFAULT);
 		setOutputPercentage(true);
 		setReverse(true);
 		setRangeMin(100);

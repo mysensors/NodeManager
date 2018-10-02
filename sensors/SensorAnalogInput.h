@@ -111,10 +111,7 @@ protected:
 	int _getAnalogRead() {
 #ifdef CHIP_AVR
 		// set the reference
-		if (_reference != -1) {
-			analogReference(_reference);
-			wait(100);
-		}
+		if (_reference != -1) nodeManager.setAnalogReference(_reference);
 #endif
 		// read and return the value
 		int value = analogRead(_pin);
