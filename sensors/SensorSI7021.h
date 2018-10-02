@@ -24,11 +24,11 @@ SensorSI7021: temperature and humidity sensor
 */
 
 #include <Wire.h>
-#include "SparkFun_Si7021_Breakout_Library.h"
+#include <SI7021.h>
 
 class SensorSI7021: public Sensor {
 protected:
-	Weather* _si7021;
+	SI7021* _si7021;
 	
 public:
 	SensorSI7021(uint8_t child_id = 255): Sensor(-1) {
@@ -40,7 +40,7 @@ public:
 	
 	// define what to do during setup
 	void onSetup() {
-		_si7021 = new Weather();
+		_si7021 = new SI7021();
 		_si7021->begin();
 	};
 
@@ -49,7 +49,7 @@ public:
 		// temperature sensor
 		if (child->getType() == V_TEMP) {
 			// read the temperature
-			float temperature = _si7021->getTemp();
+			float temperature = (float)_si7021->getCelsiusHundredths()/100;
 			// convert it
 			temperature = nodeManager.celsiusToFahrenheit(temperature);
 			// store the value
@@ -58,7 +58,7 @@ public:
 		// Humidity Sensor
 		else if (child->getType() == V_HUM) {
 			// read humidity
-			float humidity = _si7021->getRH();
+			float humidity = _si7021->getHumidityPercent();
 			// store the value
 			child->setValue(humidity);
 		}

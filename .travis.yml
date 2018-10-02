@@ -387,8 +387,8 @@ jobs:
        - eval $COMPILE
     - name: "SensorSI7021"
       script: 
-       - wget https://github.com/sparkfun/SparkFun_Si701_Breakout_Arduino_Library/archive/master.zip && unzip master.zip
-       - sudo cp -r SparkFun_Si701_Breakout_Arduino_Library-master/src /usr/local/share/arduino/libraries
+       - wget https://github.com/mysensors/MySensorsArduinoExamples/archive/master.zip && unzip master.zip
+       - sudo cp -r MySensorsArduinoExamples-master/libraries/SI7021 /usr/local/share/arduino/libraries
        - sed -r -i 's/\/\/(SensorSI7021 .+)/\1/' $SKETCH
        - sed -r -i 's/\/\/(#include <sensors\/SensorSI7021.h>)/\1/' $SKETCH
        - eval $OTA_CONFIGURATION
