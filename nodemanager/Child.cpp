@@ -149,8 +149,6 @@ void Child::sendValue(bool force) {
 			else {
 				// if the value does not differ enough from the previous one, do not send the value
 				if (_value > (_last_value - _value_delta) && _value < (_last_value + _value_delta)) {
-					// keep track of the previous value
-					_last_value = _value;
 					return;
 				}
 			}
@@ -159,8 +157,6 @@ void Child::sendValue(bool force) {
 		else {
 			// if a delta is configured, do not report if the string is the same as the previous one
 			if (_value_delta > 0 && strcmp(_value_string, _last_value_string) == 0) {
-				// keep track of the previous value
-				_last_value_string = _value_string;
 				return;
 			}
 		}
@@ -207,6 +203,7 @@ void Child::reset() {
 void Child::setForceUpdateTimerValue(unsigned long value) {
 	_force_update_timer->setMode(TIME_INTERVAL);
 	_force_update_timer->setValue(value*60);
+	_force_update_timer->start();
 }
 void Child::setMinThreshold(float value) {
 	_min_threshold = value;
