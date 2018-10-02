@@ -277,6 +277,8 @@ You can interact with each class provided by NodeManager through a set of API fu
 	Sensor* getSensorWithChild(uint8_t child_id);
 	// sleep between send()
 	void sleepBetweenSend();
+	// set the analog reference to the given value and optionally perform some fake reading on the given pin
+	void setAnalogReference(uint8_t value, uint8_t pin = -1);
 #if NODEMANAGER_SLEEP == ON
 	// [3] set the duration (in seconds) of a sleep cycle
 	void setSleepSeconds(unsigned long value);
