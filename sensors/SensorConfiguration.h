@@ -37,6 +37,8 @@ public:
 	void onReceive(MyMessage* message) {
 		// expect a REQ, V_CUSTOM message
 		if (message->getCommand() != C_REQ && message->type != V_CUSTOM) return;
+		// if the message is not a valid string, ignore it
+		if (message->getString() == NULL) return;
 		// parse the request
 		ConfigurationRequest request = ConfigurationRequest(message->sensor,message->getString());
 		int function = request.getFunction();
