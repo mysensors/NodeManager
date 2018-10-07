@@ -89,7 +89,7 @@ Chip type
 #if defined(ESP32) || defined(MY_GATEWAY_ESP32)
 #define CHIP_ESP32
 #endif
-#if defined (MYBOARDNRF5)
+#if defined (MYBOARDNRF5) || defined(NRF51) || defined(NRF52)
 #define CHIP_NRF5
 #endif
 #if !defined(CHIP_ESP8266) && !defined(CHIP_ESP32) && !defined(CHIP_STM32) && !defined(CHIP_NRF5)
