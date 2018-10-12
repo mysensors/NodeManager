@@ -346,6 +346,15 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 //#include <sensors/SensorPH.h>
 //SensorPH ph(A0);
 
+//#include <sensors/SensorPca9685W.h>
+//SensorPca9685W pca9685W;
+
+//#include <sensors/SensorPca9685Rgb.h>
+//SensorPca9685Rgb pca9685Rgb;
+
+//#include <sensors/SensorPca9685Rgbw.h>
+//SensorPca9685Rgbw pca9685Rgbw;
+
 /***********************************
  * Main Sketch
  */

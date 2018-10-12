@@ -144,6 +144,9 @@ SensorNeopixel           | 1     | Control a Neopixel LED                       
 SensorSDS011             | 2     | SDS011 air quality sensor, return concentrations of 2.5 and 10 micrometer particles.              | https://github.com/ricki-z/SDS011
 SensorFPM10A             | 1     | FPM10A fingerprint sensor                                                                         | https://github.com/adafruit/Adafruit-Fingerprint-Sensor-Library
 SensorPH                 | 1     | PH ( SKU SEN161 ) sensor, measure the analog value from the amplifier module                      | -
+SensorPca9685W 	         | 1     | Generic dimmer sensor (S_DIMMER) used to drive a single channel pwm output of PCA9685             | https://github.com/adafruit/Adafruit-PWM-Servo-Driver-Library
+SensorPca9685Rgb         | 1     | Generic RGB-dimmer sensor (S_RGB_LIGHT) used to drive RGB resp. 3-channel pwm output of PCA9685   | https://github.com/adafruit/Adafruit-PWM-Servo- Driver-Library 
+SensorPca9685Rgbw        | 1     | Generic RGBW-dimmer sensor (S_RGBW_LIGHT) used to drive RGBW resp. 4-channel pwm output of PCA9685| https://github.com/adafruit/Adafruit-PWM-Servo-Driver-Library
 
 Those sensors requiring a pin to operate would take it as an argument in the constructor. 
 NodeManager automatically creates all the child_ids, assigning an incremental counter. If you need to set your own child_id, pass it as the last argument to the constructor
@@ -880,6 +883,60 @@ Each sensor class may expose additional methods.
 	void setPH7Voltage(float value);
 	// setting the voltage value @ph = 4 (default: 3.04)
     void setPH4Voltage(float value);
+~~~
+
+* SensorPca9685W
+~~~c
+    // [101] set the effect to use for a smooth transition, can be one of SensorDimmer::EASE_LINEAR (0), SensorDimmer::EASE_INSINE (1), SensorDimmer::EASE_OUTSINE (2), SensorDimmer::EASE_INOUTSINE (3) (default: EASE_LINEAR)
+    void setEasing(int value);
+    // [102] the duration of entire the transition in seconds (default: 1)
+    void setDuration(int value);
+    // [103] the duration of a single step of the transition in milliseconds (default: 100)
+    void setStepDuration(int value);
+    //get instance of PCA9685-board
+    Adafruit_PWMServoDriver* getPWMServoDriver();
+    //set instance of PCA9685-board, if using more than one pca9685-dimmer sensor on the same pca9685-board
+    void setPWMServoDriver(Adafruit_PWMServoDriver* servoDriver);
+    //set the RGB (red/green/blue) value as hex-string (e.g. 000000...black/off, ff0000...red, 00ff00...green, 0000ff...blue, ffa500...orange, ffffff...white)
+    void setRgbVal(String hexstring);
+    //get the current RGB (red/green/blue) value as hex-string
+    String getRgbVal();
+~~~
+
+* SensorPca9685Rgb
+~~~c
+    // [101] set the effect to use for a smooth transition, can be one of SensorDimmer::EASE_LINEAR (0), SensorDimmer::EASE_INSINE (1), SensorDimmer::EASE_OUTSINE (2), SensorDimmer::EASE_INOUTSINE (3) (default: EASE_LINEAR)
+    void setEasing(int value);
+    // [102] the duration of entire the transition in seconds (default: 1)
+    void setDuration(int value);
+    // [103] the duration of a single step of the transition in milliseconds (default: 100)
+    void setStepDuration(int value);
+    //get instance of PCA9685-board
+    Adafruit_PWMServoDriver* getPWMServoDriver();
+    //set instance of PCA9685-board, if using more than one pca9685-dimmer sensor on the same pca9685-board
+    void setPWMServoDriver(Adafruit_PWMServoDriver* servoDriver);
+    //set the RGB (red/green/blue) value as hex-string (e.g. 000000...black/off, ff0000...red, 00ff00...green, 0000ff...blue, ffa500...orange, ffffff...white)
+    void setRgbVal(String hexstring);
+    //get the current RGB (red/green/blue) value as hex-string
+    String getRgbVal();
+~~~
+
+* SensorPca9685Rgbw
+~~~c
+    // [101] set the effect to use for a smooth transition, can be one of SensorDimmer::EASE_LINEAR (0), SensorDimmer::EASE_INSINE (1), SensorDimmer::EASE_OUTSINE (2), SensorDimmer::EASE_INOUTSINE (3) (default: EASE_LINEAR)
+    void setEasing(int value);
+    // [102] the duration of entire the transition in seconds (default: 1)
+    void setDuration(int value);
+    // [103] the duration of a single step of the transition in milliseconds (default: 100)
+    void setStepDuration(int value);
+    //get instance of PCA9685-board
+    Adafruit_PWMServoDriver* getPWMServoDriver();
+    //set instance of PCA9685-board, if using more than one pca9685-dimmer sensor on the same pca9685-board
+    void setPWMServoDriver(Adafruit_PWMServoDriver* servoDriver);
+    //set the RGBW (red/green/blue/white) value as hex-string (see RGB-examples from PCA9685RGB and add "00".."ff" for the white-channel)
+    void setRgbwVal(String hexstring);
+    //get the current RGBW (red/green/blue/white) value as hex-string
+    String getRgbwVal();
 ~~~
 
 ### OTA Configuration

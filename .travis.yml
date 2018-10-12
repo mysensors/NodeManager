@@ -455,3 +455,24 @@ jobs:
        - sed -r -i 's/\/\/(#include <sensors\/SensorPH.h>)/\1/' $SKETCH
        - eval $OTA_CONFIGURATION
        - eval $COMPILE
+    - name: "SensorPca9685W"
+      script: 
+       - arduino --install-library "Adafruit PWM Servo Driver Library"
+       - sed -r -i 's/\/\/(SensorPca9685W .+)/\1/' $SKETCH
+       - sed -r -i 's/\/\/(#include <sensors\/SensorPca9685W.h>)/\1/' $SKETCH
+       - eval $OTA_CONFIGURATION
+       - eval $COMPILE
+    - name: "SensorPca9685Rgb"
+      script: 
+       - arduino --install-library "Adafruit PWM Servo Driver Library"
+       - sed -r -i 's/\/\/(SensorPca9685Rgb .+)/\1/' $SKETCH
+       - sed -r -i 's/\/\/(#include <sensors\/SensorPca9685Rgb.h>)/\1/' $SKETCH
+       - eval $OTA_CONFIGURATION
+       - eval $COMPILE
+    - name: "SensorPca9685Rgbw"
+      script: 
+       - arduino --install-library "Adafruit PWM Servo Driver Library"
+       - sed -r -i 's/\/\/(SensorPca9685Rgbw .+)/\1/' $SKETCH
+       - sed -r -i 's/\/\/(#include <sensors\/SensorPca9685Rgbw.h>)/\1/' $SKETCH
+       - eval $OTA_CONFIGURATION
+       - eval $COMPILE
