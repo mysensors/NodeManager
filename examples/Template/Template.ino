@@ -343,6 +343,9 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 //#include <sensors/SensorFPM10A.h>
 //SensorFPM10A fpm10a(4,5);
 
+//#include <sensors/SensorPH.h>
+//SensorPH ph(A0);
+
 /***********************************
  * Main Sketch
  */

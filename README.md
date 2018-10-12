@@ -143,7 +143,7 @@ SensorAPDS9960           | 1     | SparkFun RGB and Gesture Sensor              
 SensorNeopixel           | 1     | Control a Neopixel LED                                                                            | https://github.com/adafruit/Adafruit_NeoPixel
 SensorSDS011             | 2     | SDS011 air quality sensor, return concentrations of 2.5 and 10 micrometer particles.              | https://github.com/ricki-z/SDS011
 SensorFPM10A             | 1     | FPM10A fingerprint sensor                                                                         | https://github.com/adafruit/Adafruit-Fingerprint-Sensor-Library
-
+SensorPH                 | 1     | PH ( SKU SEN161 ) sensor, measure the analog value from the amplifier module                      | -
 
 Those sensors requiring a pin to operate would take it as an argument in the constructor. 
 NodeManager automatically creates all the child_ids, assigning an incremental counter. If you need to set your own child_id, pass it as the last argument to the constructor
@@ -870,6 +870,16 @@ Each sensor class may expose additional methods.
    void setWaitFingerForSeconds(int value);
 	// return true if the fingerprint was recognized successfully, false otherwise. Useful when a hook function needs to act upon the result
 	bool getFingerprintIsValid();
+~~~
+
+* SensorPH
+~~~c
+	// setting AnalogRefValue (default: 5.0)
+	void setVoltageRef(float value);
+	// setting the voltage value @ph = 7 (default: 2.52)
+	void setPH7Voltage(float value);
+	// setting the voltage value @ph = 4 (default: 3.04)
+    void setPH4Voltage(float value);
 ~~~
 
 ### OTA Configuration
