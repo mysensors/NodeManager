@@ -1090,7 +1090,7 @@ void SensorThermistor::onLoop(Child* child) {
   float adc = analogRead(_pin);
   // calculate the temperature
   float reading = (1023 / adc)  - 1;
-  reading = _series_resistor / reading;
+  reading = _series_resistor * reading;
   float temperature;
   temperature = reading / _nominal_resistor;     // (R/Ro)
   temperature = log(temperature);                  // ln(R/Ro)
