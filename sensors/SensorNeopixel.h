@@ -40,13 +40,13 @@ protected:
 	int _default_brightness = 255;
 	
 public:
-	SensorNeopixel(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
+	SensorNeopixel(int8_t pin, uint8_t child_id = 0): Sensor(pin) {
 		_name = "NEOPIXEL";
 		children.allocateBlocks(1);
 		// child for controlling the color
 		new Child(this,STRING,nodeManager.getAvailableChildId(child_id), S_COLOR_SENSOR, V_RGB ,_name);
 		// child for controlling the brightness
-		new Child(this,INT,nodeManager.getAvailableChildId(child_id+1),S_LIGHT_LEVEL,V_LEVEL,_name);
+		new Child(this,INT,child_id > 0 ? nodeManager.getAvailableChildId(child_id+1) : nodeManager.getAvailableChildId(child_id),S_LIGHT_LEVEL,V_LEVEL,_name);
 	};
 	
 	// set how many NeoPixels are attached

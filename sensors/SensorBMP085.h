@@ -33,12 +33,12 @@ protected:
 	Adafruit_BMP085* _bm;
 	
 public:
-	SensorBMP085(uint8_t child_id = 255): SensorBosch(child_id) {
+	SensorBMP085(uint8_t child_id = 0): SensorBosch(child_id) {
 		_name = "BMP085";
 		children.allocateBlocks(3);
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id+1),S_BARO,V_PRESSURE,_name);
-		new Child(this,STRING,nodeManager.getAvailableChildId(child_id+2),S_BARO,V_FORECAST,_name);
+		new Child(this,FLOAT,child_id > 0 ? nodeManager.getAvailableChildId(child_id+1) : nodeManager.getAvailableChildId(child_id),S_BARO,V_PRESSURE,_name);
+		new Child(this,STRING,child_id > 0 ? nodeManager.getAvailableChildId(child_id+2) : nodeManager.getAvailableChildId(child_id),S_BARO,V_FORECAST,_name);
 	};
 
 	// define what to do during setup

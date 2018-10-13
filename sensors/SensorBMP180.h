@@ -27,7 +27,7 @@ SensorBMP180
 
 class SensorBMP180: public SensorBMP085 {
 public:
-	SensorBMP180(uint8_t child_id = 255): SensorBMP085(child_id) {
+	SensorBMP180(uint8_t child_id = 0): SensorBMP085(child_id) {
 		_name = "BMP180";
 		children.get(1)->setDescription(_name);
 		children.get(2)->setDescription(_name);

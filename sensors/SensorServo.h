@@ -31,7 +31,7 @@ protected:
 	int _value;
 	
 public:
-	SensorServo(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
+	SensorServo(int8_t pin, uint8_t child_id = 0): Sensor(pin) {
 		_name = "SERVO";
 		children.allocateBlocks(1);
 		new Child(this,INT,nodeManager.getAvailableChildId(child_id), S_DIMMER, V_PERCENTAGE ,_name);

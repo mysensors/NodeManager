@@ -35,13 +35,13 @@ protected:
 	Adafruit_BME280* _bm;
 	
 public:
-	SensorBME280(uint8_t child_id = 255): SensorBosch(child_id) {
+	SensorBME280(uint8_t child_id = 0): SensorBosch(child_id) {
 		_name = "BME280";
 		children.allocateBlocks(4);
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
-		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id+2),S_BARO,V_PRESSURE,_name);
-		new Child(this,STRING,nodeManager.getAvailableChildId(child_id+3),S_BARO,V_FORECAST,_name);
+		new Child(this,FLOAT,child_id > 0 ? nodeManager.getAvailableChildId(child_id+1) : nodeManager.getAvailableChildId(child_id),S_HUM,V_HUM,_name);
+		new Child(this,FLOAT,child_id > 0 ? nodeManager.getAvailableChildId(child_id+2) : nodeManager.getAvailableChildId(child_id),S_BARO,V_PRESSURE,_name);
+		new Child(this,STRING,child_id > 0 ? nodeManager.getAvailableChildId(child_id+3) : nodeManager.getAvailableChildId(child_id),S_BARO,V_FORECAST,_name);
 	};
 	
 	// set custom sampling to the sensor

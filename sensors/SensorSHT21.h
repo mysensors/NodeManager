@@ -28,11 +28,11 @@ SensorSHT21: temperature and humidity sensor
 
 class SensorSHT21: public Sensor {
 public:
-	SensorSHT21(uint8_t child_id = 255): Sensor(-1) {
+	SensorSHT21(uint8_t child_id = 0): Sensor(-1) {
 		_name = "SHT21";
 		children.allocateBlocks(2);
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
+		new Child(this,FLOAT,child_id > 0 ? nodeManager.getAvailableChildId(child_id+1) : nodeManager.getAvailableChildId(child_id),S_HUM,V_HUM,_name);
 	};
 	
 	// what to do during setup

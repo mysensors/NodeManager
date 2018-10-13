@@ -38,15 +38,15 @@ protected:
 	bool _valuesReadError = false;
 	
 public:
-	SensorPlantowerPMS(int8_t rxpin, int8_t txpin, uint8_t child_id = 255): Sensor(rxpin) {
+	SensorPlantowerPMS(int8_t rxpin, int8_t txpin, uint8_t child_id = 0): Sensor(rxpin) {
 		_name = "PMS";
 		_rx_pin = rxpin;
 		_tx_pin = txpin;
 		children.allocateBlocks(3);
 		// register the child
 		new Child(this,INT,nodeManager.getAvailableChildId(child_id), S_DUST, V_LEVEL, "PM1.0");
-		new Child(this,INT,nodeManager.getAvailableChildId(child_id+1), S_DUST, V_LEVEL, "PM2.5");
-		new Child(this,INT,nodeManager.getAvailableChildId(child_id+2), S_DUST, V_LEVEL, "PM10.0");
+		new Child(this,INT,child_id > 0 ? nodeManager.getAvailableChildId(child_id+1) : nodeManager.getAvailableChildId(child_id), S_DUST, V_LEVEL, "PM2.5");
+		new Child(this,INT,child_id > 0 ? nodeManager.getAvailableChildId(child_id+2) : nodeManager.getAvailableChildId(child_id), S_DUST, V_LEVEL, "PM10.0");
 	};
 
 	// define what to do during setup

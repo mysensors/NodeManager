@@ -31,11 +31,11 @@ protected:
 	Adafruit_SHT31* _sht31;
 	
 public:
-	SensorSHT31(uint8_t child_id = 255): Sensor(-1) {
+	SensorSHT31(uint8_t child_id = 0): Sensor(-1) {
 		_name = "SHT31";
 		children.allocateBlocks(2);
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
+		new Child(this,FLOAT,child_id > 0 ? nodeManager.getAvailableChildId(child_id+1) : nodeManager.getAvailableChildId(child_id),S_HUM,V_HUM,_name);
 	};
 
 	// define what to do during setup

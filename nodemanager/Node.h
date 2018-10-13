@@ -74,7 +74,7 @@ public:
 	// register a timer
 	void registerTimer(Timer* timer);
 	// return the next-available child id
-	uint8_t getAvailableChildId(uint8_t child_id = 255);
+	uint8_t getAvailableChildId(uint8_t child_id = 0);
 	// list containing all the registered sensors
 	List<Sensor*> sensors;
 	// return the Child object of the given child_id

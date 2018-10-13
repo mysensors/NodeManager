@@ -32,7 +32,7 @@ protected:
 	int _range_max = 1024;
 	
 public:
-	SensorAnalogInput(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
+	SensorAnalogInput(int8_t pin, uint8_t child_id = 0): Sensor(pin) {
 		_name = "ANALOG_I";
 		children.allocateBlocks(1);
 		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);

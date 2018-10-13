@@ -35,7 +35,7 @@ protected:
 	int _passcode_length = 4;
 	
 public:
-	SensorTTP(uint8_t child_id = 255): Sensor(-1) {
+	SensorTTP(uint8_t child_id = 0): Sensor(-1) {
 		_name = "TTP";
 		children.allocateBlocks(1);
 		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_INFO,V_TEXT,_name);

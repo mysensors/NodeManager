@@ -48,7 +48,7 @@ public:
 	const static int INFRARED = 2;
 	const static int FULL = 3;
 	
-	SensorTSL2561(uint8_t child_id = 255): Sensor(-1) {
+	SensorTSL2561(uint8_t child_id = 0): Sensor(-1) {
 		_name = "TSL2561";
 		children.allocateBlocks(1);
 		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_LIGHT_LEVEL,V_LEVEL,_name);
