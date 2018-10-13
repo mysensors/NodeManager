@@ -31,7 +31,7 @@ protected:
 	long _series_resistor = 10000;
 	float _offset = 0;
 	bool _ntc = false;
-	
+
 public:
 	SensorThermistor(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
 		_name = "THERMISTOR";
@@ -104,6 +104,7 @@ public:
 		case 103: setBCoefficient(request->getValueInt()); break;
 		case 104: setSeriesResistor((long)request->getValueInt()); break;
 		case 105: setOffset(request->getValueFloat()); break;
+		case 106: setNtc(request->getValueInt()); break;
 		default: return;
 		}
 	};
