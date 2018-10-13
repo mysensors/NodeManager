@@ -355,6 +355,9 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 //#include <sensors/SensorPca9685Rgbw.h>
 //SensorPca9685Rgbw pca9685Rgbw;
 
+//#include <sensors/SensorDSM501A.h>
+//SensorDSM501A DSM501A;
+
 /***********************************
  * Main Sketch
  */
