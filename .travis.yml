@@ -476,3 +476,9 @@ jobs:
        - sed -r -i 's/\/\/(#include <sensors\/SensorPca9685Rgbw.h>)/\1/' $SKETCH
        - eval $OTA_CONFIGURATION
        - eval $COMPILE
+    - name: "SensorDSM501A"
+      script: 
+       - sed -r -i 's/\/\/(SensorDSM501A .+)/\1/' $SKETCH
+       - sed -r -i 's/\/\/(#include <sensors\/SensorDSM501A.h>)/\1/' $SKETCH
+       - eval $OTA_CONFIGURATION
+       - eval $COMPILE
