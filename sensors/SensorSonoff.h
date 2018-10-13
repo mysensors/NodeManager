@@ -39,7 +39,7 @@ protected:
 	int _led_off = 1;
 	
 public:
-	SensorSonoff(uint8_t child_id = 255): Sensor(-1) {
+	SensorSonoff(uint8_t child_id = 0): Sensor(-1) {
 		_name = "SONOFF";
 		children.allocateBlocks(1);
 		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_BINARY,V_STATUS,_name);

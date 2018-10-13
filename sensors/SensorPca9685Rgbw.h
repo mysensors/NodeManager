@@ -43,12 +43,12 @@ protected:
     int _step_duration = 100;
 public:
 
-	SensorPca9685Rgbw(uint8_t child_id = 255, int ch_r = 0,int ch_g = 0,int ch_b = 0,int ch_w = 0, uint8_t i2c_addr = 0x40, Adafruit_PWMServoDriver* pca9685 = NULL): Sensor(-1) {
+	SensorPca9685Rgbw(uint8_t child_id = 0, int ch_r = 0,int ch_g = 0,int ch_b = 0,int ch_w = 0, uint8_t i2c_addr = 0x40, Adafruit_PWMServoDriver* pca9685 = NULL): Sensor(-1) {
 	  _name = "Pca9685Rgbw";
 	  //present as RGB
 	  children.allocateBlocks(2);
 	  new Child(this,STRING,nodeManager.getAvailableChildId(child_id),S_RGB_LIGHT,V_RGB,_name); 
-	  new Child(this,STRING,nodeManager.getAvailableChildId(child_id+1),S_RGB_LIGHT,V_WATT,_name);
+	  new Child(this,STRING,child_id > 0 ? child_id > 0 ? nodeManager.getAvailableChildId(child_id+1) : nodeManager.getAvailableChildId(child_id) : nodeManager.getAvailableChildId(child_id),S_RGB_LIGHT,V_WATT,_name);
 	  //store values for PWMServoDriver
 	  _ch_r = ch_r;
 	  _ch_g = ch_g;

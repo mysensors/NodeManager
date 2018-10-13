@@ -33,12 +33,12 @@ protected:
 	float _offset = 0;
 	
 public:
-	SensorDHT(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
+	SensorDHT(int8_t pin, uint8_t child_id = 0): Sensor(pin) {
 		_name = "DHT";
 		_dht_type = DHT::DHT11;
 		children.allocateBlocks(2);
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id+1),S_HUM,V_HUM,_name);
+		new Child(this,FLOAT,child_id > 0 ? nodeManager.getAvailableChildId(child_id+1) : nodeManager.getAvailableChildId(child_id),S_HUM,V_HUM,_name);
 	};
 
 	// define what to do during setup

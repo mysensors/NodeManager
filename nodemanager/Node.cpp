@@ -461,9 +461,14 @@ void NodeManager::loop() {
 
 	// return the next available child_id
 	uint8_t NodeManager::getAvailableChildId(uint8_t child_id) {
-		// Childs 0 and 255 not allowed
-		if ( (child_id != 0) && (child_id != 255) ) return child_id;
+		if (child_id != 0) {
+			// requested a specific child_id, check if it is available
+			Child* child = getChild(child_id);
+			if (child == nullptr) return child_id;
+		}
+		// automatic child_id assignment or child already in use
 		for (int i = 1; i < 255; i++) {
+			// look for the first available child_id
 			Child* child = getChild(i);
 			if (child == nullptr) return i;
 		}

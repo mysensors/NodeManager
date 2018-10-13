@@ -39,7 +39,7 @@ protected:
 	bool _fingerprint_is_valid = false;
 	
 public:
-	SensorFPM10A(int8_t rxpin, int8_t txpin, uint8_t child_id = 255): Sensor(rxpin) {
+	SensorFPM10A(int8_t rxpin, int8_t txpin, uint8_t child_id = 0): Sensor(rxpin) {
 		_name = "FPM10A";
 		_rx_pin = rxpin;
 		_tx_pin = txpin;

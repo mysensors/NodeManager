@@ -31,7 +31,7 @@ protected:
 	Adafruit_MCP9808* _mcp;
 	
 public:
-	SensorMCP9808(uint8_t child_id = 255): Sensor(-1) {
+	SensorMCP9808(uint8_t child_id = 0): Sensor(-1) {
 		_name = "MCP9808";
 		children.allocateBlocks(1);
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);

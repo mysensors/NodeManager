@@ -37,12 +37,12 @@ protected:
     int _step_duration = 100;
 public:
 
-	SensorPca9685W(uint8_t child_id = 255, int channel = 0, uint8_t i2c_addr = 0x40, Adafruit_PWMServoDriver* pca9685 = NULL): Sensor(-1) {
+	SensorPca9685W(uint8_t child_id = 0, int channel = 0, uint8_t i2c_addr = 0x40, Adafruit_PWMServoDriver* pca9685 = NULL): Sensor(-1) {
 	  _name = "Pca9685W";
 	  //present as Dimmer
 	  children.allocateBlocks(2);
 	  new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_DIMMER,V_PERCENTAGE,_name);  //intern child 1
-	  new Child(this,INT,nodeManager.getAvailableChildId(child_id+1),S_DIMMER,V_STATUS,_name);      //intern child 2
+	  new Child(this,INT,child_id > 0 ? nodeManager.getAvailableChildId(child_id+1) : nodeManager.getAvailableChildId(child_id),S_DIMMER,V_STATUS,_name);      //intern child 2
 	  //store values for PWMServoDriver
 	  _channel = channel;
 	  _i2c_addr = i2c_addr;

@@ -34,7 +34,7 @@ protected:
 
 public:
 	// contructor, takes at least a NodeManager object. Calls its superclass
-	SensorExample(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
+	SensorExample(int8_t pin, uint8_t child_id = 0): Sensor(pin) {
 		// set the sensor name. Useful when reviewing the logs and used as description of the child 
 		_name = "EXAMPLE";
 		// allocate a fixed number of blocks for the list containing the children

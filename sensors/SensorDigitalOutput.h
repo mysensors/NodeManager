@@ -34,7 +34,7 @@ protected:
 	Timer* _safeguard_timer = new Timer();
 	
 public:
-	SensorDigitalOutput(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
+	SensorDigitalOutput(int8_t pin, uint8_t child_id = 0): Sensor(pin) {
 		_name = "DIGITAL_O";
 		children.allocateBlocks(1);
 		new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);

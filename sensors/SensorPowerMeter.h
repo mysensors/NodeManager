@@ -27,7 +27,7 @@
 
 class SensorPowerMeter: public SensorPulseMeter {
 public:
-	SensorPowerMeter(int8_t pin, uint8_t child_id = 255): SensorPulseMeter(pin, child_id) {
+	SensorPowerMeter(int8_t pin, uint8_t child_id = 0): SensorPulseMeter(pin, child_id) {
 		_name = "POWER";
 		children.get()->setFormat(DOUBLE);
 		children.get()->setPresentation(S_POWER);

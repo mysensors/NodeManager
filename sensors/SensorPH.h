@@ -31,7 +31,7 @@ protected:
 	float _ph_step;
 
 public:
-	SensorPH(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
+	SensorPH(int8_t pin, uint8_t child_id = 0): Sensor(pin) {
 		_name = "PH";
 		children.allocateBlocks(1);
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_WATER_QUALITY,V_PH,_name);

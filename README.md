@@ -271,7 +271,7 @@ You can interact with each class provided by NodeManager through a set of API fu
 	void registerTimer(Timer* timer);
 #endif
 	// return the next-available child id
-	uint8_t getAvailableChildId(uint8_t child_id = 255);
+	uint8_t getAvailableChildId(uint8_t child_id = 0);
 	// list containing all the registered sensors
 	List<Sensor*> sensors;
 	// return the Child object of the given child_id

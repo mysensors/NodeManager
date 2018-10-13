@@ -28,7 +28,7 @@ protected:
 	float _pulse_factor;
 	
 public:
-	SensorPulseMeter(int8_t pin, uint8_t child_id = 255): Sensor(pin) {
+	SensorPulseMeter(int8_t pin, uint8_t child_id = 0): Sensor(pin) {
 		_name = "PULSE";
 		children.allocateBlocks(1);
 		new Child(this,DOUBLE,nodeManager.getAvailableChildId(child_id),S_CUSTOM,V_CUSTOM,_name);

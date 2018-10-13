@@ -32,7 +32,7 @@ SensorDHT22
 */
 class SensorDHT22: public SensorDHT {
 public:
-	SensorDHT22(int8_t pin, uint8_t child_id = 255): SensorDHT(pin, child_id) {
+	SensorDHT22(int8_t pin, uint8_t child_id = 0): SensorDHT(pin, child_id) {
 		_name = "DHT22";
 		_dht_type = DHT::DHT22;
 		children.get(1)->setDescription(_name);
