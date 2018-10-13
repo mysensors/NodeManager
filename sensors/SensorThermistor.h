@@ -90,6 +90,7 @@ public:
 		temperature = 1.0 / temperature;                 // Invert
 		temperature -= 273.15;                         // convert to C
 		temperature = nodeManager.celsiusToFahrenheit(temperature);
+		temperature += _offset;
 		// store the value
 		child->setValue(temperature);
 	};
