@@ -526,7 +526,7 @@ void NodeManager::loop() {
 	// send a message by providing the source child, type of the message and value
 	void NodeManager::sendMessage(uint8_t child_id, uint8_t type, int value) {
 		_message.clear();
-		_message.set(value);
+		_message.set((int32_t)value);
 		_sendMessage(child_id,type);
 	}
 	void NodeManager::sendMessage(uint8_t child_id, uint8_t type, float value, uint8_t precision) {
