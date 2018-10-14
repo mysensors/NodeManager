@@ -364,6 +364,9 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 //#include <sensors/SensorCCS811.h>
 //SensorCCS811 ccs811;
 
+//#include <sensors/SensorGSM.h>
+//SensorGSM gsm(6,7);
+
 /***********************************
  * Main Sketch
  */
