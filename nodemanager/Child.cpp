@@ -149,6 +149,10 @@ void Child::sendValue(bool force) {
 			// if the force update timer is over, send the value regardless and restart it
 			if (_force_update_timer->isOver()) _force_update_timer->start();
 			else {
+				Serial.println(_value);
+				Serial.println(_last_value);
+				Serial.println(_value_delta);
+				Serial.println((_last_value - _value_delta));
 				// if the value does not differ enough from the previous one, do not send the value
 				if (_value > (_last_value - _value_delta) && _value < (_last_value + _value_delta)) {
 					return;
