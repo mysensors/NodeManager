@@ -98,6 +98,8 @@ void Child::setValue(double value) {
 }
 void Child::setValue(const char* value) {
 	_value_string = value;
+	_samples = 1;
+	debug(PSTR(LOG_LOOP "%s(%d):SET t=%d v=%s\n"),_description,_child_id,_type,_value_string);
 }
 
 // store a new value and update the total
@@ -194,8 +196,8 @@ void Child::reset() {
 			if (_persist_value) saveValue();
 #endif
 		}
-		_samples = 0;
 	} else _value_string = "";
+	_samples = 0;
 }
 
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
