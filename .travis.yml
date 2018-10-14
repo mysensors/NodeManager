@@ -490,3 +490,10 @@ jobs:
        - sed -r -i 's/\/\/(#include <sensors\/SensorPN532.h>)/\1/' $SKETCH
        - eval $OTA_CONFIGURATION
        - eval $COMPILE
+    - name: "SensorCCS811"
+      script: 
+       - arduino --install-library "Adafruit CCS811 Library"
+       - sed -r -i 's/\/\/(SensorCCS811 .+)/\1/' $SKETCH
+       - sed -r -i 's/\/\/(#include <sensors\/SensorCCS811.h>)/\1/' $SKETCH
+       - eval $OTA_CONFIGURATION
+       - eval $COMPILE

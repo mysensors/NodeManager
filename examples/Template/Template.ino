@@ -361,6 +361,9 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 //#include <sensors/SensorPN532.h>
 //SensorPN532 pn532;
 
+//#include <sensors/SensorCCS811.h>
+//SensorCCS811 ccs811;
+
 /***********************************
  * Main Sketch
  */
