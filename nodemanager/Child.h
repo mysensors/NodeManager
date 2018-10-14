@@ -82,7 +82,7 @@ public:
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	// force to send an update after the configured number of minutes
 	void setForceUpdateTimerValue(unsigned long value);
-	// never report values below this threshold (default: FLT_MIN)
+	// never report values below this threshold (default: -FLT_MAX)
 	void setMinThreshold(float value);
 	// never report values above this threshold (default: FLT_MAX)
 	void setMaxThreshold(float value);

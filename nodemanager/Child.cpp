@@ -141,7 +141,8 @@ void Child::sendValue(bool force) {
 	// do not send if no samples have been collected, unless instructed otherwise
 	if (! _send_without_value && _samples == 0) return;
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
-	if (! force) {
+	// ignore conditional reporting settings if forced to report or if it is the first run
+	if (! force || ! _sensor->getFirstRun()) {
 		// if the value is a number
 		if (_format != STRING) {
 			// if below or above the thresholds, do not send the value
@@ -167,6 +168,7 @@ void Child::sendValue(bool force) {
 			}
 		}
 	}
+	Serial.println("->");
 	// keep track of the previous value
 	if (_format != STRING) _last_value = _value;
 	else _last_value_string = _value_string;
