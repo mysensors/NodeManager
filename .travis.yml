@@ -497,3 +497,10 @@ jobs:
        - sed -r -i 's/\/\/(#include <sensors\/SensorCCS811.h>)/\1/' $SKETCH
        - eval $OTA_CONFIGURATION
        - eval $COMPILE
+    - name: "SensorMPR121"
+      script: 
+       - arduino --install-library "Adafruit MPR121"
+       - sed -r -i 's/\/\/(SensorMPR121 .+)/\1/' $SKETCH
+       - sed -r -i 's/\/\/(#include <sensors\/SensorMPR121.h>)/\1/' $SKETCH
+       - eval $OTA_CONFIGURATION
+       - eval $COMPILE
