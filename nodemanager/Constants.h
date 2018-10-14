@@ -86,10 +86,13 @@ Chip type
 #if defined(ESP8266) || defined(MY_GATEWAY_ESP8266)
 #define CHIP_ESP8266
 #endif
+#if defined(ESP32) || defined(MY_GATEWAY_ESP32)
+#define CHIP_ESP32
+#endif
 #if defined (MYBOARDNRF5)
 #define CHIP_NRF5
 #endif
-#if !defined(CHIP_ESP8266) && !defined(CHIP_STM32) && !defined(CHIP_NRF5)
+#if !defined(CHIP_ESP8266) && !defined(CHIP_ESP32) && !defined(CHIP_STM32) && !defined(CHIP_NRF5)
 #define CHIP_AVR
 #endif
 

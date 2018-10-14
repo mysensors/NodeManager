@@ -455,7 +455,7 @@ void NodeManager::loop() {
 	// sleep if the node is a battery powered or wait if it is not for the given number of milliseconds 
 	void NodeManager::sleepOrWait(unsigned long value) {
 		// if the node is sleeping, sleep-or-wait is enabled and we need to sleep for a decent amount of time, call sleep() otherwise wait()
-		if (isSleepingNode() && _sleep_or_wait && value > 200) sleep(value);
+		if (isSleepingNode() && _sleep_or_wait && value > 200) sleep(value,false);
 		else wait(value);
 	}
 
@@ -531,7 +531,7 @@ void NodeManager::loop() {
 	// send a message by providing the source child, type of the message and value
 	void NodeManager::sendMessage(uint8_t child_id, uint8_t type, int value) {
 		_message.clear();
-		_message.set(value);
+		_message.set((int32_t)value);
 		_sendMessage(child_id,type);
 	}
 	void NodeManager::sendMessage(uint8_t child_id, uint8_t type, float value, uint8_t precision) {
