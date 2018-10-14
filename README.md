@@ -150,6 +150,7 @@ SensorPca9685Rgbw        | 2     | Generic RGBW-dimmer sensor (S_RGBW_LIGHT) use
 SensorDSM501A            | 1     | Dust sensor module DSM501A for PM1.0 and PM2.5 particles                                          | -
 SensorPN532              | 1     | PN532 NFC RFID Module                                                                             | https://github.com/elechouse/PN532
 SensorCCS811             | 1     | CCS811 gas/Air Quality sensor. Measure VOC and eCO2                                               | https://github.com/adafruit/Adafruit_CCS811
+SensorMPR121             | 1     | MPR121-based capacitive touch control sensor                                                      | https://github.com/adafruit/Adafruit_MPR121
 
 Those sensors requiring a pin to operate would take it as an argument in the constructor. 
 NodeManager automatically creates all the child_ids, assigning an incremental counter. If you need to set your own child_id, pass it as the last argument to the constructor
@@ -962,6 +963,16 @@ Each sensor class may expose additional methods.
 	void setTemperature(float value);
 	// Set to true if the board has a temperature sensor embedded that can be used for calibration (default: false)
 	void setTemperatureSensor(bool value);
+~~~	
+
+* SensorMPR121
+~~~c
+    // set the passcode length. Passcode will be sent to the controller only after this number of digits have been pressed (default: 4)
+	void setPasscodeLength(int value);
+	// [101] wait for a valid code for the given amount of seconds. Useful when battery powered (default: 0)
+	void setWaitCodeForSeconds(int value);
+	// return true if the code was recognized successfully, false otherwise. Useful when a hook function needs to act upon the result
+	bool getCodeIsValid();
 ~~~	
 
 ### OTA Configuration
