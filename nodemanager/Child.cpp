@@ -141,7 +141,8 @@ void Child::sendValue(bool force) {
 	// do not send if no samples have been collected, unless instructed otherwise
 	if (! _send_without_value && _samples == 0) return;
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
-	if (! force) {
+	// ignore conditional reporting settings if forced to report or if it is the first run
+	if (! force || ! _sensor->getFirstRun()) {
 		// if the value is a number
 		if (_format != STRING) {
 			// if below or above the thresholds, do not send the value

@@ -108,6 +108,11 @@ void Sensor::setReportIntervalDays(uint8_t value) {
 	setReportIntervalSeconds(value*86400UL);
 }
 
+// return true if it is the first execution of loop on this sensor
+bool Sensor::getFirstRun() {
+	return _first_run;
+}
+
 // register a child
 void Sensor::registerChild(Child* child) {
 	children.push(child);

@@ -58,6 +58,8 @@ public:
 	void setMeasureTimerMode(timer_mode value);
 	// [27] Set the value for the reporting timer's mode which has been set with setReportTimerMode() If not set explicitely, will be set with the same value as the reporting timer
 	void setMeasureTimerValue(unsigned long value);
+	// return true if it is the first execution of loop on this sensor
+	bool getFirstRun();
 	// list of configured child
 	List<Child*> children;
 	// return the child object based on the provided child_id
