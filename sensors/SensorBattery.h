@@ -34,6 +34,7 @@ protected:
 	int8_t _battery_pin = -1;
 	float _battery_volts_per_bit = 0.003363075;
 	float _battery_adj_factor = 1.0;
+	bool _send_battery_level = true;
 	
 public:
 	SensorBattery(uint8_t child_id = BATTERY_CHILD_ID): Sensor(-1) {
@@ -74,6 +75,11 @@ public:
 		_battery_adj_factor = value;
 	};
 	
+	// if true call sendBatteryLevel() in addition to send the measured voltage back (default: true)
+	void setSendBatteryLevel(bool value) {
+		_send_battery_level = value;
+	};
+	
 	// define what to do during loop
 	void onLoop(Child* child) {
 		// measure the battery
@@ -91,13 +97,15 @@ public:
 		}
 		volt = volt * _battery_adj_factor;
 		child->setValue(volt);
-		// calculate the percentage
-		int percentage = ((volt - _battery_min) / (_battery_max - _battery_min)) * 100;
-		if (percentage > 100) percentage = 100;
-		if (percentage < 0) percentage = 0;
-		// report battery level percentage
-		sendBatteryLevel(percentage);
-		nodeManager.sleepBetweenSend();
+		if (_send_battery_level) {
+			// calculate the percentage
+			int percentage = ((volt - _battery_min) / (_battery_max - _battery_min)) * 100;
+			if (percentage > 100) percentage = 100;
+			if (percentage < 0) percentage = 0;
+			// report battery level percentage
+			if (_send_battery_level) sendBatteryLevel(percentage);
+			nodeManager.sleepBetweenSend();
+		}
 	};
 
 #if NODEMANAGER_OTA_CONFIGURATION == ON

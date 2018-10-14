@@ -542,6 +542,8 @@ Each sensor class may expose additional methods.
 	void setBatteryVoltsPerBit(float value);
 	// [107] change battery voltage calibration factor
 	void setBatteryCalibrationFactor(float value);
+	// if true call sendBatteryLevel() in addition to send the measured voltage back (default: true)
+	void setSendBatteryLevel(bool value);
 ~~~
 
 * SensorSignal
