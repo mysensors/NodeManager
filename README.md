@@ -147,7 +147,8 @@ SensorPH                 | 1     | PH ( SKU SEN161 ) sensor, measure the analog 
 SensorPca9685W 	         | 2     | Generic dimmer sensor (S_DIMMER) used to drive a single channel pwm output of PCA9685             | https://github.com/adafruit/Adafruit-PWM-Servo-Driver-Library
 SensorPca9685Rgb         | 2     | Generic RGB-dimmer sensor (S_RGB_LIGHT) used to drive RGB resp. 3-channel pwm output of PCA9685   | https://github.com/adafruit/Adafruit-PWM-Servo- Driver-Library 
 SensorPca9685Rgbw        | 2     | Generic RGBW-dimmer sensor (S_RGBW_LIGHT) used to drive RGBW resp. 4-channel pwm output of PCA9685| https://github.com/adafruit/Adafruit-PWM-Servo-Driver-Library
-SensorDSM501A            | 1     | ust sensor module DSM501A for PM1.0 and PM2.5 particles                                           | -
+SensorDSM501A            | 1     | Dust sensor module DSM501A for PM1.0 and PM2.5 particles                                          | -
+SensorPN532              | 1     | PN532 NFC RFID Module                                                                             | https://github.com/elechouse/PN532
 
 Those sensors requiring a pin to operate would take it as an argument in the constructor. 
 NodeManager automatically creates all the child_ids, assigning an incremental counter. If you need to set your own child_id, pass it as the last argument to the constructor
@@ -944,6 +945,14 @@ Each sensor class may expose additional methods.
 ~~~c
     // [101] set the reference temperature for calculating PM1.0
     void setTemperature(int value);
+~~~	
+
+* SensorPN532
+~~~c
+    // [101] wait for a valid card for the given amount of seconds. Useful when battery powered (default: 0)
+	void setWaitCardForSeconds(int value);
+	// return true if the card was recognized successfully, false otherwise. Useful when a hook function needs to act upon the result
+	bool getCardIsValid();
 ~~~	
 
 ### OTA Configuration

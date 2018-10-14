@@ -482,3 +482,11 @@ jobs:
        - sed -r -i 's/\/\/(#include <sensors\/SensorDSM501A.h>)/\1/' $SKETCH
        - eval $OTA_CONFIGURATION
        - eval $COMPILE
+    - name: "SensorPN532"
+      script: 
+       - wget https://github.com/elechouse/PN532/archive/PN532_HSU.zip && unzip PN532_HSU.zip
+       - sudo cp -r PN532-PN532_HSU/* /usr/local/share/arduino/libraries
+       - sed -r -i 's/\/\/(SensorPN532 .+)/\1/' $SKETCH
+       - sed -r -i 's/\/\/(#include <sensors\/SensorPN532.h>)/\1/' $SKETCH
+       - eval $OTA_CONFIGURATION
+       - eval $COMPILE

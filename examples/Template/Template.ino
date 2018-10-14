@@ -358,6 +358,9 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 //#include <sensors/SensorDSM501A.h>
 //SensorDSM501A DSM501A;
 
+//#include <sensors/SensorPN532.h>
+//SensorPN532 pn532;
+
 /***********************************
  * Main Sketch
  */
