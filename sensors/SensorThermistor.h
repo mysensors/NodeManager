@@ -30,7 +30,8 @@ protected:
 	int _b_coefficient = 3950;
 	long _series_resistor = 10000;
 	float _offset = 0;
-	
+	bool _ntc = false;
+
 public:
 	SensorThermistor(int8_t pin, uint8_t child_id = 0): Sensor(pin) {
 		_name = "THERMISTOR";
@@ -58,6 +59,10 @@ public:
 	void setOffset(float value) {
 		_offset = value;
 	};
+    // [106] set type of thermistor 0 for PTC, 1 for NTC (default: 0)
+    void setNtc(bool ntc){
+        _ntc = ntc;
+    };
 
 	// define what to do during setup
 	void onSetup() {
@@ -71,7 +76,12 @@ public:
 		float adc = analogRead(_pin);
 		// calculate the temperature
 		float reading = (1023 / adc)  - 1;
-		reading = _series_resistor / reading;
+        if(_ntc == false){
+            reading = _series_resistor / reading;
+        }
+        else{
+            reading = _series_resistor * reading;
+        }
 		float temperature;
 		temperature = reading / _nominal_resistor;     // (R/Ro)
 		temperature = log(temperature);                  // ln(R/Ro)
@@ -80,6 +90,7 @@ public:
 		temperature = 1.0 / temperature;                 // Invert
 		temperature -= 273.15;                         // convert to C
 		temperature = nodeManager.celsiusToFahrenheit(temperature);
+		temperature += _offset;
 		// store the value
 		child->setValue(temperature);
 	};
@@ -93,6 +104,7 @@ public:
 		case 103: setBCoefficient(request->getValueInt()); break;
 		case 104: setSeriesResistor((long)request->getValueInt()); break;
 		case 105: setOffset(request->getValueFloat()); break;
+		case 106: setNtc(request->getValueInt()); break;
 		default: return;
 		}
 	};
