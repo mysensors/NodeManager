@@ -504,3 +504,9 @@ jobs:
        - sed -r -i 's/\/\/(#include <sensors\/SensorMPR121.h>)/\1/' $SKETCH
        - eval $OTA_CONFIGURATION
        - eval $COMPILE
+    - name: "SensorGSM"
+      script: 
+       - sed -r -i 's/\/\/(SensorGSM .+)/\1/' $SKETCH
+       - sed -r -i 's/\/\/(#include <sensors\/SensorGSM.h>)/\1/' $SKETCH
+       - eval $OTA_CONFIGURATION
+       - eval $COMPILE

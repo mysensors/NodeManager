@@ -151,6 +151,7 @@ SensorDSM501A            | 1     | Dust sensor module DSM501A for PM1.0 and PM2.
 SensorPN532              | 1     | PN532 NFC RFID Module                                                                             | https://github.com/elechouse/PN532
 SensorCCS811             | 1     | CCS811 gas/Air Quality sensor. Measure VOC and eCO2                                               | https://github.com/adafruit/Adafruit_CCS811
 SensorMPR121             | 1     | MPR121-based capacitive touch control sensor                                                      | https://github.com/adafruit/Adafruit_MPR121
+SensorGSM                | 1     | Send SMS through an attached serial modem (e.g. SIM900)                                           | -
 
 Those sensors requiring a pin to operate would take it as an argument in the constructor. 
 NodeManager automatically creates all the child_ids, assigning an incremental counter. If you need to set your own child_id, pass it as the last argument to the constructor
@@ -975,6 +976,16 @@ Each sensor class may expose additional methods.
 	void setWaitCodeForSeconds(int value);
 	// return true if the code was recognized successfully, false otherwise. Useful when a hook function needs to act upon the result
 	bool getCodeIsValid();
+~~~	
+
+* SensorGSM
+~~~c
+	// set the baud rate of the serial port for connecting to the sensor (default: 115200)
+	void setBaudRate(uint32_t value);
+	// [101] set the recipient phone number
+	void setRecipient(const char* value);
+	// send the provided text via SMS to the configured recipient
+	void sendSMS(const char* text);
 ~~~	
 
 ### OTA Configuration
