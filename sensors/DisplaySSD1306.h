@@ -24,13 +24,21 @@
 */
 
 #include <SSD1306Ascii.h>
-#include <SSD1306AsciiAvrI2c.h>
+#ifdef CHIP_AVR
+  #include <SSD1306AsciiAvrI2c.h>
+#else
+  #include <SSD1306AsciiWire.h>
+#endif
 
 #include "Display.h"
 
 class DisplaySSD1306: public Display {
 protected:
+#ifdef CHIP_AVR
 	SSD1306AsciiAvrI2c* _oled;
+#else
+	SSD1306AsciiWire* _oled;
+#endif
 	const DevType* _dev = &Adafruit128x64;
 	uint8_t _i2caddress = 0x3c;
 	int _fontsize = 1;
@@ -125,7 +133,11 @@ public:
 	
 	// define what to do during setup
 	void onSetup() {
+#ifdef CHIP_AVR
 		_oled = new SSD1306AsciiAvrI2c();
+#else
+		_oled = new SSD1306AsciiWire();
+#endif
 		_oled->begin(_dev, _i2caddress);
 		_oled->setFont(_font);
 		if (_contrast > -1) _oled->setContrast(_contrast);

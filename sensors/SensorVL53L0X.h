@@ -40,7 +40,16 @@ public:
 	// define what to do during setup
 	void onSetup() {
 		if (_pin > 0) {
-			pinMode(_pin, OUTPUT); // Put sensor in deep sleep until the loop
+#ifdef CHIP_NRF5
+			// The NRF5 chip has hwPinMode S0D1, i.e. standard LOW, but disconnected
+			// HIGH, which is exactly what we need for the power pin of the VL53L0X
+			// (the sensort board has a pull-up, so disconnected means sensor's
+			// VCC, not the arduino/NRF5's potentially higher VCC!)
+			hwPinMode(_pin, OUTPUT_S0D1);
+#else
+			pinMode(_pin, OUTPUT);
+#endif
+			// Put sensor in deep sleep until the loop
 			digitalWrite(_pin, LOW);
 		}
 		_lox = new VL53L0X();
@@ -59,12 +68,20 @@ protected:
 	int _getDistance() {
 		int distance = -1;
 		if (_lox) {
-			// The XSHUT pin puts the sensor into deep sleep when pulled to LOW;
-			// To wake up, do NOT write HIGH (=3.3V or 5V) to the pin, as the sensor
-			// uses only 2.8V and is not 5V-tolerant. Instead, set the pin to INPUT.
 			if (_pin >= 0) {
+#ifdef CHIP_NRF5
+				// The nrf5 chips have disconnected high, so the pullup will
+				// cause the XSHUT pin to go to the sensor's VCC, which will
+				// not fry the chip. The arduino/nrf5's VCC (3.3V or 5V) is
+				// too high for the sensor's 2.8V VCC...
+				digitalWrite(_pin, HIGH);
+#else
+				// The XSHUT pin puts the sensor into deep sleep when pulled to LOW;
+				// To wake up, do NOT write HIGH (=3.3V or 5V) to the pin, as the sensor
+				// uses only 2.8V and is not 5V-tolerant. Instead, set the pin to INPUT.
 				pinMode(_pin, INPUT);
-				sleep(5); // Transition from HW standby to SW standby might take up to 1.5 ms => use 5ms to be on the safe side
+#endif
+				sleep(3); // Transition from HW standby to SW standby might take up to 1.5 ms => use 3ms to be on the safe side
 			}
 			_lox->init();
 			_lox->setTimeout(500);
@@ -73,10 +90,9 @@ protected:
 				digitalWrite(_pin, LOW);
 				pinMode(_pin, OUTPUT);
 			}
-		}
-		//  if (measure.RangeStatus == 0) {  // only 0  data
-		if (_lox->timeoutOccurred()) {
-			distance = -1;
+			if (_lox->timeoutOccurred()) {
+				distance = -1;
+			}
 		}
 		return distance;
 	};

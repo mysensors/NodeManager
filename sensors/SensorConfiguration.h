@@ -19,6 +19,7 @@
 #ifndef SensorConfiguration_h
 #define SensorConfiguration_h
 
+#if NODEMANAGER_OTA_CONFIGURATION == ON
 /*
 SensorConfiguration: allow remote configuration of the board and any configured sensor
 */
@@ -126,4 +127,9 @@ public:
 		nodeManager.sendMessage(children.get(1)->getChildId(),V_CUSTOM,function);
 	};
 };
+
+#else
+#warning "SensorConfiguration.h included, but NODEMANAGER_OTA_CONFIGURATION configured to off..."
+#endif
+
 #endif
