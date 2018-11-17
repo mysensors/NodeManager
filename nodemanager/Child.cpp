@@ -152,6 +152,7 @@ void Child::sendValue(bool force) {
 			else {
 				// if the value does not differ enough from the previous one, do not send the value
 				if (_value > (_last_value - _value_delta) && _value < (_last_value + _value_delta)) {
+					if (_last_value_mode == UPDATE_ALWAYS) _last_value = _value;
 					return;
 				}
 			}
@@ -217,6 +218,9 @@ void Child::setMaxThreshold(float value) {
 void Child::setValueDelta(float value) {
 	_value_delta = value;
 }
+void Child::setUpdateLastValue(last_value_mode value) {
+	_last_value_mode = value;
+}
 
 // return the last value of the child in the requested format
 int Child::getLastValueInt() {
@@ -232,6 +236,7 @@ const char* Child::getLastValueString(){
 	return _last_value_string;
 }
 #endif
+
 #if NODEMANAGER_EEPROM == ON
 // setter/getter
 void Child::setPersistValue(bool value) {

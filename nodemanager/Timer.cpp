@@ -27,17 +27,22 @@ Timer::Timer() {
 	nodeManager.registerTimer(this);
 }
 
+// set the timer mode
 void Timer::setMode(timer_mode mode) {
 	_mode = mode;
 }
+
+// get the timer mode
 timer_mode Timer::getMode() {
 	return _mode;
 }
 
+// set the timer value in seconds
 void Timer::setValue(unsigned long value) {
 	_value = value;
 }
 
+// get the timer value in seconds
 unsigned long Timer::getValue() {
 	return _value;
 }
@@ -104,6 +109,8 @@ bool Timer::isOver() {
 	}
 #else
 	if (_mode == TIME_INTERVAL) {
+		// check for a millis() rollover. The difference between millis() and the target (in seconds) cannot be less than value
+		if ( (_target - millis()) > _value ) return true;
 		// check if the current millis() is greater than the target
 		if (millis() > _target) return true;
 		return false;

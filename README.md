@@ -508,6 +508,8 @@ The following methods are available for all the child:
 	void setMaxThreshold(float value);
 	// do not report values if too close to the previous one (default: 0)
 	void setValueDelta(float value);
+	// set when the last value is updated. Possible values are UPDATE_ALWAYS (at every cycle), UPDATE_ON_SEND (only after sending) (default: UPDATE_ON_SEND)
+	void setUpdateLastValue(last_value_mode value);
 	// get the last value of the child
 	int getLastValueInt();
 	float getLastValueFloat();
