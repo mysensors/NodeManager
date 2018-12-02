@@ -1,4 +1,4 @@
-# MySensors NodeManager [![Build Status](https://travis-ci.org/mysensors/NodeManager.svg?branch=development)](https://travis-ci.org/mysensors/NodeManager)
+# MySensors NodeManager [![Build Status](https://travis-ci.org/mysensors/NodeManager.svg?branch=master)](https://travis-ci.org/mysensors/NodeManager)
 
 NodeManager is intended to take care on your behalf of all those common tasks that a MySensors node has to accomplish, speeding up the development cycle of your projects. 
 Consider it as a sort of frontend for your MySensors projects. When you need to add a sensor (which requires just uncommeting a single line),
@@ -23,14 +23,7 @@ NodeManager will take care of importing the required library, presenting the sen
 ## Installation
 
 * Download the package or clone the git repository from https://github.com/mysensors/NodeManager
-* Install NodeManager as an additional Arduino library (https://www.arduino.cc/en/Guide/Libraries)
-* Open and customize one of the examples provided with the IDE or open the Template sketch which includes all the built-in sensors commented out
-* Add your sensors, configure them and upload the sketch to your arduino board
-
-### Installing the dependencies
-
-Some of the sensors and buik-in capabilities rely on third party libraries. Those libraries are not included within NodeManager and have to be installed from the Arduino IDE Library Manager (Sketch -> Include Library -> Manager Libraries) or manually. 
-You need to install the library ONLY if you are planning to enable to use the sensor.
+* Install NodeManager as an Arduino library (https://www.arduino.cc/en/Guide/Libraries)
 
 ### Upgrade
 
@@ -41,12 +34,13 @@ Please be aware when upgrading to v1.8 from an older version this procedure is n
 
 ## Configuration
 
-Configuring a sketch with is using NodeManager requires a few steps. All the configuration directives are located within the main sketch.
+* Open the Template sketch from the Arduino IDE under File -> Examples -> MySensors Nodemanager -> Template
+* Alternatively, open one of the provided example
+* Customize NodeManager's and your sensors settings (see below)
 
 ### MySensors configuration
 
-Since NodeManager has to communicate with the MySensors network on your behalf, it has to know how to do it. On top of the main sketch you will find the typical MySensors directives you are used to which can be customized to configure the board to act as a MySensors node or a MySensors gateway. 
-Please note you don't necessarily need a NodeManager gateway to interact with a NodeManager node. A NodeManager node is fully compatible with any existing gateway you are currently operating with.
+Since NodeManager has to communicate with the MySensors network on your behalf, it has to know how to do it. On top of the template sketch you will find the typical MySensors directives you are used to which can be customized to configure the board to act as a MySensors node or a MySensors gateway. 
 
 ### NodeManager configuration
 
@@ -81,7 +75,7 @@ Once the NodeManager library header file is included, a global instance of the N
 
 NodeManager provides built-in implementation of a number of sensors through ad-hoc classes located within the "sensors" directory of the library. 
 To use a built-in sensor:
-* Install the required depedencies, if any (manually or through the Arduino IDE Library Manager)
+* Install the required dependencies, if any manually or through the Arduino IDE Library Manager (see below)
 * Include the sensor header file (e.g. `#include <sensors/SensorBattery.h>`)
 * Create an instance of the sensor's class (e.g. `SensorBattery battery(node)`)
 
@@ -175,9 +169,15 @@ SensorSHT21 sht21;
 The sensor will be then registered automatically with NodeManager which will take care of it all along its lifecycle. 
 NodeManager will present each sensor for you to the controller, query each sensor and report the measure back to the gateway/controller. For actuators (e.g. relays) those can be triggered by sending a `REQ`/`SET` message with the expected type to their assigned child id.
 
+### Installing the dependencies
+
+Some of the sensors and buit-in capabilities rely on third party libraries. Those libraries are not included within NodeManager and have to be installed from the Arduino IDE Library Manager (Sketch -> Include Library -> Manager Libraries) or manually. 
+You need to install the library ONLY if you are planning to enable to use the sensor.
+
+
 ### Configure your sensors
 
-NodeManager and all the sensors can be configured from within `before()` in the main sketch. Find `Configure your sensors below` to customize the behavior of any sensor by calling one of the functions available.
+NodeManager and all the sensors can be configured from within `before()` in the main sketch. Find `Configure your sensors below` to customize the behavior of any sensor by invoking one of the functions available.
 
 Examples:
 
@@ -202,7 +202,7 @@ Please note, if you configure a sleep cycle, this may have an impact on the repo
 
 ## Running your code
 
-Once finished configuring your node, upload your sketch to your arduino board as you are used to.
+Once finished configuring your node, upload your sketch to your Arduino board as you are used to.
 
 Check your gateway's logs to ensure the node is working as expected. You should see the node presenting itself, presenting all the registered sensors and reporting new measures at the configured reporting interval.
 When `NODEMANAGER_DEBUG` is enabled, detailed information will be available through the serial port. The better understand the logs generaged by NodeManager, paste them into MySensors Log Parser (https://mysensors.org/build/parser).
@@ -1030,7 +1030,13 @@ Please note that anything set remotely will NOT persist a reboot apart from the 
 
 ## How it works
 
-A NodeManager object has to be created the beginning of your sketch and the interaction with your code happens through callback functions, placed at the end of `before()`, `presentation()`, `loop()`, `receive()` and `receiveTimes()`. The following is the flow through which the different functions are called:
+* Your sketch should begin with the standard MySensors directives
+* NodeManager's settings can be customized through `NODEMANAGER_*` defines, just after. If not set, the default value will be used
+* To make use of the NodeManager library you have to include it with `#include <MySensors_NodeManager.h>`. This automatically includes the required MySensors libraries and creates an object called `nodeManager`
+* To add a sensor, just include the corresponding header file and creates an instance of the class
+* Interaction with your code happens through callback functions, placed at the end of `before()`, `presentation()`, `loop()`, `receive()` and `receiveTimes()`. 
+
+The following is detailed what happens when the different callback functions are called:
 
 `NodeManager::before()`:
 * Setup the interrupt pins to wake up the board based on the configured interrupts
@@ -1039,7 +1045,7 @@ A NodeManager object has to be created the beginning of your sketch and the inte
 
 `NodeManager::presentation()`:
 * Present the sketch
-* Present each child of each of the registered sensors
+* Present each child of each of each registered sensors
 
 `NodeManager::setup()`:
 * Sync the time with the controller (if requested)
@@ -1059,17 +1065,15 @@ A NodeManager object has to be created the beginning of your sketch and the inte
 * Go to sleep (if requested)
 
 `Sensor::loop()`:
-* If it is time for a new measure and if the sensor is powered by a pin, this is set to on
-* For each registered sensor, the sensor-specific `onLoop()` is called. If multiple samples are requested, this is run multiple times. `onLoop()` is not intended to send out any message but just sets a new value to the requested child
-* If the sensor is powered by a pin, this is turned off
-* If it is time to report, a message is sent to the gateway with the value. Depending on the configuration, this is not sent if it is the same as the previous value or sent anyway after a given number of cycles. These functionalies are not sensor-specific and common to all the sensors inheriting from the `Sensor` class.
+* If it is time to take a new measure he sensor-specific `onLoop()` is called. If multiple samples are requested, this is run multiple times. `onLoop()` is not intended to send out any message but just sets a new value to the requested child
+* If it is time to report, a message is sent to the gateway with the value. Depending on the configuration, this is not sent if it is the same as the previous value or sent anyway after a given number of cycles. These functionalities are not sensor-specific and common to all the sensors inheriting from the `Sensor` class.
 
 `NodeManager::receive()`:
 * Receive a message from the radio network 
 * Dispatch the message to the recipient sensor
 
 `Sensor::receive()`: 
-* Invoke `Sensor::loop()` which will execute the sensor main taks and eventually call `Sensor::onReceive()`
+* Invoke `Sensor::loop()` which will execute the sensor main task and eventually call `Sensor::onReceive()`
 
 `Sensor::interrupt()`:
 * Check if the value from the interrupt is matching the one expected
@@ -1127,16 +1131,23 @@ If there are changes introduced to the development branch that conflicts with an
 When contributing with a new sensor follows the same guidelines presented above and proceed with the following steps:
 * Define your class is in a header file named `SensorNAME_OF_THE_SENSOR.h` under the `sensors` directory
 * Implement your sensor inline with the class. See `SensorExample.h` or other sensors for more commented examples and details
+* Add your sensor in `examples/Templates/Template.ino`, just after the last sensor
 * Add an additional job in the Travis CI configuration file `.travis.yml`
 * Add the sensor's specs in "Add your sensors" and in "Built-in sensors API" of the README.md file
 * Add the name of the class of your sensor in the keywords.txt file
 
 ## Compatibility
 
-This version of NodeManager has been tested and is compatibile with the following MySensors library:
+This version of NodeManager has been tested and is compatible with the following MySensors library:
 * v2.3.0
 * v2.2.0
 * v2.1.1
+
+You don't necessarily need a NodeManager gateway to interact with a NodeManager node. A NodeManager node is fully compatible with any existing gateway you are currently operating with.
+
+There are generally speaking no compatibility issues in having in your network nodes running different versions of NodeManager.
+
+Starting from v1.8 NodeManager is released as an Arduino library hence your code has to be migrated manually from previous versions.
 
 ## Release Notes
 
@@ -1257,4 +1268,34 @@ v1.7:
 * Added support for TTP226/TTP229 Touch control sensor
 
 v1.8:
-
+* Split NodeManager's core classes in individual files and each sensor code in its own dedicated header file
+* New Arduino-compatible library structure to allow easier integration and more consistent updates across version
+* Included a complete set of examples which can be loaded directly from the Arduino IDE
+* Simplified the template sketch with a global nodeManager object and sensors that can be imported directly from there
+* Debug output is now fully compatible with the one used by the MySensors library and integrated into MySensors LogParser
+* Better control on how often, if and when to sync the time with the controller for time-aware nodes
+* Added a Measure Timer so to allow splitting between taking measures and reporting
+* Added support for every sensor to keep track of the last value assigned to a child in EEPROM and restoring it upon a reboot
+* Introduced new capabilities for reporting every minute/hour/day or only at a given minute/hour/day
+* Added ability to read from the serial port at the end of each loop cycle, useful for debugging interactive sensors
+* Added support for pH sensor
+* Added support for PCA9685 as RGB/RGBW/W dimmer
+* Added support for DSM501A dust sensor 
+* Added support for PN532 NFC RFID module
+* Added support for CCS811 CO2/VOC sensor 
+* Added support for MPR121 Capacitive Touch Sensor
+* Added support for serial GSM/SMS device
+* Added support for FPM10A fingerprint sensor
+* Added support for SDS011 Air quality sensor
+* Added support for ESP32 devices
+* Added support for nRF52 radio
+* Improved SensorDigitalInput and NeoPixelSensor
+* Si7021 sensor is now using the library from the MySensors example
+* Reviewed the MQ Sensor implementation
+* Optimized memory utilization
+* Added Travis Continuous Integration tests
+* Fixed wrong battery report when using battery pin and SensorRain/SensorSoilMoisture
+* Fixed DigitalOutput safeguard not working as expected
+* Fixed radio signal level reporting wrong values
+* Fixed SensorLatchingRelay2Pins wrong pin selection
+* Other minor bug fixes
