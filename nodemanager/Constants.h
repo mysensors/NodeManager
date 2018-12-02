@@ -24,7 +24,7 @@ Constants: define all the constants used by NodeManager
 */
 
 // define NodeManager version
-#define VERSION "1.8-dev"
+#define VERSION "1.9-dev"
 
 // define on/off
 #define OFF 0

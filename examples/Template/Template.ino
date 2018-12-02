@@ -378,6 +378,7 @@ void before() {
    * Configure your sensors
    */
    
+  // EXAMPLES:
   // report measures of every attached sensors every 10 seconds
   //nodeManager.setReportIntervalSeconds(10);
   // report measures of every attached sensors every 10 minutes
