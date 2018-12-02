@@ -67,6 +67,14 @@ enum value_format {
 	STRING
 };
 
+#if NODEMANAGER_CONDITIONAL_REPORT == ON
+// define update last value modes
+enum last_value_mode {
+	UPDATE_ALWAYS,
+	UPDATE_ON_SEND
+};
+#endif
+
 /***********************************
 Chip type
 */

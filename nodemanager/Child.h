@@ -73,6 +73,8 @@ public:
 	float getValueFloat();
 	double getValueDouble();
 	const char* getValueString();
+	// check if the value must be sended back to the controller
+	bool valueReadyToSend();
 	// send the current value to the gateway
 	void sendValue(bool force = 0);
 	// print the current value on a LCD display
@@ -88,6 +90,8 @@ public:
 	void setMaxThreshold(float value);
 	// do not report values if too close to the previous one (default: 0)
 	void setValueDelta(float value);
+	// set when the last value is updated. Possible values are UPDATE_ALWAYS (at every cycle), UPDATE_ON_SEND (only after sending) (default: UPDATE_ON_SEND)
+	void setUpdateLastValue(last_value_mode value);
 	// get the last value of the child
 	int getLastValueInt();
 	float getLastValueFloat();
@@ -125,6 +129,7 @@ protected:
 	float _min_threshold = -FLT_MAX;
 	float _max_threshold = FLT_MAX;
 	float _value_delta = 0;
+	last_value_mode _last_value_mode = UPDATE_ON_SEND;
 #endif
 #if NODEMANAGER_EEPROM == ON
 	bool _persist_value = false;
