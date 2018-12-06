@@ -1,0 +1,19 @@
+{
+    "name": MySensors NodeManager",
+    "version":"1.8.0",
+    "keywords":["framework", "sensor", "rf", "Mysensors"],
+    "description":"Frontend for your MySensors projects.",
+    "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/mysensors/NodeManager.git",
+  },
+  "frameworks": "arduino",,
+  "platforms":  ["atmelavr", "atmelsam", "espressif8266"],
+  "dependencies":
+  {
+    "name": "MySensors",
+    "frameworks": "arduino"
+  }
+
+}
