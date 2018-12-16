@@ -53,14 +53,13 @@ public:
 	
 	// define what to do during loop
 	void onLoop(Child* child) {
-		if (child == children.get(1)) {
-			// get PM 1.0 - density of particles over 1 µm.
-			child->setValue((int)(_getPM(_pin_10));
-		}
-		if (child == children.get(2)) {
-			// get PM 2.5 density of particles over 2.5 µm.
-			child->setValue((int)_getPM(_pin_25));
-		}
+		int ppm = -1;
+		// get PM 1.0 - density of particles over 1 µm.
+		if (child == children.get(1)) ppm = (int)(_getPM(_pin_10);
+		// get PM 2.5 density of particles over 2.5 µm.
+		if (child == children.get(2)) ppm = (int)(_getPM(_pin_25);
+		// set the value if positive (e.g. negative = invalid read)
+		if (ppm > 0) child->setValue(ppm);
 	};
 	
 	// return PM concentration
