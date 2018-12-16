@@ -55,7 +55,7 @@ public:
 	void onLoop(Child* child) {
 		if (child == children.get(1)) {
 			// get PM 1.0 - density of particles over 1 µm.
-			child->setValue((int)((_getPM(_pin_10)*0.0283168/100/1000) *  (0.08205*_temperature)/0.01));
+			child->setValue((int)(_getPM(_pin_10));
 		}
 		if (child == children.get(2)) {
 			// get PM 2.5 density of particles over 2.5 µm.
