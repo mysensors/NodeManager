@@ -46,7 +46,13 @@ public:
 	void onReceive(MyMessage* message) {
 		Child* child = getChild(message->sensor);
 		if (child == nullptr) return;
-		if (message->getCommand() == C_REQ && message->type == child->getType()) {
+		// heandle a SET command
+	    if (message->getCommand() == C_SET && message->type == child->getType()) {
+		    // set the pulse counter to the received value
+            children.get()->setValue(message->getFloat());
+		}
+	    // handle REQ command
+        if (message->getCommand() == C_REQ && message->type == child->getType()) {
 			// send the accumulated value so far
 			children.get()->sendValue();
 		}
