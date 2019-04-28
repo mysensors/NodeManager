@@ -49,6 +49,7 @@ public:
 		// heandle a SET command
 	    if (message->getCommand() == C_SET && message->type == child->getType()) {
 		    // set the pulse counter to the received value
+            children.get()->reset();
             children.get()->setValue(message->getFloat());
 		}
 	    // handle REQ command
