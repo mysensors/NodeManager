@@ -46,7 +46,7 @@ public:
 	void onReceive(MyMessage* message) {
 		Child* child = getChild(message->sensor);
 		if (child == nullptr) return;
-		// heandle a SET command
+		// handle SET command
 	    if (message->getCommand() == C_SET && message->type == child->getType()) {
 		    // set the pulse counter to the received value
             children.get()->reset();
