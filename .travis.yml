@@ -46,7 +46,7 @@ jobs:
        - eval $COMPILE
     - name: "Empty Sketch (RFM69 radio)"
       script: 
-       - sed -r -i 's/(#define MY_RADIO_NRF24)/\/\/\1/' $SKETCH
+       - sed -r -i 's/(#define MY_RADIO_RF24)/\/\/\1/' $SKETCH
        - sed -r -i 's/\/\/(#define MY_RADIO_RFM69)/\1/' $SKETCH
        - sed -r -i 's/\/\/(#define MY_IS_RFM69HW)/\1/' $SKETCH
        - sed -r -i 's/\/\/(#define MY_RFM69_NEW_DRIVER)/\1/' $SKETCH

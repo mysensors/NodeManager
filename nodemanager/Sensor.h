@@ -64,6 +64,8 @@ public:
 	List<Child*> children;
 	// return the child object based on the provided child_id
 	Child* getChild(uint8_t child_id);
+	// return the child object based on the provided child_id and type
+	Child* getChild(uint8_t child_id, uint8_t child_type);
 	// register a child
 	void registerChild(Child* child);
 #if NODEMANAGER_INTERRUPTS == ON

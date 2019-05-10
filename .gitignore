@@ -1,7 +1,9 @@
+.vscode
 .DS_Store
 *.autosave
 *.save
 *~
 *.tmp
+*.bak
 *.part
 *.rsls

@@ -36,7 +36,7 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 //#define MY_NODE_ID 99
 
 // NRF24 radio settings
-#define MY_RADIO_NRF24
+#define MY_RADIO_RF24
 //#define MY_RF24_ENABLE_ENCRYPTION
 //#define MY_RF24_CHANNEL 125
 //#define MY_RF24_PA_LEVEL RF24_PA_HIGH
@@ -366,6 +366,14 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 
 //#include <sensors/SensorGSM.h>
 //SensorGSM gsm(6,7);
+
+
+////Air conditioning (HVAC)
+//#include <sensors/SensorHVAC.h>
+////declare heatpump
+//MitsubishiFDHeatpumpIR heatpumpIR;
+//SensorHVAC hvac(MYSX_D4, &heatpumpIR);
+
 
 /***********************************
  * Main Sketch
