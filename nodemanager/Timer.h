@@ -42,8 +42,8 @@ public:
 	bool isOver();
 private:
 	timer_mode _mode = NOT_CONFIGURED;
-	unsigned long _value = 0;
-	unsigned long _target = 0;
+	unsigned long _value = 0;  // s
+	unsigned long _target = 0;  // ms
 	bool _is_running = false;
 #if NODEMANAGER_TIME == ON
 	bool _already_reported = false;

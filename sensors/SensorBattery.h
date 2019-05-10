@@ -97,7 +97,7 @@ public:
 		}
 		volt = volt * _battery_adj_factor;
 		child->setValue(volt);
-		if (_send_battery_level) {
+		if (_send_battery_level && child->valueReadyToSend()) {
 			// calculate the percentage
 			int percentage = ((volt - _battery_min) / (_battery_max - _battery_min)) * 100;
 			if (percentage > 100) percentage = 100;

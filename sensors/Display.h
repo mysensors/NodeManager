@@ -35,6 +35,9 @@ public:
 		new Child(this,STRING,nodeManager.getAvailableChildId(child_id), S_INFO, V_TEXT,_name);
 		// prevent reporting to the gateway at each display update
 		setReportTimerMode(DO_NOT_REPORT);
+		// refresh the display every minute by default
+		setMeasureTimerValue(TIME_INTERVAL);
+		setMeasureTimerValue(60UL);
 	};
 
 	// set a static caption text on header of the display

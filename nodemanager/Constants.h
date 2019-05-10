@@ -24,7 +24,7 @@ Constants: define all the constants used by NodeManager
 */
 
 // define NodeManager version
-#define VERSION "1.8-dev"
+#define VERSION "1.9-dev"
 
 // define on/off
 #define OFF 0
@@ -66,6 +66,14 @@ enum value_format {
 	DOUBLE,
 	STRING
 };
+
+#if NODEMANAGER_CONDITIONAL_REPORT == ON
+// define update last value modes
+enum last_value_mode {
+	UPDATE_ALWAYS,
+	UPDATE_ON_SEND
+};
+#endif
 
 /***********************************
 Chip type

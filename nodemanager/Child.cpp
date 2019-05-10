@@ -136,23 +136,23 @@ const char* Child::getValueString(){
 	return _value_string;
 }
 
-// send the value back to the controller
-void Child::sendValue(bool force) {
+
+// check if the value must be sended back to the controller
+bool Child::valueReadyToSend() {
 	// do not send if no samples have been collected, unless instructed otherwise
-	if (! _send_without_value && _samples == 0) return;
+	if (!_send_without_value && _samples == 0) return false;
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
-	// ignore conditional reporting settings if forced to report or if it is the first run
-	if (! force || ! _sensor->getFirstRun()) {
+	// ignore conditional reporting settings if it is the first run
+	if (!_sensor->getFirstRun()) {
 		// if the value is a number
 		if (_format != STRING) {
 			// if below or above the thresholds, do not send the value
-			if (_value < _min_threshold || _value > _max_threshold) return;
-			// if the force update timer is over, send the value regardless and restart it
-			if (_force_update_timer->isOver()) _force_update_timer->start();
-			else {
+			if (_value < _min_threshold || _value > _max_threshold) return false;
+			// if the force update timer is over, send the value
+			if (!_force_update_timer->isOver()) {
 				// if the value does not differ enough from the previous one, do not send the value
 				if (_value > (_last_value - _value_delta) && _value < (_last_value + _value_delta)) {
-					return;
+					return false;
 				}
 			}
 		}
@@ -160,14 +160,36 @@ void Child::sendValue(bool force) {
 		else {
 			// if a delta is configured, do not report if the string is the same as the previous one
 			if (_value_delta > 0 && strcmp(_value_string, _last_value_string) == 0) {
-				return;
+				return false;
 			}
 		}
 	}
+#endif
+	return true;
+}
+
+
+// send the value back to the controller
+void Child::sendValue(bool force) {
+
+#if NODEMANAGER_CONDITIONAL_REPORT == ON
+	// update last value if mode = UPDATE_ALWAYS
+	if (_last_value_mode == UPDATE_ALWAYS) _last_value = _value;
+#endif
+
+	// ignore conditional reporting settings if forced to report
+	if (!force && !valueReadyToSend()) return;
+
+	// we report value
+#if NODEMANAGER_CONDITIONAL_REPORT == ON
+	// if the force update timer is over restart it
+	if (_force_update_timer->isOver()) _force_update_timer->start();
+
 	// keep track of the previous value
 	if (_format != STRING) _last_value = _value;
 	else _last_value_string = _value_string;
 #endif
+
 	// send the value to the gateway
 	if (_format == INT) nodeManager.sendMessage(_child_id,_type,(int)_value);
 	if (_format == FLOAT) nodeManager.sendMessage(_child_id,_type,(float)_value,_float_precision);
@@ -217,6 +239,9 @@ void Child::setMaxThreshold(float value) {
 void Child::setValueDelta(float value) {
 	_value_delta = value;
 }
+void Child::setUpdateLastValue(last_value_mode value) {
+	_last_value_mode = value;
+}
 
 // return the last value of the child in the requested format
 int Child::getLastValueInt() {
@@ -232,6 +257,7 @@ const char* Child::getLastValueString(){
 	return _last_value_string;
 }
 #endif
+
 #if NODEMANAGER_EEPROM == ON
 // setter/getter
 void Child::setPersistValue(bool value) {
