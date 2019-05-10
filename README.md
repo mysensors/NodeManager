@@ -146,6 +146,7 @@ SensorPN532              | 1     | PN532 NFC RFID Module                        
 SensorCCS811             | 1     | CCS811 gas/Air Quality sensor. Measure VOC and eCO2                                               | https://github.com/adafruit/Adafruit_CCS811
 SensorMPR121             | 1     | MPR121-based capacitive touch control sensor                                                      | https://github.com/adafruit/Adafruit_MPR121
 SensorGSM                | 1     | Send SMS through an attached serial modem (e.g. SIM900)                                           | -
+SensorHVAC               | 3     | Control Air conditioner through an attached IR led                                                | https://github.com/ToniA/arduino-heatpumpir
 
 Those sensors requiring a pin to operate would take it as an argument in the constructor. 
 NodeManager automatically creates all the child_ids, assigning an incremental counter. If you need to set your own child_id, pass it as the last argument to the constructor
