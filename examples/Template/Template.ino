@@ -20,7 +20,7 @@
 /**************************
 Template
 
-This sketch can be used as a template since containing the most relevant MySensors library configuration settings, 
+This sketch can be used as a template since containing the most relevant MySensors library configuration settings,
 NodeManager's settings, all its the supported sensors commented out and a sketch structure fully functional to operate with
 NodeManager. Just uncomment the settings you need and the sensors you want to add and configure the sensors in before()
 */
@@ -109,7 +109,7 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 /**********************************
  * MySensors gateway configuration
  */
- 
+
 // Common gateway settings
 //#define MY_REPEATER_FEATURE
 
@@ -180,7 +180,7 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
  */
 
 //PowerManager power(5,6);
- 
+
 //#include <sensors/SensorBattery.h>
 //SensorBattery battery;
 
@@ -204,6 +204,9 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 
 //#include <sensors/SensorThermistor.h>
 //SensorThermistor thermistor(A0);
+
+//#include <sensors/SensorTMP102.h>
+//SensorTMP102 tmp102;
 
 //#include <sensors/SensorML8511.h>
 //SensorML8511 ml8511(A0);
@@ -373,11 +376,11 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 
 // before
 void before() {
-	
+
   /***********************************
    * Configure your sensors
    */
-   
+
   // EXAMPLES:
   // report measures of every attached sensors every 10 seconds
   //nodeManager.setReportIntervalSeconds(10);
