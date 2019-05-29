@@ -128,7 +128,8 @@ jobs:
        - eval $COMPILE
     - name: "SensorTMP102"
       script:
-       - arduino --install-library "Sensor_TMP102"
+       - wget https://github.com/Yannicked/Sensor_TMP102/archive/master.zip && unzip master.zip
+       - sudo cp -r Sensor_TMP102-master /usr/local/share/arduino/libraries
        - sed -r -i 's/\/\/(SensorTMP102 .+)/\1/' $SKETCH
        - sed -r -i 's/\/\/(#include <sensors\/SensorTMP102.h>)/\1/' $SKETCH
        - eval $COMPILE
