@@ -128,6 +128,7 @@ jobs:
        - eval $COMPILE
     - name: "SensorTMP102"
       script:
+       - arduino --install-library "Sensor_TMP102"
        - sed -r -i 's/\/\/(SensorTMP102 .+)/\1/' $SKETCH
        - sed -r -i 's/\/\/(#include <sensors\/SensorTMP102.h>)/\1/' $SKETCH
        - eval $COMPILE
