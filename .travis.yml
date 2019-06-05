@@ -309,14 +309,15 @@ jobs:
        - sed -r -i 's/\/\/(#include <sensors\/SensorMHZ19.h>)/\1/' $SKETCH
        - eval $OTA_CONFIGURATION
        - eval $COMPILE
-    - name: "SensorAM2320"
-      script:
-       - wget https://github.com/thakshak/AM2320/archive/master.zip && unzip master.zip
-       - sudo cp -r AM2320-master/AM2320 /usr/local/share/arduino/libraries
-       - sed -r -i 's/\/\/(SensorAM2320 .+)/\1/' $SKETCH
-       - sed -r -i 's/\/\/(#include <sensors\/SensorAM2320.h>)/\1/' $SKETCH
-       - eval $OTA_CONFIGURATION
-       - eval $COMPILE
+    # This needs to be fixed first https://github.com/thakshak/AM2320/pull/9
+    # - name: "SensorAM2320"
+    #   script:
+    #    - wget https://github.com/thakshak/AM2320/archive/master.zip && unzip master.zip
+    #    - sudo cp -r AM2320-master/AM2320 /usr/local/share/arduino/libraries
+    #    - sed -r -i 's/\/\/(SensorAM2320 .+)/\1/' $SKETCH
+    #    - sed -r -i 's/\/\/(#include <sensors\/SensorAM2320.h>)/\1/' $SKETCH
+    #    - eval $OTA_CONFIGURATION
+    #    - eval $COMPILE
     - name: "SensorTSL2561"
       script:
        - wget https://github.com/adafruit/TSL2561-Arduino-Library/archive/master.zip && unzip master.zip

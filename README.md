@@ -586,6 +586,19 @@ Each sensor class may expose additional methods.
     void setOffset(float value);
 ~~~
 
+* SensorTMP102
+~~~c
+    /* Can be:
+    Sensor_TMP102::RATE_SINGLE_SHOT (reads temperature only when requested) takes about 50 ms
+    Sensor_TMP102::RATE_025HZ (reads temperature at 0.25Hz intervals) faster than single shot
+    Sensor_TMP102::RATE_1HZ (reads temperature at 1Hz intervals)
+    etc.
+    */
+    void setConversionRate(Sensor_TMP102::conversion_rate rate);
+    // Set the TMP102 to extended mode (temperatures above 128*C)
+    void setExtended(bool extended);
+~~~
+
 * SensorACS712
 ~~~c
 	// [101] set how many mV are equivalent to 1 Amp. The value depends on the module (185 for 5A Module, 100 for 20A Module, 66 for 30A Module) (default: 185);
