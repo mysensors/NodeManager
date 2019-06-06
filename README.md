@@ -1006,6 +1006,16 @@ Each sensor class may expose additional methods.
 	void sendSMS(const char* text);
 ~~~
 
+* SensorMCP9808
+~~~c
+    // set I2C address (default: 0x18)
+    void setI2CAddress(uint8_t i2caddress);
+    // set temperature resolution (default: 3)
+    void setResolution(uint8_t resolution);
+    // sleep sensor after measurment (default: true)
+    void setSleep(bool value);
+~~~ 
+
 ### OTA Configuration
 
 When `NODEMANAGER_OTA_CONFIGURATION` is set to ON the API presented above can be also called remotely through `SensorConfiguration`, which is automatically added to NodeManager. SensorConfiguration exposes by default child id 200 that can be used to interact with the service by sending `V_CUSTOM` type of messages and commands within the payload. For each `REQ` message, the node will respond with a `SET` message if successful.
