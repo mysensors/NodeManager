@@ -33,7 +33,7 @@ Constants: define all the constants used by NodeManager
 // define board sleep status
 enum status {
 	AWAKE,
-	SLEEP	
+	SLEEP
 };
 
 //define Timer mode
@@ -110,8 +110,12 @@ Chip type
 #define INTERRUPT_PIN_1 PB8
 #define INTERRUPT_PIN_2 2
 #else
+#ifndef INTERRUPT_PIN_1
 #define INTERRUPT_PIN_1 3
+#endif
+#ifndef INTERRUPT_PIN_2
 #define INTERRUPT_PIN_2 2
+#endif
 #endif
 
 // define eeprom addresses
