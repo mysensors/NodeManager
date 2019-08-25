@@ -91,7 +91,7 @@ SensorLDR                | 1     | LDR sensor, return the light level of an atta
 SensorRain               | 1     | Rain sensor, return the percentage of rain from an attached analog sensor                         | -
 SensorSoilMoisture       | 1     | Soil moisture sensor, return the percentage of moisture from an attached analog sensor            | -
 SensorThermistor         | 1     | Thermistor sensor, return the temperature based on the attached thermistor                        | -
-SensorTMP102         		 | 1     | Temperature sensor, return the temperature based on the TMP102 sensor		                         | https://github.com/Yannicked/Sensor_TMP102
+SensorTMP102             | 1     | Temperature sensor, return the temperature based on the TMP102 sensor	                         | https://github.com/Yannicked/Sensor_TMP102
 SensorML8511             | 1     | ML8511 sensor, return UV intensity                                                                | -
 SensorACS712             | 1     | ACS712 sensor, measure the current going through the attached module                              | -
 SensorDigitalInput       | 1     | Generic digital sensor, return a pin's digital value                                              | -
@@ -147,6 +147,7 @@ SensorPN532              | 1     | PN532 NFC RFID Module                        
 SensorCCS811             | 1     | CCS811 gas/Air Quality sensor. Measure VOC and eCO2                                               | https://github.com/adafruit/Adafruit_CCS811
 SensorMPR121             | 1     | MPR121-based capacitive touch control sensor                                                      | https://github.com/adafruit/Adafruit_MPR121
 SensorGSM                | 1     | Send SMS through an attached serial modem (e.g. SIM900)                                           | -
+SensorWaterLeak          | 1     | Water leak sensor; via an interrupt, wake up the board and report when a leak is detected         | -
 
 Those sensors requiring a pin to operate would take it as an argument in the constructor.
 NodeManager automatically creates all the child_ids, assigning an incremental counter. If you need to set your own child_id, pass it as the last argument to the constructor
@@ -643,7 +644,7 @@ Each sensor class may expose additional methods.
     void toggleStatus(int value);
 ~~~
 
-*  SensorInterrupt / SensorDoor / SensorMotion
+*  SensorInterrupt / SensorDoor / SensorMotion / SensorWaterLeak
 ~~~c
     // [105] Invert the value to report. E.g. if FALLING and value is LOW, report HIGH (default: false)
     void setInvertValueToReport(bool value);
