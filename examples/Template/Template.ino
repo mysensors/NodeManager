@@ -370,6 +370,9 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 //#include <sensors/SensorGSM.h>
 //SensorGSM gsm(6,7);
 
+//#include <sensors/SensorWaterLeak.h>
+//SensorWaterLeak waterLeak(3);
+
 /***********************************
  * Main Sketch
  */
