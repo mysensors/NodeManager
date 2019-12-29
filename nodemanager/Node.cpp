@@ -737,6 +737,8 @@ void NodeManager::setAnalogReference(uint8_t value, uint8_t pin) {
 	if (value == _analog_reference) return;
 	// change the analog reference
 	analogReference(value);
+	// update _analog_reference
+	_analog_reference = value;
 	// wait a bit 
 	wait(200);
 	// perform some reading before actually reading the value
