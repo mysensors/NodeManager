@@ -105,6 +105,11 @@ void Child::setValue(const char* value) {
 // store a new value and update the total
 void Child::_setValueNumber(double value) {
 	if (isnan(value)) return;
+	// this is the first measure after a send(), reset _value and _total
+	if (_samples == 0) {
+		_value = 0; 
+		_total = 0;
+	}
 	if (_value_processing != NONE) _total = _total + value;
 	// keep track of the samples
 	_samples++;
@@ -211,15 +216,12 @@ void Child::print(Print& device) {
 void Child::reset() { 
 	if (_format != STRING) {
 		if (_value_processing != NONE) {
-			// reset the counters
-			_total = 0;
-			_value = 0;
 #if NODEMANAGER_EEPROM == ON
 			// if the value is supposed to be persisted in EEPROM, save it
 			if (_persist_value) saveValue();
 #endif
 		}
-	} else _value_string = "";
+	}
 	_samples = 0;
 }
 
