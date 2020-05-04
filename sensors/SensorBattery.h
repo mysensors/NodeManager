@@ -87,11 +87,10 @@ public:
 		if (_battery_internal_vcc || _battery_pin == -1) volt = (float)hwCPUVoltage()/1000;
 		else {
 			// when measuring the battery from a pin, analog reference must be internal
-#ifdef CHIP_AVR
-			nodeManager.setAnalogReference(INTERNAL);
-#endif
-#ifdef CHIP_MEGA
+#if defined(CHIP_MEGA)
 			nodeManager.setAnalogReference(INTERNAL1V1);
+#elif defined(CHIP_AVR)
+			nodeManager.setAnalogReference(INTERNAL);
 #endif
 			volt = analogRead(_battery_pin) * _battery_volts_per_bit;
 		}
