@@ -47,7 +47,7 @@ and send a command back if needed.
 #define MY_NODE_ID 99
 
 // NRF24 radio settings
-#define MY_RADIO_NRF24
+#define MY_RADIO_RF24
 
 /***********************************
 * NodeManager configuration
