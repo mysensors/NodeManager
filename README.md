@@ -99,8 +99,8 @@ SensorDigitalOutput      | 1     | Generic digital output sensor, allows setting
 SensorRelay              | 1     | Relay sensor, allows activating the relay                                                         | -
 SensorLatchingRelay1Pin  | 1     | Latching Relay sensor, allows toggling the relay with a pulse on the configured pin               | -
 SensorLatchingRelay2Pins | 1     | Latching Relay sensor, allows turing the relay on and off with a pulse on the configured pins     | -
-SensorDHT11              | 2     | DHT11 sensor, return temperature/humidity based on the attached DHT sensor                        | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/DHT
-SensorDHT22              | 2     | DHT22 sensor, return temperature/humidity based on the attached DHT sensor                        | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/DHT
+SensorDHT11              | 2     | DHT11 sensor, return temperature/humidity based on the attached DHT sensor                        | https://github.com/markruys/arduino-DHT
+SensorDHT22              | 2     | DHT22 sensor, return temperature/humidity based on the attached DHT sensor                        | https://github.com/markruys/arduino-DHT
 SensorSHT21              | 2     | SHT21 sensor, return temperature/humidity based on the attached SHT21 sensor                      | https://github.com/SodaqMoja/Sodaq_SHT2x
 SensorHTU21D             | 2     | HTU21D sensor, return temperature/humidity based on the attached HTU21D sensor                    | https://github.com/SodaqMoja/Sodaq_SHT2x
 SensorInterrupt          | 1     | Generic interrupt-based sensor, wake up the board when a pin changes status                       | -
