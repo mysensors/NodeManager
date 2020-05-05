@@ -561,7 +561,7 @@ void NodeManager::loop() {
 		for (int i = 0; i < _retries; i++) {
 			if (mGetPayloadType(_message) == P_INT16) debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%d\n"),_message.sensor,_message.type,_message.getInt());
 			if (mGetPayloadType(_message) == P_LONG32) debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%ld\n"),_message.sensor,_message.type,_message.getLong());
-			if (mGetPayloadType(_message) == P_FLOAT32) debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%d.%02d\n"),_message.sensor,_message.type,(unsigned int)_message.getFloat(), (unsigned int)(_message.getFloat()*100)%100);
+			if (mGetPayloadType(_message) == P_FLOAT32) debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%d.%03d\n"),_message.sensor,_message.type,(unsigned int)_message.getFloat(), (unsigned int)(_message.getFloat()*100)%100);
 			if (mGetPayloadType(_message) == P_STRING) debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%s\n"),_message.sensor,_message.type,_message.getString());
 			send(_message, _ack);
 			// if configured, sleep between each send

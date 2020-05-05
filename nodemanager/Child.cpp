@@ -201,7 +201,7 @@ void Child::sendValue(bool force) {
 	if (_format == DOUBLE) nodeManager.sendMessage(_child_id,_type,_value,_float_precision);
 	if (_format == STRING) nodeManager.sendMessage(_child_id,_type,_value_string);
 	// reset the counters
-	reset();
+	if (_value_processing != SUM) reset();
 }
 
 // print the child value to a device
