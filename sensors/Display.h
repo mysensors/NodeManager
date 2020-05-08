@@ -36,7 +36,7 @@ public:
 		// prevent reporting to the gateway at each display update
 		setReportTimerMode(DO_NOT_REPORT);
 		// refresh the display every minute by default
-		setMeasureTimerValue(TIME_INTERVAL);
+		setMeasureTimerMode(TIME_INTERVAL);
 		setMeasureTimerValue(60UL);
 	};
 

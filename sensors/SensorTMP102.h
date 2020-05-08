@@ -16,57 +16,62 @@
 * modify it under the terms of the GNU General Public License
 * version 2 as published by the Free Software Foundation.
 */
-#ifndef SensorDHT_h
-#define SensorDHT_h
+#ifndef SensorTMP102_h
+#define SensorTMP102_h
 
 /*
-SensorDHT
+SensorTMP102: temperature and humidity sensor
 */
 
-#include <DHT.h>
+#include <Wire.h>
+#include <Sensor_TMP102.h>
 
-class SensorDHT: public Sensor {
-	
+class SensorTMP102: public Sensor {
 protected:
-	DHT* _dht;
-	int _dht_type;
-	float _offset = 0;
-	
+	Sensor_TMP102* _tmp102;
+	uint8_t _address;
+	bool _single_shot;
+
 public:
-	SensorDHT(int8_t pin, uint8_t child_id = 0): Sensor(pin) {
-		_name = "DHT";
-		_dht_type = DHT::DHT11;
-		children.allocateBlocks(2);
+	SensorTMP102(uint8_t address = 0x48, bool single_shot = false, uint8_t child_id = 0): Sensor(-1) {
+		_name = "TMP102";
+		children.allocateBlocks(1);
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
-		new Child(this,FLOAT,child_id > 0 ? nodeManager.getAvailableChildId(child_id+1) : nodeManager.getAvailableChildId(child_id),S_HUM,V_HUM,_name);
-	};
+		_address = address;
+		_single_shot = single_shot;
+	}
+
+	/* Can be:
+	RATE_SINGLE_SHOT (reads temperature only when requested) takes about 50 ms
+	RATE_025HZ (reads temperature at 0.25Hz intervals) faster than single shot
+	RATE_1HZ (reads temperature at 1Hz intervals)
+	etc.
+	*/
+	void setConversionRate(Sensor_TMP102::conversion_rate rate) {
+		_tmp102->setConversionRate(rate);
+	}
+
+	// Set the TMP102 to extended mode (temperatures above 128*C)
+	void setExtended(bool extended) {
+		_tmp102->setExtended(extended);
+	}
 
 	// define what to do during setup
 	void onSetup() {
-		// store the dht object
-		_dht = new DHT();
-		// initialize the dht library
-		_dht->setup(_pin,(DHT::DHT_MODEL_t)_dht_type);
+		_tmp102 = new Sensor_TMP102(_single_shot);
+		_tmp102->begin(_address);
 	};
-	
-	// define what to do during setup
+
+	// define what to do during loop
 	void onLoop(Child* child) {
-		nodeManager.sleepOrWait(_dht->getMinimumSamplingPeriod()+100);
-		_dht->readSensor(true);
 		// temperature sensor
 		if (child->getType() == V_TEMP) {
 			// read the temperature
-			float temperature = _dht->getTemperature();
-			if (!nodeManager.getIsMetric()) temperature = _dht->toFahrenheit(temperature);
+			float temperature = _tmp102->readTemperature();
+			// convert it
+			temperature = nodeManager.celsiusToFahrenheit(temperature);
 			// store the value
 			child->setValue(temperature);
-		}
-		// humidity sensor
-		else if (child->getType() == V_HUM) {
-			// read humidity
-			float humidity = _dht->getHumidity();
-			// store the value
-			child->setValue(humidity);
 		}
 	};
 };

@@ -265,8 +265,6 @@ void NodeManager::loop() {
 		if (_last_interrupt_pin != -1 && sensor->getInterruptPin() == _last_interrupt_pin) {
 			// call the sensor interrupt() and then loop(), provided the interrupt has been "accepted" by interrupt()
 			if (sensor->interrupt()) sensor->loop(nullptr);
-			// reset the last interrupt pin
-			_last_interrupt_pin = -1;
 		}
 		else if (_last_interrupt_pin == -1) {
 #endif
@@ -276,6 +274,8 @@ void NodeManager::loop() {
 		}
 #endif
 	}
+	// reset the last interrupt pin
+	_last_interrupt_pin = -1;
 #if NODEMANAGER_POWER_MANAGER == ON
 	// turn off the pin powering all the sensors
 	powerOff();
@@ -737,6 +737,8 @@ void NodeManager::setAnalogReference(uint8_t value, uint8_t pin) {
 	if (value == _analog_reference) return;
 	// change the analog reference
 	analogReference(value);
+	// update _analog_reference
+	_analog_reference = value;
 	// wait a bit 
 	wait(200);
 	// perform some reading before actually reading the value

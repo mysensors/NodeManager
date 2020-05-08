@@ -143,7 +143,7 @@ void Sensor::presentation() {
 	for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
 		Child* child = *itr;
 		debug(PSTR(LOG_PRESENTATION "%s(%d) p=%d t=%d\n"),child->getDescription(),child->getChildId(),child->getPresentation(),child->getType());
-		present(child->getChildId(), child->getPresentation(), child->getDescription(), nodeManager.getAck());
+		present(child->getChildId(), static_cast<mysensors_sensor_t>(child->getPresentation()), child->getDescription(), nodeManager.getAck());
 	}
 }
 
