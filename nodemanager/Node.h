@@ -181,7 +181,11 @@ private:
 	uint8_t _reboot_pin = -1;
 	void _present(uint8_t child_id, uint8_t type);
 	List<Timer*> _timers;
+#if defined(ARDUINO_ARCH_STM32F1)
+	uint8_t _analog_reference = -1;
+#else
 	uint8_t _analog_reference = DEFAULT;
+#endif
 #if NODEMANAGER_INTERRUPTS == ON
 	uint8_t _interrupt_1_mode = MODE_NOT_DEFINED;
 	uint8_t _interrupt_2_mode = MODE_NOT_DEFINED;
