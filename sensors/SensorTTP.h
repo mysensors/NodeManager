@@ -30,7 +30,7 @@ protected:
 	int8_t _dv_pin = 3;
 	int8_t _rst_pin = 4;
 	int key = 0;
-	int ziro = 0;
+	int count = 0;
 	List<int> _passcode;
 	int _passcode_length = 4;
 	
@@ -109,6 +109,7 @@ public:
 protected:
 	// Send 8 clock pulses and check each data bit as it arrives
 	int _fetchData() {
+		count = 0;
 		for(int i = 1; i < 9; i++) {       
 			digitalWrite(_clock_pin,1);
 			delayMicroseconds(1000);
@@ -116,12 +117,12 @@ protected:
 			if(digitalRead(_sdo_pin) == HIGH)  
 			key=i; 
 			else 
-			ziro++;
+			count++;
 			digitalWrite(_clock_pin,0);
 			// Don't use delay(1) as it will mess up interrupts
 			delayMicroseconds(1000);  
 		}
-		if(key > 0 && ziro == 7) return key;
+		if(key > 0 && count == 7) return key;
 		return 0;
 	};
 };
