@@ -292,7 +292,7 @@ void Sensor::setReceiveHook(void (*function)(Sensor* sensor, MyMessage* message)
 // virtual functions
 void Sensor::onSetup(){
 }
-void Sensor::onLoop(Child* child){}
+void Sensor::onLoop(Child* /*child*/){}
 
 // by default when a child receive a REQ message and the type matches the type of the request, executes its onLoop function
 void Sensor::onReceive(MyMessage* message){
@@ -302,7 +302,7 @@ void Sensor::onReceive(MyMessage* message){
 }
 void Sensor::onInterrupt(){}
 #if NODEMANAGER_OTA_CONFIGURATION == ON
-void Sensor::onOTAConfiguration(ConfigurationRequest* request) {}
+void Sensor::onOTAConfiguration(ConfigurationRequest* /*request*/) {}
 #endif
 
 // evaluate the timer and return true if can be considered over
