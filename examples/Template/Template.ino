@@ -259,6 +259,7 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 //#include <sensors/SensorMLX90614.h>
 //SensorMLX90614 mlx90614;
 
+//#define NODEMANAGER_SENSOR_BOSCH_LITE
 //#include <sensors/SensorBME280.h>
 //SensorBME280 bme280;
 

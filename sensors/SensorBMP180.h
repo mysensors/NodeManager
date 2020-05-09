@@ -31,7 +31,9 @@ public:
 		_name = "BMP180";
 		children.get(1)->setDescription(_name);
 		children.get(2)->setDescription(_name);
+#if !defined(NODEMANAGER_SENSOR_BOSCH_LITE)
 		children.get(3)->setDescription(_name);
+#endif
 	};
 };
 #endif

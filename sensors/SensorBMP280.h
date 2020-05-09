@@ -36,10 +36,16 @@ protected:
 public:
 	SensorBMP280(uint8_t child_id = 0): SensorBosch(child_id) {
 		_name = "BMP280";
+#if !defined(NODEMANAGER_SENSOR_BOSCH_LITE)
 		children.allocateBlocks(3);
+#else
+		children.allocateBlocks(2);
+#endif
 		new Child(this,FLOAT,nodeManager.getAvailableChildId(child_id),S_TEMP,V_TEMP,_name);
 		new Child(this,FLOAT,child_id > 0 ? nodeManager.getAvailableChildId(child_id+1) : nodeManager.getAvailableChildId(child_id),S_BARO,V_PRESSURE,_name);
+#if !defined(NODEMANAGER_SENSOR_BOSCH_LITE)
 		new Child(this,STRING,child_id > 0 ? nodeManager.getAvailableChildId(child_id+2) : nodeManager.getAvailableChildId(child_id),S_BARO,V_FORECAST,_name);
+#endif
 
 	};
 
@@ -67,11 +73,13 @@ public:
 			// store the value
 			child->setValue(pressure);
 		}
+#if !defined(NODEMANAGER_SENSOR_BOSCH_LITE)
 		// Forecast Sensor
 		else if (child->getType() == V_FORECAST) {
 			float pressure = _bm->readPressure() / 100.0F;
 			child->setValue(_forecast(pressure));
 		}
+#endif
 	};
 };
 #endif
