@@ -29,16 +29,6 @@ NodeManager::NodeManager(uint8_t sensor_count) {
 	_message = MyMessage();
 	// allocate block for all the sensors if sensor_count is provided
 	if (sensor_count > 0) sensors.allocateBlocks(sensor_count);
-	// setup serial port baud rate
-#ifndef CHIP_NRF5
-	MY_SERIALDEVICE.begin(MY_BAUD_RATE);
-#endif
-	// print out the version
-	debug(PSTR(LOG_INIT "VER=" VERSION "\n"));
-	// print out sketch name
-	debug(PSTR(LOG_INIT "INO=" SKETCH_NAME " v" SKETCH_VERSION "\n"));
-	// print out MySensors' library capabilities
-	debug(PSTR(LOG_INIT "LIB VER=" MYSENSORS_LIBRARY_VERSION " CP=" MY_CAPABILITIES " \n"));
 }
 
 #if NODEMANAGER_INTERRUPTS == ON
@@ -152,15 +142,21 @@ void NodeManager::registerSensor(Sensor* sensor) {
 }
 
 // register a timer
-void NodeManager::registerTimer(Timer* timer) {
+void NodeManager::registerTimer(InternalTimer* timer) {
 	_timers.push(timer);
 }
 
 
 // setup NodeManager
 void NodeManager::before() {
+	// print out the version
+	debug(PSTR(LOG_INIT "VER=" VERSION "\n"));
+	// print out sketch name
+	debug(PSTR(LOG_INIT "INO=" SKETCH_NAME " v" SKETCH_VERSION "\n"));
+	// print out MySensors' library capabilities
+	debug(PSTR(LOG_INIT "LIB VER=" MYSENSORS_LIBRARY_VERSION " CP=" MY_CAPABILITIES " \n"));
 	// setup the reboot pin if needed
-	if (_reboot_pin > -1) {
+	if (_reboot_pin > 0) {
 		debug(PSTR(LOG_INIT "RBT p=%d\n"),_reboot_pin);
 		pinMode(_reboot_pin, OUTPUT);
 		digitalWrite(_reboot_pin, HIGH);
@@ -251,8 +247,8 @@ void NodeManager::loop() {
 	powerOn();
 #endif
 	// update all the registered timers
-	for (List<Timer*>::iterator itr = _timers.begin(); itr != _timers.end(); ++itr) {
-		Timer* timer = *itr;
+	for (List<InternalTimer*>::iterator itr = _timers.begin(); itr != _timers.end(); ++itr) {
+		InternalTimer* timer = *itr;
 		timer->update();
 	}
 	// run loop for all the registered sensors
@@ -348,7 +344,7 @@ void NodeManager::loop() {
 	// reboot the board
 	void NodeManager::reboot() {
 		debug(PSTR(LOG_POWER "RBT\n"));
-		if (_reboot_pin > -1) {
+		if (_reboot_pin > 0) {
 			// reboot the board through the reboot pin which is connected to RST by setting it to low
 			digitalWrite(_reboot_pin, LOW);
 		}
@@ -481,7 +477,7 @@ void NodeManager::loop() {
 	// setup the interrupt pins
 	void NodeManager::_setupInterrupts() {
 		// configure wakeup pin if needed
-		if (_sleep_interrupt_pin > -1) {
+		if (_sleep_interrupt_pin > 0) {
 			// set the interrupt when the pin is connected to ground
 			setInterrupt(_sleep_interrupt_pin,FALLING,HIGH);
 		}
@@ -559,10 +555,10 @@ void NodeManager::loop() {
 		_message.setType(type);
 		// send the message, multiple times if requested
 		for (int i = 0; i < _retries; i++) {
-			if (mGetPayloadType(_message) == P_INT16) debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%d\n"),_message.sensor,_message.type,_message.getInt());
-			if (mGetPayloadType(_message) == P_LONG32) debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%ld\n"),_message.sensor,_message.type,_message.getLong());
-			if (mGetPayloadType(_message) == P_FLOAT32) debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%d.%02d\n"),_message.sensor,_message.type,(unsigned int)_message.getFloat(), (unsigned int)(_message.getFloat()*100)%100);
-			if (mGetPayloadType(_message) == P_STRING) debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%s\n"),_message.sensor,_message.type,_message.getString());
+			if (mGetPayloadType(_message) == P_INT16) { debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%d\n"),_message.sensor,_message.type,_message.getInt()); }
+			if (mGetPayloadType(_message) == P_LONG32) { debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%ld\n"),_message.sensor,_message.type,_message.getLong()); }
+			if (mGetPayloadType(_message) == P_FLOAT32) { debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%d.%02d\n"),_message.sensor,_message.type,(unsigned int)_message.getFloat(), (unsigned int)(_message.getFloat()*100)%100); }
+			if (mGetPayloadType(_message) == P_STRING) { debug_verbose(PSTR(LOG_MSG "SEND(%d) t=%d p=%s\n"),_message.sensor,_message.type,_message.getString()); }
 			send(_message, _ack);
 			// if configured, sleep between each send
 			sleepBetweenSend();
@@ -742,7 +738,7 @@ void NodeManager::setAnalogReference(uint8_t value, uint8_t pin) {
 	// wait a bit 
 	wait(200);
 	// perform some reading before actually reading the value
-	if (pin > -1) {
+	if (pin > 0) {
 		for (int i = 0; i < 5; i++) {
 			analogRead(pin);
 			wait(50);

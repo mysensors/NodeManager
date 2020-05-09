@@ -20,14 +20,14 @@
 #define Timer_h
 
 /******************************************
-Timer: helper class to keep track of the elapsed time
+InternalTimer: helper class to keep track of the elapsed time
 */
 
 class NodeManager;
 
-class Timer {
+class InternalTimer {
 public:
-	Timer();
+	InternalTimer();
 	void setMode(timer_mode mode);
 	timer_mode getMode();
 	void setValue(unsigned long value);

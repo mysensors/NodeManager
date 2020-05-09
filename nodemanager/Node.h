@@ -72,7 +72,7 @@ public:
 	// register a sensor
 	void registerSensor(Sensor* sensor);
 	// register a timer
-	void registerTimer(Timer* timer);
+	void registerTimer(InternalTimer* timer);
 	// return the next-available child id
 	uint8_t getAvailableChildId(uint8_t child_id = 0);
 	// list containing all the registered sensors
@@ -84,7 +84,7 @@ public:
 	// sleep between send()
 	void sleepBetweenSend();
 	// set the analog reference to the given value and optionally perform some fake reading on the given pin
-	void setAnalogReference(uint8_t value, uint8_t pin = -1);
+	void setAnalogReference(uint8_t value, uint8_t pin = 0);
 #if NODEMANAGER_SLEEP == ON
 	// [3] set the duration (in seconds) of a sleep cycle
 	void setSleepSeconds(unsigned long value);
@@ -175,13 +175,17 @@ private:
 	void _sendMessage(uint8_t child_id, uint8_t type);
 	unsigned long _sleep_time = 0;
 	bool _sleep_or_wait = true;
-	uint8_t _sleep_interrupt_pin = -1;
+	uint8_t _sleep_interrupt_pin = 0;
 	unsigned int _sleep_between_send = 0;
 	unsigned long _report_interval_seconds = 10*60;
-	uint8_t _reboot_pin = -1;
+	uint8_t _reboot_pin = 0;
 	void _present(uint8_t child_id, uint8_t type);
-	List<Timer*> _timers;
+	List<InternalTimer*> _timers;
+#if defined(ARDUINO_ARCH_STM32F1)
+	uint8_t _analog_reference = -1;
+#else
 	uint8_t _analog_reference = DEFAULT;
+#endif
 #if NODEMANAGER_INTERRUPTS == ON
 	uint8_t _interrupt_1_mode = MODE_NOT_DEFINED;
 	uint8_t _interrupt_2_mode = MODE_NOT_DEFINED;

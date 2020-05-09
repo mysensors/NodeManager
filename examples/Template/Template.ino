@@ -121,8 +121,8 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 
 // ESP8266 gateway settings
 //#define MY_GATEWAY_ESP8266
-//#define MY_ESP8266_SSID ""
-//#define MY_ESP8266_PASSWORD ""
+//#define MY_WIFI_SSID ""
+//#define MY_WIFI_PASSWORD ""
 
 // Gateway networking settings
 //#define MY_IP_ADDRESS 192,168,178,87

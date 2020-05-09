@@ -29,8 +29,8 @@ Sensor::Sensor() {
 Sensor::Sensor(int8_t pin) {
 	_pin = pin;
 	// initialize the timers
-	_report_timer = new Timer();
-	_measure_timer = new Timer();
+	_report_timer = new InternalTimer();
+	_measure_timer = new InternalTimer();
 	// register the sensor with the node
 	nodeManager.registerSensor(this);
 }
@@ -292,7 +292,7 @@ void Sensor::setReceiveHook(void (*function)(Sensor* sensor, MyMessage* message)
 // virtual functions
 void Sensor::onSetup(){
 }
-void Sensor::onLoop(Child* child){}
+void Sensor::onLoop(Child* /*child*/){}
 
 // by default when a child receive a REQ message and the type matches the type of the request, executes its onLoop function
 void Sensor::onReceive(MyMessage* message){
@@ -302,11 +302,11 @@ void Sensor::onReceive(MyMessage* message){
 }
 void Sensor::onInterrupt(){}
 #if NODEMANAGER_OTA_CONFIGURATION == ON
-void Sensor::onOTAConfiguration(ConfigurationRequest* request) {}
+void Sensor::onOTAConfiguration(ConfigurationRequest* /*request*/) {}
 #endif
 
 // evaluate the timer and return true if can be considered over
-bool Sensor::_evaluateTimer(Timer* timer) {
+bool Sensor::_evaluateTimer(InternalTimer* timer) {
 	// timer is over
 	if (timer->isOver()) return true;
 	if (_first_run) {

@@ -100,22 +100,19 @@ Chip type
 #if defined (MYBOARDNRF5) || defined(NRF51) || defined(NRF52)
 #define CHIP_NRF5
 #endif
-#if !defined(CHIP_ESP8266) && !defined(CHIP_ESP32) && !defined(CHIP_STM32) && !defined(CHIP_NRF5)
+#if defined (SAMD_SERIES)
+#define CHIP_SAMD
+#endif
+#if !defined(CHIP_ESP8266) && !defined(CHIP_ESP32) && !defined(CHIP_STM32) && !defined(CHIP_NRF5) && !defined(CHIP_SAMD)
 #define CHIP_AVR
 #endif
 
 // define interrupt pins
-
-#if defined(CHIP_STM32)
-#define INTERRUPT_PIN_1 PB8
-#define INTERRUPT_PIN_2 2
-#else
 #ifndef INTERRUPT_PIN_1
 #define INTERRUPT_PIN_1 3
 #endif
 #ifndef INTERRUPT_PIN_2
 #define INTERRUPT_PIN_2 2
-#endif
 #endif
 
 // define eeprom addresses
