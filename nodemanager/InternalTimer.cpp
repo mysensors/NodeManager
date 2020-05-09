@@ -18,37 +18,37 @@
 */
 
 /******************************************
-Timer: helper class to keep track of the elapsed time
+InternalTimer: helper class to keep track of the elapsed time
 */
 
-#include "Timer.h"
+#include "InternalTimer.h"
 
-Timer::Timer() {
+InternalTimer::InternalTimer() {
 	nodeManager.registerTimer(this);
 }
 
 // set the timer mode
-void Timer::setMode(timer_mode mode) {
+void InternalTimer::setMode(timer_mode mode) {
 	_mode = mode;
 }
 
 // get the timer mode
-timer_mode Timer::getMode() {
+timer_mode InternalTimer::getMode() {
 	return _mode;
 }
 
 // set the timer value in seconds
-void Timer::setValue(unsigned long value) {
+void InternalTimer::setValue(unsigned long value) {
 	_value = value;
 }
 
 // get the timer value in seconds
-unsigned long Timer::getValue() {
+unsigned long InternalTimer::getValue() {
 	return _value;
 }
 
 // start/restart the timer
-void Timer::start() {
+void InternalTimer::start() {
 #if NODEMANAGER_TIME == ON
 	// target will be the current unix timestamp plus the requested
 	if (_mode == TIME_INTERVAL) _target = now() + _value;
@@ -64,12 +64,12 @@ void Timer::start() {
 }
 
 // stop the timer
-void Timer::stop() {
+void InternalTimer::stop() {
 	_is_running = false;
 }
 
 // update the timer and keep track of the elapsed time
-void Timer::update() {
+void InternalTimer::update() {
 #if NODEMANAGER_TIME == OFF && NODEMANAGER_SLEEP == ON
 	// if a sleeping node and time is not reliable take out from target the time slept in the previous cycle
 	if (_mode == TIME_INTERVAL && nodeManager.isSleepingNode()) _target -= nodeManager.getSleepSeconds()*1000UL;
@@ -77,7 +77,7 @@ void Timer::update() {
 }
 
 // return true if the time is over
-bool Timer::isOver() {
+bool InternalTimer::isOver() {
 	// time is never over if not configured or instructed to never report
 	if (_mode == DO_NOT_REPORT || _mode == NOT_CONFIGURED) return false;
 	// timer is always over when reporting immediately

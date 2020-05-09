@@ -275,7 +275,7 @@ You can interact with each class provided by NodeManager through a set of API fu
 	void registerSensor(Sensor* sensor);
 #if NODEMANAGER_SLEEP == ON
 	// register a timer
-	void registerTimer(Timer* timer);
+	void registerTimer(InternalTimer* timer);
 #endif
 	// return the next-available child id
 	uint8_t getAvailableChildId(uint8_t child_id = 0);

@@ -24,7 +24,7 @@ Sensor: provide functionalities common to all the sensors
 */
 
 #include "Node.h"
-#include "Timer.h"
+#include "InternalTimer.h"
 #include "Child.h"
 #if NODEMANAGER_POWER_MANAGER == ON
 #include "PowerManager.h"
@@ -124,9 +124,9 @@ protected:
 	unsigned int _samples = 1;
 	unsigned long _samples_interval = 0;
 	bool _first_run = true;
-	Timer* _report_timer;
-	Timer* _measure_timer;
-	bool _evaluateTimer(Timer* timer);
+	InternalTimer* _report_timer;
+	InternalTimer* _measure_timer;
+	bool _evaluateTimer(InternalTimer* timer);
 #if NODEMANAGER_INTERRUPTS == ON
 	int8_t _interrupt_pin = -1;
 	uint8_t _interrupt_mode = MODE_NOT_DEFINED;

@@ -72,7 +72,7 @@ public:
 	// register a sensor
 	void registerSensor(Sensor* sensor);
 	// register a timer
-	void registerTimer(Timer* timer);
+	void registerTimer(InternalTimer* timer);
 	// return the next-available child id
 	uint8_t getAvailableChildId(uint8_t child_id = 0);
 	// list containing all the registered sensors
@@ -180,7 +180,7 @@ private:
 	unsigned long _report_interval_seconds = 10*60;
 	uint8_t _reboot_pin = -1;
 	void _present(uint8_t child_id, uint8_t type);
-	List<Timer*> _timers;
+	List<InternalTimer*> _timers;
 #if defined(ARDUINO_ARCH_STM32F1)
 	uint8_t _analog_reference = -1;
 #else

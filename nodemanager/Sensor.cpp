@@ -29,8 +29,8 @@ Sensor::Sensor() {
 Sensor::Sensor(int8_t pin) {
 	_pin = pin;
 	// initialize the timers
-	_report_timer = new Timer();
-	_measure_timer = new Timer();
+	_report_timer = new InternalTimer();
+	_measure_timer = new InternalTimer();
 	// register the sensor with the node
 	nodeManager.registerSensor(this);
 }
@@ -306,7 +306,7 @@ void Sensor::onOTAConfiguration(ConfigurationRequest* request) {}
 #endif
 
 // evaluate the timer and return true if can be considered over
-bool Sensor::_evaluateTimer(Timer* timer) {
+bool Sensor::_evaluateTimer(InternalTimer* timer) {
 	// timer is over
 	if (timer->isOver()) return true;
 	if (_first_run) {

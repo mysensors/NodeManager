@@ -24,7 +24,7 @@ Child: data structure for representing a Child of a Sensor
 */
 
 class Sensor;
-#include "Timer.h"
+#include "InternalTimer.h"
 
 // how many slots to leave for the user before starting using them for Child
 #define EEPROM_CHILD_OFFSET	10
@@ -125,7 +125,7 @@ protected:
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	double _last_value = 0;
 	const char* _last_value_string = "";
-	Timer* _force_update_timer = new Timer();
+	InternalTimer* _force_update_timer = new InternalTimer();
 	float _min_threshold = -FLT_MAX;
 	float _max_threshold = FLT_MAX;
 	float _value_delta = 0;

@@ -142,7 +142,7 @@ void NodeManager::registerSensor(Sensor* sensor) {
 }
 
 // register a timer
-void NodeManager::registerTimer(Timer* timer) {
+void NodeManager::registerTimer(InternalTimer* timer) {
 	_timers.push(timer);
 }
 
@@ -247,8 +247,8 @@ void NodeManager::loop() {
 	powerOn();
 #endif
 	// update all the registered timers
-	for (List<Timer*>::iterator itr = _timers.begin(); itr != _timers.end(); ++itr) {
-		Timer* timer = *itr;
+	for (List<InternalTimer*>::iterator itr = _timers.begin(); itr != _timers.end(); ++itr) {
+		InternalTimer* timer = *itr;
 		timer->update();
 	}
 	// run loop for all the registered sensors

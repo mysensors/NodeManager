@@ -23,7 +23,7 @@ Child	KEYWORD1
 ConfigurationRequest	KEYWORD1
 List	KEYWORD1
 PowerManager	KEYWORD1
-Timer	KEYWORD1
+InternalTimer	KEYWORD1
 
 # NodeManager functions
 
