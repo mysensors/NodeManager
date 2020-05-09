@@ -156,7 +156,7 @@ void NodeManager::before() {
 	// print out MySensors' library capabilities
 	debug(PSTR(LOG_INIT "LIB VER=" MYSENSORS_LIBRARY_VERSION " CP=" MY_CAPABILITIES " \n"));
 	// setup the reboot pin if needed
-	if (_reboot_pin > -1) {
+	if (_reboot_pin > 0) {
 		debug(PSTR(LOG_INIT "RBT p=%d\n"),_reboot_pin);
 		pinMode(_reboot_pin, OUTPUT);
 		digitalWrite(_reboot_pin, HIGH);
@@ -344,7 +344,7 @@ void NodeManager::loop() {
 	// reboot the board
 	void NodeManager::reboot() {
 		debug(PSTR(LOG_POWER "RBT\n"));
-		if (_reboot_pin > -1) {
+		if (_reboot_pin > 0) {
 			// reboot the board through the reboot pin which is connected to RST by setting it to low
 			digitalWrite(_reboot_pin, LOW);
 		}
@@ -477,7 +477,7 @@ void NodeManager::loop() {
 	// setup the interrupt pins
 	void NodeManager::_setupInterrupts() {
 		// configure wakeup pin if needed
-		if (_sleep_interrupt_pin > -1) {
+		if (_sleep_interrupt_pin > 0) {
 			// set the interrupt when the pin is connected to ground
 			setInterrupt(_sleep_interrupt_pin,FALLING,HIGH);
 		}
@@ -738,7 +738,7 @@ void NodeManager::setAnalogReference(uint8_t value, uint8_t pin) {
 	// wait a bit 
 	wait(200);
 	// perform some reading before actually reading the value
-	if (pin > -1) {
+	if (pin > 0) {
 		for (int i = 0; i < 5; i++) {
 			analogRead(pin);
 			wait(50);
