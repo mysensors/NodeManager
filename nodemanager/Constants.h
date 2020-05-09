@@ -105,17 +105,11 @@ Chip type
 #endif
 
 // define interrupt pins
-
-#if defined(CHIP_STM32)
-#define INTERRUPT_PIN_1 PB8
-#define INTERRUPT_PIN_2 2
-#else
 #ifndef INTERRUPT_PIN_1
 #define INTERRUPT_PIN_1 3
 #endif
 #ifndef INTERRUPT_PIN_2
 #define INTERRUPT_PIN_2 2
-#endif
 #endif
 
 // define eeprom addresses
