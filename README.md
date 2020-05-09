@@ -109,10 +109,10 @@ SensorMotion             | 1     | Motion sensor, wake up the board and report w
 SensorDs18b20            | 1+    | DS18B20 sensor, return the temperature based on the attached sensor                               | https://github.com/milesburton/Arduino-Temperature-Control-Library
 SensorBH1750             | 1     | BH1750 sensor, return light level in lux                                                          | https://github.com/claws/BH1750
 SensorMLX90614           | 2     | MLX90614 contactless temperature sensor, return ambient and object temperature                    | https://github.com/adafruit/Adafruit-MLX90614-Library
-SensorBME280             | 4     | BME280 sensor, return temperature/humidity/pressure based on the attached BME280 sensor           | https://github.com/adafruit/Adafruit_BME280_Library
-SensorBMP085             | 3     | BMP085 sensor, return temperature and pressure                                                    | https://github.com/adafruit/Adafruit-BMP085-Library
-SensorBMP180             | 3     | BMP180 sensor, return temperature and pressure                                                    | https://github.com/adafruit/Adafruit-BMP085-Library
-SensorBMP280             | 3     | BMP280 sensor, return temperature/pressure based on the attached BMP280 sensor                    | https://github.com/adafruit/Adafruit_BMP280_Library
+SensorBME280             | 4     | BME280 sensor, return temperature/humidity/pressure based on the attached BME280 sensor           | https://github.com/adafruit/Adafruit_BME280_Library / https://github.com/adafruit/Adafruit_Sensor
+SensorBMP085             | 3     | BMP085 sensor, return temperature and pressure                                                    | https://github.com/adafruit/Adafruit-BMP085-Library / https://github.com/adafruit/Adafruit_Sensor
+SensorBMP180             | 3     | BMP180 sensor, return temperature and pressure                                                    | https://github.com/adafruit/Adafruit-BMP085-Library / https://github.com/adafruit/Adafruit_Sensor
+SensorBMP280             | 3     | BMP280 sensor, return temperature/pressure based on the attached BMP280 sensor                    | https://github.com/adafruit/Adafruit_BMP280_Library / https://github.com/adafruit/Adafruit_Sensor
 SensorSonoff             | 1     | Sonoff wireless smart switch                                                                      | https://github.com/thomasfredericks/Bounce2
 SensorHCSR04             | 1     | HC-SR04 sensor, return the distance between the sensor and an object                              | https://github.com/mysensors/MySensorsArduinoExamples/tree/master/libraries/NewPing
 SensorMCP9808            | 1     | MCP9808 sensor, measure the temperature through the attached module                               | https://github.com/adafruit/Adafruit_MCP9808_Library
