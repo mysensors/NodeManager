@@ -100,7 +100,10 @@ Chip type
 #if defined (MYBOARDNRF5) || defined(NRF51) || defined(NRF52)
 #define CHIP_NRF5
 #endif
-#if !defined(CHIP_ESP8266) && !defined(CHIP_ESP32) && !defined(CHIP_STM32) && !defined(CHIP_NRF5)
+#if defined (SAMD_SERIES)
+#define CHIP_SAMD
+#endif
+#if !defined(CHIP_ESP8266) && !defined(CHIP_ESP32) && !defined(CHIP_STM32) && !defined(CHIP_NRF5) && !defined(CHIP_SAMD)
 #define CHIP_AVR
 #endif
 
