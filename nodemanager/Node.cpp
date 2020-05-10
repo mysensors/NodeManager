@@ -69,6 +69,9 @@ unsigned long NodeManager::getSleepSeconds() {
 void NodeManager::setSleepBetweenSend(unsigned int value) {
 	_sleep_between_send = value;
 }
+void NodeManager::setSleepBetweenSendSleepOrWait(bool value) {
+	_sleep_between_send_sleep_or_wait = value;
+}
 #endif
 #if NODEMANAGER_INTERRUPTS == ON
 void NodeManager::setSleepInterruptPin(int8_t value) {
@@ -722,8 +725,9 @@ void NodeManager::loop() {
 
 // sleep between send()
 void NodeManager::sleepBetweenSend() {
-	// if we sleep here ack management will not work
-	if (_sleep_between_send > 0) wait(_sleep_between_send);
+	if (_sleep_between_send == 0) return;
+	if (_sleep_between_send_sleep_or_wait) sleepOrWait(_sleep_between_send);
+	else wait(_sleep_between_send);
 }
 
 // set the analog reference 

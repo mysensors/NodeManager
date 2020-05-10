@@ -301,6 +301,8 @@ You can interact with each class provided by NodeManager through a set of API fu
 	void setSleepDays(uint8_t value);
 	// [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
 	void setSleepBetweenSend(unsigned int value);
+	// [43] when sleep between send is set, by default the node will only wait, set it to true to make it sleeping for long intervals (default: false)
+	void setSleepBetweenSendSleepOrWait(bool value);
 	// [9] wake up the board
 	void wakeup();
 	// use smart sleep for sleeping boards (default: true)

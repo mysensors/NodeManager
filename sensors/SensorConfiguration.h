@@ -54,6 +54,7 @@ public:
 			case 5: nodeManager.setSleepHours(request.getValueInt()); break;
 			case 29: nodeManager.setSleepDays(request.getValueInt()); break;
 			case 20: nodeManager.setSleepBetweenSend(request.getValueInt()); break;
+			case 43: nodeManager.setSleepBetweenSendSleepOrWait(request.getValueInt()); break;
 			case 9: nodeManager.wakeup(); break;
 #endif
 #ifdef CHIP_AVR
