@@ -524,6 +524,7 @@ void NodeManager::loop() {
 		if (_interrupt_debounce > 0 &&  (millis() - _last_interrupt_millis < _interrupt_debounce) && pin == _last_interrupt_pin && millis() > _last_interrupt_millis) return;
 		// save pin and value
 		_last_interrupt_pin = pin;
+		_last_interrupt_millis = millis();
 		_last_interrupt_value = digitalRead(pin);
 		debug(PSTR(LOG_LOOP "INT p=%d v=%d\n"),_last_interrupt_pin,_last_interrupt_value);
 	}
