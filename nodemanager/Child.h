@@ -41,7 +41,7 @@ class Sensor;
 class Child {
 public:
 	Child();
-	Child(Sensor* sensor, value_format format, uint8_t child_id, uint8_t presentation, uint8_t type, const char* description = "", const char* unit_prefix = NULL);
+	Child(Sensor* sensor, value_format format, uint8_t child_id, uint8_t presentation, uint8_t type, const char* description = "", const char* unit_prefix = NULL, bool request_initial_value = false);
 	// set child id used to communicate with the gateway/controller
 	void setChildId(uint8_t value);
 	uint8_t getChildId();
@@ -84,6 +84,9 @@ public:
 	void print(Print& device);
 	// reset all the counters
 	void reset();
+	// if set request the controller the initial value of this child (default: false)
+	void setRequestInitialValue(bool value);
+	bool getRequestInitialValue();
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	// force to send an update after the configured number of minutes
 	void setForceUpdateTimerValue(unsigned long value);
@@ -127,6 +130,7 @@ protected:
 	void _setValueNumber(double value);
 	const char* _unit_prefix = NULL;
 	bool _unit_prefix_sent = false;
+	bool _request_initial_value = false;
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	double _last_value = 0;
 	const char* _last_value_string = "";

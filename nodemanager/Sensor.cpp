@@ -157,6 +157,17 @@ void Sensor::setup() {
 	// start the timers
 	_report_timer->start();
 	_measure_timer->start();
+	// for each child, request the initial value to the controller if configured
+	bool requested_initial_value = false;
+	for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
+		Child* child = *itr;
+		if (child->getRequestInitialValue()) {
+			request(child->getChildId(),child->getType());
+			requested_initial_value = true;
+		}
+	}
+	// wait a bit before controller returns the requested value
+	if (requested_initial_value) wait(2000);
 #if NODEMANAGER_INTERRUPTS == ON
 	// for interrupt based sensors, register a callback for the interrupt
 	if (_interrupt_mode != MODE_NOT_DEFINED) {

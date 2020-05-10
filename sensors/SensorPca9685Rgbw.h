@@ -47,7 +47,7 @@ public:
 	  _name = "Pca9685Rgbw";
 	  //present as RGB
 	  children.allocateBlocks(2);
-	  new Child(this,STRING,nodeManager.getAvailableChildId(child_id),S_RGB_LIGHT,V_RGB,_name); 
+	  new Child(this,STRING,nodeManager.getAvailableChildId(child_id),S_RGB_LIGHT,V_RGB,_name, NULL, true); 
 	  new Child(this,STRING,child_id > 0 ? child_id > 0 ? nodeManager.getAvailableChildId(child_id+1) : nodeManager.getAvailableChildId(child_id) : nodeManager.getAvailableChildId(child_id),S_RGB_LIGHT,V_WATT,_name);
 	  //store values for PWMServoDriver
 	  _ch_r = ch_r;
@@ -99,8 +99,6 @@ public:
 	    _pca9685g->onSetup();
 		_pca9685b->onSetup();
 		_pca9685w->onSetup();
-		//get current value from host
-		request( children.get(1)->getChildId(), V_RGB  );
 		// report immediately
 		setReportTimerMode(IMMEDIATELY);
 		// do not average the value

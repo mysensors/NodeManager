@@ -469,7 +469,7 @@ The following methods are available for all the sensors:
 
 The following methods are available for all the child:
 ~~~c
-	Child(Sensor* sensor, value_format format, uint8_t child_id, uint8_t presentation, uint8_t type, const char* description = "", const char* unit_prefix = "");
+	Child(Sensor* sensor, value_format format, uint8_t child_id, uint8_t presentation, uint8_t type, const char* description = "", const char* unit_prefix = "", , bool request_initial_value = false);
 	// set child id used to communicate with the gateway/controller
 	void setChildId(uint8_t value);
 	uint8_t getChildId();
@@ -509,6 +509,9 @@ The following methods are available for all the child:
 	void print(Print& device);
 	// reset all the counters
 	void reset();
+	// if set request the controller the initial value of this child (default: false)
+	void setRequestInitialValue(bool value);
+	bool getRequestInitialValue();
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	// force to send an update after the configured number of minutes
 	void setForceUpdateTimerValue(unsigned long value);

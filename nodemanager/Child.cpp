@@ -27,7 +27,7 @@ Child::Child() {
 }
 
 // constructor
-Child::Child(Sensor* sensor, value_format format, uint8_t child_id, uint8_t presentation, uint8_t type, const char* description, const char* unit_prefix) {
+Child::Child(Sensor* sensor, value_format format, uint8_t child_id, uint8_t presentation, uint8_t type, const char* description, const char* unit_prefix, bool request_initial_value) {
 	_sensor = sensor;
 	setFormat(format);
 	_child_id = child_id;
@@ -35,6 +35,7 @@ Child::Child(Sensor* sensor, value_format format, uint8_t child_id, uint8_t pres
 	_type = type;
 	_description = description;
 	_unit_prefix = unit_prefix;
+	_request_initial_value = request_initial_value;
 	// register the child with the sensor
 	_sensor->registerChild(this);
 #if NODEMANAGER_EEPROM == ON
@@ -108,6 +109,12 @@ void Child::setUnitPrefix(const char* value) {
 const char* Child::getUnitPrefix() {
 	if (_unit_prefix == NULL) return nodeManager.getDefaultUnitPrefix(_presentation,_type);
 	return _unit_prefix;
+}
+void Child::setRequestInitialValue(bool value) {
+	_request_initial_value = value;
+}
+bool Child::getRequestInitialValue() {
+	return _request_initial_value;
 }
 
 // store a new value and update the total
