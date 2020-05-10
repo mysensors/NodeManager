@@ -34,8 +34,6 @@ protected:
 	int8_t _rx_pin = 3;
 	PMS *_pms;
 	PMS::DATA _data;
-	bool _valuesRead = false;
-	bool _valuesReadError = false;
 	
 public:
 	SensorPlantowerPMS(int8_t rxpin, int8_t txpin, uint8_t child_id = 0): Sensor(rxpin) {
@@ -58,35 +56,30 @@ public:
 
 	// define what to do during loop
 	void onLoop(Child* child) {
+		// for the first child only, read the values
 		if (child == children.get(1)) {
-			_valuesRead = false;
-			_valuesReadError = false;
-		}
-		// Read the ppm values
-		if (!_valuesRead || _valuesReadError) {
-			_valuesReadError = !_pms->readUntil(_data, 1000);
-			if (_valuesReadError) {
-				debug(PSTR("!" LOG_SENSOR "%s:READ\n"),_name);
-				return;
+			// keep reading untile we get valid data
+			while(true) {
+				if (_pms->read(_data)) break;
 			}
-			_valuesRead = true;
 		}
+		// get the value based on the requested child
 		int val = 0;
+		// PM1.0 values
 		if (child == children.get(1)) {
-			// PM1.0 values
 			val = _data.PM_AE_UG_1_0;
+		// PM 2.5 values
 		} else if (child == children.get(2)) {
-			// PM 2.5 values
 			val = _data.PM_AE_UG_2_5;
+		// PM 10.0 values
 		} else if (child == children.get(3)) {
-			// PM 10.0 values
 			val = _data.PM_AE_UG_10_0;
 		} else {
 			debug(PSTR("!" LOG_SENSOR "%s:CHILD\n"),_name);
 			return;
 		}
-		// store the value
-		child->setValue(val);
+		// send the value
+		if (val >= 0) child->setValue(val);
 	};
 };
 #endif
