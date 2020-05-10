@@ -300,6 +300,41 @@ void Sensor::setReceiveHook(void (*function)(Sensor* sensor, MyMessage* message)
 }
 #endif
 
+// enabler/disable the sensor
+void Sensor::setEnabled(bool value, bool just_set) {
+	if (!just_set) {
+		// sensors was enabled and now has to be disable
+		if (_enabled && ! value) {
+			setup();
+#if NODEMANAGER_INTERRUPTS == ON
+			nodeManager.setupInterrupts();
+#endif
+		}
+		// sensors was disabled and now has to be enable
+		if (!_enabled && value) {
+#if NODEMANAGER_INTERRUPTS == ON
+			nodeManager.setupInterrupts();
+#endif		
+		}
+#if NODEMANAGER_EEPROM == ON
+		// if the status of a sensor has to be persisted in EEPROM
+		if (_enabled != value && nodeManager.getPersistEnabledSensors()) {
+			// iterates over all the children
+			for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
+				Child* child = *itr;
+				// save to the index equals to child id the enabled flag
+				nodeManager.saveToMemory(child->getChildId(), value);
+			}
+		}
+#endif
+	}
+	_enabled = value;
+}
+
+bool Sensor::getEnabled() {
+	return _enabled;
+}
+
 // virtual functions
 void Sensor::onSetup(){
 }

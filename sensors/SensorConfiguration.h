@@ -113,6 +113,7 @@ public:
 				case 17: sensor->setReportIntervalSeconds(request.getValueInt()); break;
 				case 19: sensor->setReportIntervalHours(request.getValueInt()); break;
 				case 20: sensor->setReportIntervalDays(request.getValueInt()); break;
+				case 28: sensor->setEnabled(request.getValueInt()); break;
 #if NODEMANAGER_INTERRUPTS == ON			
 				case 22: sensor->setInterruptMode(request.getValueInt()); break;
 				case 23: sensor->setWaitAfterInterrupt(request.getValueInt()); break;

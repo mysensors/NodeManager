@@ -323,6 +323,8 @@ You can interact with each class provided by NodeManager through a set of API fu
 	int8_t getLastInterruptPin();
 	// return the value of the pin from which the last interrupt came
 	int8_t getLastInterruptValue();
+	// setup the interrupt pins
+	void setupInterrupts(bool from_setup);
 #endif
 #if NODEMANAGER_POWER_MANAGER == ON
 	// configure a PowerManager common to all the sensors
@@ -343,6 +345,9 @@ You can interact with each class provided by NodeManager through a set of API fu
 	void saveToMemory(int index, int value);
 	// [40] if set save the sleep settings in memory, also when changed remotely (default: false)
 	void setSaveSleepSettings(bool value);
+	// keep track in the eeprom of enabled/disabled status for each sensor (default: false)
+	void setPersistEnabledSensors(bool value);
+	bool getPersistEnabledSensors();
 #endif
 #if NODEMANAGER_TIME == ON
 	// [41] synchronize the local time with the controller
@@ -411,6 +416,9 @@ The following methods are available for all the sensors:
 	Child* getChild(uint8_t child_id);
 	// register a child
 	void registerChild(Child* child);
+	// [28] enabler/disable the sensor (default: true)
+	void setEnabled(bool value, bool just_set = false);
+	bool getEnabled();
 #if NODEMANAGER_INTERRUPTS == ON
 	// return the pin the interrupt is attached to
 	int8_t getInterruptPin();

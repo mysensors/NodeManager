@@ -120,6 +120,8 @@ public:
 	int8_t getLastInterruptPin();
 	// return the value of the pin from which the last interrupt came
 	int8_t getLastInterruptValue();
+	// setup the interrupt pins
+	void setupInterrupts(bool from_setup);
 #endif
 #if NODEMANAGER_POWER_MANAGER == ON
 	// configure a PowerManager common to all the sensors
@@ -140,6 +142,9 @@ public:
 	void saveToMemory(int index, int value);
 	// [40] if set save the sleep settings in memory, also when changed remotely (default: false)
 	void setSaveSleepSettings(bool value);
+	// keep track in the eeprom of enabled/disabled status for each sensor (default: false)
+	void setPersistEnabledSensors(bool value);
+	bool getPersistEnabledSensors();
 #endif
 #if NODEMANAGER_TIME == ON
 	// [41] synchronize the local time with the controller
@@ -204,11 +209,11 @@ private:
 	static int8_t _last_interrupt_value;
 	static long unsigned _interrupt_debounce;
 	static long unsigned _last_interrupt_millis;
-	void _setupInterrupts();
 	static void _onInterrupt_1();
 	static void _onInterrupt_2();
+	bool _run_interrupt_setup = false;
 	static void _saveInterrupt(int8_t pin);
-#endif
+	#endif
 #if NODEMANAGER_SLEEP == ON
 	void _sleep();
 	bool _smart_sleep = true;
@@ -218,6 +223,7 @@ private:
 #endif
 #if NODEMANAGER_EEPROM == ON
 	bool _save_sleep_settings = false;
+	bool _persist_enabled_sensors = false;
 	void _loadSleepSettings();
 	void _saveSleepSettings();
 #endif

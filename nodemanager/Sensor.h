@@ -66,6 +66,9 @@ public:
 	Child* getChild(uint8_t child_id);
 	// register a child
 	void registerChild(Child* child);
+	// [28] enabler/disable the sensor (default: true)
+	void setEnabled(bool value, bool just_set = false);
+	bool getEnabled();
 #if NODEMANAGER_INTERRUPTS == ON
 	// return the pin the interrupt is attached to
 	int8_t getInterruptPin();
@@ -127,6 +130,7 @@ protected:
 	InternalTimer* _report_timer;
 	InternalTimer* _measure_timer;
 	bool _evaluateTimer(InternalTimer* timer);
+	bool _enabled = true;
 #if NODEMANAGER_INTERRUPTS == ON
 	int8_t _interrupt_pin = -1;
 	uint8_t _interrupt_mode = MODE_NOT_DEFINED;

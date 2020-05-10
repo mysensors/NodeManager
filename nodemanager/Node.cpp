@@ -124,6 +124,12 @@ bool NodeManager::getIsMetric() {
 void NodeManager::setSaveSleepSettings(bool value) {
 	_save_sleep_settings = value;
 }
+void NodeManager::setPersistEnabledSensors(bool value) {
+	_persist_enabled_sensors = value;
+}
+bool NodeManager::getPersistEnabledSensors() {
+	return _persist_enabled_sensors;
+}
 #endif
 
 // Convert a temperature from celsius to fahrenheit depending on how isMetric is set
@@ -224,12 +230,27 @@ void NodeManager::setup() {
 	// run setup for all the registered sensors
 	for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
 		Sensor* sensor = *itr;
+#if NODEMANAGER_EEPROM == ON
+		// if sensors status is persisted in EEPROM, restore it
+		if (getPersistEnabledSensors()) {
+			// status is saved for all the childern individually
+			for (List<Child*>::iterator itr = sensor->children.begin(); itr != sensor->children.end(); ++itr) {
+				Child* child = *itr;
+				// load status from memory
+				int value = loadFromMemory(child->getChildId());
+				// ignore invalid values
+				if (value != 0 && value != 1) continue;
+				// theoretically all the children should have the same value
+				sensor->setEnabled(value);
+			}
+		}
+#endif		
 		// call each sensor's setup()
-		sensor->setup();
+		if (sensor->getEnabled()) sensor->setup();
 	}
 #if NODEMANAGER_INTERRUPTS == ON
 	// setup the interrupt pins
-	_setupInterrupts();
+	setupInterrupts(true);
 #endif
 #if NODEMANAGER_POWER_MANAGER == ON
 	// turn the sensor off
@@ -257,6 +278,8 @@ void NodeManager::loop() {
 	// run loop for all the registered sensors
 	for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
 		Sensor* sensor = *itr;
+		// skip the sensor if not enabled
+		if (! sensor->getEnabled()) continue;
 		// clear the MyMessage so will be ready to be used for the sensor
 		_message.clear();
 #if NODEMANAGER_INTERRUPTS == ON
@@ -372,14 +395,24 @@ void NodeManager::loop() {
 
 	// return the value stored at the requested index from the EEPROM
 	int NodeManager::loadFromMemory(int index) {
-		int value = loadState(index+EEPROM_USER_START);
+		int position = index+EEPROM_USER_START;
+		if (position >= 255) {
+			debug(PSTR(LOG_EEPROM "!LOAD i=%d\n"),index);
+			return 0;
+		}
+		int value = loadState(position);
 		debug_verbose(PSTR(LOG_EEPROM "LOAD i=%d v=%d\n"),index,value);
 		return value;
 	}
 
 	// save the given index of the EEPROM the provided value
 	void NodeManager::saveToMemory(int index, int value) {
-		saveState(index+EEPROM_USER_START, value);
+		int position = index+EEPROM_USER_START;
+		if (position >= 255) {
+			debug(PSTR(LOG_EEPROM "!SAVE i=%d\n"),index);
+			return;
+		}
+		saveState(position, value);
 		debug_verbose(PSTR(LOG_EEPROM "SAVE i=%d v=%d\n"),index,value);
 	}
 #endif
@@ -478,35 +511,44 @@ void NodeManager::loop() {
 
 #if NODEMANAGER_INTERRUPTS == ON
 	// setup the interrupt pins
-	void NodeManager::_setupInterrupts() {
+	void NodeManager::setupInterrupts(bool from_setup = false) {
 		// configure wakeup pin if needed
 		if (_sleep_interrupt_pin > 0) {
 			// set the interrupt when the pin is connected to ground
 			setInterrupt(_sleep_interrupt_pin,FALLING,HIGH);
 		}
 		// setup the interrupt pins
+		if (_status != SLEEP) {
+			detachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1));
+			detachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2));
+		}
 		if (_interrupt_1_mode != MODE_NOT_DEFINED) {
 			pinMode(INTERRUPT_PIN_1,INPUT);
 			if (_interrupt_1_initial > -1) digitalWrite(INTERRUPT_PIN_1,_interrupt_1_initial);
-			// for non sleeping nodes, we need to handle the interrupt by ourselves  
+			// for non sleeping nodes, we need to handle the interrupt by ourselves. For sleeping nodes interrupts are handled by _sleep()
+			if (_status != SLEEP) {
 #if defined(CHIP_STM32)
-			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, (ExtIntTriggerMode)_interrupt_1_mode);
+				attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, (ExtIntTriggerMode)_interrupt_1_mode);
 #else
-			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, _interrupt_1_mode);
+				attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, _interrupt_1_mode);
 #endif
+			}
 			debug(PSTR(LOG_BEFORE "INT p=%d m=%d\n"),INTERRUPT_PIN_1,_interrupt_1_mode);
 		}
 		if (_interrupt_2_mode != MODE_NOT_DEFINED) {
 			pinMode(INTERRUPT_PIN_2, INPUT);
 			if (_interrupt_2_initial > -1) digitalWrite(INTERRUPT_PIN_2,_interrupt_2_initial);
-			// for non sleeping nodes, we need to handle the interrupt by ourselves  
+			// for non sleeping nodes, we need to handle the interrupt by ourselves. For sleeping nodes interrupts are handled by _sleep()
+			if (_status != SLEEP) {
 #if defined(CHIP_STM32)
-			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, (ExtIntTriggerMode)_interrupt_2_mode);
+				attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, (ExtIntTriggerMode)_interrupt_2_mode);
 #else
-			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, _interrupt_2_mode);
+				attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, _interrupt_2_mode);
 #endif
+			}
 			debug(PSTR(LOG_BEFORE "INT p=%d m=%d\n"),INTERRUPT_PIN_2,_interrupt_2_mode);
 		}
+		if (from_setup) _run_interrupt_setup = true;
 	}
 	
 	// handle an interrupt
