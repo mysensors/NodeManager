@@ -85,6 +85,11 @@ public:
 	void sleepBetweenSend();
 	// set the analog reference to the given value and optionally perform some fake reading on the given pin
 	void setAnalogReference(uint8_t value, uint8_t pin = 0);
+	// send the configured unit prefix just before sending the first measure (default: false)
+	void setSendUnitPrefix(bool value);
+	bool getSendUnitPrefix();
+	// return the default unit prefix for the given sensor presentation and type
+	const char* getDefaultUnitPrefix(uint8_t presentation, uint8_t type);
 #if NODEMANAGER_SLEEP == ON
 	// [3] set the duration (in seconds) of a sleep cycle
 	void setSleepSeconds(unsigned long value);
@@ -184,6 +189,7 @@ private:
 	uint8_t _reboot_pin = 0;
 	void _present(uint8_t child_id, uint8_t type);
 	List<InternalTimer*> _timers;
+	bool _send_unit_prefix = false;
 #if defined(ARDUINO_ARCH_STM32F1)
 	uint8_t _analog_reference = -1;
 #else

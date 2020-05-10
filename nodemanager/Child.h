@@ -41,7 +41,7 @@ class Sensor;
 class Child {
 public:
 	Child();
-	Child(Sensor* sensor, value_format format, uint8_t child_id, uint8_t presentation, uint8_t type, const char* description = "");
+	Child(Sensor* sensor, value_format format, uint8_t child_id, uint8_t presentation, uint8_t type, const char* description = "", const char* unit_prefix = NULL);
 	// set child id used to communicate with the gateway/controller
 	void setChildId(uint8_t value);
 	uint8_t getChildId();
@@ -59,6 +59,9 @@ public:
 	// set sensor description
 	void setDescription(const char* value);
 	const char* getDescription();
+	// set sensor unit
+	void setUnitPrefix(const char* value);
+	const char* getUnitPrefix();
 	// configure the behavior of the child when setValue() is called multiple times. It can be NONE (ignore the previous values but the last one),  AVG (averages the values), SUM (sum up the values) (default: AVG)
 	void setValueProcessing(child_processing value);
 	// send the value to the gateway even if there have been no samples collected (default: false)
@@ -122,6 +125,8 @@ protected:
 	double _total = 0;
 	bool _send_without_value = false;
 	void _setValueNumber(double value);
+	const char* _unit_prefix = NULL;
+	bool _unit_prefix_sent = false;
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	double _last_value = 0;
 	const char* _last_value_string = "";

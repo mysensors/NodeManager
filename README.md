@@ -289,6 +289,10 @@ You can interact with each class provided by NodeManager through a set of API fu
 	void sleepBetweenSend();
 	// set the analog reference to the given value and optionally perform some fake reading on the given pin
 	void setAnalogReference(uint8_t value, uint8_t pin = -1);
+	// send the configured unit prefix just before sending the first measure (default: false)
+	void setSendUnitPrefix(bool value);
+	// return the default unit prefix for the given sensor presentation and type
+	const char* getDefaultUnitPrefix(uint8_t presentation, uint8_t type);
 #if NODEMANAGER_SLEEP == ON
 	// [3] set the duration (in seconds) of a sleep cycle
 	void setSleepSeconds(unsigned long value);
@@ -465,7 +469,7 @@ The following methods are available for all the sensors:
 
 The following methods are available for all the child:
 ~~~c
-	Child(Sensor* sensor, value_format format, uint8_t child_id, uint8_t presentation, uint8_t type, const char* description = "");
+	Child(Sensor* sensor, value_format format, uint8_t child_id, uint8_t presentation, uint8_t type, const char* description = "", const char* unit_prefix = "");
 	// set child id used to communicate with the gateway/controller
 	void setChildId(uint8_t value);
 	uint8_t getChildId();

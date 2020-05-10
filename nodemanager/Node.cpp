@@ -752,3 +752,29 @@ void NodeManager::setAnalogReference(uint8_t value, uint8_t pin) {
 #endif
 }
 
+// send the configured unit prefix just before sending the first measure (default: false)
+void NodeManager::setSendUnitPrefix(bool value) {
+	_send_unit_prefix = value;
+}
+bool NodeManager::getSendUnitPrefix() {
+	return _send_unit_prefix;
+}
+
+// return the default unit prefix for the given sensor presentation and type
+const char* NodeManager::getDefaultUnitPrefix(uint8_t presentation, uint8_t type) {
+	const char* percentage = "%";
+	if (type == V_TEMP) {
+		if (getIsMetric()) return "C";
+		else return "F";
+	}
+	else if (type == V_HUM || type == V_PERCENTAGE) return percentage;
+	else if (type == V_PRESSURE) return "Pa";
+	else if (type == V_WIND || type == V_GUST) return "Km/h";
+	else if (type == V_VOLTAGE) return "V";
+	else if (type == V_CURRENT) return "A";
+	else if (type == V_LEVEL && presentation == S_SOUND) return "dB";
+	else if (type == V_LIGHT_LEVEL && presentation == S_LIGHT_LEVEL) return percentage;
+	else if (type == V_RAINRATE) return percentage;
+	else if (type == V_LEVEL && presentation == S_MOISTURE) return percentage;
+	else return "";
+}
