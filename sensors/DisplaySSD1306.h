@@ -127,7 +127,7 @@ public:
 	void setCursor(int col,int row) {
 		_oled->setCursor(col,row);
 	};
-	SSD1306AsciiAvrI2c* getDisplay() {
+	SSD1306Ascii* getDisplay() {
 		return _oled;
 	};
 	
