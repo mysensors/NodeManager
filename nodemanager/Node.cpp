@@ -324,6 +324,10 @@ void NodeManager::loop() {
 	// dispacth inbound messages
 	void NodeManager::receive(const MyMessage &message) {
 		debug_verbose(PSTR(LOG_MSG "RECV(%d) c=%d t=%d p=%s\n"),message.sensor,message.getCommand(),message.type,message.getString());
+		// ignore the message if we are not the final destination
+		if (getNodeId() != message.getDestination()) return;
+		// ignore the message if we are running a gatway and the message is coming from a different node (to avoid triggering our sensors when others are reporting)
+		if (getNodeId() == 0 && message.getSender() != 0) return;
 		// dispatch the message to the registered sensor
 		Sensor* sensor = getSensorWithChild(message.sensor);
 		if (sensor != nullptr) {
