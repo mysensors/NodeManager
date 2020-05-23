@@ -41,8 +41,8 @@ public:
 	  _name = "Pca9685W";
 	  //present as Dimmer
 	  children.allocateBlocks(2);
-	  new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_DIMMER,V_PERCENTAGE,_name);  //intern child 1
-	  new Child(this,INT,child_id > 0 ? nodeManager.getAvailableChildId(child_id+1) : nodeManager.getAvailableChildId(child_id),S_DIMMER,V_STATUS,_name);      //intern child 2
+	  new Child(this,INT,nodeManager.getAvailableChildId(child_id),S_DIMMER,V_PERCENTAGE,_name, NULL, true);
+	  new Child(this,INT,child_id > 0 ? nodeManager.getAvailableChildId(child_id+1) : nodeManager.getAvailableChildId(child_id),S_DIMMER,V_STATUS,_name, NULL, true);
 	  //store values for PWMServoDriver
 	  _channel = channel;
 	  _i2c_addr = i2c_addr;
@@ -75,9 +75,6 @@ public:
 		//init pca9685
 		_pca9685w = new SensorPca9685Led (_channel, _i2c_addr, _pca9685); 
 		_pca9685w->onSetup();
-		//get current value from host
-		request( children.get(1)->getChildId(), V_PERCENTAGE );
-		request( children.get(2)->getChildId(), V_STATUS );
 		// report immediately
 		setReportTimerMode(IMMEDIATELY);
 		// do not average the value

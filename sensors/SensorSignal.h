@@ -22,8 +22,9 @@
 /*
 SensorSignal: report RSSI signal strength from the radio
 */
-
-#define MY_SIGNAL_REPORT_ENABLED
+#ifndef MY_SIGNAL_REPORT_ENABLED
+#error "SensorSignal: MY_SIGNAL_REPORT_ENABLED must be defined in the sketch in order to SensorSignal to work"
+#endif
 #define SIGNAL_CHILD_ID 202
 
 class SensorSignal: public Sensor {

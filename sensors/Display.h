@@ -79,20 +79,8 @@ public:
 				}
 				// print value
 				printChild(ch);
-				// print type
-				if (ch->getType() == V_TEMP) {
-					if (nodeManager.getIsMetric()) print("C");
-					else print("F");
-				}
-				else if (ch->getType() == V_HUM || ch->getType() == V_PERCENTAGE) print("%");
-				else if (ch->getType() == V_PRESSURE) print("Pa");
-				else if (ch->getType() == V_WIND || ch->getType() == V_GUST) print("Km/h");
-				else if (ch->getType() == V_VOLTAGE) print("V");
-				else if (ch->getType() == V_CURRENT) print("A");
-				else if (ch->getType() == V_LEVEL && ch->getPresentation() == S_SOUND) print("dB");
-				else if (ch->getType() == V_LIGHT_LEVEL && ch->getPresentation() == S_LIGHT_LEVEL) print("%");
-				else if (ch->getType() == V_RAINRATE) print("%");
-				else if (ch->getType() == V_LEVEL && ch->getPresentation() == S_MOISTURE) print("%");
+				// print unit prefix
+				print(ch->getUnitPrefix());
 				println(nullptr);
 			}
 		}

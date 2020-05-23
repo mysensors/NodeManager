@@ -69,6 +69,9 @@ unsigned long NodeManager::getSleepSeconds() {
 void NodeManager::setSleepBetweenSend(unsigned int value) {
 	_sleep_between_send = value;
 }
+void NodeManager::setSleepBetweenSendSleepOrWait(bool value) {
+	_sleep_between_send_sleep_or_wait = value;
+}
 #endif
 #if NODEMANAGER_INTERRUPTS == ON
 void NodeManager::setSleepInterruptPin(int8_t value) {
@@ -120,6 +123,12 @@ bool NodeManager::getIsMetric() {
 #if NODEMANAGER_EEPROM == ON
 void NodeManager::setSaveSleepSettings(bool value) {
 	_save_sleep_settings = value;
+}
+void NodeManager::setPersistEnabledSensors(bool value) {
+	_persist_enabled_sensors = value;
+}
+bool NodeManager::getPersistEnabledSensors() {
+	return _persist_enabled_sensors;
 }
 #endif
 
@@ -221,12 +230,27 @@ void NodeManager::setup() {
 	// run setup for all the registered sensors
 	for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
 		Sensor* sensor = *itr;
+#if NODEMANAGER_EEPROM == ON
+		// if sensors status is persisted in EEPROM, restore it
+		if (getPersistEnabledSensors()) {
+			// status is saved for all the childern individually
+			for (List<Child*>::iterator itr = sensor->children.begin(); itr != sensor->children.end(); ++itr) {
+				Child* child = *itr;
+				// load status from memory
+				int value = loadFromMemory(child->getChildId());
+				// ignore invalid values
+				if (value != 0 && value != 1) continue;
+				// theoretically all the children should have the same value
+				sensor->setEnabled(value);
+			}
+		}
+#endif		
 		// call each sensor's setup()
-		sensor->setup();
+		if (sensor->getEnabled()) sensor->setup();
 	}
 #if NODEMANAGER_INTERRUPTS == ON
 	// setup the interrupt pins
-	_setupInterrupts();
+	setupInterrupts(true);
 #endif
 #if NODEMANAGER_POWER_MANAGER == ON
 	// turn the sensor off
@@ -254,6 +278,8 @@ void NodeManager::loop() {
 	// run loop for all the registered sensors
 	for (List<Sensor*>::iterator itr = sensors.begin(); itr != sensors.end(); ++itr) {
 		Sensor* sensor = *itr;
+		// skip the sensor if not enabled
+		if (! sensor->getEnabled()) continue;
 		// clear the MyMessage so will be ready to be used for the sensor
 		_message.clear();
 #if NODEMANAGER_INTERRUPTS == ON
@@ -298,6 +324,10 @@ void NodeManager::loop() {
 	// dispacth inbound messages
 	void NodeManager::receive(const MyMessage &message) {
 		debug_verbose(PSTR(LOG_MSG "RECV(%d) c=%d t=%d p=%s\n"),message.sensor,message.getCommand(),message.type,message.getString());
+		// ignore the message if we are not the final destination
+		if (getNodeId() != message.getDestination()) return;
+		// ignore the message if we are running a gatway and the message is coming from a different node (to avoid triggering our sensors when others are reporting)
+		if (getNodeId() == 0 && message.getSender() != 0) return;
 		// dispatch the message to the registered sensor
 		Sensor* sensor = getSensorWithChild(message.sensor);
 		if (sensor != nullptr) {
@@ -369,14 +399,24 @@ void NodeManager::loop() {
 
 	// return the value stored at the requested index from the EEPROM
 	int NodeManager::loadFromMemory(int index) {
-		int value = loadState(index+EEPROM_USER_START);
+		int position = index+EEPROM_USER_START;
+		if (position >= 255) {
+			debug(PSTR(LOG_EEPROM "!LOAD i=%d\n"),index);
+			return 0;
+		}
+		int value = loadState(position);
 		debug_verbose(PSTR(LOG_EEPROM "LOAD i=%d v=%d\n"),index,value);
 		return value;
 	}
 
 	// save the given index of the EEPROM the provided value
 	void NodeManager::saveToMemory(int index, int value) {
-		saveState(index+EEPROM_USER_START, value);
+		int position = index+EEPROM_USER_START;
+		if (position >= 255) {
+			debug(PSTR(LOG_EEPROM "!SAVE i=%d\n"),index);
+			return;
+		}
+		saveState(position, value);
 		debug_verbose(PSTR(LOG_EEPROM "SAVE i=%d v=%d\n"),index,value);
 	}
 #endif
@@ -475,35 +515,44 @@ void NodeManager::loop() {
 
 #if NODEMANAGER_INTERRUPTS == ON
 	// setup the interrupt pins
-	void NodeManager::_setupInterrupts() {
+	void NodeManager::setupInterrupts(bool from_setup = false) {
 		// configure wakeup pin if needed
 		if (_sleep_interrupt_pin > 0) {
 			// set the interrupt when the pin is connected to ground
 			setInterrupt(_sleep_interrupt_pin,FALLING,HIGH);
 		}
 		// setup the interrupt pins
+		if (_status != SLEEP) {
+			detachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1));
+			detachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2));
+		}
 		if (_interrupt_1_mode != MODE_NOT_DEFINED) {
 			pinMode(INTERRUPT_PIN_1,INPUT);
 			if (_interrupt_1_initial > -1) digitalWrite(INTERRUPT_PIN_1,_interrupt_1_initial);
-			// for non sleeping nodes, we need to handle the interrupt by ourselves  
+			// for non sleeping nodes, we need to handle the interrupt by ourselves. For sleeping nodes interrupts are handled by _sleep()
+			if (_status != SLEEP) {
 #if defined(CHIP_STM32)
-			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, (ExtIntTriggerMode)_interrupt_1_mode);
+				attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, (ExtIntTriggerMode)_interrupt_1_mode);
 #else
-			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, _interrupt_1_mode);
+				attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_1), _onInterrupt_1, _interrupt_1_mode);
 #endif
+			}
 			debug(PSTR(LOG_BEFORE "INT p=%d m=%d\n"),INTERRUPT_PIN_1,_interrupt_1_mode);
 		}
 		if (_interrupt_2_mode != MODE_NOT_DEFINED) {
 			pinMode(INTERRUPT_PIN_2, INPUT);
 			if (_interrupt_2_initial > -1) digitalWrite(INTERRUPT_PIN_2,_interrupt_2_initial);
-			// for non sleeping nodes, we need to handle the interrupt by ourselves  
+			// for non sleeping nodes, we need to handle the interrupt by ourselves. For sleeping nodes interrupts are handled by _sleep()
+			if (_status != SLEEP) {
 #if defined(CHIP_STM32)
-			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, (ExtIntTriggerMode)_interrupt_2_mode);
+				attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, (ExtIntTriggerMode)_interrupt_2_mode);
 #else
-			if (_status != SLEEP) attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, _interrupt_2_mode);
+				attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN_2), _onInterrupt_2, _interrupt_2_mode);
 #endif
+			}
 			debug(PSTR(LOG_BEFORE "INT p=%d m=%d\n"),INTERRUPT_PIN_2,_interrupt_2_mode);
 		}
+		if (from_setup) _run_interrupt_setup = true;
 	}
 	
 	// handle an interrupt
@@ -521,6 +570,7 @@ void NodeManager::loop() {
 		if (_interrupt_debounce > 0 &&  (millis() - _last_interrupt_millis < _interrupt_debounce) && pin == _last_interrupt_pin && millis() > _last_interrupt_millis) return;
 		// save pin and value
 		_last_interrupt_pin = pin;
+		_last_interrupt_millis = millis();
 		_last_interrupt_value = digitalRead(pin);
 		debug(PSTR(LOG_LOOP "INT p=%d v=%d\n"),_last_interrupt_pin,_last_interrupt_value);
 	}
@@ -722,8 +772,9 @@ void NodeManager::loop() {
 
 // sleep between send()
 void NodeManager::sleepBetweenSend() {
-	// if we sleep here ack management will not work
-	if (_sleep_between_send > 0) wait(_sleep_between_send);
+	if (_sleep_between_send == 0) return;
+	if (_sleep_between_send_sleep_or_wait) sleepOrWait(_sleep_between_send);
+	else wait(_sleep_between_send);
 }
 
 // set the analog reference 
@@ -747,3 +798,29 @@ void NodeManager::setAnalogReference(uint8_t value, uint8_t pin) {
 #endif
 }
 
+// send the configured unit prefix just before sending the first measure (default: false)
+void NodeManager::setSendUnitPrefix(bool value) {
+	_send_unit_prefix = value;
+}
+bool NodeManager::getSendUnitPrefix() {
+	return _send_unit_prefix;
+}
+
+// return the default unit prefix for the given sensor presentation and type
+const char* NodeManager::getDefaultUnitPrefix(uint8_t presentation, uint8_t type) {
+	const char* percentage = "%";
+	if (type == V_TEMP) {
+		if (getIsMetric()) return "C";
+		else return "F";
+	}
+	else if (type == V_HUM || type == V_PERCENTAGE) return percentage;
+	else if (type == V_PRESSURE) return "Pa";
+	else if (type == V_WIND || type == V_GUST) return "Km/h";
+	else if (type == V_VOLTAGE) return "V";
+	else if (type == V_CURRENT) return "A";
+	else if (type == V_LEVEL && presentation == S_SOUND) return "dB";
+	else if (type == V_LIGHT_LEVEL && presentation == S_LIGHT_LEVEL) return percentage;
+	else if (type == V_RAINRATE) return percentage;
+	else if (type == V_LEVEL && presentation == S_MOISTURE) return percentage;
+	else return "";
+}

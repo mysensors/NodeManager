@@ -289,6 +289,10 @@ You can interact with each class provided by NodeManager through a set of API fu
 	void sleepBetweenSend();
 	// set the analog reference to the given value and optionally perform some fake reading on the given pin
 	void setAnalogReference(uint8_t value, uint8_t pin = -1);
+	// send the configured unit prefix just before sending the first measure (default: false)
+	void setSendUnitPrefix(bool value);
+	// return the default unit prefix for the given sensor presentation and type
+	const char* getDefaultUnitPrefix(uint8_t presentation, uint8_t type);
 #if NODEMANAGER_SLEEP == ON
 	// [3] set the duration (in seconds) of a sleep cycle
 	void setSleepSeconds(unsigned long value);
@@ -301,6 +305,8 @@ You can interact with each class provided by NodeManager through a set of API fu
 	void setSleepDays(uint8_t value);
 	// [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
 	void setSleepBetweenSend(unsigned int value);
+	// [43] when sleep between send is set, by default the node will only wait, set it to true to make it sleeping for long intervals (default: false)
+	void setSleepBetweenSendSleepOrWait(bool value);
 	// [9] wake up the board
 	void wakeup();
 	// use smart sleep for sleeping boards (default: true)
@@ -317,6 +323,8 @@ You can interact with each class provided by NodeManager through a set of API fu
 	int8_t getLastInterruptPin();
 	// return the value of the pin from which the last interrupt came
 	int8_t getLastInterruptValue();
+	// setup the interrupt pins
+	void setupInterrupts(bool from_setup);
 #endif
 #if NODEMANAGER_POWER_MANAGER == ON
 	// configure a PowerManager common to all the sensors
@@ -337,6 +345,9 @@ You can interact with each class provided by NodeManager through a set of API fu
 	void saveToMemory(int index, int value);
 	// [40] if set save the sleep settings in memory, also when changed remotely (default: false)
 	void setSaveSleepSettings(bool value);
+	// keep track in the eeprom of enabled/disabled status for each sensor (default: false)
+	void setPersistEnabledSensors(bool value);
+	bool getPersistEnabledSensors();
 #endif
 #if NODEMANAGER_TIME == ON
 	// [41] synchronize the local time with the controller
@@ -405,6 +416,9 @@ The following methods are available for all the sensors:
 	Child* getChild(uint8_t child_id);
 	// register a child
 	void registerChild(Child* child);
+	// [28] enabler/disable the sensor (default: true)
+	void setEnabled(bool value, bool just_set = false);
+	bool getEnabled();
 #if NODEMANAGER_INTERRUPTS == ON
 	// return the pin the interrupt is attached to
 	int8_t getInterruptPin();
@@ -463,7 +477,7 @@ The following methods are available for all the sensors:
 
 The following methods are available for all the child:
 ~~~c
-	Child(Sensor* sensor, value_format format, uint8_t child_id, uint8_t presentation, uint8_t type, const char* description = "");
+	Child(Sensor* sensor, value_format format, uint8_t child_id, uint8_t presentation, uint8_t type, const char* description = "", const char* unit_prefix = "", , bool request_initial_value = false);
 	// set child id used to communicate with the gateway/controller
 	void setChildId(uint8_t value);
 	uint8_t getChildId();
@@ -503,6 +517,9 @@ The following methods are available for all the child:
 	void print(Print& device);
 	// reset all the counters
 	void reset();
+	// if set request the controller the initial value of this child (default: false)
+	void setRequestInitialValue(bool value);
+	bool getRequestInitialValue();
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	// force to send an update after the configured number of minutes
 	void setForceUpdateTimerValue(unsigned long value);

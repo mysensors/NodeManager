@@ -54,6 +54,7 @@ public:
 			case 5: nodeManager.setSleepHours(request.getValueInt()); break;
 			case 29: nodeManager.setSleepDays(request.getValueInt()); break;
 			case 20: nodeManager.setSleepBetweenSend(request.getValueInt()); break;
+			case 43: nodeManager.setSleepBetweenSendSleepOrWait(request.getValueInt()); break;
 			case 9: nodeManager.wakeup(); break;
 #endif
 #ifdef CHIP_AVR
@@ -112,6 +113,7 @@ public:
 				case 17: sensor->setReportIntervalSeconds(request.getValueInt()); break;
 				case 19: sensor->setReportIntervalHours(request.getValueInt()); break;
 				case 20: sensor->setReportIntervalDays(request.getValueInt()); break;
+				case 28: sensor->setEnabled(request.getValueInt()); break;
 #if NODEMANAGER_INTERRUPTS == ON			
 				case 22: sensor->setInterruptMode(request.getValueInt()); break;
 				case 23: sensor->setWaitAfterInterrupt(request.getValueInt()); break;
