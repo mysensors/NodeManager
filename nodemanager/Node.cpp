@@ -296,8 +296,10 @@ void NodeManager::loop() {
 		}
 #endif
 	}
+#if NODEMANAGER_INTERRUPTS == ON
 	// reset the last interrupt pin
 	_last_interrupt_pin = -1;
+#endif
 #if NODEMANAGER_POWER_MANAGER == ON
 	// turn off the pin powering all the sensors
 	powerOff();
