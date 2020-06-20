@@ -105,9 +105,9 @@ public:
 				case 13: sensor->powerOn(); break;
 				case 14: sensor->powerOff(); break;
 #endif
-				case 24: sensor->setReportTimerMode((timer_mode)request.getValueInt()); break;
+				case 24: sensor->setReportTimerMode((nm_timer_mode)request.getValueInt()); break;
 				case 25: sensor->setReportTimerValue(request.getValueInt()); break;
-				case 26: sensor->setMeasureTimerMode((timer_mode)request.getValueInt()); break;
+				case 26: sensor->setMeasureTimerMode((nm_timer_mode)request.getValueInt()); break;
 				case 27: sensor->setMeasureTimerValue(request.getValueInt()); break;
 				case 16: sensor->setReportIntervalMinutes(request.getValueInt()); break;
 				case 17: sensor->setReportIntervalSeconds(request.getValueInt()); break;

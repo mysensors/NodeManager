@@ -37,7 +37,7 @@ enum status {
 };
 
 //define Timer mode
-enum timer_mode {
+enum nm_timer_mode {
 	NOT_CONFIGURED,
 	TIME_INTERVAL,
 	IMMEDIATELY,
