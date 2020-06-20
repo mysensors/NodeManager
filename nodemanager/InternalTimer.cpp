@@ -28,12 +28,12 @@ InternalTimer::InternalTimer() {
 }
 
 // set the timer mode
-void InternalTimer::setMode(timer_mode mode) {
+void InternalTimer::setMode(nm_timer_mode mode) {
 	_mode = mode;
 }
 
 // get the timer mode
-timer_mode InternalTimer::getMode() {
+nm_timer_mode InternalTimer::getMode() {
 	return _mode;
 }
 
