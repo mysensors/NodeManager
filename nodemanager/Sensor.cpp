@@ -82,13 +82,13 @@ void Sensor::setInterruptStrict(bool value) {
 }
 #endif
 
-void Sensor::setReportTimerMode(timer_mode value) {
+void Sensor::setReportTimerMode(nm_timer_mode value) {
 	_report_timer->setMode(value);
 }
 void Sensor::setReportTimerValue(unsigned long value) {
 	_report_timer->setValue(value);
 }
-void Sensor::setMeasureTimerMode(timer_mode value) {
+void Sensor::setMeasureTimerMode(nm_timer_mode value) {
 	_measure_timer->setMode(value);
 }
 void Sensor::setMeasureTimerValue(unsigned long value) {
