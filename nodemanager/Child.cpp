@@ -119,7 +119,7 @@ bool Child::getRequestInitialValue() {
 
 // store a new value and update the total
 void Child::_setValueNumber(double value) {
-	if (isnan(value)) return;
+	if (std::isnan(value)) return;
 	// this is the first measure after a send(), reset _value and _total
 	if (_samples == 0) {
 		_value = 0; 

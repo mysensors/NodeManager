@@ -101,7 +101,7 @@ protected:
 	
 	// calculate and send the forecast back
 	const char* _forecast(float pressure) {
-		if (isnan(pressure)) return "";
+		if (std::isnan(pressure)) return "";
 		// Calculate the average of the last n minutes.
 		int index = _minute_count % _forecast_samples_count;
 		_forecast_samples[index] = pressure;
