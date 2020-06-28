@@ -52,7 +52,7 @@ public:
 	// define what to do during setup
 	void onLoop(Child* child) {
 		nodeManager.sleepOrWait(_dht->getMinimumSamplingPeriod()+100);
-		_dht->readSensor(true);
+		// _dht->readSensor(true);
 		// temperature sensor
 		if (child->getType() == V_TEMP) {
 			// read the temperature
