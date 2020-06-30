@@ -20,16 +20,16 @@
 #define Timer_h
 
 /******************************************
-Timer: helper class to keep track of the elapsed time
+InternalTimer: helper class to keep track of the elapsed time
 */
 
 class NodeManager;
 
-class Timer {
+class InternalTimer {
 public:
-	Timer();
-	void setMode(timer_mode mode);
-	timer_mode getMode();
+	InternalTimer();
+	void setMode(nm_timer_mode mode);
+	nm_timer_mode getMode();
 	void setValue(unsigned long value);
 	unsigned long getValue();
 	// start the timer
@@ -41,7 +41,7 @@ public:
 	// return true if the time is over
 	bool isOver();
 private:
-	timer_mode _mode = NOT_CONFIGURED;
+	nm_timer_mode _mode = NOT_CONFIGURED;
 	unsigned long _value = 0;  // s
 	unsigned long _target = 0;  // ms
 	bool _is_running = false;

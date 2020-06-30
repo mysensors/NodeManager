@@ -24,7 +24,7 @@ Sensor: provide functionalities common to all the sensors
 */
 
 #include "Node.h"
-#include "Timer.h"
+#include "InternalTimer.h"
 #include "Child.h"
 #if NODEMANAGER_POWER_MANAGER == ON
 #include "PowerManager.h"
@@ -51,11 +51,11 @@ public:
     // [20] After how many days the sensor will report back its measure (default: 10 minutes)
     void setReportIntervalDays(uint8_t value);
 	// [24] Set the way the timer used for reporting to the gateway should operate. It can be either TIME_INTERVAL (e.g. report every X seconds with the amount of time set with setReportTimerValue()), IMMEDIATELY (e.g. report at every cycle, useful for sensors like actuators which should report as soon as the value has changed), DO_NOT_REPORT (e.g. never report, useful for when there is no need to report, like a Display) and when NODEMANAGER_TIME is ON, EVERY_MINUTE/EVERY_HOUR/EVERY_DAY (e.g. to report the value set in the previous timeframe, useful for sensors reporting an accumulated value linked to a timeframe at regular intervals), AT_MINUTE/AT_HOUR/AT_DAY (e.g. report at a given minute/hour/day, useful if the measure is expected at a specified time, set with setReportTimerValue())
-	void setReportTimerMode(timer_mode value);
+	void setReportTimerMode(nm_timer_mode value);
 	// [25] Set the value for the reporting timer's mode which has been set with setReportTimerMode()
 	void setReportTimerValue(unsigned long value);
 	// [26] Set the way the timer used for taking measures should operate. Takes the same parameters as setReportTimerMode(). If not set explicitly, will be set as the reporting timer
-	void setMeasureTimerMode(timer_mode value);
+	void setMeasureTimerMode(nm_timer_mode value);
 	// [27] Set the value for the reporting timer's mode which has been set with setReportTimerMode() If not set explicitely, will be set with the same value as the reporting timer
 	void setMeasureTimerValue(unsigned long value);
 	// return true if it is the first execution of loop on this sensor
@@ -68,6 +68,9 @@ public:
 	Child* getChild(uint8_t child_id, uint8_t child_type);
 	// register a child
 	void registerChild(Child* child);
+	// [28] enabler/disable the sensor (default: true)
+	void setEnabled(bool value, bool just_set = false);
+	bool getEnabled();
 #if NODEMANAGER_INTERRUPTS == ON
 	// return the pin the interrupt is attached to
 	int8_t getInterruptPin();
@@ -126,9 +129,10 @@ protected:
 	unsigned int _samples = 1;
 	unsigned long _samples_interval = 0;
 	bool _first_run = true;
-	Timer* _report_timer;
-	Timer* _measure_timer;
-	bool _evaluateTimer(Timer* timer);
+	InternalTimer* _report_timer;
+	InternalTimer* _measure_timer;
+	bool _evaluateTimer(InternalTimer* timer);
+	bool _enabled = true;
 #if NODEMANAGER_INTERRUPTS == ON
 	int8_t _interrupt_pin = -1;
 	uint8_t _interrupt_mode = MODE_NOT_DEFINED;

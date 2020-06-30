@@ -31,7 +31,7 @@ protected:
 	int _wait_after_set = 0;
 	int _pulse_width = 0;
 	bool _invert_value_to_write = false;
-	Timer* _safeguard_timer = new Timer();
+	InternalTimer* _safeguard_timer = new InternalTimer();
 	
 public:
 	SensorDigitalOutput(int8_t pin, uint8_t child_id = 0): Sensor(pin) {

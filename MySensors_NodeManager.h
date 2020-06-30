@@ -26,6 +26,13 @@
 #include "nodemanager/Constants.h"
 
 /***********************************
+Platform dependent variation
+*/
+#if defined(CHIP_STM32)
+#define isnan std::isnan
+#endif
+
+/***********************************
 Include required third-party libraries
 */
 
@@ -87,8 +94,8 @@ NodeManager nodeManager;
 #include "nodemanager/Sensor.cpp"
 // Child class
 #include "nodemanager/Child.cpp"
-// Timer class
-#include "nodemanager/Timer.cpp"
+// InternalTimer class
+#include "nodemanager/InternalTimer.cpp"
 
 #if NODEMANAGER_OTA_CONFIGURATION == ON
 // include SensorConfiguration if needed

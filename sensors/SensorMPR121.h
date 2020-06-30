@@ -68,7 +68,7 @@ public:
 		// do not average the value
 		children.get()->setValueProcessing(NONE);
 		// report immediately
-		setReportTimerMode(IMMEDIATELY);		
+		setReportTimerMode(IMMEDIATELY);
 		if (!_cap->begin(_i2c_addr)) debug(PSTR(LOG_SENSOR "%s: KO\n"),_name);
 		// setup passcode array  
 		_passcode.allocateBlocks(_passcode_length);
@@ -82,9 +82,9 @@ public:
 		while(true) {
 			// if a timer is set, leave the cycle if over
 			if (_wait_code_for_seconds > 0 && ((millis() - start_millis) > (unsigned long)_wait_code_for_seconds*1000)) break;
-
 			 // Get the currently touched pads
 			_currtouched = _cap->touched();
+			bool value_set = false;
 			for (uint8_t i=0; i<12; i++) {
 				if ((_currtouched & _BV(i)) && !(_lasttouched & _BV(i)) ) {
 					// pad i touched
@@ -103,10 +103,13 @@ public:
 						child->setValue(passcode);
 						// clear the passcode array
 						_passcode.clear();
+						value_set = true;
 						break;
 					}
 				}
 			}
+			// value was captured, leave the while cycle
+			if (value_set) break;
 			// reset state
 			_lasttouched = _currtouched;
 			wait(100);

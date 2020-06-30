@@ -72,7 +72,7 @@ public:
 	// register a sensor
 	void registerSensor(Sensor* sensor);
 	// register a timer
-	void registerTimer(Timer* timer);
+	void registerTimer(InternalTimer* timer);
 	// return the next-available child id
 	uint8_t getAvailableChildId(uint8_t child_id = 0);
 	// list containing all the registered sensors
@@ -84,7 +84,12 @@ public:
 	// sleep between send()
 	void sleepBetweenSend();
 	// set the analog reference to the given value and optionally perform some fake reading on the given pin
-	void setAnalogReference(uint8_t value, uint8_t pin = -1);
+	void setAnalogReference(uint8_t value, uint8_t pin = 0);
+	// send the configured unit prefix just before sending the first measure (default: false)
+	void setSendUnitPrefix(bool value);
+	bool getSendUnitPrefix();
+	// return the default unit prefix for the given sensor presentation and type
+	const char* getDefaultUnitPrefix(uint8_t presentation, uint8_t type);
 #if NODEMANAGER_SLEEP == ON
 	// [3] set the duration (in seconds) of a sleep cycle
 	void setSleepSeconds(unsigned long value);
@@ -97,6 +102,8 @@ public:
 	void setSleepDays(uint8_t value);
 	// [20] optionally sleep interval in milliseconds before sending each message to the radio network (default: 0)
 	void setSleepBetweenSend(unsigned int value);
+	// [43] when sleep between send is set, by default the node will only wait, set it to true to make it sleeping for long intervals (default: false)
+	void setSleepBetweenSendSleepOrWait(bool value);
 	// [9] wake up the board
 	void wakeup();
 	// use smart sleep for sleeping boards (default: true)
@@ -113,6 +120,8 @@ public:
 	int8_t getLastInterruptPin();
 	// return the value of the pin from which the last interrupt came
 	int8_t getLastInterruptValue();
+	// setup the interrupt pins
+	void setupInterrupts(bool from_setup);
 #endif
 #if NODEMANAGER_POWER_MANAGER == ON
 	// configure a PowerManager common to all the sensors
@@ -133,6 +142,9 @@ public:
 	void saveToMemory(int index, int value);
 	// [40] if set save the sleep settings in memory, also when changed remotely (default: false)
 	void setSaveSleepSettings(bool value);
+	// keep track in the eeprom of enabled/disabled status for each sensor (default: false)
+	void setPersistEnabledSensors(bool value);
+	bool getPersistEnabledSensors();
 #endif
 #if NODEMANAGER_TIME == ON
 	// [41] synchronize the local time with the controller
@@ -175,13 +187,19 @@ private:
 	void _sendMessage(uint8_t child_id, uint8_t type);
 	unsigned long _sleep_time = 0;
 	bool _sleep_or_wait = true;
-	uint8_t _sleep_interrupt_pin = -1;
+	uint8_t _sleep_interrupt_pin = 0;
 	unsigned int _sleep_between_send = 0;
+	bool _sleep_between_send_sleep_or_wait = false;
 	unsigned long _report_interval_seconds = 10*60;
-	uint8_t _reboot_pin = -1;
+	uint8_t _reboot_pin = 0;
 	void _present(uint8_t child_id, uint8_t type);
-	List<Timer*> _timers;
+	List<InternalTimer*> _timers;
+	bool _send_unit_prefix = false;
+#if defined(ARDUINO_ARCH_STM32F1)
+	uint8_t _analog_reference = -1;
+#else
 	uint8_t _analog_reference = DEFAULT;
+#endif
 #if NODEMANAGER_INTERRUPTS == ON
 	uint8_t _interrupt_1_mode = MODE_NOT_DEFINED;
 	uint8_t _interrupt_2_mode = MODE_NOT_DEFINED;
@@ -191,11 +209,11 @@ private:
 	static int8_t _last_interrupt_value;
 	static long unsigned _interrupt_debounce;
 	static long unsigned _last_interrupt_millis;
-	void _setupInterrupts();
 	static void _onInterrupt_1();
 	static void _onInterrupt_2();
+	bool _run_interrupt_setup = false;
 	static void _saveInterrupt(int8_t pin);
-#endif
+	#endif
 #if NODEMANAGER_SLEEP == ON
 	void _sleep();
 	bool _smart_sleep = true;
@@ -205,6 +223,7 @@ private:
 #endif
 #if NODEMANAGER_EEPROM == ON
 	bool _save_sleep_settings = false;
+	bool _persist_enabled_sensors = false;
 	void _loadSleepSettings();
 	void _saveSleepSettings();
 #endif

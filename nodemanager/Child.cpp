@@ -27,13 +27,15 @@ Child::Child() {
 }
 
 // constructor
-Child::Child(Sensor* sensor, value_format format, uint8_t child_id, uint8_t presentation, uint8_t type, const char* description) {
+Child::Child(Sensor* sensor, value_format format, uint8_t child_id, uint8_t presentation, uint8_t type, const char* description, const char* unit_prefix, bool request_initial_value) {
 	_sensor = sensor;
 	setFormat(format);
 	_child_id = child_id;
 	_presentation = presentation;
 	_type = type;
 	_description = description;
+	_unit_prefix = unit_prefix;
+	_request_initial_value = request_initial_value;
 	// register the child with the sensor
 	_sensor->registerChild(this);
 #if NODEMANAGER_EEPROM == ON
@@ -100,6 +102,19 @@ void Child::setValue(const char* value) {
 	_value_string = value;
 	_samples = 1;
 	debug(PSTR(LOG_LOOP "%s(%d):SET t=%d v=%s\n"),_description,_child_id,_type,_value_string);
+}
+void Child::setUnitPrefix(const char* value) {
+	_unit_prefix = value;
+}
+const char* Child::getUnitPrefix() {
+	if (_unit_prefix == NULL) return nodeManager.getDefaultUnitPrefix(_presentation,_type);
+	return _unit_prefix;
+}
+void Child::setRequestInitialValue(bool value) {
+	_request_initial_value = value;
+}
+bool Child::getRequestInitialValue() {
+	return _request_initial_value;
 }
 
 // store a new value and update the total
@@ -181,20 +196,21 @@ void Child::sendValue(bool force) {
 	// update last value if mode = UPDATE_ALWAYS
 	if (_last_value_mode == UPDATE_ALWAYS) _last_value = _value;
 #endif
-
 	// ignore conditional reporting settings if forced to report
 	if (!force && !valueReadyToSend()) return;
-
 	// we report value
 #if NODEMANAGER_CONDITIONAL_REPORT == ON
 	// if the force update timer is over restart it
 	if (_force_update_timer->isOver()) _force_update_timer->start();
-
 	// keep track of the previous value
 	if (_format != STRING) _last_value = _value;
 	else _last_value_string = _value_string;
 #endif
-
+	// send unit prefix if configured to do so
+	if (nodeManager.getSendUnitPrefix() && ! _unit_prefix_sent) {
+		nodeManager.sendMessage(_child_id,V_UNIT_PREFIX,getUnitPrefix());
+		_unit_prefix_sent = true;
+	}
 	// send the value to the gateway
 	if (_format == INT) nodeManager.sendMessage(_child_id,_type,(int)_value);
 	if (_format == FLOAT) nodeManager.sendMessage(_child_id,_type,(float)_value,_float_precision);

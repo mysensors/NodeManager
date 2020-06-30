@@ -25,6 +25,7 @@
 
 class SensorBosch: public Sensor {
 protected:
+#if !defined(NODEMANAGER_SENSOR_BOSCH_LITE)
 	const char* _weather[6] = { "stable", "sunny", "cloudy", "unstable", "thunderstorm", "unknown" };
 	int _forecast_samples_count = 5;
 	float* _forecast_samples;
@@ -33,18 +34,23 @@ protected:
 	float _pressure_avg2;
 	float _dP_dt;
 	bool _first_round = true;
-	
+#endif
+
 public:
 	SensorBosch(uint8_t child_id = 0): Sensor(-1) {
 		_name = "BOSCH";
+#if !defined(NODEMANAGER_SENSOR_BOSCH_LITE)
 		// initialize the forecast samples array
 		_forecast_samples = new float[_forecast_samples_count];
+#endif
 	};
 	
+#if !defined(NODEMANAGER_SENSOR_BOSCH_LITE)
 	// [101] define how many pressure samples to keep track of for calculating the forecast (default: 5)
 	void setForecastSamplesCount(int value) {
 		_forecast_samples_count = value;
 	};
+#endif
 	
 	// search for a given chip on i2c bus (emulating Adafruit's init() function)
 	uint8_t detectI2CAddress(uint8_t chip_id) {
@@ -84,6 +90,7 @@ public:
 #endif
 	
 protected:
+#if !defined(NODEMANAGER_SENSOR_BOSCH_LITE)
 	// returns the average of the latest pressure samples
 	float _getLastPressureSamplesAverage() {
 		float avg = 0;
@@ -158,5 +165,6 @@ protected:
 		else forecast = 5;
 		return _weather[forecast];
 	};
+#endif
 };
 #endif

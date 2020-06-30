@@ -29,7 +29,11 @@ protected:
 	bool _reverse = false;
 	bool _output_percentage = true;
 	int _range_min = 0;
+#if defined(ARDUINO_ARCH_STM32F1)
+	int _range_max = 4096;
+#else
 	int _range_max = 1024;
+#endif
 	
 public:
 	SensorAnalogInput(int8_t pin, uint8_t child_id = 0): Sensor(pin) {

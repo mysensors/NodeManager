@@ -121,8 +121,8 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 
 // ESP8266 gateway settings
 //#define MY_GATEWAY_ESP8266
-//#define MY_ESP8266_SSID ""
-//#define MY_ESP8266_PASSWORD ""
+//#define MY_WIFI_SSID ""
+//#define MY_WIFI_PASSWORD ""
 
 // Gateway networking settings
 //#define MY_IP_ADDRESS 192,168,178,87
@@ -259,6 +259,7 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 //#include <sensors/SensorMLX90614.h>
 //SensorMLX90614 mlx90614;
 
+//#define NODEMANAGER_SENSOR_BOSCH_LITE
 //#include <sensors/SensorBME280.h>
 //SensorBME280 bme280;
 

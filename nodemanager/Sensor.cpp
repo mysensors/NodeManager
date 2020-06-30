@@ -29,8 +29,8 @@ Sensor::Sensor() {
 Sensor::Sensor(int8_t pin) {
 	_pin = pin;
 	// initialize the timers
-	_report_timer = new Timer();
-	_measure_timer = new Timer();
+	_report_timer = new InternalTimer();
+	_measure_timer = new InternalTimer();
 	// register the sensor with the node
 	nodeManager.registerSensor(this);
 }
@@ -82,13 +82,13 @@ void Sensor::setInterruptStrict(bool value) {
 }
 #endif
 
-void Sensor::setReportTimerMode(timer_mode value) {
+void Sensor::setReportTimerMode(nm_timer_mode value) {
 	_report_timer->setMode(value);
 }
 void Sensor::setReportTimerValue(unsigned long value) {
 	_report_timer->setValue(value);
 }
-void Sensor::setMeasureTimerMode(timer_mode value) {
+void Sensor::setMeasureTimerMode(nm_timer_mode value) {
 	_measure_timer->setMode(value);
 }
 void Sensor::setMeasureTimerValue(unsigned long value) {
@@ -168,6 +168,17 @@ void Sensor::setup() {
 	// start the timers
 	_report_timer->start();
 	_measure_timer->start();
+	// for each child, request the initial value to the controller if configured
+	bool requested_initial_value = false;
+	for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
+		Child* child = *itr;
+		if (child->getRequestInitialValue()) {
+			request(child->getChildId(),child->getType());
+			requested_initial_value = true;
+		}
+	}
+	// wait a bit before controller returns the requested value
+	if (requested_initial_value) wait(2000);
 #if NODEMANAGER_INTERRUPTS == ON
 	// for interrupt based sensors, register a callback for the interrupt
 	if (_interrupt_mode != MODE_NOT_DEFINED) {
@@ -306,10 +317,45 @@ void Sensor::setReceiveHook(void (*function)(Sensor* sensor, MyMessage* message)
 }
 #endif
 
+// enabler/disable the sensor
+void Sensor::setEnabled(bool value, bool just_set) {
+	if (!just_set) {
+		// sensors was enabled and now has to be disable
+		if (_enabled && ! value) {
+			setup();
+#if NODEMANAGER_INTERRUPTS == ON
+			nodeManager.setupInterrupts();
+#endif
+		}
+		// sensors was disabled and now has to be enable
+		if (!_enabled && value) {
+#if NODEMANAGER_INTERRUPTS == ON
+			nodeManager.setupInterrupts();
+#endif		
+		}
+#if NODEMANAGER_EEPROM == ON
+		// if the status of a sensor has to be persisted in EEPROM
+		if (_enabled != value && nodeManager.getPersistEnabledSensors()) {
+			// iterates over all the children
+			for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
+				Child* child = *itr;
+				// save to the index equals to child id the enabled flag
+				nodeManager.saveToMemory(child->getChildId(), value);
+			}
+		}
+#endif
+	}
+	_enabled = value;
+}
+
+bool Sensor::getEnabled() {
+	return _enabled;
+}
+
 // virtual functions
 void Sensor::onSetup(){
 }
-void Sensor::onLoop(Child* child){}
+void Sensor::onLoop(Child* /*child*/){}
 
 // by default when a child receive a REQ message and the type matches the type of the request, executes its onLoop function
 void Sensor::onReceive(MyMessage* message){
@@ -319,11 +365,11 @@ void Sensor::onReceive(MyMessage* message){
 }
 void Sensor::onInterrupt(){}
 #if NODEMANAGER_OTA_CONFIGURATION == ON
-void Sensor::onOTAConfiguration(ConfigurationRequest* request) {}
+void Sensor::onOTAConfiguration(ConfigurationRequest* /*request*/) {}
 #endif
 
 // evaluate the timer and return true if can be considered over
-bool Sensor::_evaluateTimer(Timer* timer) {
+bool Sensor::_evaluateTimer(InternalTimer* timer) {
 	// timer is over
 	if (timer->isOver()) return true;
 	if (_first_run) {
