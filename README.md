@@ -148,6 +148,7 @@ SensorCCS811             | 1     | CCS811 gas/Air Quality sensor. Measure VOC an
 SensorMPR121             | 1     | MPR121-based capacitive touch control sensor                                                      | https://github.com/adafruit/Adafruit_MPR121
 SensorGSM                | 1     | Send SMS through an attached serial modem (e.g. SIM900)                                           | -
 SensorWaterLeak          | 1     | Water leak sensor; via an interrupt, wake up the board and report when a leak is detected         | -
+SensorIRremote           | 1     | Send signals to infrared devices through an attached IR sensor                                    | https://github.com/z3t0/Arduino-IRremote / https://github.com/crankyoldgit/IRremoteESP8266
 
 Those sensors requiring a pin to operate would take it as an argument in the constructor.
 NodeManager automatically creates all the child_ids, assigning an incremental counter. If you need to set your own child_id, pass it as the last argument to the constructor

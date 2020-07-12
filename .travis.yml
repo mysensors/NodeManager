@@ -524,3 +524,11 @@ jobs:
        - sed -r -i 's/\/\/(#include <sensors\/SensorWaterLeak.h>)/\1/' $SKETCH
        - eval $OTA_CONFIGURATION
        - eval $COMPILE
+    - name: "SensorIRremote"
+      script:
+       - arduino --install-library "IRremote"
+       - sed -r -i 's/\/\/(SensorIRremote .+)/\1/' $SKETCH
+       - sed -r -i 's/\/\/(#include <sensors\/SensorIRRemote.h>)/\1/' $SKETCH
+       - sed -r -i 's/\/\/(unsigned int irSignal .+)/\1/' $SKETCH
+       - eval $OTA_CONFIGURATION
+       - eval $COMPILE
