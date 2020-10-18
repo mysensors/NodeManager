@@ -1155,6 +1155,7 @@ Create a branch for the fix/feature you want to work on and apply changes to the
 * Include all the files changed for your commit: `git add .`
 * Commit the changes: `git  commit -m"Use enum instead of define for defining each sensor #121"`
 * Push the branch with the changes to your repository: `git push origin <yourbranch>`
+* A compilation test under Github Actions should trigger, wait for the results to ensure your changes are still making the code compiling successfully
 * Visit `https://github.com/<username>/NodeManager/branches` and click the "New pull request" button just aside your newly created branch
 * Fill in the request with a significant title and description and select the "development" branch (this step is very important)
 * Submit the request and start the discussion. After a few seconds, the configured Continuous Integration tool will automatically compile your code and check for errors
@@ -1174,17 +1175,15 @@ If there are changes introduced to the development branch that conflicts with an
 When contributing with a new sensor follows the same guidelines presented above and proceed with the following steps:
 * Define your class is in a header file named `SensorNAME_OF_THE_SENSOR.h` under the `sensors` directory
 * Implement your sensor inline with the class. See `SensorExample.h` or other sensors for more commented examples and details
-* Add your sensor in `examples/Templates/Template.ino`, just after the last sensor
-* Add an additional job in the Travis CI configuration file `.travis.yml`
+* Add your sensor in `examples/Templates/Template.ino`, just after the last sensor. Ensure your lines are commented out, like the other sensors
+* Add an additional step for the CI/CD pipeline configured in `.github/workflows/test.yml` for testing out your new code taking inspiration from other sensors. The code has to create a new sketch out of the template and uncomment the lines required for your new sensor to be tested
 * Add the sensor's specs in "Add your sensors" and in "Built-in sensors API" of the README.md file
 * Add the name of the class of your sensor in the keywords.txt file
 
 ## Compatibility
 
 This version of NodeManager has been tested and is compatible with the following MySensors library:
-* v2.3.0
-* v2.2.0
-* v2.1.1
+* v2.3.2
 
 You don't necessarily need a NodeManager gateway to interact with a NodeManager node. A NodeManager node is fully compatible with any existing gateway you are currently operating with.
 
