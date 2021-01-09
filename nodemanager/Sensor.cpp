@@ -127,6 +127,15 @@ Child* Sensor::getChild(uint8_t child_id) {
 	return nullptr;
 }
 
+Child* Sensor::getChild(uint8_t child_id, uint8_t ctype) {
+	for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
+		Child* child = *itr;
+		if ((child->getChildId() == child_id) && (child->getType() == ctype))
+			return child;
+	}
+	return nullptr;
+}
+
 // present the sensor to the gateway and controller
 void Sensor::presentation() {
 	for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
@@ -342,7 +351,7 @@ void Sensor::onLoop(Child* /*child*/){}
 
 // by default when a child receive a REQ message and the type matches the type of the request, executes its onLoop function
 void Sensor::onReceive(MyMessage* message){
-	Child* child = getChild(message->sensor);
+	Child* child = getChild(message->sensor, message->type);
 	if (child == nullptr) return;
 	if (message->getCommand() == C_REQ && message->type == child->getType()) onLoop(child);
 }
