@@ -217,7 +217,11 @@ void Sensor::loop(MyMessage* message) {
 		for (List<Child*>::iterator itr = children.begin(); itr != children.end(); ++itr) {
 			Child* child = *itr;
 			// if a specific child is requested from receive(), skip all the others
-			if (message != nullptr && message->sensor != child->getChildId()) continue;
+			if (message != nullptr &&
+				((message->sensor != child->getChildId()) ||
+				(message->type != child->getType()))) {
+					continue;
+				}
 			// collect multiple samples if needed
 			for (unsigned int i = 0; i < _samples; i++) {
 				// we've been called from receive(), pass the message along
