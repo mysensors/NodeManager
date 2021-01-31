@@ -381,6 +381,10 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 //#include <sensors/SensorWaterLeak.h>
 //SensorWaterLeak waterLeak(3);
 
+//#include <sensors/SensorIRremote.h>
+//unsigned int irSignal[59] = {8250,4150, 550,1600, 500,550, 500,600, 500,550, 500,1650, 500,550, 500,550, 550,550, 500,550, 500,600, 500,550, 500,550, 550,550, 500,550, 500,600, 500,550, 500,1650, 500,550, 550,550, 500,550, 500,550, 500,600, 500,550, 500,600, 500,1600, 500,600, 500,550, 500,550, 550}; 
+//SensorIRremote remote(irSignal);
+
 /***********************************
  * Main Sketch
  */

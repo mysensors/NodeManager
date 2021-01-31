@@ -1,0 +1,736 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Compilation Test
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install custom library milesburton/Arduino-Temperature-Control-Library 
+        uses: actions/checkout@v2
+        with:
+          repository: milesburton/Arduino-Temperature-Control-Library
+          ref: master
+          path: CustomLibraryArduino-Temperature-Control-Library
+          
+      - name: Install custom library claws/BH1750
+        uses: actions/checkout@v2
+        with:
+          repository: claws/BH1750
+          ref: master
+          path: CustomLibraryBH1750
+          
+      - name: Install custom library markruys/arduino-DHT
+        uses: actions/checkout@v2
+        with:
+          repository: markruys/arduino-DHT
+          ref: master
+          path: CustomLibraryarduino-DHT
+
+      - name: Install custom library thakshak/AM2320
+        uses: actions/checkout@v2
+        with:
+          repository: thakshak/AM2320
+          ref: master
+          path: CustomLibraryAM2320
+        
+      - name: Install custom library adafruit/TSL2561-Arduino-Library
+        uses: actions/checkout@v2
+        with:
+          repository: adafruit/TSL2561-Arduino-Library
+          ref: master
+          path: CustomLibraryTSL2561-Arduino-Library
+          
+      - name: Install custom library nxcosa/HighTemperatureSensor
+        run: | 
+          wget https://raw.githubusercontent.com/nxcosa/HighTemperatureSensor/master/libraries.zip && unzip libraries.zip
+          mv libraries/DFRobotHighTemperatureSensor ./CustomLibraryHighTemperatureSensor
+          
+      - name: Install custom library pololu/vl53l0x-arduino
+        uses: actions/checkout@v2
+        with:
+          repository: pololu/vl53l0x-arduino
+          ref: master
+          path: CustomLibraryvl53l0x-arduino
+          
+      - name: Install custom library cyberang3l/NewLiquidCrystal
+        uses: actions/checkout@v2
+        with:
+          repository: cyberang3l/NewLiquidCrystal
+          ref: master
+          path: CustomLibraryNewLiquidCrystal
+          
+      - name: Install custom library adafruit/Adafruit-Fingerprint-Sensor-Library
+        uses: actions/checkout@v2
+        with:
+          repository: adafruit/Adafruit-Fingerprint-Sensor-Library
+          ref: master
+          path: CustomLibraryAdafruit-Fingerprint-Sensor-Library
+          
+      - name: Install custom library elechouse/PN532
+        run: | 
+          wget https://github.com/elechouse/PN532/archive/PN532_HSU.zip && unzip PN532_HSU.zip
+          mv PN532-PN532_HSU/PN532 ./CustomLibraryPN532
+          mv PN532-PN532_HSU/PN532_HSU ./CustomLibraryPN532_HSU
+          mv PN532-PN532_HSU/PN532_I2C ./CustomLibraryPN532_I2C
+          mv PN532-PN532_HSU/NDEF ./CustomLibraryNDEF
+          mv PN532-PN532_HSU/PN532_SPI ./CustomLibraryPN532_SPI
+          mv PN532-PN532_HSU/PN532_SWHSU ./CustomLibraryPN532_SWHSU
+
+      - name: Install custom library MySensorsArduinoExamples
+        run: | 
+          wget https://github.com/mysensors/MySensorsArduinoExamples/archive/master.zip && unzip master.zip
+          mv MySensorsArduinoExamples-master/libraries/SI7021 ./CustomLibrarySI7021
+          mv MySensorsArduinoExamples-master/libraries/NewPing ./CustomLibraryNewPing
+
+
+
+
+      - name: Prepare test case for RFM69
+        run: | 
+          export NAME=RFM69
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/(#define MY_RADIO_RF24)/\/\/\1/' $SKETCH
+          sed -r -i 's/\/\/(#define MY_RADIO_RFM69)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#define MY_IS_RFM69HW)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#define MY_RFM69_NEW_DRIVER)/\1/' $SKETCH
+          cat $SKETCH
+          
+      - name: Prepare test case for Gateway_Serial
+        run: | 
+          export NAME=Gateway_Serial
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(#define MY_GATEWAY_SERIAL)/\1/' $SKETCH
+          cat $SKETCH
+          
+      # To enable when this will be fixed: https://github.com/mysensors/NodeManager/issues/529    
+      #- name: Prepare test case for Features_ON
+      #  run: | 
+      #    export NAME=Features_ON
+      #    export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+      #    mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+      #    sed -r -i 's/(#define NODEMANAGER_.+) OFF/\1 ON/g' $SKETCH
+      #    sed -i 's/#define NODEMANAGER_OTA_CONFIGURATION ON/#define NODEMANAGER_OTA_CONFIGURATION OFF/g' $SKETCH
+      #    cat $SKETCH
+          
+      - name: Prepare test case for Features_OFF
+        run: | 
+          export NAME=Features_OFF
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/(#define NODEMANAGER_.+) ON/\1 OFF/g' $SKETCH
+          cat $SKETCH
+          
+      - name: Prepare test case for SensorBattery
+        run: | 
+          export NAME=SensorBattery
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorBattery .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorBattery.h>)/\1/' $SKETCH
+          cat $SKETCH        
+          
+      - name: Prepare test case for SensorSignal
+        run: | 
+          export NAME=SensorSignal
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorSignal .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorSignal.h>)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#define MY_SIGNAL_REPORT_ENABLED)/\1/' $SKETCH
+          cat $SKETCH    
+          
+      - name: Prepare test case for SensorAnalogInput
+        run: | 
+          export NAME=SensorAnalogInput
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorAnalogInput .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorAnalogInput.h>)/\1/' $SKETCH
+          cat $SKETCH    
+          
+      - name: Prepare test case for SensorLDR
+        run: | 
+          export NAME=SensorLDR
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorLDR .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorLDR.h>)/\1/' $SKETCH
+          cat $SKETCH    
+
+      - name: Prepare test case for SensorRain
+        run: | 
+          export NAME=SensorRain
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorRain .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorRain.h>)/\1/' $SKETCH
+          cat $SKETCH    
+          
+      - name: Prepare test case for SensorSoilMoisture
+        run: | 
+          export NAME=SensorSoilMoisture
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorSoilMoisture .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorSoilMoisture.h>)/\1/' $SKETCH
+          cat $SKETCH    
+          
+      - name: Prepare test case for SensorThermistor
+        run: | 
+          export NAME=SensorThermistor
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorThermistor .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorThermistor.h>)/\1/' $SKETCH
+          cat $SKETCH    
+          
+      - name: Prepare test case for SensorML8511
+        run: | 
+          export NAME=SensorML8511
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorML8511 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorML8511.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorACS712
+        run: | 
+          export NAME=SensorACS712
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorACS712 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorACS712.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorDigitalInput
+        run: | 
+          export NAME=SensorDigitalInput
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorDigitalInput .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorDigitalInput.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorDigitalOutput
+        run: | 
+          export NAME=SensorDigitalOutput
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorDigitalOutput .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorDigitalOutput.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorRelay
+        run: | 
+          export NAME=SensorRelay
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorRelay .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorRelay.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorLatchingRelay1Pin
+        run: | 
+          export NAME=SensorLatchingRelay1Pin
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorLatchingRelay1Pin .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorLatchingRelay1Pin.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorLatchingRelay2Pins
+        run: | 
+          export NAME=SensorLatchingRelay2Pins
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorLatchingRelay2Pins .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorLatchingRelay2Pins.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorDHT11
+        run: | 
+          export NAME=SensorDHT11
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorDHT11 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorDHT11.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorDHT22
+        run: | 
+          export NAME=SensorDHT22
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorDHT22 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorDHT22.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorSHT21
+        run: | 
+          export NAME=SensorSHT21
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorSHT21 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorSHT21.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorHTU21D
+        run: | 
+          export NAME=SensorHTU21D
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorHTU21D .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorHTU21D.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorInterrupt
+        run: | 
+          export NAME=SensorInterrupt
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorInterrupt .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorInterrupt.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorDoor
+        run: | 
+          export NAME=SensorDoor
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorDoor .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorDoor.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorMotion
+        run: | 
+          export NAME=SensorSHT21
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorMotion .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorMotion.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorDs18b20
+        run: | 
+          export NAME=SensorDs18b20
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorDs18b20 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorDs18b20.h>)/\1/' $SKETCH 
+          cat $SKETCH
+          
+      - name: Prepare test case for SensorBH1750
+        run: | 
+          export NAME=SensorBH1750
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorBH1750 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorBH1750.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorMLX90614
+        run: | 
+          export NAME=SensorMLX90614
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorMLX90614 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorMLX90614.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorBME280
+        run: | 
+          export NAME=SensorBME280
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorBME280 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorBME280.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorBMP085
+        run: | 
+          export NAME=SensorBMP085
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorBMP085 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorBMP085.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorBMP180
+        run: | 
+          export NAME=SensorBMP180
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorBMP180.h>)/\1/' $SKETCH          
+          cat $SKETCH
+          
+      - name: Prepare test case for SensorBMP280
+        run: | 
+          export NAME=SensorBMP280
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorBMP280 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorBMP280.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorSonoff
+        run: | 
+          export NAME=SensorSonoff
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorSonoff .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorSonoff.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorHCSR04
+        run: | 
+          export NAME=SensorHCSR04
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorHCSR04 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorHCSR04.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorMCP9808
+        run: | 
+          export NAME=SensorMCP9808
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorMCP9808 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorMCP9808.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorMQ
+        run: | 
+          export NAME=SensorMQ
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorMQ .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorMQ.h>)/\1/' $SKETCH
+          cat $SKETCH             
+          
+      - name: Prepare test case for SensorMHZ19
+        run: | 
+          export NAME=SensorMHZ19
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorMHZ19 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorMHZ19.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      # This needs to be fixed first https://github.com/thakshak/AM2320/pull/9    
+      #- name: Prepare test case for SensorAM2320
+      #  run: | 
+      #    export NAME=SensorAM2320
+      #    export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+      #    mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+      #    sed -r -i 's/\/\/(SensorAM2320 .+)/\1/' $SKETCH
+      #    sed -r -i 's/\/\/(#include <sensors\/SensorAM2320.h>)/\1/' $SKETCH
+      #    cat $SKETCH   
+          
+      - name: Prepare test case for SensorTSL2561
+        run: | 
+          export NAME=SensorTSL2561
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorTSL2561 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorTSL2561.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorPT100
+        run: | 
+          export NAME=SensorPT100
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorPT100 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorPT100.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorDimmer
+        run: | 
+          export NAME=SensorDimmer
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorDimmer .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorDimmer.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorRainGauge
+        run: | 
+          export NAME=SensorRainGauge
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorRainGauge .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorRainGauge.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorPowerMeter
+        run: | 
+          export NAME=SensorPowerMeter
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorPowerMeter .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorPowerMeter.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorWaterMeter
+        run: | 
+          export NAME=SensorWaterMeter
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorWaterMeter .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorWaterMeter.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorPlantowerPMS
+        run: | 
+          export NAME=SensorPlantowerPMS
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorPlantowerPMS .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorPlantowerPMS.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorVL53L0X
+        run: | 
+          export NAME=SensorVL53L0X
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorVL53L0X .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorVL53L0X.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for DisplaySSD1306
+        run: | 
+          export NAME=DisplaySSD1306
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(DisplaySSD1306 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/DisplaySSD1306.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorSHT31
+        run: | 
+          export NAME=SensorSHT31
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorSHT31 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorSHT31.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorVL53L0X
+        run: | 
+          export NAME=SensorVL53L0X
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorVL53L0X .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorVL53L0X.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorSI7021
+        run: | 
+          export NAME=SensorSI7021
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorSI7021 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorSI7021.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorChirp
+        run: | 
+          export NAME=SensorChirp
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorChirp .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorChirp.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for DisplayHD44780
+        run: | 
+          export NAME=DisplayHD44780
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(DisplayHD44780 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/DisplayHD44780.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorTTP
+        run: | 
+          export NAME=SensorTTP
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorTTP .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorTTP.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorServo
+        run: | 
+          export NAME=SensorServo
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorServo .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorServo.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorAPDS9960
+        run: | 
+          export NAME=SensorAPDS9960
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorAPDS9960 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorAPDS9960.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorNeopixel
+        run: | 
+          export NAME=SensorNeopixel
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorNeopixel .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorNeopixel.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorSDS011
+        run: | 
+          export NAME=SensorSDS011
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorSDS011 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorSDS011.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorFPM10A
+        run: | 
+          export NAME=SensorFPM10A
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorFPM10A .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorFPM10A.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorPH
+        run: | 
+          export NAME=SensorPH
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorPH .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorPH.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorPca9685W
+        run: | 
+          export NAME=SensorPca9685W
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorPca9685W .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorPca9685W.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorPca9685Rgb
+        run: | 
+          export NAME=SensorPca9685Rgb
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorPca9685Rgb .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorPca9685Rgb.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorPca9685Rgbw
+        run: | 
+          export NAME=SensorPca9685Rgbw
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorPca9685Rgbw .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorPca9685Rgbw.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorDSM501A
+        run: | 
+          export NAME=SensorDSM501A
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorDSM501A .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorDSM501A.h>)/\1/' $SKETCH
+          cat $SKETCH   
+
+      - name: Prepare test case for SensorPN532
+        run: | 
+          export NAME=SensorPN532
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorPN532 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorPN532.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorCCS811
+        run: | 
+          export NAME=SensorCCS811
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorCCS811 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorCCS811.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorMPR121
+        run: | 
+          export NAME=SensorMPR121
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorMPR121 .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorMPR121.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorGSM
+        run: | 
+          export NAME=SensorGSM
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorGSM .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorGSM.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorWaterLeak
+        run: | 
+          export NAME=SensorWaterLeak
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorWaterLeak .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorWaterLeak.h>)/\1/' $SKETCH
+          cat $SKETCH   
+          
+      - name: Prepare test case for SensorIRremote
+        run: | 
+          export NAME=SensorIRremote
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorIRremote .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(unsigned int irSignal.+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorIRremote.h>)/\1/' $SKETCH
+          cat $SKETCH   
+
+
+    
+      - name: Compile all test cases
+        uses: ArminJo/arduino-test-compile@v2
+        with:
+          arduino-board-fqbn: arduino:avr:mini:cpu=atmega328
+          required-libraries: MySensors,SD,Adafruit BMP085 Library,OneWire,DS3232RTC,Time,Sodaq_SHT2x,Adafruit MLX90614 Library,Adafruit Unified Sensor,Adafruit BME280 Library,Adafruit BMP280 Library,Bounce2,Adafruit MCP9808 Library,SSD1306Ascii,Adafruit SHT31 Library,I2CSoilMoistureSensor,SparkFun APDS9960 RGB and Gesture Sensor,Adafruit NeoPixel,SDS011 sensor Library,Adafruit PWM Servo Driver Library,Adafruit CCS811 Library,Adafruit MPR121,PMS Library,IRremote,Servo
+          debug-compile: true
+          sketch-names-find-start: ./examples
