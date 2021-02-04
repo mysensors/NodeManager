@@ -241,6 +241,9 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 //#include <sensors/SensorHTU21D.h>
 //SensorHTU21D htu21;
 
+//#include <sensors/SensorAHT10.h>
+//SensorAHT10 aht10;
+
 //#include <sensors/SensorInterrupt.h>
 //SensorInterrupt interrupt(3);
 
