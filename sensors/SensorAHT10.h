@@ -43,11 +43,11 @@ public:
 
 		_aht10 = new AHT10(AHT10_ADDRESS_0X38);
 
-		while (_aht10->begin() != true)
+		if (_aht10->begin() != true)
   	{
-			debug(PSTR(LOG_SETUP "AHT10 not connected or fail to load calibration coefficient\n"));
 			setIndication(INDICATION_ERR_HW_INIT);
-  	  sleep(5000);
+			debug(PSTR(LOG_SETUP "AHT10 not connected or fail to load calibration coefficient\n"));
+  	  //sleep(5000);
   	}
 	};
 
