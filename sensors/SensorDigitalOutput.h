@@ -111,7 +111,9 @@ public:
 	void onSetup() {
 		// do not average the value
 		children.get()->setValueProcessing(NONE);
-		// setup the pin
+		// First, set pin status. This will effect only the pullup at first
+		setStatus(OFF);
+		// Now, setup the pin mode
 		pinMode(_pin, OUTPUT);
 		// setup the off pin if needed
 		if (_pin_off > 0) pinMode(_pin_off, OUTPUT);
@@ -121,8 +123,7 @@ public:
 		// keep track of the value in EEPROM so to restore it upon a reboot
 		children.get()->setPersistValue(true);
 #else
-		// turn the output off by default
-		setStatus(OFF);
+
 #endif
 	};
 
