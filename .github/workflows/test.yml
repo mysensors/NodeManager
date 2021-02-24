@@ -98,8 +98,12 @@ jobs:
           mv MySensorsArduinoExamples-master/libraries/SI7021 ./CustomLibrarySI7021
           mv MySensorsArduinoExamples-master/libraries/NewPing ./CustomLibraryNewPing
 
-
-
+      - name: Install custom library enjoyneering/AHT10
+        uses: actions/checkout@v2
+        with:
+          repository: enjoyneering/AHT10
+          ref: master
+          path: CustomLibraryAHT10
 
       - name: Prepare test case for RFM69
         run: | 
