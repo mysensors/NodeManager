@@ -103,6 +103,7 @@ SensorDHT11              | 2     | DHT11 sensor, return temperature/humidity bas
 SensorDHT22              | 2     | DHT22 sensor, return temperature/humidity based on the attached DHT sensor                        | https://github.com/markruys/arduino-DHT
 SensorSHT21              | 2     | SHT21 sensor, return temperature/humidity based on the attached SHT21 sensor                      | https://github.com/SodaqMoja/Sodaq_SHT2x
 SensorHTU21D             | 2     | HTU21D sensor, return temperature/humidity based on the attached HTU21D sensor                    | https://github.com/SodaqMoja/Sodaq_SHT2x
+SensorAHT10              | 2     | AHT10 sensor, return temperature/humidity based on the attached AHT10 sensor                      | https://github.com/enjoyneering/AHT10
 SensorInterrupt          | 1     | Generic interrupt-based sensor, wake up the board when a pin changes status                       | -
 SensorDoor               | 1     | Door sensor, wake up the board and report when an attached magnetic sensor has been opened/closed | -
 SensorMotion             | 1     | Motion sensor, wake up the board and report when an attached PIR has triggered                    | -
