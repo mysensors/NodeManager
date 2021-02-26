@@ -381,6 +381,9 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 //#include <sensors/SensorAHT10.h>
 //SensorAHT10 aht10;
 
+//#include <sensors/SensorParent.h>
+//SensorParent parent(254);
+
 /***********************************
  * Main Sketch
  */
