@@ -223,3 +223,4 @@ SensorMPR121	KEYWORD1
 SensorGSM	KEYWORD1
 SensorWaterLeak	KEYWORD1
 SensorIRremote  KEYWORD1
+SensorParent  KEYWORD1
