@@ -384,6 +384,9 @@ NodeManager. Just uncomment the settings you need and the sensors you want to ad
 //#include <sensors/SensorParent.h>
 //SensorParent parent(254);
 
+//#include <sensors/SensorACS712_AC.h>
+//SensorACS712_AC ac(A0);
+
 /***********************************
  * Main Sketch
  */
