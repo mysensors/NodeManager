@@ -27,8 +27,9 @@ SensorRelay
 
 class SensorRelay: public SensorDigitalOutput {
 public:
-	SensorRelay(int8_t pin, uint8_t child_id = 0): SensorDigitalOutput(pin, child_id) {
+	SensorRelay(int8_t pin, bool inverted = false, uint8_t child_id = 0): SensorDigitalOutput(pin, child_id) {
 		_name = "RELAY";
+		setInvertValueToWrite(inverted);
 		children.get()->setPresentation(S_BINARY);
 		children.get()->setType(V_STATUS);
 		children.get()->setDescription(_name);
