@@ -64,6 +64,7 @@ public:
 	List<Child*> children;
 	// return the child object based on the provided child_id
 	Child* getChild(uint8_t child_id);
+	Child* getChild(uint8_t child_id, uint8_t ctype);
 	// register a child
 	void registerChild(Child* child);
 	// [28] enabler/disable the sensor (default: true)
