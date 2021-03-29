@@ -747,6 +747,14 @@ jobs:
           sed -r -i 's/\/\/(#include <sensors\/SensorParent.h>)/\1/' $SKETCH
           cat $SKETCH   
 
+      - name: Prepare test case for SensorACS712_AC
+        run: | 
+          export NAME=SensorACS712_AC
+          export SKETCH=$GITHUB_WORKSPACE/examples/$NAME/$NAME.ino  
+          mkdir -p $GITHUB_WORKSPACE/examples/$NAME && cp $GITHUB_WORKSPACE/examples/Template/Template.ino $SKETCH
+          sed -r -i 's/\/\/(SensorACS712_AC .+)/\1/' $SKETCH
+          sed -r -i 's/\/\/(#include <sensors\/SensorACS712_AC.h>)/\1/' $SKETCH
+          cat $SKETCH   
     
       - name: Compile all test cases
         uses: ArminJo/arduino-test-compile@v2

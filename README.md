@@ -94,6 +94,7 @@ SensorThermistor         | 1     | Thermistor sensor, return the temperature bas
 SensorTMP102             | 1     | Temperature sensor, return the temperature based on the TMP102 sensor	                         | https://github.com/Yannicked/Sensor_TMP102
 SensorML8511             | 1     | ML8511 sensor, return UV intensity                                                                | -
 SensorACS712             | 1     | ACS712 sensor, measure the current going through the attached module                              | -
+SensorACS712_AC          | 1     | ACS712, same as the above, but allows measuring alternating current         | -
 SensorDigitalInput       | 1     | Generic digital sensor, return a pin's digital value                                              | -
 SensorDigitalOutput      | 1     | Generic digital output sensor, allows setting the digital output of a pin to the requested value  | -
 SensorRelay              | 1     | Relay sensor, allows activating the relay                                                         | -
@@ -633,6 +634,23 @@ Each sensor class may expose additional methods.
 	void setACNoise(int value);
 	// [105] Adjust AC noise
 	void computeACNoise();
+~~~
+
+* SensorACS712_AC
+~~~c
+	// [101] set how many mV are equivalent to 1 Amp. The value depends on the module (185 for 5A Module, 100 for 20A Module, 66 for 30A Module) (default: 185);
+	void setmVPerAmp(int value);
+	// [102] set ACS offset (default: 2500);
+	void setOffset(int value);
+	// [103] set AC Measurement mode
+	void setACMode(bool value);
+	// [104] set AC noise
+	void setACNoise(int value);
+	// [105] Adjust AC noise
+	void computeACNoise();
+	// Performs initial calibration. Call this function once when there is no
+	// current flowing through the sensor. 
+	void calibrateZero();
 ~~~
 
 * SensorDigitalInput

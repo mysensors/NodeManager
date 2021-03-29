@@ -50,14 +50,18 @@ public:
 		pinMode(_pin, INPUT);
 	};
 
-	// define what to do during loop
-	void onLoop(Child* child) {
+	virtual float measure() {
 		int value = analogRead(_pin);
 		// convert the analog read in mV
 		double voltage = (value / 1024.0) * 5000; 
 		// convert voltage in amps
 		float value_float = ((voltage - _ACS_offset) / _mv_per_amp);
-		child->setValue(value_float);
+		return value_float;
+	}
+
+	// define what to do during loop
+	virtual void onLoop(Child* child) {
+		child->setValue(measure());
 	};
 };
 #endif
