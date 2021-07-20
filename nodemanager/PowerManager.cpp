@@ -58,7 +58,7 @@ void PowerManager::powerOn() {
 // turn off the sensor
 void PowerManager::powerOff() {
 	if (_vcc_pin == -1) return;
-	debug(PSTR(LOG_POWER "OFF p=%d\n"),_ground_pin);
+	debug(PSTR(LOG_POWER "OFF p=%d\n"),_vcc_pin);
 	// power off the sensor by turning low the vcc pin
 	digitalWrite(_vcc_pin, LOW);
 }
