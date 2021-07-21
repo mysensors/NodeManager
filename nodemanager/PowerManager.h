@@ -27,13 +27,13 @@ class PowerManager {
 public:
 	PowerManager(int8_t ground_pin, int8_t vcc_pin, unsigned long wait_time = 50);
 	// to save battery the sensor can be optionally connected to two pins which will act as vcc and ground and activated on demand
-	void setPowerPins(int8_t ground_pin, int8_t vcc_pin, unsigned long wait_time = 50);
+	virtual void setPowerPins(int8_t ground_pin, int8_t vcc_pin, unsigned long wait_time = 50);
 	// if enabled the pins will be automatically powered on while awake and off during sleeping
 	// turns the power pins on
-	void powerOn();
+	virtual void powerOn();
 	// turns the power pins on
-	void powerOff();
-private:
+	virtual void powerOff();
+protected:
 	int8_t _vcc_pin = -1;
 	int8_t _ground_pin = -1;
 	unsigned long _wait = 0;
