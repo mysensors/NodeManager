@@ -288,8 +288,8 @@ bool Child::getPersistValue() {
 // save value to EEPROM - subclass needs to implement
 void Child::saveValue() {
 	if (_format == STRING) return;
-	// number is too large to be saved or we run out of EEPROM slots
-	if ((_eeprom_address+EEPROM_CHILD_SIZE) > 255) return;
+	// check if slots of EEPROM run out
+	if ((_eeprom_address + EEPROM_CHILD_SIZE) > (EEPROM_USER_END - EEPROM_USER_START)) return;
 	debug(PSTR(LOG_EEPROM "%s(%d):SAVE\n"),_description,_child_id);
 	// save the type
 	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_TYPE,_type);
@@ -322,7 +322,7 @@ void Child::saveValue() {
 void Child::loadValue() { 
 	if (_format == STRING) return;
 	// ensure we are not going to read beyond the available EEPROM slots
-	if ((_eeprom_address+EEPROM_CHILD_SIZE) > 255 ) return;
+	if ((_eeprom_address + EEPROM_CHILD_SIZE) > (EEPROM_USER_END - EEPROM_USER_START)) return;
 	debug(PSTR(LOG_EEPROM "%s(%d):LOAD\n"),_description,_child_id);
 	// ensure the type is valid
 	if (nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_TYPE) != _type) return;
