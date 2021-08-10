@@ -114,11 +114,11 @@ public:
 		int rs = 0;
 		if (_ro == 0) {
 			// calibrate the sensor (the Ro resistance) if requested. Since ppm = scaling_factor*(rs/ro)^exponent, we need Rs to calculate Ro for the given ppm
-			debug(PSTR(LOG_SENSOR "%s:CAL"),_name);
+			debug(PSTR(LOG_SENSOR "%s:CAL\n"),_name);
 			rs = _getRsValue(_calibration_samples,_calibration_sample_interval);
 			_ro = (long)(rs * exp( log(_curve_scaling_factor/_known_ppm) / _curve_exponent ));
 		}
-		debug(PSTR(LOG_SENSOR "%s:CAL OK Rs=%d Ro=%d Rl=_rl F=%d.%02d x^=%d.%02d\n"),_name,rs,_ro,_rl,(int)_curve_scaling_factor, (int)(_curve_scaling_factor*100)%100,(int)_curve_exponent, (int)(_curve_exponent*100)%100);
+		debug(PSTR(LOG_SENSOR "%s:CAL OK Rs=%d Ro=%ld Rl=%ld F=%d.%02d x^=%d.%02d\n"),_name,rs,_ro,_rl,(int)_curve_scaling_factor,(int)((_curve_scaling_factor-(int)_curve_scaling_factor)*100)*(_curve_scaling_factor<0.0f?-1:1),(int)_curve_exponent,(int)((_curve_exponent-(int)_curve_exponent)*100)*(_curve_exponent<0.0f?-1:1));
 	};
 
 	// define what to do during loop
@@ -129,7 +129,7 @@ public:
 		float rs_ro_ratio = rs / _ro;
 		// calculate ppm 
 		int ppm = _curve_scaling_factor * pow(rs_ro_ratio, _curve_exponent);
-		debug(PSTR(LOG_SENSOR "%s(%d):READ Rs=%d Rs/Ro=%d.%02d ppm=%d\n"),_name,child->getChildId(),rs,(int)rs_ro_ratio, (int)(rs_ro_ratio*100)%100,ppm);
+		debug(PSTR(LOG_SENSOR "%s(%d):READ Rs=%d Rs/Ro=%d.%02d ppm=%d\n"),_name,child->getChildId(),(int)rs,(int)rs_ro_ratio,(int)((rs_ro_ratio-(int)rs_ro_ratio)*100)*(rs_ro_ratio<0.0f?-1:1),ppm);
 		// ppm cannot be negative
 		if (ppm < 0) ppm = 0;
 		// if warmup is configured, do not send the value back if within the warmup period
