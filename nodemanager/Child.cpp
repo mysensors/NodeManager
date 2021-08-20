@@ -288,40 +288,70 @@ bool Child::getPersistValue() {
 // save value to EEPROM - subclass needs to implement
 void Child::saveValue() {
 	if (_format == STRING) return;
-	// number is too large to be saved or we run out of EEPROM slots
-	if (_value >= 10000 || ((_eeprom_address+EEPROM_CHILD_SIZE) > 255) ) return;
+	// check if slots of EEPROM run out
+	if ((_eeprom_address + EEPROM_CHILD_SIZE) > (EEPROM_USER_END - EEPROM_USER_START)) return;
 	debug(PSTR(LOG_EEPROM "%s(%d):SAVE\n"),_description,_child_id);
 	// save the type
 	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_TYPE,_type);
-	// encode the sign (e.g. 0 if > 0, 1 otherwise)
-	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_SIGN, _value >= 0 ? 0 : 1);
-	// encode and save the integer value (e.g. 7240 -> int_1 = 72, int_2 = 40)
-	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_INT_1,(int)(_value/100)%100);
-	nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_INT_2,(int)_value%100);
-	// encode and save the first part of the decimal value (e.g. 7240.12 -> dec_1 = 12)
-	if (_format == FLOAT || _format == DOUBLE) nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_DEC_1,(int)(_value*100)%100);
-	// encode and save the second part of the decimal value (e.g. 7240.1244 -> dec_2 = 44)
-	if (_format == DOUBLE) nodeManager.saveToMemory(_eeprom_address+EEPROM_CHILD_DEC_1,(int)(_value*10000)%100);
+	// encode the bytes
+	uint8_t bytes[EEPROM_CHILD_SIZE - EEPROM_CHILD_VALUE];
+	if (_format == INT) {
+		// encode integer value
+		const int word = (int)_value;
+		// shift out the bytes of the int number into the buffer
+		for (uint8_t i = 0; i < sizeof(int); i++) {
+			bytes[i] = (uint8_t)((word >> ((sizeof(int) - 1 - i) * 8)) & 0xFF);
+		}
+	}
+	if ((_format == FLOAT || _format == DOUBLE)) {
+		// encode the decimal value
+		const float word = (float)_value;
+		const uint8_t* src = (uint8_t*)&word;
+		// copy bytes from float number as is into the buffer
+		for (uint8_t i = 0; i < sizeof(bytes); i++) {
+			bytes[i] = src[sizeof(bytes) - 1 - i];
+		}
+	}
+	// save the bytes of the loaded value
+	for (uint8_t i = 0; i < (_format == INT ? sizeof(int) : sizeof(bytes)); i++) {
+		nodeManager.saveToMemory(_eeprom_address + EEPROM_CHILD_VALUE + i, bytes[i]);
+	}
 }
 
 // load value from EEPROM 
 void Child::loadValue() { 
 	if (_format == STRING) return;
 	// ensure we are not going to read beyond the available EEPROM slots
-	if (((_eeprom_address+EEPROM_CHILD_SIZE) > 255) ) return;
+	if ((_eeprom_address + EEPROM_CHILD_SIZE) > (EEPROM_USER_END - EEPROM_USER_START)) return;
+	debug(PSTR(LOG_EEPROM "%s(%d):LOAD\n"),_description,_child_id);
 	// ensure the type is valid
 	if (nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_TYPE) != _type) return;
-	debug(PSTR(LOG_EEPROM "%s(%d):LOAD\n"),_description,_child_id);
-	// decode the integer part
+	// decode the bytes
 	double value = 0;
-	value = nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_INT_1)*100 + nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_INT_2);
-	if (value == 255) return;
-	// decode the sign
-	if (nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_SIGN) == 1) value = value * -1;
-	// decode the first part of the decimal value
-	if (_format == FLOAT || _format == DOUBLE) value += nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_DEC_1)/100.0;
-	// decode the second part of the decimal value
-	if (_format == DOUBLE) value += nodeManager.loadFromMemory(_eeprom_address+EEPROM_CHILD_DEC_2)/10000.0;
+	uint8_t bytes[EEPROM_CHILD_SIZE - EEPROM_CHILD_VALUE];
+	// load the bytes of the saved value
+	for (uint8_t i = 0; i < (_format == INT ? sizeof(int) : sizeof(bytes)); i++) {
+		bytes[i] = (uint8_t)nodeManager.loadFromMemory(_eeprom_address + EEPROM_CHILD_VALUE + i);
+	}
+	if (_format == INT) {
+		// decode the integer value
+		int word = 0;
+		// shift back bytes into position of the int number
+		for (uint8_t i = 0; i < sizeof(int); i++) {
+			word |= ((int)bytes[i]) << ((sizeof(int) - 1 - i) * 8);
+		}
+		value = word;
+	}
+	if (_format == FLOAT || _format == DOUBLE) {
+		// decode the decimal value
+		float word;
+		uint8_t* dst = (uint8_t*)&word;
+		// copy bytes as is into float number
+		for (uint8_t i = 0; i < sizeof(bytes); i++) {
+			dst[i] = bytes[sizeof(bytes) - 1 - i];
+		}
+		value = word;
+	}
 	setValue(value);
 }
 #endif

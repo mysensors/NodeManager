@@ -402,7 +402,7 @@ void NodeManager::loop() {
 	// return the value stored at the requested index from the EEPROM
 	int NodeManager::loadFromMemory(int index) {
 		int position = index+EEPROM_USER_START;
-		if (position >= 255) {
+		if (position >= EEPROM_USER_END) {
 			debug(PSTR(LOG_EEPROM "!LOAD i=%d\n"),index);
 			return 0;
 		}
@@ -414,7 +414,7 @@ void NodeManager::loop() {
 	// save the given index of the EEPROM the provided value
 	void NodeManager::saveToMemory(int index, int value) {
 		int position = index+EEPROM_USER_START;
-		if (position >= 255) {
+		if (position >= EEPROM_USER_END) {
 			debug(PSTR(LOG_EEPROM "!SAVE i=%d\n"),index);
 			return;
 		}

@@ -28,15 +28,11 @@ class Sensor;
 
 // how many slots to leave for the user before starting using them for Child
 #define EEPROM_CHILD_OFFSET	10
-// define the number of slots of the EEPROM needed to store a Child's value
-#define EEPROM_CHILD_SIZE 6
 // define the relative positions of each information
-#define EEPROM_CHILD_TYPE 0
-#define EEPROM_CHILD_SIGN 1
-#define EEPROM_CHILD_INT_1 2
-#define EEPROM_CHILD_INT_2 3
-#define EEPROM_CHILD_DEC_1 4
-#define EEPROM_CHILD_DEC_2 5
+#define EEPROM_CHILD_TYPE  0
+#define EEPROM_CHILD_VALUE (EEPROM_CHILD_TYPE + 1)
+// define the number of slots of the EEPROM needed to store a Child's value
+#define EEPROM_CHILD_SIZE  (EEPROM_CHILD_VALUE + 4)
 
 class Child {
 public:
