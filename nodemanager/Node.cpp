@@ -288,7 +288,7 @@ void NodeManager::loop() {
 			// call the sensor interrupt() and then loop(), provided the interrupt has been "accepted" by interrupt()
 			if (sensor->interrupt()) sensor->loop(nullptr);
 		}
-		else if (_last_interrupt_pin == -1) {
+		else {
 #endif
 			// if just at the end of a cycle, call all the sensor's loop() 
 			sensor->loop(nullptr);
